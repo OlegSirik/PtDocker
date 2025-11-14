@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/PoliTechAPI" />
+        <option name="gradleJvm" value="21" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/PoliTechAPI" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-api" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-auth" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-calculator" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-db" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-files" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-launcher" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-numbers" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-process" />
+            <option value="$PROJECT_DIR$/PoliTechAPI/pt-product" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

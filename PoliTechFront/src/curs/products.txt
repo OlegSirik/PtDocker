@@ -1,0 +1,49 @@
+Add new page with route products
+This page is for products searching and add new record
+
+Example of products is -
+[
+  {
+    "id": "12345",  
+    "lob": "Ипотека",
+    "name": "НС спорт",
+    "code": "NS_SPORT",
+    "versionNo": "2",
+    "versionStatus": "PROD"
+  }
+]
+
+Data returns from API, mock it in service
+
+Page header - "Продукты",  class - h1 class="page-title" , align left
+
+Add <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" ">
+          <mat-icon>add</mat-icon>
+          Новый продукт
+        </button>
+      </div>
+
+onClick - call method createNewProduct()
+create a new service - products.ts for that
+and than route to page product
+
+Than text h3 - "список продуктов" align left
+search item on the same line, align right
+
+2th segment - rounded rectange. 
+Than table class="business-table"
+Table with search, and pagination 
+table with columns coverCode title "код покрытия", coverName -  title "Покрытие", risks column with title "Список рисков",
+action column with title "..." and buttons Edit, Delete with icons
+
+Delete button delete record, must be a dialog with question and that call api method.
+Mock it
+
+Edit call page product / { code }
+
+html, ts, css must be in separate files
+
+

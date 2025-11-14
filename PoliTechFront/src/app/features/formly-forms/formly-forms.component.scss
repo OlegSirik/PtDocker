@@ -1,0 +1,166 @@
+.display-flex {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.flex-1 {
+  flex: 1;
+  max-width: 25%;
+}
+
+.flex-2 {
+  flex: 2;
+}
+
+.flex-3 {
+  flex: 3;
+}
+
+.flex-4 {
+  flex: 4;
+}
+
+.flex-5 {
+  flex: 5;
+}
+
+.flex-6 {
+  flex: 6;
+}
+
+[class*='flex-'] {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+[class*='flex-']:first-child {
+  padding-left: 0;
+}
+
+[class*='flex-']:nth-last-child(2) {
+  padding-right: 0;
+}
+
+.formly-forms-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  .page-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 500;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+.form-card {
+  margin-bottom: 24px;
+  
+  mat-card-content {
+    padding: 24px;
+  }
+  
+  mat-card-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+.loading-card {
+  text-align: center;
+  
+  .loading-content {
+    padding: 48px;
+    
+    .loading-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #666;
+      animation: spin 2s linear infinite;
+    }
+    
+    p {
+      margin-top: 16px;
+      color: #666;
+      font-size: 16px;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  .mat-form-field {
+    width: 100%;
+  }
+}
+
+// Field style classes
+.field-primary {
+  .mat-form-field-wrapper {
+    border-color: #1976d2;
+  }
+}
+
+.field-secondary {
+  .mat-form-field-wrapper {
+    border-color: #424242;
+  }
+}
+
+.field-accent {
+  .mat-form-field-wrapper {
+    border-color: #ff4081;
+  }
+}
+
+.field-warn {
+  .mat-form-field-wrapper {
+    border-color: #f44336;
+  }
+}
+
+.field-large {
+  .mat-form-field-wrapper {
+    font-size: 18px;
+  }
+}
+
+.field-small {
+  .mat-form-field-wrapper {
+    font-size: 12px;
+  }
+}
+
+.field-bold {
+  .mat-form-field-label {
+    font-weight: bold;
+  }
+}
+
+.field-italic {
+  .mat-form-field-label {
+    font-style: italic;
+  }
+}

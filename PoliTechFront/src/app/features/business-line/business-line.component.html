@@ -1,0 +1,60 @@
+<div class="business-line-container">
+  <h1 class="page-title">Линия бизнеса</h1>
+  
+  
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" (click)="addBusinessLine()">
+          <mat-icon>add</mat-icon>
+          Добавить линию
+        </button>
+      </div>
+      
+        <div class="table-header">
+          <h3>Список линий бизнеса</h3>
+          <mat-form-field class="search-field"  appearance="outline" >
+            <mat-label>Поиск</mat-label>
+            <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск по названию или коду">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>         
+
+        <table mat-table [dataSource]="filteredBusinessLines" class="business-table">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let element">{{element.id}}</td>
+          </ng-container>
+          
+          <ng-container matColumnDef="mpCode">
+            <th mat-header-cell *matHeaderCellDef>Код</th>
+            <td mat-cell *matCellDef="let element">{{element.mpCode}}</td>
+          </ng-container>
+          
+          <ng-container matColumnDef="mpName">
+            <th mat-header-cell *matHeaderCellDef>Название</th>
+            <td mat-cell *matCellDef="let element">{{element.mpName}}</td>
+          </ng-container>
+          
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+              <div class="action-buttons">
+                <button mat-button color="primary" class="action-button" (click)="editBusinessLine(element)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-button color="warn" class="action-button" (click)="deleteBusinessLine(element)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      
+    </mat-card-content>
+  </mat-card>
+  </div>
+

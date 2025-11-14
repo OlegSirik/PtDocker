@@ -1,0 +1,53 @@
+---
+description: стиль компонента таблица
+globs:
+---
+
+For displaing component with type datatable1 use the template
+
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+      
+        <div class="table-header">
+          <h3></h3>
+          <mat-form-field class="search-field"  appearance="outline" >
+            <mat-label>Поиск</mat-label>
+            <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>         
+
+        <table mat-table [dataSource]="filteredBusinessLines" class="business-table">
+          <ng-container matColumnDef="">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element"></td>
+          </ng-container>
+          
+          
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+              <div class="action-buttons">
+                <button mat-button color="primary" class="action-button" (click)="edit(element)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-button color="warn" class="action-button" (click)="delete(element)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      
+    </mat-card-content>
+  </mat-card>
+
+

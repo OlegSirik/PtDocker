@@ -1,0 +1,491 @@
+
+this feature is for editing json document  - product
+
+example json  -
+
+{
+
+  "id": 1202,
+
+  "lob": "NS",
+
+  "code": "NS-SRAVNIRU",
+
+  "name": "НС Сравниру",
+
+  "versionNo": 0,
+
+  "activationDelay": {
+
+    "minPeriod": "string",
+
+    "maxPeriod": "string",
+
+    "listOfPeriods": "string",
+
+    "defaultValue": "string"
+
+  },
+
+  "policyTerm": {
+
+    "minPeriod": "string",
+
+    "maxPeriod": "string",
+
+    "listOfPeriods": "string",
+
+    "defaultValue": "P1Y"
+
+  },
+
+  "quoteValidator": [
+
+    {
+
+      "lineNr": 0,
+
+      "keyLeft": "insAmount",
+
+      "ruleType": "RANGE",
+
+      "keyRight": "string",
+
+      "valueRight": "10000-200000",
+
+      "dataType": "NUMBER",
+
+      "errorText": "Ошибка в страховой сумме"
+
+    }
+
+  ],
+
+  "saveValidator": [
+
+    {
+
+      "lineNr": 0,
+
+      "keyLeft": "insAmount",
+
+      "ruleType": "RANGE",
+
+      "keyRight": "string",
+
+      "valueRight": "10000-200000",
+
+      "dataType": "NUMBER",
+
+      "errorText": "Ошибка в страховой сумме"
+
+    }
+
+  ],
+
+  "packages": [
+
+    {
+
+      "code": "Basic",
+
+      "name": "Простой",
+
+      "covers": [
+
+        {
+
+          "code": "PD",
+
+          "isMandatory": true,
+
+          "delayPeriod": "P0D",
+
+          "coverageTerm": "P1Y",
+
+          "isDeductibleMandatory": false,
+
+          "deductibles": [
+
+            {
+
+              "nr": 1,
+
+              "deductibleType": "string",
+
+              "deductible": 100,
+
+              "deductibleUnit": "SUM",
+
+              "deductibleSpecific": "EVERY"
+            }
+          ],
+        "limits": [
+          
+          {
+            "nr": 1,
+            "sumInsured": 100000,
+            "premium": 5000
+          },
+          {
+            "nr": 2,
+            "sumInsured": 200000,
+            "premium": 9000
+          }
+        ],
+
+        }
+
+      ]
+
+    }
+
+  ]
+
+}
+
+ 
+
+ 
+
+ 
+
+create service for API calls for get, post, put, delete document.
+
+primary key is  - ID,
+
+methods are get, post, put, delete make a call and comment them. Make mock code.
+
+ 
+
+make a page with route product/ { id }
+html, ts, css must be in separate files
+
+
+Name of page  - "Настройка продукта": {name},  h2
+
+ 
+
+Then carts with data
+
+add tab for them
+
+ 
+
+1. Main product data
+
+cart with buttons. add buttons - "Create new version", "Go to production"
+
+call a service methods, mock them
+
+ 
+
+cart with data.
+
+id - readonly, generated on serverside. after post operation, refresh state of document with resonce data
+
+lob - drop down list. take data from service metaproducts. mandatory
+
+name - textfield . mandatory
+
+versionNo - readonly
+
+versionStatus - readonly
+
+
+cart - "activationDelay":
+
+ "minPeriod": text field, optional, ISO 8601 Duration, add validation
+
+    "maxPeriod": text field, optional, ISO 8601 Duration, add validation
+
+    "listOfPeriods": text field, optional, array of ISO 8601 Duration, add validation
+
+    "defaultValue": text field, optional, ISO 8601 Duration, add validation
+
+ 
+
+cart - "policyTerm": {
+
+"minPeriod": text field, optional, ISO 8601 Duration, add validation
+
+    "maxPeriod": text field, optional, ISO 8601 Duration, add validation
+
+    "listOfPeriods": text field, optional, array of ISO 8601 Duration, add validation
+
+   "defaultValue": text field, optional, ISO 8601 Duration, add validation
+
+ 
+
+2. cart - "quoteValidator":
+
+add buttons cart with button "add line"
+
+call dialog by the button with fields:
+
+      "lineNr": number, optional,
+
+      "keyLeft": drop down item, mandatory, take list of vars from service. mock it.
+
+      "ruleType": drop down item, mandatory, take list of vars from service. mock it.
+
+      "keyRight": drop down item, optional, take list of vars from service. mock it.
+
+      "valueRight": textfield, optional,
+
+      "dataType": drop down item, mandatory, values - Number,String,Date,Duration
+
+      "errorText": textfield, mandatory
+
+    }
+
+ 
+
+ 
+
+name of table - "Проверки предрасчета", h3, allign left
+
+search field - same line, align right
+
+ 
+
+table with pagination, no inplace editor, columns:
+
+      "lineNr",
+
+      "keyLeft",
+
+      "ruleType",
+
+      "keyRight",
+
+      "valueRight",
+
+      "dataType",
+
+      "errorText",
+
+                  "..."
+
+last column are actions - edit and delete. show icon.
+
+for edit show dialog, same as for create.
+
+for delete show question.
+
+ 
+
+3. cart - "saveValidator":
+
+add buttons cart with button "add line"
+
+call dialog by the button with fields:
+
+      "lineNr": number, optional,
+
+      "keyLeft": drop down item, mandatory, take list of vars from service. mock it.
+
+      "ruleType": drop down item, mandatory, take list of vars from service. mock it.
+
+      "keyRight": drop down item, optional, take list of vars from service. mock it.
+
+      "valueRight": textfield, optional,
+
+      "dataType": drop down item, mandatory, values - Number,String,Date,Duration
+
+      "errorText": textfield, mandatory
+
+    }
+
+ 
+
+ 
+
+name of table - "Проверки договора", h3, allign left
+
+search field - same line, align right
+
+ 
+
+table with pagination, no inplace editor, columns:
+
+      "lineNr",
+
+      "keyLeft",
+
+      "ruleType",
+
+      "keyRight",
+
+      "valueRight",
+
+      "dataType",
+
+      "errorText",
+
+                  "..."
+
+last column are actions - edit and delete. show icon.
+
+for edit show dialog, same as for create.
+
+for delete show question.
+
+   
+
+4. tab page - Packages
+
+ 
+
+cart - Packages
+
+add buttons cart with button "add Package"
+
+call dialog by the button with fields:
+
+      "code": text, mandatory
+
+      "name": text, mandatory
+
+    }
+
+ 
+
+name of table - "Пакеты покрвтий", h3, allign left
+
+search field - same line, align right
+
+ 
+
+table with pagination, no inplace editor, columns:
+
+      "code",
+
+      "name",
+
+                  "..."
+
+last column are actions - text button "covers" with badge with count of covers, when button pressed - show/refresh table "covers"
+
+, and icon buttons - edit and delete. show icon.
+
+for edit show dialog, same as for create.
+
+for delete show question.
+
+ 
+
+cart - Covers
+
+add buttons cart with button "add Cover"
+
+call dialog by the button with fields:
+
+      "code": drop down list, mandatory, make a stub in service
+
+      "isMandatory": checkbox, mandatory, default true
+
+                  delayPeriod - textfield, mandatory, default "P0D"
+
+                  coverageTerm - textfield, mandatory, default "P1Y"
+
+                  isDeductibleMandatory - checkbox, mandatory, default false
+
+    }
+
+ 
+
+name of table - "Покрытия", h3, allign left
+
+search field - same line, align right
+
+ 
+
+table with pagination, no inplace editor, columns:
+
+      "code",
+
+      "name","isMandatory","delayPeriod","coverageTerm","isDeductibleMandatory"
+
+                  "..."
+
+last column are actions - text button "deductibles" with badge with count of deductibles, when button pressed - show/refresh table "deductibles"
+
+, and icon buttons - edit and delete. show icon.
+
+for edit show dialog, same as for create.
+
+for delete show question.
+
+ 
+
+cart - Deductibles
+
+add buttons cart with button "add Deductible"
+
+call dialog by the button with fields:
+
+      "nr": number, optional
+
+      "deductibleType": dropdown, mandatory, values are [OPTIONAL, MANDATORY]
+
+                  deductible - textfield, mandatory, default 0
+
+                  deductibleUnit - dropdown, mandatory, values are [PERCENT, DAY, RUB]
+
+                  deductibleSpecific - dropdown, mandatory, values are [EVERY, FROM SECOND]
+
+    }
+
+ 
+
+name of table - "Франшизы", h3, allign left
+
+search field - same line, align right
+
+ 
+
+table with pagination, no inplace editor, columns:
+
+      "nr",
+
+      "deductibleType","deductible","deductibleUnit","deductibleSpecific"
+
+                  "..."
+
+last column are actions -  icon buttons - edit and delete. show icon.
+
+for edit show dialog, same as for create.
+
+for delete show question.
+
+
+
+
+
+
+
+
+
+
+add tab page with title "Policy"
+add cart
+add popup list with values 'Policy Holder', 'Insured Object', 'Others'
+add button "Reload vars"
+add table with columns "Category','Field','Название',	'Код', '...'
+take data from policyVersiopn.vars
+sort by varPath
+
+if filter list = 'Policy Holder' then filter objects with path starts from 'policyHolder.'
+if string after  'policyHolder.' contains '.' then column1 = left part of string and column2 = right part
+if no '.' then column1 = 'policyHolder' and column2 = varPath
+'Название' = "varName"
+'Код' = "varCode"
+if value of column1 equals value from previous record then does not show value
+last column - add icon buttom "Show" and show dialog with all object fields
+and button "Delete" to delete object from vars array
+
+if filter list = 'Insured Object' then filter objects with path starts from 'insuredObject.'
+all others functions the same as for Policy Holder
+
+If filter list = 'Others' then show record with varPath does not starts with 'policyHolder.' or 'insuredObject.'

@@ -1,0 +1,2 @@
+create docker image for this application and all components for instance database postgre
+image must be compatible with docker hub

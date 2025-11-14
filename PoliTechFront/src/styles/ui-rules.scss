@@ -1,0 +1,139 @@
+// UI Rules - Reusable component styles
+@import 'variables';
+@import 'mixins';
+
+// biz-table1 - Business table style with search header and action buttons
+// Usage: Apply class="biz-table1" to your table container
+.biz-table1 {
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 0;
+    
+    h3 {
+      margin: 0;
+      @include heading-2;
+      font-size: $font-size-xl;
+    }
+    
+    .search-field {
+      min-width: 300px;
+      margin: 0;
+      
+      .mat-mdc-form-field {
+        height: 20px;
+        line-height: 20px;
+      }
+      
+      input.mat-input-element {
+        height: 20px;
+        line-height: 20px;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+      
+      .mat-icon {
+        line-height: 20px;
+      }
+    }
+  }
+  
+  .business-table {
+    width: 100%;
+    
+    th.mat-header-cell {
+      @include table-header;
+      
+      &:last-child {
+        text-align: center;
+        width: 120px;
+      }
+    }
+    
+    td.mat-cell, th.mat-header-cell {
+      @include table-cell;
+      
+      &:last-child {
+        text-align: center;
+      }
+    }
+  }
+  
+  .action-buttons {
+    @include flex-end;
+    gap: $spacing-xs;
+  }
+  
+  .action-button {
+    @include flex-center;
+    gap: $spacing-xs;
+    transition: all $transition-base;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: $shadow-sm;
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  // Responsive adjustments
+  @include responsive(sm) {
+    .table-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-md;
+      
+      .search-field {
+        min-width: 100%;
+      }
+    }
+  }
+}
+
+// biz-card1 - Business card style with button section
+// Usage: Apply class="biz-card1" to your card container
+.biz-card1 {
+  @include card-elevated;
+  
+  .button-section {
+    @include card-base;
+    padding: $spacing-md;
+    margin-bottom: $spacing-lg;
+    background-color: $gray-50;
+    
+    .add-button {
+      @include button-primary;
+      @include flex-center;
+      gap: $spacing-sm;
+    }
+  }
+}
+
+// biz-form1 - Business form style with form fields
+// Usage: Apply class="biz-form1" to your form container
+.biz-form1 {
+  .form-row {
+    @include flex-start;
+    gap: $spacing-lg;
+    flex-wrap: wrap;
+    
+    .form-field {
+      min-width: 300px;
+      flex: 1;
+    }
+  }
+  
+  @include responsive(sm) {
+    .form-row {
+      flex-direction: column;
+      
+      .form-field {
+        min-width: 100%;
+      }
+    }
+  }
+}

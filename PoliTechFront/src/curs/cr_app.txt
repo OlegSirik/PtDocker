@@ -1,0 +1,91 @@
+новое приложение на ангуляре с использованием только стандартной библиотеки  matherial UI
+добавь все компоненты в shared UI
+
+приложение содержит тулбар с названиями основных разделов. Названия выравнены вправо. С левого края должны быть иконка с эмдлемой приложения.
+авторизация не нужна.
+
+первый раздел "Линия бизнеса"
+
+страница "Линия бизнеса" содержит заголовок выравненный влево
+
+Далее раздел с данными.
+Раздел обведен прямоугольником с закругленными краями . линия светло серого цвета
+
+Внутри раздел с кнопками. Так же обведен светно серм прямоугольником.
+Внутри кнопка "Добавить линию"
+
+Таблица 100% ширины с колонками - id, code, name, actions
+Данные для корлонок поставляет сервис. Сделай заглушку
+Данные - id number, code char(30), name char(200)
+колонка Action содержин кнопки для редактирования и удаления записи. Кнопки сделай текстовые с иконкой в начале. 
+Кнопки выравнены в конец строки, расстояние между ними 4px
+
+
+
+
+
+
+
+
+Add action to buttons "добавить линию" and "редактирование"
+navigate to the page lob-edit
+
+Page lob-edit
+This page for editing document lob
+Example of document is -
+[
+  {
+    "mpCode": "MORTGAGE",  
+    "mpName": "Ипотека",
+    "mpVars": [
+      {
+        "varCode": "InsAmount",
+        "varType": "IN",
+        "varPath": "string"
+      }
+    ],
+    "mpCovers": [
+      {
+        "coverCode": "string",
+        "coverName": "string",
+        "risks": "string"
+      }
+    ]
+  }
+]
+
+if value of "mpCode" from first page is empty then its a new document otherwise read data from service, create a stub for that. 
+
+Page header - Линия бизнеса: + name of corresponded line, class - page title, align left
+On the same line add button "Save". Align it to the right
+button is enables only if document changed and can be saved to server
+make servise stub for saving
+
+first segment rounded rectangle
+items - mpCode enabled only if record is new. if its editing then disable item
+mpName - textitem
+textfields are on the same line and outlined.
+
+secont segment - mat-card rounded rectange
+then <div class="button-section"> rounded rectangle with button "add var", align left
+then name of table - "vars", 20px, align left, and search item at the same line, align right
+table with columns varCode title "код атрибута", varType - title "Тип переменной", varPath, action column with title "..."
+and buttons Edit, Delete with icons
+table readonly
+Delete button delete record, must be a dialog with question
+Edit call a dialog with textfield varCode, dropdown list varType with values [IN,VAR,OUT] and varPath a textitem with min width - 400px 
+Add button - call the same dialog
+
+3th segment - rounded rectange. Take template - datatable1
+then rounded rectangle with button "add cover", align left
+then name of table - "covers", 20px, align left, and search item at the same line, align right
+table with columns coverCode title "код покрытия", coverName -  title "Покрытие", risks column with title "Список рисков",
+action column with title "..." and buttons Edit, Delete with icons
+
+Delete button delete record, must be a dialog with question
+Edit call a dialog with textfield coverCode, textfield coverName and risks a textitem with min width - 200px 
+Add button - call the same dialog
+
+html, ts, css must be in separate files
+
+

@@ -1,0 +1,54 @@
+feature - files
+This page is for managing file templates
+
+
+Data returns from API, if API does not exists then return data from mock
+
+Page header - "Файлы",  class - h1 class="page-title" , align left
+
+Add <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" ">
+          <mat-icon>add</mat-icon>
+          Новый продукт
+        </button>
+      </div>
+
+onClick - show dialog "Add new file"
+Fields - 
+productCode - dropdown from service products 
+fileType - dropdown { Policy, KID, HZ}
+fileDescription - textfield
+file - file
+If Ok pressed call API /admin/files with json in body 
+{
+    "fileType": "policy",
+    "fileDescription": "policy pf",
+    "productCode": "LF"
+}
+the method return id
+If no error then call API /admin/files/{ID} with file in body
+all API call must be in done in service files.service.ts
+
+
+
+Then text h3 - "список файлов" align left
+search item on the same line, align right
+
+2th segment - rounded rectange. 
+Than table class="business-table"
+Table with search, and pagination 
+table with columns id, productCode title "код продукта", fileType -  title "тип файла", fileDescription column with title "Описание",
+action column with title "..." and buttons Edit, Delete Run with icons
+
+Delete button delete record, must be a dialog with question and that call api method.
+delete /admin/files/{ID}
+Mock it
+
+Run button calls a dialog with textarea with header "key-value"
+if button "Ok" pressed make an API call /admin/files/{id}/cmd/process with json from textfield as a bodymethod retuns a file. download them/
+ 
+Add page to application navbar
+
+html, ts, css must be in separate files

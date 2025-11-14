@@ -1,0 +1,31 @@
+  "error": {
+    "code": 404,
+    "message": "File Not Found",
+    "errors": [{
+      "domain": "Calendar",
+      "reason": "ResourceNotFoundException",
+      "message": "File Not Found"
+      "field": "product.cdoe"
+    }]
+  }
+
+error.code - Represents the code for this error. This property value will usually represent the HTTP response code. If there are multiple errors, code will be the error code for the first error.
+error.message - A human readable message providing more details about the error. If there are multiple errors, message will be the message for the first error.
+error.errors - Container for any additional information regarding the error. If the service returns multiple errors, each element in the errors array represents a different error.
+error.errors[].domain - Unique identifier for the service raising this error. This helps distinguish service-specific errors (i.e. error inserting an event in a calendar) from general protocol errors (i.e. file not found).
+error.errors[].reason - Unique identifier for this error. Different from the error.code property in that this is not an http response code.
+error.errors[].message - A human readable message providing more details about the error. If there is only one error, this field will match error.message.
+error.errors[].field - A reference to the field.
+
+create a domain model in domain.error package
+
+create custom exceptions in package exception for the next http codes
+400	Bad Request.
+401	Unauthorized (JWT not valid).
+404 Not found
+500 Internal Server Error
+503	Service Unavailable
+parameters for constructor are - error from error domain
+
+
+

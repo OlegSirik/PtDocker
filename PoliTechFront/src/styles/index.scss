@@ -1,0 +1,67 @@
+// Global Style Library
+@import 'variables';
+@import 'mixins';
+@import 'utilities';
+@import 'ui-rules';
+
+// Global Base Styles
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: $font-family-primary;
+  font-size: $font-size-base;
+  line-height: 1.5;
+  color: $gray-900;
+  background-color: $gray-50;
+}
+
+// Global Link Styles
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-base;
+  
+  &:hover {
+    color: $primary-dark;
+  }
+}
+
+// Global Button Reset
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// Global Input Reset
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// Global Table Reset
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+// Global Image Styles
+img {
+  max-width: 100%;
+  height: auto;
+}

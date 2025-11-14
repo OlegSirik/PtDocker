@@ -1,0 +1,123 @@
+.calculator-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.page-title {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.save-button, .json-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-content {
+  padding: 20px 0;
+}
+
+.datatable-card {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.button-section {
+  margin-bottom: 20px;
+}
+
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.search-field {
+  width: 300px;
+}
+
+.calculator-table {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.action-button {
+  min-width: 40px;
+  padding: 0;
+}
+
+.action-button1 {
+  min-width: 80px;
+  padding: 0 8px;
+}
+
+.var-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.var-name {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+mat-paginator {
+  margin-top: 20px;
+}
+
+mat-tab-group {
+  margin-top: 20px;
+}
+
+mat-card-content {
+  padding: 20px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

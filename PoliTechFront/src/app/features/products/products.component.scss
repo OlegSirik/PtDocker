@@ -1,0 +1,72 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.products-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .page-header {
+    margin-bottom: 20px;
+
+    .page-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+  }
+
+  .datatable-card {
+    margin-bottom: 20px;
+
+    .button-section {
+      @include card-base;
+      padding: $spacing-md;
+      margin-bottom: $spacing-lg;
+      background-color: $gray-50;
+
+      .add-button {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+      }
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+      }
+
+      .search-field {
+        width: 300px;
+      }
+    }
+
+    .business-table {
+      width: 100%;
+      margin-bottom: 16px;
+
+      .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+
+        .action-button {
+          min-width: auto;
+          padding: 0 8px;
+        }
+      }
+    }
+
+    mat-paginator {
+      border-top: 1px solid #e0e0e0;
+    }
+  }
+}

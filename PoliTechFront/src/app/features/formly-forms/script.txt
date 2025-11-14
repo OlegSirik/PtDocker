@@ -1,0 +1,16 @@
+add page product/{product-id}/version/{version-no}/from
+
+put 10 text field on this page
+
+create service
+object field { style, show, label }
+fields array of field
+http API GET /product/{product-id}/version/{version-no}/forms returns JSON with array of fields
+
+loop throught fields and change form fields - set label, set stylename, set mandatory, set visible = true
+if form field is not in array than set visibility = false
+
+after submit - sent post to the same API POST /product/{product-id}/version/{version-no}/forms
+
+add mock JSON in service in case api is not reached
+

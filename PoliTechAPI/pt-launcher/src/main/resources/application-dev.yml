@@ -1,0 +1,23 @@
+# Development profile configuration
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pt_db_dev
+    username: spring
+    password: spring
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: false
+
+# Logging configuration for Flyway
+logging:
+  level:
+    org.flywaydb: DEBUG
+    ru.pt: DEBUG

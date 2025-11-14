@@ -1,0 +1,101 @@
+
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+
+
+.business-line-container {
+  padding: $spacing-lg;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  @include heading-1;
+  text-align: left;
+  margin-bottom: $spacing-lg;
+}
+
+.data-section {
+  @include card-elevated;
+}
+
+.button-section {
+  @include card-base;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+  background-color: $gray-50;
+}
+
+.add-button {
+  @include button-primary;
+  @include flex-center;
+  gap: $spacing-sm;
+}
+
+.business-table {
+  width: 100%;
+  
+  th.mat-header-cell {
+    @include table-header;
+  }
+  
+  td.mat-cell, th.mat-header-cell {
+    @include table-cell;
+  }
+}
+
+.action-buttons {
+  @include flex-end;
+  gap: $spacing-xs;
+}
+
+.action-button {
+  @include flex-center;
+  gap: $spacing-xs;
+  transition: all $transition-base;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.table-header {
+  @include flex-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  
+  .table-title {
+    @include heading-2;
+    margin: 0;
+    font-size: $font-size-xl;
+  }
+  
+  .search-field {
+    min-width: 400px;
+    appearance: outline;
+  }
+
+}
+
+// Responsive adjustments
+@include responsive(sm) {
+  .business-line-container {
+    padding: $spacing-xl;
+  }
+  
+  .page-title {
+    font-size: $font-size-4xl;
+  }
+}
+
+@include responsive(md) {
+  .business-line-container {
+    padding: $spacing-2xl;
+  }
+}

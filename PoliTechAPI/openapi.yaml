@@ -1,0 +1,1144 @@
+openapi: 3.0.3
+info:
+  title: Insurance Policy Management System API
+  description: A Spring Boot application for managing insurance policies with advanced number generation capabilities
+  version: 1.0.0
+  contact:
+    name: VSK API Team
+    email: sirik@vsk.ru
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.vsk.ru
+    description: Production server
+
+paths:
+  # Number Generator Endpoints
+  /test/policy/nextnumber/{id}:
+    post:
+      summary: Generate next policy number
+      description: Generates the next sequential policy number using the specified generator configuration
+      operationId: generateNextNumber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Number generator ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Optional key-value pairs for custom mask replacements
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+            example:
+              NS: "INS"
+              PREFIX: "POL"
+      responses:
+        '200':
+          description: Generated policy number
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "2025-INS-0001"
+        '400':
+          description: Bad request - generator not found
+        '500':
+          description: Internal server error
+
+  # Policy Processing Endpoints
+  /test/policy/inner:
+    post:
+      summary: Process policy with validation and calculation
+      description: Processes a policy request with validation, calculation, and returns structured policy data
+      operationId: processPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyRequest'
+            example:
+              product:
+                code: "NS-SRAVNIRU"
+              issueDate: "01-01-2026"
+              issueTimeZone: "3"
+              startDate: "12-12-2005"
+              endDate: "12-12-2026"
+              premium: "2000.00"
+      responses:
+        '200':
+          description: Processed policy data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InnerPolicy'
+        '400':
+          description: Bad request - validation errors
+        '500':
+          description: Internal server error
+
+  # Product Management Endpoints
+  /admin/products:
+    get:
+      summary: List all products
+      description: Returns a list of all active products with summary information
+      operationId: listProducts
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductSummary'
+    
+    post:
+      summary: Create new product
+      description: Creates a new insurance product with initial version
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+      responses:
+        '200':
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Bad request - validation errors
+        '500':
+          description: Internal server error
+
+  /admin/products/{id}/versions/{versionNo}:
+    get:
+      summary: Get product version
+      description: Returns the JSON configuration for a specific product version
+      operationId: getProductVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+            format: int64
+        - name: versionNo
+          in: path
+          required: true
+          description: Version number
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product version configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+        '404':
+          description: Product or version not found
+    
+    put:
+      summary: Update product version
+      description: Updates a development version of a product (only dev versions can be updated)
+      operationId: updateProductVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+            format: int64
+        - name: versionNo
+          in: path
+          required: true
+          description: Version number
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVersion'
+      responses:
+        '200':
+          description: Updated product version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+        '400':
+          description: Bad request - only dev versions can be updated
+        '404':
+          description: Product or version not found
+
+  /admin/products/{id}/versions/{versionNo}/cmd/create:
+    post:
+      summary: Create new product version
+      description: Creates a new version of a product as a copy of the specified version
+      operationId: createProductVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+            format: int64
+        - name: versionNo
+          in: path
+          required: true
+          description: Source version number
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created product version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+        '400':
+          description: Bad request - only one version can be in dev status
+        '404':
+          description: Product or source version not found
+
+  /admin/products/{id}:
+    delete:
+      summary: Delete product
+      description: Soft deletes a product (sets isDeleted flag)
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Product deleted successfully
+        '404':
+          description: Product not found
+
+  /admin/products/{id}/versions/{versionNo}:
+    delete:
+      summary: Delete product version
+      description: Deletes a development version of a product (only dev versions can be deleted)
+      operationId: deleteProductVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+            format: int64
+        - name: versionNo
+          in: path
+          required: true
+          description: Version number
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Version deleted successfully
+        '400':
+          description: Bad request - only dev versions can be deleted
+        '404':
+          description: Product or version not found
+
+  # LOB Management Endpoints
+  /admin/lobs:
+    get:
+      summary: List all LOBs
+      description: Returns a list of all active Line of Business configurations
+      operationId: listLobs
+      responses:
+        '200':
+          description: List of LOBs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LobSummary'
+    
+    post:
+      summary: Create new LOB
+      description: Creates a new Line of Business configuration
+      operationId: createLob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LobCreateRequest'
+      responses:
+        '200':
+          description: Created LOB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lob'
+        '400':
+          description: Bad request - validation errors
+
+  /admin/lobs/{lobCode}:
+    get:
+      summary: Get LOB by code
+      description: Returns the JSON configuration for a specific LOB
+      operationId: getLobByCode
+      parameters:
+        - name: lobCode
+          in: path
+          required: true
+          description: LOB code
+          schema:
+            type: string
+      responses:
+        '200':
+          description: LOB configuration
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: LOB not found
+    
+    put:
+      summary: Update LOB
+      description: Updates a LOB configuration
+      operationId: updateLob
+      parameters:
+        - name: lobCode
+          in: path
+          required: true
+          description: LOB code
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated LOB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lob'
+        '404':
+          description: LOB not found
+
+  # Notes API Endpoints
+  /api/notes:
+    get:
+      summary: List all notes
+      description: Returns a list of all notes
+      operationId: listNotes
+      responses:
+        '200':
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+    
+    post:
+      summary: Create new note
+      description: Creates a new note
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreateRequest'
+      responses:
+        '200':
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+
+  /api/notes/{id}:
+    get:
+      summary: Get note by ID
+      description: Returns a specific note by ID
+      operationId: getNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Note details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '404':
+          description: Note not found
+    
+    put:
+      summary: Update note
+      description: Updates an existing note
+      operationId: updateNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreateRequest'
+      responses:
+        '200':
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '404':
+          description: Note not found
+    
+    delete:
+      summary: Delete note
+      description: Deletes a note by ID
+      operationId: deleteNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Note deleted successfully
+        '404':
+          description: Note not found
+
+  # Sample API Endpoints
+  /api/items:
+    get:
+      summary: List in-memory items
+      description: Returns a list of all in-memory items
+      operationId: listItems
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: integer
+                      format: int64
+                    value:
+                      type: string
+    
+    post:
+      summary: Create in-memory item
+      description: Creates a new in-memory item with raw string body
+      operationId: createItem
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Created item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: integer
+                    format: int64
+                  value:
+                    type: string
+
+  /api/items/{id}:
+    get:
+      summary: Get in-memory item
+      description: Returns a specific in-memory item by ID
+      operationId: getItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Item value
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Item not found
+    
+    put:
+      summary: Update in-memory item
+      description: Updates an existing in-memory item
+      operationId: updateItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: integer
+                    format: int64
+                  value:
+                    type: string
+        '404':
+          description: Item not found
+    
+    delete:
+      summary: Delete in-memory item
+      description: Deletes an in-memory item by ID
+      operationId: deleteItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Item ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Item deleted successfully
+        '404':
+          description: Item not found
+
+components:
+  schemas:
+    # Number Generator Schema
+    NumberGenerator:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Generator ID
+        productCode:
+          type: string
+          description: Product code this generator is associated with
+          example: "NS-SRAVNIRU"
+        mask:
+          type: string
+          description: Number generation mask using {KEY} format
+          example: "{YYYY}-{NS}-{XXXX}"
+        resetPolicy:
+          type: string
+          enum: [YEARLY, MONTHLY, NEVER]
+          description: Reset policy for sequence numbers
+          example: "YEARLY"
+        maxValue:
+          type: integer
+          description: Maximum value before reset
+          example: 999999
+        lastReset:
+          type: string
+          format: date
+          description: Date of last reset
+        currentValue:
+          type: integer
+          description: Current sequence value
+          example: 0
+
+    NumberGeneratorConfig:
+      type: object
+      properties:
+        mask:
+          type: string
+          description: Number generation mask
+          example: "{YYYY}-{NS}-{XXXX}"
+        maxNumber:
+          type: integer
+          description: Maximum number value
+          example: 9999
+        resetPolicy:
+          type: string
+          enum: [YEARLY, MONTHLY, NEVER]
+          description: Reset policy
+          example: "YEARLY"
+
+    # Policy Schemas
+    PolicyRequest:
+      type: object
+      required:
+        - product
+      properties:
+        product:
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              type: string
+              description: Product code
+              example: "NS-SRAVNIRU"
+        issueDate:
+          type: string
+          description: Policy issue date
+          example: "01-01-2026"
+        issueTimeZone:
+          type: string
+          description: Issue time zone
+          example: "3"
+        startDate:
+          type: string
+          description: Policy start date
+          example: "12-12-2005"
+        endDate:
+          type: string
+          description: Policy end date
+          example: "12-12-2026"
+        premium:
+          type: string
+          description: Policy premium amount
+          example: "2000.00"
+
+    InnerPolicy:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/ProductInfo'
+        waitingPeriod:
+          type: string
+          description: Waiting period configuration
+          example: "P0D"
+        policyTerm:
+          type: string
+          description: Policy term configuration
+          example: "P1Y"
+        issueDate:
+          type: string
+          description: Issue date
+          example: "01-01-2026"
+        issueTimeZone:
+          type: string
+          description: Issue time zone
+          example: "3"
+        startDate:
+          type: string
+          description: Start date
+          example: "12-12-2005"
+        endDate:
+          type: string
+          description: End date
+          example: "12-12-2026"
+        premium:
+          type: string
+          description: Premium amount
+          example: "2000.00"
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyError'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyAttribute'
+        bundles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyBundle'
+
+    ProductInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1202
+        lob:
+          type: string
+          example: "NS"
+        code:
+          type: string
+          example: "NS-SRAVNIRU"
+        name:
+          type: string
+          example: "НС Сравниру"
+        versionNo:
+          type: integer
+          example: 0
+        versionStatus:
+          type: string
+          example: "DEV"
+
+    PolicyError:
+      type: object
+      properties:
+        keyLeft:
+          type: string
+          description: Field that caused the error
+          example: "insAmount"
+        errorText:
+          type: string
+          description: Error message
+          example: "Ошибка в страховой сумме"
+
+    PolicyAttribute:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Attribute key
+          example: "InsAmount"
+        path:
+          type: string
+          description: JSONPath to value
+          example: "string"
+        value:
+          type: string
+          description: Attribute value
+          example: "100000"
+
+    PolicyBundle:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "Basic"
+        name:
+          type: string
+          example: "Простой"
+        premium:
+          type: string
+          example: "0"
+        covers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyCover'
+
+    PolicyCover:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "PD"
+        existsInRequest:
+          type: boolean
+          example: false
+        isMandatory:
+          type: boolean
+          example: true
+        waitingPeriod:
+          type: string
+          example: "P0D"
+        coverageTerm:
+          type: string
+          example: "P1Y"
+        startDate:
+          type: string
+          example: ""
+        endDate:
+          type: string
+          example: ""
+        insAmount:
+          type: string
+          example: ""
+        premium:
+          type: string
+          example: ""
+        isDeductibleMandatory:
+          type: boolean
+          example: false
+        deductibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyDeductible'
+
+    PolicyDeductible:
+      type: object
+      properties:
+        nr:
+          type: integer
+          example: 1
+        deductibleType:
+          type: string
+          example: "UNCONDITIONAL"
+        deductible:
+          type: number
+          format: double
+          example: 100
+        deductibleUnit:
+          type: string
+          example: "SUM"
+        deductibleSpecific:
+          type: string
+          example: "EVERY"
+
+    # Product Schemas
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1202
+        lob:
+          type: string
+          example: "NS"
+        code:
+          type: string
+          example: "NS-SRAVNIRU"
+        name:
+          type: string
+          example: "НС Сравниру"
+        prodVersionNo:
+          type: integer
+          nullable: true
+          example: null
+        devVersionNo:
+          type: integer
+          nullable: true
+          example: 1
+        isDeleted:
+          type: boolean
+          example: false
+
+    ProductSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        lob:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        prodVersionNo:
+          type: integer
+          nullable: true
+        devVersionNo:
+          type: integer
+          nullable: true
+
+    ProductCreateRequest:
+      type: object
+      required:
+        - lob
+        - code
+        - name
+      properties:
+        lob:
+          type: string
+          description: Line of Business code
+          example: "NS"
+        code:
+          type: string
+          description: Product code
+          example: "NS-SRAVNIRU"
+        name:
+          type: string
+          description: Product name
+          example: "НС Сравниру"
+        numberGenerator:
+          $ref: '#/components/schemas/NumberGeneratorConfig'
+
+    ProductVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1202
+        lob:
+          type: string
+          example: "NS"
+        code:
+          type: string
+          example: "NS-SRAVNIRU"
+        name:
+          type: string
+          example: "НС Сравниру"
+        versionNo:
+          type: integer
+          example: 1
+        versionStatus:
+          type: string
+          example: "DEV"
+        activationDelay:
+          $ref: '#/components/schemas/PeriodConfig'
+        policyTerm:
+          $ref: '#/components/schemas/PeriodConfig'
+        quoteValidator:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationRule'
+        saveValidator:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationRule'
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductPackage'
+        numberGenerator:
+          $ref: '#/components/schemas/NumberGeneratorConfig'
+
+    PeriodConfig:
+      type: object
+      properties:
+        minPeriod:
+          type: string
+          example: "string"
+        maxPeriod:
+          type: string
+          example: "string"
+        listOfPeriods:
+          type: string
+          example: "string"
+        defaultValue:
+          type: string
+          example: "P1Y"
+
+    ValidationRule:
+      type: object
+      properties:
+        lineNr:
+          type: integer
+          example: 0
+        keyLeft:
+          type: string
+          example: "insAmount"
+        ruleType:
+          type: string
+          example: "RANGE"
+        keyRight:
+          type: string
+          example: "string"
+        valueRight:
+          type: string
+          example: "10000-200000"
+        dataType:
+          type: string
+          example: "NUMBER"
+        errorText:
+          type: string
+          example: "Ошибка в страховой сумме"
+
+    ProductPackage:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "Basic"
+        name:
+          type: string
+          example: "Простой"
+        covers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCover'
+
+    ProductCover:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "PD"
+        isMandatory:
+          type: boolean
+          example: true
+        delayPeriod:
+          type: string
+          example: "P0D"
+        coverageTerm:
+          type: string
+          example: "P1Y"
+        isDeductibleMandatory:
+          type: boolean
+          example: false
+        deductibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDeductible'
+
+    ProductDeductible:
+      type: object
+      properties:
+        nr:
+          type: integer
+          example: 1
+        deductibleType:
+          type: string
+          example: "string"
+        deductible:
+          type: number
+          format: double
+          example: 100
+        deductibleUnit:
+          type: string
+          example: "SUM"
+        deductibleSpecific:
+          type: string
+          example: "EVERY"
+
+    # LOB Schemas
+    Lob:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+          description: LOB code
+        name:
+          type: string
+          description: LOB name
+        lob:
+          type: object
+          description: LOB configuration JSON
+        isDeleted:
+          type: boolean
+          example: false
+
+    LobSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        mpCode:
+          type: string
+          description: LOB code
+        mpName:
+          type: string
+          description: LOB name
+
+    LobCreateRequest:
+      type: object
+      required:
+        - code
+        - name
+        - lob
+      properties:
+        code:
+          type: string
+          description: LOB code
+        name:
+          type: string
+          description: LOB name
+        lob:
+          type: object
+          description: LOB configuration JSON
+
+    # Note Schemas
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+          description: Note title
+        content:
+          type: string
+          description: Note content
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+
+    NoteCreateRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Note title
+        content:
+          type: string
+          description: Note content
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Number Generator
+    description: Policy number generation operations
+  - name: Policy Processing
+    description: Policy validation and calculation operations
+  - name: Product Management
+    description: Insurance product management operations
+  - name: LOB Management
+    description: Line of Business management operations
+  - name: Notes
+    description: Note management operations
+  - name: Items
+    description: In-memory item management operations

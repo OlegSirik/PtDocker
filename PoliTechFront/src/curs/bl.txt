@@ -1,0 +1,20 @@
+add new tab "Policy Holder" on bussines-line-edit.html page
+add div with header "PolicyHolder"
+add table, no search, no pagination
+
+take data from this.businessLine.mpVars 
+filter , take record only with varPath starts with policyHolder.
+sort data by varNr
+first column = "person" in varPath starts with "policyHolder.person." and second column = string after "policyHolder.person."
+first column = "phone" in varPath starts with "policyHolder.phone." and second column = string after "policyHolder.phone."
+first column = "passport" in varPath starts with "policyHolder.passport." and second column = string after "policyHolder.passport."
+first column = "address" in varPath starts with "policyHolder.address." and second column = string after "policyHolder.address."
+first column = "organization" in varPath starts with "policyHolder.organization." and second column = string after "policyHolder.organization."
+first column = "policy Holderh" in other cases, and second column = string after "policyHolder."
+3 column value is varName
+4 column value is varCode
+last column has one button "Delete" as an icon button.
+if button pressed < delete record from mpVars
+
+
+add card on

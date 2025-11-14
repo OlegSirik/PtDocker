@@ -1,0 +1,36 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.toolbar-content {
+  @include flex-between;
+  width: 100%;
+}
+
+.app-icon {
+  @include flex-center;
+  
+  mat-icon {
+    font-size: $font-size-2xl;
+    color: $white;
+  }
+}
+
+.nav-sections {
+  @include flex-center;
+  gap: $spacing-md;
+}
+
+.nav-button {
+  color: $white;
+  font-weight: 500;
+  transition: all $transition-base;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,10 @@
+on button pressed "Новый продукт"
+show dialog window with 3 text items, each on new line
+  "lob" - List , source for list is - businessLineService.getLobCodes()
+  "code": text
+  "name": text
+
+and 2 buttins - cancel and close dialog window
+Create - call 
+productService.createProduct(this.product)
+if now error than call page product with new id 

@@ -1,0 +1,334 @@
+example of calculator JSON
+
+{
+
+  "id": "string",
+
+  "productId": "string",
+
+  "productCode": "string",
+
+  "versionNo": "string",
+
+  "packageNo": "string",
+
+  "vars": [
+
+    {
+
+      "varCode": "ph_firstname",
+
+      "varName": "Имя страхователя",
+
+      "varPath": "policyHolder.person.firstName",
+
+      "varType": "IN",
+
+      "varValue": "string"
+
+    }
+
+  ],
+
+  "formulas": [
+
+    {
+
+      "varCode": "ph_firstname",
+
+      "varName": "Имя страхователя",
+
+      "lines": [
+
+        {
+
+          "nr": "string",
+
+          "conditionLeft": {
+
+            "varCode": "ph_firstname",
+
+            "varName": "Имя страхователя"
+
+          },
+
+          "conditionOperator": "string",
+
+          "conditionRight": {
+
+            "varCode": "ph_firstname",
+
+            "varName": "Имя страхователя"
+
+          },
+
+          "expressionResult": {
+
+            "varCode": "ph_firstname",
+
+            "varName": "Имя страхователя"
+
+          },
+
+          "expressionLeft": {
+
+            "varCode": "ph_firstname",
+
+            "varName": "Имя страхователя"
+
+          },
+
+          "expressionOperator": "*",
+
+          "expressionight": {
+
+            "varCode": "ph_firstname",
+
+            "varName": "Имя страхователя"
+
+          },
+
+          "postProcessor": "string"
+
+        }
+
+      ]
+
+    }
+
+  ],
+
+  "coefficients": [
+
+    {
+
+      "varCode": "ph_firstname",
+
+      "varName": "Имя страхователя",
+
+      "columns": [
+
+        {
+
+          "varCode": "ph_firstname",
+
+          "varName": "Имя страхователя",
+
+          "nr": "string",
+
+          "conditionOperator": "string",
+
+          "sortOrder": "string"
+
+        }
+
+      ]
+
+    }
+
+  ]
+
+}
+
+ 
+
+make new page with URL - products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator:
+
+when page open, make get call to service with prameters from url
+
+address is {BASE_URL}/admin/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator
+
+if http request returns Not_found then make post request with same UTL
+
+body is
+
+{
+
+  "productId": {productId},
+
+  "versionNo": {versionNo},
+
+  "packageNo": {packageNo},
+
+}
+
+the methods returns JSON calculator.
+
+ 
+
+The page:
+
+name "Калькулятор:" + productCode + ":" + versionNo + ":package" + packageNo
+
+buttons - Save, Save to JSON, Load from JSON
+
+ 
+
+Tab with 3 tabs: vars, formulas, coefficients
+
+Tab vars - show cart with button "Add var"
+
+Then title "List of variables", align left
+
+search field, same line align right
+
+table with pagination and columns: "varCode","varName","varPath","varType","varValue",""
+
+data from json, array vars
+
+last column for actions - edit and delete
+
+ 
+
+for add var and edit make a dialog with fields: varCode - textfield; varName - textfield, varType - dropdown list, varValue textfield optional
+
+when button "Save" pressed, check if varCode is unique within calculator array.
+
+if not then raise error
+
+ 
+
+Tab formulas
+
+Button "Add formula"
+
+Title "Formulas" and search field
+
+table with pagination and columns: "varCode","varName",""
+
+datasource is a formulas array in json
+
+last column for actions - edit and delete and textbutton "lines" with badge with count of lines
+
+if add or edit pressed then show dialog with "varCode","varName"
+
+ 
+
+when button pressed show the cart with table with lines
+
+button "Add line"
+
+Title "lines"
+
+table with pagination and columns: "nr",
+
+          "conditionLeft"
+
+          "conditionOperator",
+
+          "conditionRight":,
+
+          "expressionResult",
+
+          "expressionLeft",
+
+          "expressionOperator",
+
+          "expressionRight",
+
+          "postProcessor",""
+
+sorted by nr asc
+
+"varCode", "varName" must be shown in one cell in 2 lines
+
+last column for actions - edit and delete
+
+if add or edit pressed then show the dialog with all fields from line
+
+"conditionLeft", "conditionRight", "expressionResult", "expressionLeft", "expressionRight"is a dropdown list from Vars array
+
+"conditionOperator" dropdown list, make a service method for them
+
+"expressionOperator" dropdown list, make a service method for them
+
+"postProcessor"  dropdown list, make a service method for them
+
+ 
+
+Tab coefficients
+
+Button "Add coefficients"
+
+Title "coefficients" and search field
+
+table with pagination and columns: "varCode","varName",""
+
+datasource is a coefficients array in json
+
+last column for actions - edit and delete and textbutton "columns" with badge with count of columns
+
+if add or edit pressed then show dialog with "varCode","varName"
+
+ 
+
+when button pressed show the cart with table with "columns"
+
+button "Add column"
+
+Title "Columns"
+
+table with pagination and columns: "nr","varCode","varName","conditionOperator","sortOrder"
+
+if add or edit pressed then show the dialog with fields:
+
+"nr" textfield,
+
+"varCode" and "varName" - dropdown from vars
+
+"conditionOperator" dropdown list, make a service method for them ,
+
+"sortOrder"  dropdown list, make a service method for them
+
+ 
+
+if API methods returns error then take a mock data
+
+
+// calculator coefficient table //
+
+add text button in action column of coefficent table. 
+button "Data"
+if Button pressed show a cart with coefficent data
+cart title - coefficients 
+button "To Excel", "From Excel"
+add table with pagination and column sorting
+
+count of columns is variable.
+take a columns[] array from json, order by nr
+add column one by one, name of column is varCode, title is varDesc
+and last column is "Coefficient"
+
+create service for data manipulation
+get data - get {BASE_URL}/admin/calculator/{calculatorId}/coefficients/{coefficientCode}
+the result is -
+[
+    {
+        "id": 0,
+        "conditionValue": [
+            "0",
+            "1",
+            "DVA",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        ],
+        "resultValue": 12.34
+    }
+]
+result value copy to last column "Coefficient"
+values from "conditionValue" copy to columns one by one
+
+to add data call POST  {BASE_URL}/admin/calculator/{calculatorId}/coefficients/{coefficientCode}
+and send full table in body
+
+to update data call PUT {BASE_URL}/admin/calculator/{calculatorId}/coefficients/{coefficientCode}
+and send full table in body
+
+button - "To Excel" must export data from table to excel file
+button - "From Excel" must read excel file and fill table with data

@@ -1,0 +1,65 @@
+Add new page with route test
+Add it to navigation bar
+
+Page name is "Тестирование"
+Add a toggle buttons "Предрасчет", "Расчет" on the same line, align left
+
+Add button cart 
+Add button validator with name "Проверка запроса"
+Add button calculator with name "Расчет"
+Add drop down list pf_type with file types.Make a service call for list. And add mock is service anavailable
+Add button print_pf with name "ПФ"
+
+Add cart with textarea "request_json" with title "Запрос" h2
+
+Add cart with table
+Table title - "Контекст расчета"
+Table with pagination
+Columns are "varCode" and "varValue"
+
+Add cart with table
+Table title - "Ошибки валидации"
+Table with pagination
+Columns are "errorText" and "validator"
+
+Add cart with readonly textarea
+Title - "Результат расчета"
+
+
+When button validator pressed and toggle button = "Предрасчет" then call http://{BASE_URL}/test/quote/validator with text from textarea "request_json"
+When button validator pressed and toggle button = "Расчет" then call http://{BASE_URL}/test/policy/validator with text from textarea "request_json"
+
+response json is = 
+{
+    "product": "LIFETIME_PLUS",
+    "context": [
+        {
+            "varCode": "ph_firstName",
+            "varValue": "Акакий"
+        }
+    ],
+    "errorText": [
+        {
+            "errorText": "умад",
+            "validator": "sumInsuredIn  0.01-300000 RANGE NUMBER"
+        }
+    ]
+}
+Put "context" array data to Table title - "Контекст расчета"
+Put  "errorText" array data to Table title - "Ошибки валидации"
+
+
+When button calculator pressed and toggle button = "Предрасчет" then call http://{BASE_URL}/test/quote/calculator with text from textarea "request_json"
+When button calculator pressed and toggle button = "Расчет" then call http://{BASE_URL}/test/policy/calculator with text from textarea "request_json"
+
+clear Table title - "Контекст расчета"
+clear Table title - "Ошибки валидации"
+response json put to textarea "Результат расчета"
+
+When button print_pf pressed  then call http://{BASE_URL}/test/policy/printpf/{pf_type} with text from textarea "request_json"
+if print_pf is empty, show error - 'Print form must be selected'; raise;
+
+response if a file.
+download them
+
+

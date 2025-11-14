@@ -1,0 +1,98 @@
+{
+  "id": "14",
+  "vars": [
+    {
+      "varCode": "ph_firstName",
+      "varDesc": "Страхователь.имя",
+      "varPath": "policyHolder.person.firstName",
+      "varType": "IN"
+    },
+    {
+      "varCode": "sumInsuredIn",
+      "varDesc": "Желаемая страховая сумма",
+      "varPath": "insuredObject.covers[0].sumInsured",
+      "varType": "IN"
+    }
+  ],
+  "formulas": [
+    {
+      "lines": [
+        {
+          "nr": "1",
+          "conditionLeft": {
+            "varCode": "",
+          },
+          "postProcessor": "",
+          "conditionRight": {
+            "varCode": "",
+          },
+          "expressionLeft": {
+            "varCode": "ph_firstName"
+          },
+          "expressionRight": {
+            "varCode": "",
+          },
+          "expressionResult": {
+            "varCode": "ph_firstName"
+          },
+          "conditionOperator": "",
+          "expressionOperator": ""
+        },
+        {
+          "nr": "2",
+          "conditionLeft": {
+            "varCode": "",
+            "varName": ""
+          },
+          "postProcessor": "",
+          "conditionRight": {
+            "varCode": "",
+            "varName": ""
+          },
+          "expressionLeft": {
+            "varCode": "sumInsuredIn"
+          },
+          "expressionRight": {
+            "varCode": "k-01",
+            "varName": "k-01"
+          },
+          "expressionResult": {
+            "varCode": "DEVICE_BREAKAGE_Prem",
+            "varName": "DEVICE_BREAKAGE Премия"
+          },
+          "conditionOperator": "",
+          "expressionOperator": "*"
+        }
+      ],
+      "varCode": "pkg0_formula",
+      "varName": "Calculator for package:0",
+      "varType": "FORMULA"
+    }
+  ],
+  "packageNo": "0",
+  "productId": "1020",
+  "versionNo": "1",
+  "productCode": "",
+  "coefficients": [
+    {
+      "columns": [
+        {
+          "nr": "1",
+          "varCode": "sumInsuredIn",
+          "varName": "1",
+          "sortOrder": "ASC",
+          "conditionOperator": ">"
+        },
+        {
+          "nr": "2",
+          "varCode": "sumInsuredIn",
+          "varName": "1",
+          "sortOrder": "ASC",
+          "conditionOperator": "<"
+        }
+      ],
+      "varCode": "k-01",
+      "varName": "k-01"
+    }
+  ]
+}
