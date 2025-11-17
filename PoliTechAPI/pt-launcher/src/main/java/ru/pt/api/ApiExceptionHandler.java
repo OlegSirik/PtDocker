@@ -1,5 +1,7 @@
 package ru.pt.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,38 +12,46 @@ import ru.pt.exception.*;
 @ControllerAdvice
 public class ApiExceptionHandler {
 
+    private final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorModel> handleBadRequest(BadRequestException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ex.getErrorModel());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorModel> handleUnauthorized(UnauthorizedException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ex.getErrorModel());
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorModel> handleNotFound(NotFoundException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ex.getErrorModel());
     }
 
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ErrorModel> handleInternalServerError(InternalServerErrorException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ex.getErrorModel());
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
     public ResponseEntity<ErrorModel> handleServiceUnavailable(ServiceUnavailableException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ex.getErrorModel());
     }
     // TODO 2 ниже удалить
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorModel> handleIllegalArgument(IllegalArgumentException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         ErrorModel errorModel = new ErrorModel(400, ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorModel);
@@ -49,6 +59,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorModel> handleGenericException(Exception ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
         ErrorModel errorModel = new ErrorModel(500, "Internal Server Error");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(errorModel);

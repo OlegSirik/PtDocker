@@ -34,8 +34,8 @@ export interface BusinessLineEdit {
 })
 export class BusinessLineEditService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {};
-  
-  private mockData: BusinessLineEdit = 
+
+  private mockData: BusinessLineEdit =
     {
       id: -1,
       mpCode: 'MORTGAGE-MOCK',
@@ -85,10 +85,10 @@ export class BusinessLineEditService {
       return of(this.mockData);
     }
 
-    return this.http.get<BusinessLineEdit>(`${this.baseUrl}/admin/lobs/${code}`).pipe(
+    return this.http.get<BusinessLineEdit>(`${this.baseUrl}admin/lobs/${code}`).pipe(
       tap((data: BusinessLineEdit) => {
         // Replace the item in mockData with the fetched one, or add if not present
-          this.mockData = data;        
+          this.mockData = data;
       }),
       catchError((error) => {
         console.error('Error fetching business line:', error);
@@ -98,10 +98,10 @@ export class BusinessLineEditService {
   }
 
   saveBusinessLine(businessLine: BusinessLineEdit): Observable<BusinessLineEdit> {
-    
+
     if (this.mockData.id != -1) {
       // Update existing
-      this.mockData = { 
+      this.mockData = {
         ...businessLine,
         mpPhType: businessLine.mpPhType || '',
         mpInsObjectType: businessLine.mpInsObjectType || ''
@@ -109,12 +109,12 @@ export class BusinessLineEditService {
     if (this.http) {
       // Also update backend with the full mockData
       const code = businessLine.mpCode;
-      const url = `${this.baseUrl}/admin/lobs/${code}`;
+      const url = `${this.baseUrl}admin/lobs/${code}`;
       // INSERT_YOUR_CODE
       console.log('HTTP PUT Request:', {
         url,
         body: businessLine,
-        headers: this.http 
+        headers: this.http
       });
       this.http.put<BusinessLineEdit>(url, businessLine).subscribe({
         next: (data) => {
@@ -139,8 +139,8 @@ export class BusinessLineEditService {
       };
     if (this.http) {
       // Also save to backend if http is available
-      
-      this.http.post(`${this.baseUrl}/admin/lobs`, businessLine).subscribe({
+
+      this.http.post(`${this.baseUrl}admin/lobs`, businessLine).subscribe({
         next: () => {},
         error: (err) => {
           console.error('Error saving business line to backend:', err);
@@ -264,7 +264,7 @@ export class BusinessLineEditService {
       });
     }
 
-    return this.http.get<any>(`${this.baseUrl}/admin/lobs/${lobCode}/example`).pipe(
+    return this.http.get<any>(`${this.baseUrl}admin/lobs/${lobCode}/example`).pipe(
       catchError((error) => {
         console.error('Error fetching example JSON:', error);
         return of({
@@ -433,7 +433,7 @@ export class BusinessLineEditService {
         "varPath": "policyHolder.person.ext_id",
         "varType": "IN",
         "varValue": ""
-      }  
+      }
   ];
   phPhoneVars: BusinessLineVar[] = [
     {
@@ -593,8 +593,8 @@ export class BusinessLineEditService {
         "varType": "IN",
         "varValue": ""
       }
-    ];    
-  
+    ];
+
   phPersonDocumentVars: BusinessLineVar[] = [
       {
         "varNr": 101,
@@ -685,7 +685,7 @@ export class BusinessLineEditService {
         "varPath": "policyHolder.passport.countryCode",
         "varType": "IN",
         "varValue": "RU"
-      }    
+      }
   ];
   phAddressVars: BusinessLineVar[] = [
       {
@@ -831,7 +831,7 @@ export class BusinessLineEditService {
         "varPath": "policyHolder.address.ext_id",
         "varType": "IN",
         "varValue": ""
-      }    
+      }
   ];
 
   phOrganizationVars: BusinessLineVar[] = [
@@ -970,7 +970,7 @@ export class BusinessLineEditService {
       "varType": "IN",
       "varValue": ""
     }
-  ];    
+  ];
 
   phOrganizationDocumentVars: BusinessLineVar[] = [
     {
@@ -1062,7 +1062,7 @@ export class BusinessLineEditService {
       "varPath": "policyHolder.document.countryCode",
       "varType": "IN",
       "varValue": "RU"
-    }    
+    }
   ];
 
   ioDeviceVars: BusinessLineVar[] = [
@@ -1475,5 +1475,5 @@ export class BusinessLineEditService {
         "varValue": "0"
       }
     ]
-  
+
   }

@@ -10,17 +10,60 @@ import java.util.List;
  */
 public interface CalculatorService {
 
+    /**
+     * Получить сохраненный калькулятор продукта
+     * @param productId айди продукта
+     * @param versionNo номер версии
+     * @param packageNo номер пакета
+     * @return модель калькулятора или null, если не найден
+     */
     CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo);
 
+    /**
+     * Создать калькулятор, если он отсутствует
+     * @param productId айди продукта
+     * @param productCode код продукта
+     * @param versionNo номер версии
+     * @param packageNo номер пакета
+     * @return созданный или найденный калькулятор
+     */
     CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo);
 
+    /**
+     * Получить модель калькулятора, выбрасывая исключение при отсутствии
+     * @param productId айди продукта
+     * @param versionNo номер версии
+     * @param packageNo номер пакета
+     * @return модель калькулятора
+     */
     CalculatorModel getCalculatorModel(Integer productId, Integer versionNo, Integer packageNo);
 
+    /**
+     * Выполнить калькулятор и вернуть рассчитанные переменные
+     * @param productId айди продукта
+     * @param versionNo номер версии
+     * @param packageNo номер пакета
+     * @param inputValues входные переменные
+     * @return список переменных с рассчитанными значениями
+     */
     List<LobVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<LobVar> inputValues);
 
+    /**
+     * Заменить модель калькулятора
+     * @param productId айди продукта
+     * @param productCode код продукта
+     * @param versionNo номер версии
+     * @param packageNo номер пакета
+     * @param newJson новая модель калькулятора
+     * @return сохраненная модель
+     */
     CalculatorModel replaceCalculator(Integer productId, String productCode, Integer versionNo,
                                       Integer packageNo, CalculatorModel newJson);
 
+    /**
+     * Синхронизировать переменные калькулятора с продуктом
+     * @param calculatorId идентификатор калькулятора
+     */
     void syncVars(Integer calculatorId);
 
 }

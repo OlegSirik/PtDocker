@@ -10,8 +10,9 @@ import org.hibernate.type.SqlTypes;
 public class ProductVersionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pk")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_product_versions_seq")
+    @SequenceGenerator(name = "pt_product_versions_seq", sequenceName = "pt_product_versions_seq", allocationSize = 1)
     private Integer pk;
 
     @Column(name = "product_id", nullable = false)

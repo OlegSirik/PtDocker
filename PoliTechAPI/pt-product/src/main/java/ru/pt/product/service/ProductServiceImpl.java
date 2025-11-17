@@ -73,7 +73,8 @@ public class ProductServiceImpl implements ProductService {
 
         ProductEntity product = new ProductEntity();
         product.setId(id);
-        if (productVersionModel.getVersionStatus().equals("PROD")) {
+        var versionStatus = productVersionModel.getVersionStatus();
+        if (versionStatus!= null && versionStatus.equals("PROD")) {
             product.setProdVersionNo(productVersionModel.getVersionNo());
         } else {
             product.setDevVersionNo(productVersionModel.getVersionNo());

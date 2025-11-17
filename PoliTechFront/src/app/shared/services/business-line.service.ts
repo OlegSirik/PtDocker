@@ -23,14 +23,14 @@ export class BusinessLineService {
     { id: 4, mpCode: 'HEALTH', mpName: 'Здоровье' },
     { id: 5, mpCode: 'LIFE', mpName: 'Жизнь' }
   ];
-  
+
 
   getBusinessLines(): Observable<BusinessLine[]> {
     if (!this.http) {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<BusinessLine[]>(`${this.baseUrl}/admin/lobs`).pipe(
+    return this.http.get<BusinessLine[]>(`${this.baseUrl}admin/lobs`).pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
           this.mockData = data;
@@ -64,7 +64,7 @@ export class BusinessLineService {
 
   deleteBusinessLine(id: number): Observable<boolean> {
     if (this.http) {
-      const url = `${this.baseUrl}/admin/lobs/${id}`;
+      const url = `${this.baseUrl}admin/lobs/${id}`;
       return this.http.delete(url).pipe(
         map(() => true),
         catchError(error => {
@@ -75,13 +75,13 @@ export class BusinessLineService {
     }
     return of(false);
   }
-     
+
 
   getLobCodes(): Observable<string[]> {
     return this.getBusinessLines().pipe(
       map((businessLines: BusinessLine[]) => businessLines.map(item => item.mpCode))
     );
-    
+
   }
 
 }

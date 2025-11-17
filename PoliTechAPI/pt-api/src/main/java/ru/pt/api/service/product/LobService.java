@@ -8,19 +8,52 @@ import java.util.List;
  * Методы для работы с общей частью продукта(Линия бизнеса - LOB)
  */
 public interface LobService {
-    // TODO сгенерировать описание
+    /**
+     * Получить список активных линий бизнеса
+     * @return краткие описания LOB
+     */
     List<Object[]> listActiveSummaries();
 
+    /**
+     * Найти LOB по коду
+     * @param code код линии бизнеса
+     * @return модель линии бизнеса
+     */
     LobModel getByCode(String code);
 
-    // get by id
+    /**
+     * Найти LOB по идентификатору
+     * @param id айди линии бизнеса
+     * @return модель линии бизнеса
+     */
     LobModel getById(Integer id);
 
+    /**
+     * Создать новую линию бизнеса
+     * @param payload описание линии
+     * @return созданная модель
+     */
     LobModel create(LobModel payload);
 
+    /**
+     * Мягко удалить LOB по коду
+     * @param code код линии бизнеса
+     * @return true если отметка удаления установлена
+     */
     boolean softDeleteByCode(String code);
 
+    /**
+     * Мягко удалить LOB по идентификатору
+     * @param id айди линии бизнеса
+     * @return true если отметка удаления установлена
+     */
     boolean softDeleteById(Integer id);
 
+    /**
+     * Обновить LOB по коду
+     * @param code код линии бизнеса
+     * @param payload новое описание
+     * @return обновленная модель
+     */
     LobModel updateByCode(String code, LobModel payload);
 }

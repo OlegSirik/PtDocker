@@ -84,8 +84,8 @@ export interface Deductible {
 })
 export class ProductService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {};
-  
-  private mockData: Product = 
+
+  private mockData: Product =
     {
       id: 1202,
       lob: 'NS',
@@ -206,7 +206,7 @@ export class ProductService {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<Product>(`${this.baseUrl}/admin/products/${id}/versions/${versionNo}`).pipe(
+    return this.http.get<Product>(`${this.baseUrl}admin/products/${id}/versions/${versionNo}`).pipe(
       tap(data => {
           this.mockData = data;
           this.fixProduct();
@@ -216,20 +216,20 @@ export class ProductService {
         return of(this.mockData);
       })
     );
-    
+
   //    return of( this.products ) // Mock API delay
-    
+
   }
 
 
 
-  
+
   // POST - Create new product
   createProduct(product: Product): Observable<Product> {
 
 
     if (this.http) {
-      return this.http.post<Product>(`${this.baseUrl}/admin/products`, product).pipe(
+      return this.http.post<Product>(`${this.baseUrl}admin/products`, product).pipe(
         tap(createdProduct => {
           this.mockData = { ...createdProduct };
           this.fixProduct();
@@ -246,11 +246,11 @@ export class ProductService {
 
   // PUT - Update existing product
   updateProduct(id: number, product: Product): Observable<Product> {
-    
+
     const versionNo = product.versionNo;
-    
+
     if (this.http) {
-      return this.http.put<Product>(`${this.baseUrl}/admin/products/${id}/versions/${versionNo}`, product).pipe(
+      return this.http.put<Product>(`${this.baseUrl}admin/products/${id}/versions/${versionNo}`, product).pipe(
         tap(updatedProduct => {
           this.mockData = { ...updatedProduct };
           this.fixProduct();
@@ -270,10 +270,10 @@ export class ProductService {
   // DELETE - Delete product
   deleteProduct(id: number): Observable<void> {
     const index = this.mockData
-    
+
       this.mockData;
       return of(void 0).pipe(delay(500));
-    
+
     throw new Error('Product not found');
   }
 
@@ -350,7 +350,7 @@ handleHttpError(error: any): string {
       });
     }
 
-    const url = `${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/example_quote`;
+    const url = `${this.baseUrl}admin/products/${productId}/versions/${versionNo}/example_quote`;
     return this.http.get<any>(url).pipe(
       catchError((error) => {
         console.error('Error fetching test request:', error);
@@ -373,7 +373,7 @@ handleHttpError(error: any): string {
       });
     }
 
-    const url = `${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/example_save`;
+    const url = `${this.baseUrl}admin/products/${productId}/versions/${versionNo}/example_save`;
     return this.http.get<any>(url).pipe(
       catchError((error) => {
         console.error('Error fetching test request:', error);

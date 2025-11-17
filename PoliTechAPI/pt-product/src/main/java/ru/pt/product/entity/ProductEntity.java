@@ -8,6 +8,8 @@ public class ProductEntity {
 
     @Id
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_products_seq")
+    @SequenceGenerator(name = "pt_products_seq", sequenceName = "pt_products_seq", allocationSize = 1)
     private Integer id;
 
     @Column(name = "lob", nullable = false, length = 30)

@@ -43,7 +43,7 @@ export class FilesService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
 
   getFiles(): Observable<FileTemplate[]> {
-    return this.http.get<FileTemplate[]>(`${this.baseUrl}/admin/files`).pipe(
+    return this.http.get<FileTemplate[]>(`${this.baseUrl}admin/files`).pipe(
       catchError(() => of(this.mockFiles))
     );
   }
@@ -53,8 +53,8 @@ export class FilesService {
       ...fileData,
       id: Date.now()
     };
-    
-    return this.http.post<FileUploadResponse>(`${this.baseUrl}/admin/files`, {
+
+    return this.http.post<FileUploadResponse>(`${this.baseUrl}admin/files`, {
       fileType: fileData.fileType.toLowerCase(),
       fileDescription: fileData.fileDescription,
       productCode: fileData.productCode,
@@ -70,14 +70,14 @@ export class FilesService {
   uploadFile(id: number, file: File): Observable<void> {
     const formData = new FormData();
     formData.append('file', file);
-    
-    return this.http.post<void>(`${this.baseUrl}/admin/files/${id}`, formData).pipe(
+
+    return this.http.post<void>(`${this.baseUrl}admin/files/${id}`, formData).pipe(
       catchError(() => of(void 0))
     );
   }
 
   deleteFile(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/admin/files/${id}`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}admin/files/${id}`).pipe(
       catchError(() => {
         const index = this.mockFiles.findIndex(f => f.id === id);
         if (index !== -1) {
@@ -92,7 +92,7 @@ export class FilesService {
     // Try different request formats based on the API requirements
     let requestBody: any;
     let contentType = 'application/json';
-    
+
     try {
       // Try to parse as JSON first
       const parsedData = JSON.parse(keyValueData);
@@ -107,9 +107,9 @@ export class FilesService {
       };
     }
 
-    return this.http.post(`${this.baseUrl}/admin/files/${id}/cmd/process`, 
-      requestBody, 
-      { 
+    return this.http.post(`${this.baseUrl}admin/files/${id}/cmd/process`,
+      requestBody,
+      {
         responseType: 'blob',
         headers: {
           'Content-Type': contentType

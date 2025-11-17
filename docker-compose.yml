@@ -22,9 +22,11 @@ services:
 
   # Бэкенд на Spring Boot 3
   backend:
-    build:
-      context: ./PoliTechAPI
-      dockerfile: Dockerfile
+    # build:
+      # context: ./PoliTechAPI
+      # dockerfile: Dockerfile
+      # no_cache: true
+    image: fant560/papi:1.5
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pt-db
       SPRING_DATASOURCE_USERNAME: postgres
@@ -46,11 +48,12 @@ services:
 
   # Фронтенд
   frontend:
-    build:
-      context: ./PoliTechFront
-      dockerfile: Dockerfile
+    # build:
+      # context: ./PoliTechFront
+      # dockerfile: Dockerfile
+    image: fant560/papi-front:latest
     environment:
-      BASE_URL: http://localhost:8080/
+      BASE_URL: http://localhost:8080
     ports:
       - "80:80"
     depends_on:
@@ -58,11 +61,6 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   postgres_data:

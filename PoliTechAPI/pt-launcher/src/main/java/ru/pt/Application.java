@@ -1,7 +1,9 @@
 package ru.pt;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import ru.pt.auth.configuration.AuthModuleConfiguration;
 import ru.pt.calculator.configuration.CalculatorModuleConfiguration;
@@ -10,7 +12,8 @@ import ru.pt.files.configuration.FilesModuleConfiguration;
 import ru.pt.numbers.configuration.NumbersModuleConfiguration;
 import ru.pt.process.configuration.ProcessModuleConfiguration;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class,
+        ManagementWebSecurityAutoConfiguration.class})
 // spring по идее подтянет, но, лучше явно указать
 @Import({NumbersModuleConfiguration.class,
         ProcessModuleConfiguration.class,

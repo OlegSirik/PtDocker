@@ -22,6 +22,10 @@ public interface StorageService {
      */
     PolicyData save(String policy, UserData userData, Version version, UUID uuid);
 
+    /**
+     * Обновить договор целиком
+     * @param policyData данные договора для сохранения
+     */
     void update(PolicyData policyData);
 
     /**

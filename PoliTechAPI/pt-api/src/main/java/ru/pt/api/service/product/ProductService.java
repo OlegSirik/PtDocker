@@ -75,12 +75,20 @@ public interface ProductService {
      * @return пример json
      */
     String getJsonExampleSave(Integer id, Integer versionNo);
-    // TODO возможно надо прокидывать версию
-    //  - или флаг дев или прод
+    /**
+     * Получить продукт по идентификатору
+     * @param id айди продукта
+     * @param forDev флаг получения dev-версии
+     * @return актуальная версия продукта
+     */
     ProductVersionModel getProduct(Integer id, boolean forDev);
 
-    // TODO возможно надо прокидывать версию
-    //  - или флаг дев или прод
+    /**
+     * Получить продукт по коду
+     * @param code код продукта
+     * @param forDev флаг получения dev-версии
+     * @return актуальная версия продукта
+     */
     ProductVersionModel getProductByCode(String code, boolean forDev);
 
 }

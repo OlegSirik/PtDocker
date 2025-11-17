@@ -11,6 +11,8 @@ public class LobEntity {
 
     @Id
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_lobs_seq")
+    @SequenceGenerator(name = "pt_lobs_seq", sequenceName = "pt_lobs_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "code", nullable = false, unique = true, length = 128)
