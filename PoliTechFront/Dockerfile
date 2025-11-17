@@ -1,5 +1,5 @@
 # Stage 1: Build Angular app
-FROM node:20-alpine AS build
+FROM --platform=linux/amd64 node:20-alpine AS build
 WORKDIR /app
 
 # Install dependencies first (better caching)
@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Nginx to serve the app
-FROM nginx:alpine AS runtime
+FROM --platform=linux/amd64 nginx:alpine AS runtime
 
 # Copy SPA-friendly nginx config
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -23,8 +23,7 @@ COPY public/assets/env.template.js /usr/share/nginx/html/assets/env.template.js
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+EXPOSE 80
 ARG BASE_URL
 ENV BASE_URL=${BASE_URL}
-EXPOSE 80
-#  ENV BASE_URL=http://localhost:8080
 ENTRYPOINT ["/entrypoint.sh"]

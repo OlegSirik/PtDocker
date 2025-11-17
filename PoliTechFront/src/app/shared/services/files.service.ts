@@ -43,7 +43,7 @@ export class FilesService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
 
   getFiles(): Observable<FileTemplate[]> {
-    return this.http.get<FileTemplate[]>(`${this.baseUrl}admin/files`).pipe(
+    return this.http.get<FileTemplate[]>(`${this.baseUrl}/admin/files`).pipe(
       catchError(() => of(this.mockFiles))
     );
   }
@@ -54,7 +54,7 @@ export class FilesService {
       id: Date.now()
     };
 
-    return this.http.post<FileUploadResponse>(`${this.baseUrl}admin/files`, {
+    return this.http.post<FileUploadResponse>(`${this.baseUrl}/admin/files`, {
       fileType: fileData.fileType.toLowerCase(),
       fileDescription: fileData.fileDescription,
       productCode: fileData.productCode,
@@ -71,13 +71,13 @@ export class FilesService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<void>(`${this.baseUrl}admin/files/${id}`, formData).pipe(
+    return this.http.post<void>(`${this.baseUrl}/admin/files/${id}`, formData).pipe(
       catchError(() => of(void 0))
     );
   }
 
   deleteFile(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}admin/files/${id}`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}/admin/files/${id}`).pipe(
       catchError(() => {
         const index = this.mockFiles.findIndex(f => f.id === id);
         if (index !== -1) {
@@ -107,7 +107,7 @@ export class FilesService {
       };
     }
 
-    return this.http.post(`${this.baseUrl}admin/files/${id}/cmd/process`,
+    return this.http.post(`${this.baseUrl}/admin/files/${id}/cmd/process`,
       requestBody,
       {
         responseType: 'blob',
