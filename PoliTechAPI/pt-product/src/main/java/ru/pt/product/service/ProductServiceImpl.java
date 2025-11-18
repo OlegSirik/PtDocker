@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class ProductServiceImpl implements ProductService {
+
+    private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final ProductRepository productRepository;
     private final LobService lobService;
@@ -107,17 +111,7 @@ public class ProductServiceImpl implements ProductService {
         pv.setProductId(saved.getId());
         pv.setVersionNo(productVersionModel.getVersionNo());
 
-
-        String productJson;
-        try {
-            productJson = objectMapper.writeValueAsString(productVersionModel);
-        } catch (JsonProcessingException e) {
-            // TODO exception handling
-            throw new RuntimeException(e);
-        }
-        pv.setProduct(productJson);
-
-// copy lob.mpVars to productVersionModel.vars
+        log.info("Getting lob data by code {}", productVersionModel.getLob());
         LobModel lob = lobService.getByCode(productVersionModel.getLob());
         if (lob != null) {
             if (productVersionModel.getVars() == null) {
@@ -133,8 +127,18 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setVarDataType(var.getVarDataType());
                 productVersionModel.getVars().add(pvVar);
             }
+        } else {
+            log.warn("No variables copied from lob!!");
         }
 
+        String productJson;
+        try {
+            productJson = objectMapper.writeValueAsString(productVersionModel);
+        } catch (JsonProcessingException e) {
+            // TODO exception handling
+            throw new RuntimeException(e);
+        }
+        pv.setProduct(productJson);
 
         productVersionRepository.save(pv);
 

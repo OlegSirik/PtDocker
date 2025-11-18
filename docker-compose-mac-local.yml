@@ -24,7 +24,7 @@ services:
   backend:
     build:
       context: ./PoliTechAPI
-      dockerfile: Dockerfile
+      dockerfile: DockerfileMacLocal
       no_cache: true
     # image: fant560/papi:2.0
     environment:
@@ -50,7 +50,7 @@ services:
   frontend:
     build:
       context: ./PoliTechFront
-      dockerfile: Dockerfile
+      dockerfile: DockerfileMacLocal
     # image: fant560/papi-front:latest
     environment:
       BASE_URL: http://backend:8080
