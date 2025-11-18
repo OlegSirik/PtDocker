@@ -69,10 +69,8 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException("name must not be empty");
         }
 
-        Integer id = productRepository.getNextProductId();
 
         ProductEntity product = new ProductEntity();
-        product.setId(id);
         var versionStatus = productVersionModel.getVersionStatus();
         if (versionStatus!= null && versionStatus.equals("PROD")) {
             product.setProdVersionNo(productVersionModel.getVersionNo());
@@ -83,9 +81,9 @@ public class ProductServiceImpl implements ProductService {
         product.setLob(productVersionModel.getLob());
         product.setCode(productVersionModel.getCode());
         product.setName(productVersionModel.getName());
-        productRepository.save(product);
+        var saved = productRepository.save(product);
 
-        productVersionModel.setId(id);
+        productVersionModel.setId(saved.getId());
 
         if (productVersionModel.getQuoteValidator() == null) {
             productVersionModel.setQuoteValidator(new ArrayList<>());
@@ -106,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductVersionEntity pv = new ProductVersionEntity();
-        pv.setProductId(id);
+        pv.setProductId(saved.getId());
         pv.setVersionNo(productVersionModel.getVersionNo());
 
 

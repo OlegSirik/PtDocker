@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 RUN gradle clean build --no-daemon -x test
 
-FROM amazoncorretto:21-alpine
+FROM --platform=linux/amd64 amazoncorretto:21-alpine
 WORKDIR /app
 
 # Устанавливаем curl для health checks
@@ -22,4 +22,4 @@ EXPOSE 8080
 
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
-ENTRYPOINT exec java $JAVA_OPTS -jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
