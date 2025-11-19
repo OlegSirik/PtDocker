@@ -1,0 +1,40 @@
+=== PoliTech API JWT Tokens ===
+
+1. ADMIN TOKEN:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwLCJyb2xlIjoiQURNSU4ifQ.id5HtLBWtzV2Wt3vfd0zACYiVRl5NQTRmbau49SnxOE
+
+2. USER TOKEN:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIiwiZXhwIjoxOTk5OTk5OTk5LCJpYXQiOjE3MDAwMDAwMDAsInJvbGUiOiJVU0VSIn0.VptHj3Fm6MCIJQhgQwmKNykhtuALkqJNddcOCUvUs0I
+
+3. PRODUCT_MANAGER TOKEN:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcm9kdWN0X21hbmFnZXIiLCJleHAiOjE5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMCwicm9sZSI6IlVTRVIifQ.FjTJaGcQQN0v_b6smScREn7ORxyULEsEsYuhilbixn8
+
+=== Как использовать ===
+
+В Postman:
+1. Откройте Environment "PoliTech API Environment"
+2. Скопируйте нужный токен
+3. Вставьте в переменную jwt_token или admin_token/user_token
+
+В curl:
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8080/api/auth/me
+
+=== Создание пользователей в БД ===
+
+psql -U postgres -d pt-db
+
+-- ADMIN пользователь
+INSERT INTO acc_logins (id, tid, user_login) VALUES (nextval('account_seq'), 1, 'admin');
+INSERT INTO acc_account_logins (id, tid, user_login, client_id, account_id, user_role, is_default)
+VALUES (nextval('account_seq'), 1, 'admin', 1, 1, 'ADMIN', true);
+
+-- USER пользователь
+INSERT INTO acc_logins (id, tid, user_login) VALUES (nextval('account_seq'), 1, 'user');
+INSERT INTO acc_account_logins (id, tid, user_login, client_id, account_id, user_role, is_default)
+VALUES (nextval('account_seq'), 1, 'user', 1, 1, 'USER', true);
+
+-- PRODUCT_MANAGER пользователь
+INSERT INTO acc_logins (id, tid, user_login) VALUES (nextval('account_seq'), 1, 'product_manager');
+INSERT INTO acc_account_logins (id, tid, user_login, client_id, account_id, user_role, is_default)
+VALUES (nextval('account_seq'), 1, 'product_manager', 1, 1, 'USER', true);
+

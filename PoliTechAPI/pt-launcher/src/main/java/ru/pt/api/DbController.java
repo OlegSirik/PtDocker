@@ -1,9 +1,12 @@
 package ru.pt.api;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.process.ProcessOrchestrator;
+import ru.pt.auth.security.UserDetailsImpl;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,10 +14,11 @@ import java.util.UUID;
 
 /**
  * Only for storage operations! Assumes no additional business logic
+ * Требует аутентификации для всех операций
  */
 @RestController
 @RequestMapping("/db")
-public class DbController {
+public class DbController extends SecuredController {
 
     private final ProcessOrchestrator processOrchestrator;
 
@@ -26,19 +30,31 @@ public class DbController {
     /**
      * Create a new policy
      * POST /sales/policies
+     * Требуется право POLICY на продукт
      */
     @PostMapping("/policies")
-    public ResponseEntity<PolicyData> createPolicy(@RequestBody String request) {
+    public ResponseEntity<PolicyData> createPolicy(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody String request) {
+        requireAuthenticated(user);
+        // TODO: Извлечь productCode из request и проверить права
+        // requireProductPolicy(user, productCode);
         return ResponseEntity.ok(processOrchestrator.createPolicy(request));
     }
 
     /**
      * Update an existing policy
      * PUT /sales/policies/{id}
+     * Требуется право ADDENDUM на продукт
      */
     @PutMapping("/policies/{policyNumber}")
-    public ResponseEntity<PolicyData> updatePolicy(@PathVariable("policyNumber") String policyNumber,
-                                                    @RequestBody String request) {
+    public ResponseEntity<PolicyData> updatePolicy(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("policyNumber") String policyNumber,
+            @RequestBody String request) {
+        requireAuthenticated(user);
+        // TODO: Извлечь productCode из существующей политики и проверить права
+        // requireProductWrite(user, productCode);
         PolicyData updated = processOrchestrator.updatePolicy(policyNumber, request);
         return ResponseEntity.ok(updated);
     }
@@ -46,9 +62,13 @@ public class DbController {
     /**
      * Get policy by ID
      * GET /sales/policies/{id}
+     * Требуется право READ на продукт
      */
     @GetMapping("/policies/{id}")
-    public ResponseEntity<PolicyData> getPolicyById(@PathVariable("id") UUID id) {
+    public ResponseEntity<PolicyData> getPolicyById(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("id") UUID id) {
+        requireAuthenticated(user);
         PolicyData policy = processOrchestrator.getPolicyById(id);
         return ResponseEntity.ok(policy);
     }

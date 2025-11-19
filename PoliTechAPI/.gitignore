@@ -12,7 +12,6 @@ buildNumber.properties
 
 # Compiled class files
 *.class
-
 # Log files
 *.log
 
