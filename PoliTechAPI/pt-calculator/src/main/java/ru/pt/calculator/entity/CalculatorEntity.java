@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "pt_calculators")
-@SequenceGenerator(name = "pt_calculators_seq_gen", sequenceName = "pt_calculators_seq", allocationSize = 1)
 public class CalculatorEntity {
 
     @Id
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_calculators_seq")
+    @SequenceGenerator(name = "pt_calculators_seq", sequenceName = "pt_calculators_seq", allocationSize = 1)
     private Integer id;
 
     @Column(name = "product_id", nullable = false)

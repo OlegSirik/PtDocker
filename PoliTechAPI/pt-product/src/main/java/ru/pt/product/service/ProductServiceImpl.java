@@ -20,6 +20,7 @@ import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
 
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -272,7 +273,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", OffsetDateTime.now().toString());
+        jsonValues.put("issueDate", ZonedDateTime.now().toString());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -280,7 +281,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("waitingPeriod", value);
         } else {
             jsonPaths.add("startDate");
-            jsonValues.put("startDate", OffsetDateTime.now().toString());
+            jsonValues.put("startDate", ZonedDateTime.now().toString());
         }
 
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
@@ -325,7 +326,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", OffsetDateTime.now().toString());
+        jsonValues.put("issueDate", ZonedDateTime.now().toString());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -388,11 +389,18 @@ public class ProductServiceImpl implements ProductService {
     //get product by code and isDeletedFalse
     @Override
     public ProductVersionModel getProductByCode(String code, boolean forDev) {
+
+        log.info("Finging product by code {}, forDev - {}", code, forDev);
+
         var entity = productRepository.findByCodeAndIsDeletedFalse(code)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
-
-        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), entity.getProdVersionNo())
+        if (versionNo == null) {
+            // TODO fix me
+            log.warn("No true version number resolution, we will take just not null");
+            versionNo = entity.getProdVersionNo() == null ? entity.getDevVersionNo() : entity.getProdVersionNo();
+        }
+        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);

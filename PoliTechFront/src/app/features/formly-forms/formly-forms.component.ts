@@ -86,12 +86,12 @@ export class FormlyFormsComponent implements OnInit {
 onCancel() {
 throw new Error('Method not implemented.');
 }
-  
+
   product: Product = {
     lob: '',
     code: '',
     name: '',
-    versionNo: 0,
+    versionNo: 1,
     waitingPeriod: {validatorType: 'RANGE', validatorValue: ''},
     policyTerm: { validatorType: 'RANGE', validatorValue: '' },
     numberGenerator: { mask: '', maxValue: 0, resetPolicy: 'MONTHLY', xorMask: '' },
@@ -100,7 +100,7 @@ throw new Error('Method not implemented.');
     packages: [],
     vars: []
   };
-  
+
   formData1: FormData = {
     item1: '',
     item2: 'item2',
@@ -108,7 +108,7 @@ throw new Error('Method not implemented.');
     item4: '',
     item5: ''
   };
-  
+
   policy: Policy = {
     policyNumber: '32523453245',
     previousPolicyNumber: '',
@@ -127,11 +127,11 @@ throw new Error('Method not implemented.');
     placeOfIssue: '',
     draftId: '',
     policyHolder: { person: {firstName: ''}, phone: {phoneNumber: '', contactPerson: ''}, email: '', passport: {typeCode: '', serial: '', number: '', dateIssue: '', validUntil: '', whom: ''
-      , divisionCode: '', vsk_id: '', ext_id: '', countryCode: ''}, 
-      address: {typeCode: 'REGISTRATION', countryCode: '', region: '', city: '', street: '', house: '', building: '', flat: '', room: '', zipCode: '', kladrId: '', 
-        fiasId: '', addressStr: '', addressStrEn: '', vsk_id: '', ext_id: ''}, placeOfWork: {organization: '', occupationType: '', occupation: '', 
-          address: '', phone: ''}, inn: '', snils: '', otherAddresses: [], otherDocuments: [], organization: {country: '', inn: '', fullName: '', 
-            fullNameEn: '', shortName: '', legalForm: 'OOO', kpp: '', ogrn: '', okpo: '', bic: '', isResident: false, group: '', vsk_id: '', ext_id: '', nciCode: ''}, 
+      , divisionCode: '', vsk_id: '', ext_id: '', countryCode: ''},
+      address: {typeCode: 'REGISTRATION', countryCode: '', region: '', city: '', street: '', house: '', building: '', flat: '', room: '', zipCode: '', kladrId: '',
+        fiasId: '', addressStr: '', addressStrEn: '', vsk_id: '', ext_id: ''}, placeOfWork: {organization: '', occupationType: '', occupation: '',
+          address: '', phone: ''}, inn: '', snils: '', otherAddresses: [], otherDocuments: [], organization: {country: '', inn: '', fullName: '',
+            fullNameEn: '', shortName: '', legalForm: 'OOO', kpp: '', ogrn: '', okpo: '', bic: '', isResident: false, group: '', vsk_id: '', ext_id: '', nciCode: ''},
             isGovernmentService: false, customFields: {} },
     insuredObject: {
       packageCode: '',
@@ -158,13 +158,13 @@ throw new Error('Method not implemented.');
 
 
   ngOnInit(): void {
-    
+
 
     const productId = this.route.snapshot.paramMap.get('product-id');
     const versionNo = this.route.snapshot.paramMap.get('version-no');
-    
+
     this.loadProduct(parseInt(productId || '0'), parseInt(versionNo || '0'));
-        
+
     this.policy = this.policyService.getMockPolicy();
 
   }
@@ -189,10 +189,10 @@ throw new Error('Method not implemented.');
     } else {
       this.updateTables();
     }
-  }  
+  }
 
   updateTables(): void {}
-  
+
   /*
   private applyStylesToField(wrapper: HTMLElement, config: any): void {
     const matFormField = wrapper.querySelector('mat-form-field');
@@ -215,10 +215,10 @@ throw new Error('Method not implemented.');
   onSubmit() {
     console.log("onSubmit-----------------------------------------------------------------------------");
     console.log(this.policy);
-      
+
       };
-    
-    
+
+
   getFieldVisible(fieldName: string): boolean {
     const found = this.product.vars.some(v => v.varCode === fieldName);
     //console.log(fieldName + "=" + found.toString());
@@ -257,7 +257,7 @@ throw new Error('Method not implemented.');
       values = validator.valueRight.split(',').map((s: string) => s.trim());
       this.ph_addr_typeCode = values.map(value => ({value: value, viewValue: value}));
     }
-    
+
     /*
 "saveValidator": [
         {

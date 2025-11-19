@@ -18,8 +18,9 @@ USER spring
 # Копируем JAR файл
 COPY --from=build /app/pt-launcher/build/libs/pt-launcher-*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8080 5005
 
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS ${DEBUG:+$DEBUG_OPTS} -jar app.jar"]

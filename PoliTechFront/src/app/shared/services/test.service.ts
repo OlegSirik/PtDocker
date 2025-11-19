@@ -38,13 +38,13 @@ export class TestService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
 
   getPfTypes(): Observable<PfType[]> {
-    return this.http.get<PfType[]>(`${this.baseUrl}/test/pf-types`).pipe(
+    return this.http.get<PfType[]>(`${this.baseUrl}test/pf-types`).pipe(
       catchError(() => of(this.mockPfTypes))
     );
   }
 
   validateQuote(requestJson: string): Observable<TestResponse> {
-    return this.http.post<TestResponse>(`${this.baseUrl}/test/quote/validator`, requestJson, {
+    return this.http.post<TestResponse>(`${this.baseUrl}test/quote/validator`, requestJson, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       catchError(() => {
@@ -74,7 +74,7 @@ export class TestService {
   }
 
   validatePolicy(requestJson: string): Observable<TestResponse> {
-    return this.http.post<TestResponse>(`${this.baseUrl}/test/policy/validator`, requestJson, {
+    return this.http.post<TestResponse>(`${this.baseUrl}test/policy/validator`, requestJson, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       catchError(() => {
@@ -100,7 +100,7 @@ export class TestService {
   }
 
   calculateQuote(requestJson: string): Observable<string> {
-    return this.http.post(`${this.baseUrl}/test/quote/calculator`, requestJson, {
+    return this.http.post(`${this.baseUrl}test/quote/calculator`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text'
     }).pipe(
@@ -119,7 +119,7 @@ export class TestService {
   }
 
   calculatePolicy(requestJson: string): Observable<string> {
-    return this.http.post(`${this.baseUrl}/test/policy/calculator`, requestJson, {
+    return this.http.post(`${this.baseUrl}test/policy/calculator`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text'
     }).pipe(
@@ -138,7 +138,7 @@ export class TestService {
   }
 
   printPf(requestJson: string, pfType: string): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/test/policy/printpf/${pfType}`, requestJson, {
+    return this.http.post(`${this.baseUrl}test/policy/printpf/${pfType}`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'blob'
     }).pipe(
