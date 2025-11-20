@@ -18,20 +18,17 @@ import ru.pt.auth.security.UserDetailsImpl;
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasAnyRoles('SYS_ADMIN')")
-public class AdminCalculatorController {
+public class AdminCalculatorController extends SecuredController {
 
     private final CalculatorService calculateService;
     private final CoefficientService coefficientService;
-    private final SecuredController securedController;
 
     public AdminCalculatorController(
             CalculatorService calculateService,
-            CoefficientService coefficientService,
-            SecuredController securedController
+            CoefficientService coefficientService
     ) {
         this.calculateService = calculateService;
         this.coefficientService = coefficientService;
-        this.securedController = securedController;
     }
 
     @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator")
@@ -40,7 +37,7 @@ public class AdminCalculatorController {
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
             @PathVariable("packageNo") Integer packageNo) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         CalculatorModel json = calculateService.getCalculator(productId, versionNo, packageNo);
         return json != null ? ResponseEntity.ok(json) : ResponseEntity.notFound().build();
     }
@@ -51,7 +48,7 @@ public class AdminCalculatorController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         return ResponseEntity.ok(coefficientService.getTable(calculatorId, code));
     }
 
@@ -61,7 +58,7 @@ public class AdminCalculatorController {
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
             @RequestBody ArrayNode tableJson) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         // if any exists -> error
         if (coefficientService.getTable(calculatorId, code).withArray("data").size() > 0) {
             return ResponseEntity.badRequest().build();
@@ -75,7 +72,7 @@ public class AdminCalculatorController {
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
             @RequestBody ArrayNode tableJson) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }
 
@@ -86,7 +83,7 @@ public class AdminCalculatorController {
             @PathVariable("versionNo") Integer versionNo,
             @PathVariable("packageNo") Integer packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         CalculatorModel json = calculateService.createCalculatorIfMissing(productId, productCode, versionNo, packageNo);
         return ResponseEntity.ok(json);
     }
@@ -99,7 +96,7 @@ public class AdminCalculatorController {
             @PathVariable("packageNo") Integer packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode,
             @RequestBody CalculatorModel newJson) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         CalculatorModel json = calculateService.replaceCalculator(productId, productCode, versionNo, packageNo, newJson);
         return ResponseEntity.ok(json);
     }
@@ -109,7 +106,7 @@ public class AdminCalculatorController {
     public ResponseEntity<Void> syncVars(
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("id") Integer calculatorId) {
-        securedController.requireAdmin(user);
+        requireAdmin(user);
         calculateService.syncVars(calculatorId);
         return ResponseEntity.ok().build();
     }
