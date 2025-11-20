@@ -91,7 +91,7 @@ export class ProductService {
       lob: 'NS',
       code: 'NS-SRAVNIRU',
       name: 'НС Сравниру',
-      versionNo: 0,
+      versionNo: 1,
       versionStatus: 'DRAFT',
       waitingPeriod: {
         validatorType: 'RANGE',

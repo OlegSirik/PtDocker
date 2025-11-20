@@ -13,7 +13,4 @@ public interface CalculatorRepository extends JpaRepository<CalculatorEntity, In
     Optional<CalculatorEntity> findByKeys(@Param("productId") Integer productId,
                                           @Param("versionNo") Integer versionNo,
                                           @Param("packageNo") Integer packageNo);
-
-    @Query("select nextval('pt_seq')")
-    Integer nextCalculatorId();
 }

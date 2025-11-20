@@ -3,6 +3,7 @@ package ru.pt.product.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class JsonExampleBuilder {
     }
 
     public static String buildCompleteJson(List<String> jsonPaths, Map<String, String> values) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
         ObjectNode root = mapper.createObjectNode();
 
         // Сначала создаем структуру
@@ -53,7 +54,7 @@ public class JsonExampleBuilder {
                 int index = Integer.parseInt(part.substring(part.indexOf("[") + 1, part.indexOf("]")));
 
                 if (!current.has(arrayName)) {
-                    current.set(arrayName, new ObjectMapper().createArrayNode());
+                    current.set(arrayName, new ObjectMapper().registerModule(new JavaTimeModule()).createArrayNode());
                 }
 
                 ArrayNode array = (ArrayNode) current.get(arrayName);
@@ -65,7 +66,7 @@ public class JsonExampleBuilder {
             } else {
                 if (!current.has(part)) {
                     if (i < parts.length - 1) {
-                        current.set(part, new ObjectMapper().createObjectNode());
+                        current.set(part, new ObjectMapper().registerModule(new JavaTimeModule()).createObjectNode());
                     } else {
                         current.put(part, value);
                     }

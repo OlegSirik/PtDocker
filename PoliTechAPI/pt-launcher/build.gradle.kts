@@ -50,6 +50,7 @@ dependencies {
 
     // JSON Processing
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // PDF Processing
     implementation("org.apache.pdfbox:pdfbox:3.0.2")

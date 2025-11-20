@@ -43,6 +43,7 @@ export class FilesService {
   constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
 
   getFiles(): Observable<FileTemplate[]> {
+    // на маке надо так this.http.get<FileTemplate[]>(`${this.baseUrl}admin/files`) -- нет слеша
     return this.http.get<FileTemplate[]>(`${this.baseUrl}admin/files`).pipe(
       catchError(() => of(this.mockFiles))
     );

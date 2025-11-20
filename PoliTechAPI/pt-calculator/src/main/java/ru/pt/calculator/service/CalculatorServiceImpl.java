@@ -78,10 +78,8 @@ public class CalculatorServiceImpl implements CalculatorService {
                         throw new IllegalArgumentException("LOB not found: " + productVersionModel.getLob());
                     }
 
-                    Integer id = calculatorRepository.nextCalculatorId();
                     // create empty calculator JSON as per spec
                     CalculatorModel calculatorModel = new CalculatorModel();
-                    calculatorModel.setId(id);
                     calculatorModel.setProductId(productId.intValue());
                     calculatorModel.setProductCode(productCode);
                     calculatorModel.setVersionNo(versionNo);
@@ -131,12 +129,10 @@ public class CalculatorServiceImpl implements CalculatorService {
 
 
                     CalculatorEntity e = new CalculatorEntity();
-                    e.setId(id);
                     e.setProductId(productId);
                     e.setProductCode(productCode);
                     e.setVersionNo(versionNo);
                     e.setPackageNo(packageNo);
-                    calculatorModel.setId(id);
                     String calculatorJson;
                     try {
                         calculatorJson = objectMapper.writeValueAsString(calculatorModel);
@@ -145,6 +141,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     }
                     e.setCalculator(calculatorJson);
                     CalculatorEntity saved = calculatorRepository.save(e);
+                    calculatorModel.setId(saved.getId());
 
                     String savedCalculatorJson = saved.getCalculator();
                     try {
