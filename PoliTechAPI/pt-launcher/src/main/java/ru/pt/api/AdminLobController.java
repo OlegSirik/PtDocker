@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/lobs")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminLobController extends SecuredController {
 
     private final LobService lobService;

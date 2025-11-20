@@ -3,6 +3,7 @@ package ru.pt.api.security;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.exception.UnauthorizedException;
 
 /**
  * Базовый класс для контроллеров с проверкой прав доступа.
@@ -13,9 +14,17 @@ public abstract class SecuredController {
     /**
      * Проверяет, имеет ли пользователь роль ADMIN
      */
-    protected void requireAdmin(UserDetailsImpl user) {
-        if (user == null || !"ADMIN".equals(user.getUserRole())) {
-            throw new AccessDeniedException("Admin role required");
+    public void requireAdmin(UserDetailsImpl user) {
+        if (user == null || !"SYS_ADMIN".equals(user.getUserRole())) {
+            throw new UnauthorizedException("Admin role required");
+        }
+    }
+    /**
+     * Проверяет, имеет ли пользователь нужную роль
+     */
+    protected void requireRole(UserDetailsImpl user, String role) {
+        if (user == null || !role.equals(user.getUserRole())) {
+            throw new UnauthorizedException(role + " required");
         }
     }
 
@@ -24,7 +33,7 @@ public abstract class SecuredController {
      */
     protected void requireProductRead(UserDetailsImpl user, String productCode) {
         if (user == null || !user.canPerformAction(productCode, "READ")) {
-            throw new AccessDeniedException("No read access to product: " + productCode);
+            throw new UnauthorizedException("No read access to product: " + productCode);
         }
     }
 
@@ -33,7 +42,7 @@ public abstract class SecuredController {
      */
     protected void requireProductQuote(UserDetailsImpl user, String productCode) {
         if (user == null || !user.canPerformAction(productCode, "QUOTE")) {
-            throw new AccessDeniedException("No quote access to product: " + productCode);
+            throw new UnauthorizedException("No quote access to product: " + productCode);
         }
     }
 
@@ -42,7 +51,7 @@ public abstract class SecuredController {
      */
     protected void requireProductPolicy(UserDetailsImpl user, String productCode) {
         if (user == null || !user.canPerformAction(productCode, "POLICY")) {
-            throw new AccessDeniedException("No policy access to product: " + productCode);
+            throw new UnauthorizedException("No policy access to product: " + productCode);
         }
     }
 
@@ -51,7 +60,7 @@ public abstract class SecuredController {
      */
     protected void requireProductWrite(UserDetailsImpl user, String productCode) {
         if (user == null || !user.canPerformAction(productCode, "ADDENDUM")) {
-            throw new AccessDeniedException("No write access to product: " + productCode);
+            throw new UnauthorizedException("No write access to product: " + productCode);
         }
     }
 
@@ -60,7 +69,7 @@ public abstract class SecuredController {
      */
     protected void requireAuthenticated(UserDetailsImpl user) {
         if (user == null) {
-            throw new AccessDeniedException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
     }
 

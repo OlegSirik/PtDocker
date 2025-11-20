@@ -1,4 +1,4 @@
-package ru.pt.auth.controller;
+package ru.pt.api.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

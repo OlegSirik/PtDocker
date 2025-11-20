@@ -17,15 +17,21 @@ import ru.pt.auth.security.UserDetailsImpl;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
-public class AdminCalculatorController extends SecuredController {
+@PreAuthorize("hasAnyRoles('SYS_ADMIN')")
+public class AdminCalculatorController {
 
     private final CalculatorService calculateService;
     private final CoefficientService coefficientService;
+    private final SecuredController securedController;
 
-    public AdminCalculatorController(CalculatorService calculateService, CoefficientService coefficientService) {
+    public AdminCalculatorController(
+            CalculatorService calculateService,
+            CoefficientService coefficientService,
+            SecuredController securedController
+    ) {
         this.calculateService = calculateService;
         this.coefficientService = coefficientService;
+        this.securedController = securedController;
     }
 
     @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator")
@@ -34,7 +40,7 @@ public class AdminCalculatorController extends SecuredController {
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
             @PathVariable("packageNo") Integer packageNo) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         CalculatorModel json = calculateService.getCalculator(productId, versionNo, packageNo);
         return json != null ? ResponseEntity.ok(json) : ResponseEntity.notFound().build();
     }
@@ -45,7 +51,7 @@ public class AdminCalculatorController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         return ResponseEntity.ok(coefficientService.getTable(calculatorId, code));
     }
 
@@ -55,7 +61,7 @@ public class AdminCalculatorController extends SecuredController {
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
             @RequestBody ArrayNode tableJson) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         // if any exists -> error
         if (coefficientService.getTable(calculatorId, code).withArray("data").size() > 0) {
             return ResponseEntity.badRequest().build();
@@ -69,7 +75,7 @@ public class AdminCalculatorController extends SecuredController {
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
             @RequestBody ArrayNode tableJson) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }
 
@@ -80,7 +86,7 @@ public class AdminCalculatorController extends SecuredController {
             @PathVariable("versionNo") Integer versionNo,
             @PathVariable("packageNo") Integer packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         CalculatorModel json = calculateService.createCalculatorIfMissing(productId, productCode, versionNo, packageNo);
         return ResponseEntity.ok(json);
     }
@@ -93,7 +99,7 @@ public class AdminCalculatorController extends SecuredController {
             @PathVariable("packageNo") Integer packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode,
             @RequestBody CalculatorModel newJson) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         CalculatorModel json = calculateService.replaceCalculator(productId, productCode, versionNo, packageNo, newJson);
         return ResponseEntity.ok(json);
     }
@@ -103,7 +109,7 @@ public class AdminCalculatorController extends SecuredController {
     public ResponseEntity<Void> syncVars(
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("id") Integer calculatorId) {
-        requireAdmin(user);
+        securedController.requireAdmin(user);
         calculateService.syncVars(calculatorId);
         return ResponseEntity.ok().build();
     }

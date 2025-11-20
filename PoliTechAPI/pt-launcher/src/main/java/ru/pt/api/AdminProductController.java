@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/products")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminProductController extends SecuredController {
 
     private final ProductService productService;
@@ -52,7 +52,7 @@ public class AdminProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("id") Integer id,
             @PathVariable("versionNo") Integer versionNo) {
-        requireAdmin(user);
+        requireRole(user, "SYS_ADMIN");
         return ResponseEntity.ok(productService.createVersionFrom(id, versionNo));
     }
 

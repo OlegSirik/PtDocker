@@ -28,7 +28,7 @@ public class AdminFileController extends SecuredController {
 
     // POST /admin/files body json
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, String>> createMeta(
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody Map<String, String> body) {
