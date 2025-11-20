@@ -1,11 +1,13 @@
 package ru.pt.auth.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.pt.auth.model.TokenRequest;
+import ru.pt.auth.model.TokenResponse;
+import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
@@ -21,9 +23,11 @@ import java.util.Map;
 public class AuthenticationController {
 
     private final SecurityContextHelper securityContextHelper;
+    private final JwtTokenUtil jwtTokenUtil;
 
-    public AuthenticationController(SecurityContextHelper securityContextHelper) {
+    public AuthenticationController(SecurityContextHelper securityContextHelper, JwtTokenUtil jwtTokenUtil) {
         this.securityContextHelper = securityContextHelper;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     /**
@@ -102,6 +106,52 @@ public class AuthenticationController {
     @PreAuthorize("hasRole('PRODUCT_CODE_READ')")
     public ResponseEntity<String> productRead() {
         return ResponseEntity.ok("You can read PRODUCT_CODE!");
+    }
+
+    /**
+     * Генерация JWT токена для пользователя
+     * POST /api/auth/token
+     */
+    @PostMapping("/token")
+    public ResponseEntity<TokenResponse> generateToken(@RequestBody TokenRequest request) {
+        String token = jwtTokenUtil.createToken(request.getUserLogin(), request.getClientId());
+
+        if (token == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to generate token");
+            error.put("message", "User not found or not associated with specified client");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new TokenResponse(null, error.get("message")));
+        }
+
+        TokenResponse response = new TokenResponse();
+        response.setAccessToken(token);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(24L * 60 * 60); // 24 часа в секундах
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Генерация refresh токена для пользователя
+     * POST /api/auth/refresh-token
+     */
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenResponse> generateRefreshToken(@RequestBody TokenRequest request) {
+        String refreshToken = jwtTokenUtil.refreshToken(request.getUserLogin(), request.getClientId());
+
+        if (refreshToken == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to generate refresh token");
+            error.put("message", "User not found or not associated with specified client");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new TokenResponse(null, error.get("message")));
+        }
+
+        TokenResponse response = new TokenResponse();
+        response.setRefreshToken(refreshToken);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(30L * 24 * 60 * 60); // 30 дней в секундах
+
+        return ResponseEntity.ok(response);
     }
 }
 

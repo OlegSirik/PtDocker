@@ -32,15 +32,16 @@
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
     <open-files>
-      <object connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" object-ref="schemas/public/tables/acc_logins" />
+      <object connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" object-ref="schemas/public/tables/acc_clients" />
       <object connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" object-ref="schemas/public/tables/acc_account_logins" />
+      <object connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" object-ref="schemas/public/tables/acc_logins" />
     </open-files>
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_account_tokens" active-filter-id="" />
+    <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_account_tokens" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_product_roles" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_logins" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.pt_products" active-filter-id="EMPTY_FILTER" />
@@ -49,7 +50,7 @@
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_clients" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_accounts" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.policy_data" active-filter-id="" />
-    <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_tenants" active-filter-id="">
+    <filter-actions connection-id="a93418db-bf44-4ee8-8a1e-b29963ec23dd" dataset="public.acc_tenants" active-filter-id="EMPTY_FILTER">
       <filter id="fe3dc109-4dcd-4fe9-8701-41ca322f3bbe" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="id" operator="=" value="" active="true" />
       </filter>
