@@ -346,7 +346,7 @@ public class AdminUserManagementService {
     }
 
     private AccountEntity getOrCreateTenantAccount(TenantEntity tenant) {
-        List<AccountEntity> tenantAccounts = accountRepository.findByNodeType("CLIENT");
+        List<AccountEntity> tenantAccounts = accountRepository.findByNodeType(AccountNodeType.CLIENT);
         return tenantAccounts.stream()
                 .filter(a -> a.getTenant().getId().equals(tenant.getId()))
                 .findFirst()
@@ -381,7 +381,7 @@ public class AdminUserManagementService {
     }
 
     private AccountEntity createProductAccount(TenantEntity tenant, ClientEntity client, String productName) {
-        AccountEntity groupAccount = accountRepository.findByNodeType("GROUP").stream()
+        AccountEntity groupAccount = accountRepository.findByNodeType(AccountNodeType.GROUP).stream()
                 .filter(a -> a.getTenant().getId().equals(tenant.getId()) &&
                         a.getClient().getId().equals(client.getId()))
                 .findFirst()

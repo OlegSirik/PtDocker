@@ -35,7 +35,7 @@ public class CreateAdminsAndUsersController {
      * POST /api/admin/tenants
      */
     @PostMapping("/tenants")
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> createTenant(@RequestBody CreateTenantRequest request) {
         try {
             TenantEntity tenant = adminUserManagementService.createTenant(request.getTenantName());
@@ -56,7 +56,7 @@ public class CreateAdminsAndUsersController {
      * DELETE /api/admin/tenants/{tenantId}
      */
     @DeleteMapping("/tenants/{tenantId}")
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteTenant(@PathVariable Long tenantId) {
         try {
             adminUserManagementService.deleteTenant(tenantId);
@@ -77,7 +77,7 @@ public class CreateAdminsAndUsersController {
      * POST /api/admin/tnt-admins
      */
     @PostMapping("/tnt-admins")
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> createTntAdmin(@RequestBody CreateAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createTntAdmin(
@@ -103,7 +103,7 @@ public class CreateAdminsAndUsersController {
      * DELETE /api/admin/tnt-admins/{accountLoginId}
      */
     @DeleteMapping("/tnt-admins/{accountLoginId}")
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteTntAdmin(@PathVariable Long accountLoginId) {
         try {
             adminUserManagementService.deleteTntAdmin(accountLoginId);
@@ -124,7 +124,7 @@ public class CreateAdminsAndUsersController {
      * POST /api/admin/group-admins
      */
     @PostMapping("/group-admins")
-    @PreAuthorize("hasAuthority('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> createGroupAdmin(@RequestBody CreateSimpleAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createGroupAdmin(
@@ -149,7 +149,7 @@ public class CreateAdminsAndUsersController {
      * DELETE /api/admin/group-admins/{accountLoginId}
      */
     @DeleteMapping("/group-admins/{accountLoginId}")
-    @PreAuthorize("hasAuthority('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteGroupAdmin(@PathVariable Long accountLoginId) {
         try {
             adminUserManagementService.deleteGroupAdmin(accountLoginId);
@@ -170,7 +170,7 @@ public class CreateAdminsAndUsersController {
      * POST /api/admin/product-admins
      */
     @PostMapping("/product-admins")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasRole('GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> createProductAdmin(@RequestBody CreateSimpleAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createProductAdmin(
@@ -195,7 +195,7 @@ public class CreateAdminsAndUsersController {
      * PUT /api/admin/product-admins/{accountLoginId}
      */
     @PutMapping("/product-admins/{accountLoginId}")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasRole('GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateProductAdmin(
             @PathVariable Long accountLoginId,
             @RequestBody UpdateProductAdminRequest request) {
@@ -223,7 +223,7 @@ public class CreateAdminsAndUsersController {
      * POST /api/admin/product-roles
      */
     @PostMapping("/product-roles")
-    @PreAuthorize("hasAuthority('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> assignProductRole(@RequestBody AssignProductRoleRequest request) {
         try {
             ProductRoleEntity role = adminUserManagementService.assignProductRole(
@@ -254,7 +254,7 @@ public class CreateAdminsAndUsersController {
      * DELETE /api/admin/product-roles/{productRoleId}
      */
     @DeleteMapping("/product-roles/{productRoleId}")
-    @PreAuthorize("hasAuthority('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> revokeProductRole(@PathVariable Long productRoleId) {
         try {
             adminUserManagementService.revokeProductRole(productRoleId);

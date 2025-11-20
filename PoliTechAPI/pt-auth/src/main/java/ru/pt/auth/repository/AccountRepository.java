@@ -3,6 +3,7 @@ package ru.pt.auth.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.pt.auth.entity.AccountEntity;
+import ru.pt.auth.entity.AccountNodeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      * Find accounts by node type
      */
     @Query("SELECT a FROM AccountEntity a WHERE a.nodeType = :nodeType ORDER BY a.name")
-    List<AccountEntity> findByNodeType(String nodeType);
+    List<AccountEntity> findByNodeType(AccountNodeType nodeType);
 
     /**
      * Find accounts by name containing the given string (case insensitive)

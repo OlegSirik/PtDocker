@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
         uniqueConstraints = @UniqueConstraint(name = "acc_account_tokens_uk", columnNames = {"token", "client_id"}))
 public class AccountTokenEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
