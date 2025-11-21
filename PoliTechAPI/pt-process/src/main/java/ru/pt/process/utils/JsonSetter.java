@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.common.util.StringUtils;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.product.LobVar;
@@ -12,7 +13,8 @@ import ru.pt.api.dto.product.LobVar;
 public class JsonSetter {
 
     private final ObjectNode root;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
 
     public JsonSetter(String json) {
         try {

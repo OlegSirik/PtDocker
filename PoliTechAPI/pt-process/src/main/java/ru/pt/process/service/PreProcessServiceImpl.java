@@ -221,53 +221,55 @@ public class PreProcessServiceImpl implements PreProcessService {
         if (issueDate == null) {
             throw new IllegalAccessError("Issue date is required");
         }
-        switch (validatorType) {
-            case "RANGE":
-                if (startDate == null) {
-                    throw new IllegalAccessError("Start date is required");
-                }
-
-                if (!PeriodUtils.isDateInRange(issueDate, startDate, validatorValue)) {
-                    throw new IllegalArgumentException("Activation delay is not in range");
-                }
-                setter.setRawValue("waitingPeriod", validatorValue);
-                break;
-            case "LIST":
-                // список доступных значений из модели полиса
-                // взять из договора policyTerm, проверить что это значение есть в списке. вычислить дату2
-                String[] list = validatorValue.split(",");
-                // если только одно значение, то только оно и возможно
-                if (list.length == 0) {
-                    throw new IllegalAccessError("validatorValue is invalid");
-                } else if (list.length == 1) {
-                    waitingPeriod = list[0];
-                } else {
-                    if (waitingPeriod == null) {
-                        throw new IllegalAccessError("Waiting period is required");
+        if (validatorType != null) {
+            switch (validatorType) {
+                case "RANGE":
+                    if (startDate == null) {
+                        throw new IllegalAccessError("Start date is required");
                     }
 
-                    boolean found = false;
-                    // check if policyTerm is in list array. loop through list and check if policyTerm is in list
-                    for (String period : list) {
-                        if (waitingPeriod.equals(period.trim())) {
-                            found = true;
-                            break;
+                    if (!PeriodUtils.isDateInRange(issueDate, startDate, validatorValue)) {
+                        throw new IllegalArgumentException("Activation delay is not in range");
+                    }
+                    setter.setRawValue("waitingPeriod", validatorValue);
+                    break;
+                case "LIST":
+                    // список доступных значений из модели полиса
+                    // взять из договора policyTerm, проверить что это значение есть в списке. вычислить дату2
+                    String[] list = validatorValue.split(",");
+                    // если только одно значение, то только оно и возможно
+                    if (list.length == 0) {
+                        throw new IllegalAccessError("validatorValue is invalid");
+                    } else if (list.length == 1) {
+                        waitingPeriod = list[0];
+                    } else {
+                        if (waitingPeriod == null) {
+                            throw new IllegalAccessError("Waiting period is required");
+                        }
+
+                        boolean found = false;
+                        // check if policyTerm is in list array. loop through list and check if policyTerm is in list
+                        for (String period : list) {
+                            if (waitingPeriod.equals(period.trim())) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            throw new IllegalAccessError("Waiting period is not in list");
                         }
                     }
-                    if (!found) {
-                        throw new IllegalAccessError("Waiting period is not in list");
-                    }
-                }
 
-                startDate = issueDate.plus(Period.parse(waitingPeriod));
+                    startDate = issueDate.plus(Period.parse(waitingPeriod));
 
-                setter.setRawValue("startDate", startDate.toString());
-                setter.setRawValue("waitingPeriod", waitingPeriod);
-                break;
-            case "NEXT_MONTH":
-                startDate = issueDate.plus(Period.parse("P1M")).withDayOfMonth(1);
-                setter.setRawValue("startDate", startDate.toString());
-                break;
+                    setter.setRawValue("startDate", startDate.toString());
+                    setter.setRawValue("waitingPeriod", waitingPeriod);
+                    break;
+                case "NEXT_MONTH":
+                    startDate = issueDate.plus(Period.parse("P1M")).withDayOfMonth(1);
+                    setter.setRawValue("startDate", startDate.toString());
+                    break;
+            }
         }
 
         return setter.writeValue();
@@ -290,50 +292,51 @@ public class PreProcessServiceImpl implements PreProcessService {
         if (startDate == null) {
             throw new BadRequestException("start date is required");
         }
-
-        switch (validatorType) {
-            case "RANGE":
-                if (endDate == null) {
-                    throw new BadRequestException("End date is required");
-                }
-
-                if (!PeriodUtils.isDateInRange(startDate, endDate, validatorValue)) {
-                    throw new IllegalArgumentException("Activation delay is not in range");
-                }
-                setter.setRawValue("policyTerm", validatorValue);
-                break;
-            case "LIST":
-                // должно быть startDate и policyTerm в договоре и policyTerms в модели полиса
-                // список доступных значений из модели полиса
-                String[] list = validatorValue.split(",");
-                // если только одно значение, то только оно и возможно
-                if (list.length == 0) {
-                    throw new IllegalAccessError("validatorValue is invalid");
-                } else if (list.length == 1) {
-                    policyTerm = list[0];
-                } else {
-                    if (policyTerm == null) {
-                        throw new IllegalAccessError("Policy term is required");
+        if (validatorType != null) {
+            switch (validatorType) {
+                case "RANGE":
+                    if (endDate == null) {
+                        throw new BadRequestException("End date is required");
                     }
 
-                    boolean found = false;
-                    // check if policyTerm is in list array. loop through list and check if policyTerm is in list
-                    for (String period : list) {
-                        if (policyTerm.equals(period.trim())) {
-                            found = true;
-                            break;
+                    if (!PeriodUtils.isDateInRange(startDate, endDate, validatorValue)) {
+                        throw new IllegalArgumentException("Activation delay is not in range");
+                    }
+                    setter.setRawValue("policyTerm", validatorValue);
+                    break;
+                case "LIST":
+                    // должно быть startDate и policyTerm в договоре и policyTerms в модели полиса
+                    // список доступных значений из модели полиса
+                    String[] list = validatorValue.split(",");
+                    // если только одно значение, то только оно и возможно
+                    if (list.length == 0) {
+                        throw new IllegalAccessError("validatorValue is invalid");
+                    } else if (list.length == 1) {
+                        policyTerm = list[0];
+                    } else {
+                        if (policyTerm == null) {
+                            throw new IllegalAccessError("Policy term is required");
+                        }
+
+                        boolean found = false;
+                        // check if policyTerm is in list array. loop through list and check if policyTerm is in list
+                        for (String period : list) {
+                            if (policyTerm.equals(period.trim())) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            throw new IllegalArgumentException("Policy term is not in list");
                         }
                     }
-                    if (!found) {
-                        throw new IllegalArgumentException("Policy term is not in list");
-                    }
-                }
 
-                endDate = startDate.plus(Period.parse(policyTerm));
+                    endDate = startDate.plus(Period.parse(policyTerm));
 
-                setter.setRawValue("endDate", endDate.toString());
-                setter.setRawValue("policyTerm", policyTerm);
-                break;
+                    setter.setRawValue("endDate", endDate.toString());
+                    setter.setRawValue("policyTerm", policyTerm);
+                    break;
+            }
         }
 
         return policy;

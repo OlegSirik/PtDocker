@@ -63,7 +63,7 @@ export class ProductComponent implements OnInit {
     lob: '',
     code: '',
     name: '',
-    versionNo: 0,
+    versionNo: 1,
     waitingPeriod: {validatorType: 'RANGE', validatorValue: ''},
     policyTerm: { validatorType: 'RANGE', validatorValue: '' },
     numberGenerator: { mask: '', maxValue: 0, resetPolicy: 'MONTHLY', xorMask: '' },
@@ -146,7 +146,7 @@ export class ProductComponent implements OnInit {
   filteredPolicyVars: PolicyVar[] = [];
   paginatedPolicyVars: PolicyVar[] = [];
   policyVars: PolicyVar[] = [];
-  
+
 
   constructor(
     private route: ActivatedRoute,
@@ -159,11 +159,11 @@ export class ProductComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    
-    
+
+
     const id = this.route.snapshot.paramMap.get('id');
     const versionNo = this.route.snapshot.paramMap.get('versionNo');
-    
+
     if (id === 'new') {
       this.isNewRecord = true;
       this.loadProduct();
@@ -490,9 +490,9 @@ export class ProductComponent implements OnInit {
   // Cover methods
   addCover(): void {
     if (this.selectedPackageIndex === -1) return;
-    
+
     this.loadDropdownOptions();
-    
+
     const dialogRef = this.dialog.open(CoverDialogComponent, {
       width: '600px',
       data: {
@@ -574,7 +574,7 @@ export class ProductComponent implements OnInit {
   // Deductible methods
   addDeductible(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return;
-    
+
     const dialogRef = this.dialog.open(DeductibleDialogComponent, {
       width: '600px',
       data: {
@@ -650,7 +650,7 @@ export class ProductComponent implements OnInit {
   // Limits methods
   addLimit(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return;
-    
+
     const dialogRef = this.dialog.open(LimitDialogComponent, {
       width: '500px',
       data: {
@@ -820,7 +820,7 @@ export class ProductComponent implements OnInit {
         } else {
           prevCategory = 'others';
         }
-        
+
         if (category === prevCategory) {
           category = ''; // Hide duplicate category
         }

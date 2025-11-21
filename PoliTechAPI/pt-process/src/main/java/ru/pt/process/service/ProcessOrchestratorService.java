@@ -68,7 +68,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         var product = productService.getProductByCode(productCode, false);
 
-        LobModel lobModel = lobService.getByCode(productCode);
+        LobModel lobModel = lobService.getByCode(product.getLob());
 
         policy = preProcessService.enrichPolicy(policy, product);
 

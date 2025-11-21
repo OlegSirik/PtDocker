@@ -3,11 +3,12 @@ package ru.pt.hz;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.*;
 
 public class JsonExampleBuilder {
-    
+
 
     public static String buildJsonExample(List<String> jsonPaths) throws Exception {
         return buildCompleteJson(jsonPaths, createPathsMap());
@@ -22,9 +23,9 @@ public class JsonExampleBuilder {
     }
 
     public static String buildCompleteJson(List<String> jsonPaths, Map<String, String> values) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
         ObjectNode root = mapper.createObjectNode();
-        
+
         // Сначала создаем структуру
         for (String path : jsonPaths) {
             String value = values.get(path);
@@ -36,46 +37,46 @@ public class JsonExampleBuilder {
 
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
     }
-    
+
     private static void createPath(ObjectNode node, String jsonPath, String value) {
         String[] parts = jsonPath.split("\\.");
         ObjectNode current = node;
-        
+
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i];
-            
+
             if (part.contains("[")) {
                 String arrayName = part.substring(0, part.indexOf("["));
                 int index = Integer.parseInt(part.substring(part.indexOf("[") + 1, part.indexOf("]")));
-                
+
                 if (!current.has(arrayName)) {
-                    current.set(arrayName, new ObjectMapper().createArrayNode());
+                    current.set(arrayName, new ObjectMapper().registerModule(new JavaTimeModule()).createArrayNode());
                 }
-                
+
                 ArrayNode array = (ArrayNode) current.get(arrayName);
                 while (array.size() <= index) {
                     array.addObject();
                 }
-                
+
                 current = (ObjectNode) array.get(index);
             } else {
                 if (!current.has(part)) {
                     if (i < parts.length - 1) {
-                        current.set(part, new ObjectMapper().createObjectNode());
+                        current.set(part, new ObjectMapper().registerModule(new JavaTimeModule()).createObjectNode());
                     } else {
                         current.put(part, value);
                     }
                 }
                 if (i < parts.length - 1) {
                     current = (ObjectNode) current.get(part);
-                }            
+                }
             }
         }
-    }  
-    
+    }
+
     private static Map<String, String> createPathsMap() {
         Map<String, String> paths = new LinkedHashMap<>();
-        
+
         // Person paths
         paths.put("policyHolder.person.firstName", "Фаддей");
         paths.put("policyHolder.person.lastName", "Беллинсгаузен");
@@ -91,13 +92,13 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.person.isResident", "true");
         paths.put("policyHolder.person.vsk_id", "1234567890");
         paths.put("policyHolder.person.ext_id", "");
-        
+
         // Phone paths
         paths.put("policyHolder.phone.phoneNumber", "79991234567");
-        
+
         // Email paths
         paths.put("policyHolder.email", "faddey.bellinghausen@example.com");
-        
+
         // Organization paths
         paths.put("policyHolder.organization.country", "");
         paths.put("policyHolder.organization.inn", "");
@@ -114,7 +115,7 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.organization.vsk_id", "");
         paths.put("policyHolder.organization.ext_id", "");
         paths.put("policyHolder.organization.nciCode", "");
-        
+
         // Document paths (Person)
         paths.put("policyHolder.passport.typeCode", "PASSPORT");
         paths.put("policyHolder.passport.serial", "1234");
@@ -126,7 +127,7 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.passport.vsk_id", "");
         paths.put("policyHolder.passport.ext_id", "");
         paths.put("policyHolder.passport.countryCode", "RU");
-        
+
         // Address paths
         paths.put("policyHolder.address.typeCode", "REGISTRATION");
         paths.put("policyHolder.address.countryCode", "RU");
@@ -144,7 +145,7 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.address.addressStrEn", "Saint Petersburg, Square Bellinghausen");
         paths.put("policyHolder.address.vsk_id", "");
         paths.put("policyHolder.address.ext_id", "");
-        
+
         // Organization Document paths
         paths.put("policyHolder.document.typeCode", "");
         paths.put("policyHolder.document.serial", "");
@@ -156,7 +157,7 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.document.vsk_id", "");
         paths.put("policyHolder.document.ext_id", "");
         paths.put("policyHolder.document.countryCode", "RU");
-        
+
         return Collections.unmodifiableMap(paths);
     }
 }

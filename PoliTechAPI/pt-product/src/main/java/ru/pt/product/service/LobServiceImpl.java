@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Lob;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.Set;
 
 @Component
 public class LobServiceImpl implements LobService {
+
+    private final Logger log = LoggerFactory.getLogger(LobServiceImpl.class);
 
     private final LobRepository lobRepository;
     private final ObjectMapper objectMapper;

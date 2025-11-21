@@ -3,6 +3,7 @@ package ru.pt.auth.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
@@ -200,7 +201,7 @@ public class AccountServiceImpl implements AccountService {
         }
 
         // create JSON  with fasterxml.jackson
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         ObjectNode jsonNode = objectMapper.createObjectNode();
         jsonNode.put("id", accountLogin.getId());
         jsonNode.put("login", accountLogin.getLogin().getUserLogin());

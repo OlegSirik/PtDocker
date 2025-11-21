@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
@@ -18,11 +20,14 @@ import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
 
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class ProductServiceImpl implements ProductService {
+
+    private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final ProductRepository productRepository;
     private final LobService lobService;
@@ -69,10 +74,8 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException("name must not be empty");
         }
 
-        Integer id = productRepository.getNextProductId();
 
         ProductEntity product = new ProductEntity();
-        product.setId(id);
         var versionStatus = productVersionModel.getVersionStatus();
         if (versionStatus!= null && versionStatus.equals("PROD")) {
             product.setProdVersionNo(productVersionModel.getVersionNo());
@@ -83,9 +86,9 @@ public class ProductServiceImpl implements ProductService {
         product.setLob(productVersionModel.getLob());
         product.setCode(productVersionModel.getCode());
         product.setName(productVersionModel.getName());
-        productRepository.save(product);
+        var saved = productRepository.save(product);
 
-        productVersionModel.setId(id);
+        productVersionModel.setId(saved.getId());
 
         if (productVersionModel.getQuoteValidator() == null) {
             productVersionModel.setQuoteValidator(new ArrayList<>());
@@ -106,20 +109,10 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductVersionEntity pv = new ProductVersionEntity();
-        pv.setProductId(id);
+        pv.setProductId(saved.getId());
         pv.setVersionNo(productVersionModel.getVersionNo());
 
-
-        String productJson;
-        try {
-            productJson = objectMapper.writeValueAsString(productVersionModel);
-        } catch (JsonProcessingException e) {
-            // TODO exception handling
-            throw new RuntimeException(e);
-        }
-        pv.setProduct(productJson);
-
-// copy lob.mpVars to productVersionModel.vars
+        log.info("Getting lob data by code {}", productVersionModel.getLob());
         LobModel lob = lobService.getByCode(productVersionModel.getLob());
         if (lob != null) {
             if (productVersionModel.getVars() == null) {
@@ -135,8 +128,18 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setVarDataType(var.getVarDataType());
                 productVersionModel.getVars().add(pvVar);
             }
+        } else {
+            log.warn("No variables copied from lob!!");
         }
 
+        String productJson;
+        try {
+            productJson = objectMapper.writeValueAsString(productVersionModel);
+        } catch (JsonProcessingException e) {
+            // TODO exception handling
+            throw new RuntimeException(e);
+        }
+        pv.setProduct(productJson);
 
         productVersionRepository.save(pv);
 
@@ -270,7 +273,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", OffsetDateTime.now().toString());
+        jsonValues.put("issueDate", ZonedDateTime.now().toString());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -278,7 +281,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("waitingPeriod", value);
         } else {
             jsonPaths.add("startDate");
-            jsonValues.put("startDate", OffsetDateTime.now().toString());
+            jsonValues.put("startDate", ZonedDateTime.now().toString());
         }
 
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
@@ -323,7 +326,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", OffsetDateTime.now().toString());
+        jsonValues.put("issueDate", ZonedDateTime.now().toString());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -386,11 +389,18 @@ public class ProductServiceImpl implements ProductService {
     //get product by code and isDeletedFalse
     @Override
     public ProductVersionModel getProductByCode(String code, boolean forDev) {
+
+        log.info("Finging product by code {}, forDev - {}", code, forDev);
+
         var entity = productRepository.findByCodeAndIsDeletedFalse(code)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
-
-        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), entity.getProdVersionNo())
+        if (versionNo == null) {
+            // TODO fix me
+            log.warn("No true version number resolution, we will take just not null");
+            versionNo = entity.getProdVersionNo() == null ? entity.getDevVersionNo() : entity.getProdVersionNo();
+        }
+        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);

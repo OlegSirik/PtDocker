@@ -51,9 +51,9 @@ export class ProductsComponent implements OnInit {
   get filteredProducts(): ProductList[] {
     const s = this.searchText.trim().toLowerCase();
     if (!s) return this.products;
-    return this.products.filter(p => 
-      p.name.toLowerCase().includes(s) || 
-      p.code.toLowerCase().includes(s) || 
+    return this.products.filter(p =>
+      p.name.toLowerCase().includes(s) ||
+      p.code.toLowerCase().includes(s) ||
       p.lob.toLowerCase().includes(s)
     );
   }
@@ -88,11 +88,11 @@ export class ProductsComponent implements OnInit {
 
   editProduct(product: ProductList): void {
     if (!product?.id) return;
-    
+
     // Use devVersionNo if available, otherwise use prodVersionNo, fallback to 0
-    const versionNo = product.devVersionNo !== undefined ? product.devVersionNo : 
+    const versionNo = product.devVersionNo !== undefined ? product.devVersionNo :
                      product.prodVersionNo !== undefined ? product.prodVersionNo : 0;
-    
+
     this.router.navigate(['/product', product.id, 'version', versionNo]);
   }
 
@@ -197,7 +197,7 @@ export class CreateProductDialogComponent {
     lob: '',
     code: '',
     name: '',
-    versionNo: 0,
+    versionNo: 1,
     waitingPeriod: {},
     policyTerm: {},
     numberGenerator: { mask: '', maxValue: 0, resetPolicy: 'MONTHLY', xorMask: '' },

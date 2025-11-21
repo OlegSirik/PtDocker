@@ -30,6 +30,8 @@ export class BusinessLineService {
       throw new Error('HttpClient is not initialized');
     }
 
+    console.log("getting from backend " + this.baseUrl + "/admin/lobs")
+
     return this.http.get<BusinessLine[]>(`${this.baseUrl}admin/lobs`).pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
