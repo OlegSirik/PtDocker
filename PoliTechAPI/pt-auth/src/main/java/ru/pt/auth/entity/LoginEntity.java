@@ -13,6 +13,8 @@ import java.util.List;
         uniqueConstraints = @UniqueConstraint(name = "acc_logins_uk", columnNames = {"user_login", "tid"}))
 public class LoginEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

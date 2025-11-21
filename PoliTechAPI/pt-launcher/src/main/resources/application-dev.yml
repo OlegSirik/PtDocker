@@ -1,7 +1,7 @@
 # Development profile configuration
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pt_db_dev
+    url: jdbc:postgresql://localhost:5432/pt-db
     username: spring
     password: spring
   jpa:

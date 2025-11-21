@@ -1,0 +1,787 @@
+{
+  "info": {
+    "name": "Admin User Management API",
+    "description": "Complete collection for Admin User Management with JWT tokens and role-based access control",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Get JWT tokens for different roles",
+      "item": [
+        {
+          "name": "Get SYS_ADMIN Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"sys_admin\",\n  \"clientId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Get JWT token for SYS_ADMIN role"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"sys_admin_token\", data.accessToken);",
+                  "    pm.environment.set(\"sys_admin_token_expires\", new Date().getTime() + (24 * 60 * 60 * 1000));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get TNT_ADMIN Token (after create)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"tnt_admin_test\",\n  \"clientId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Get JWT token for TNT_ADMIN role"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"tnt_admin_token\", data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get GROUP_ADMIN Token (after create)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"group_admin_test\",\n  \"clientId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Get JWT token for GROUP_ADMIN role"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"group_admin_token\", data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenant Management (SYS_ADMIN)",
+      "description": "Only SYS_ADMIN can create and delete tenants",
+      "item": [
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sys_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantName\": \"Company A\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tenants"]
+            },
+            "description": "Create new tenant (SYS_ADMIN only)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"tenant_id\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sys_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/tenants/{{tenant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tenants", "{{tenant_id}}"]
+            },
+            "description": "Delete tenant (soft delete, SYS_ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Try Create Tenant as TNT_ADMIN (should fail 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantName\": \"Company B\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tenants"]
+            },
+            "description": "Test: TNT_ADMIN should NOT be able to create tenant (403)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Forbidden\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message contains only SYS_ADMIN\", function() {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.error).to.include(\"SYS_ADMIN\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TNT_ADMIN Management (SYS_ADMIN)",
+      "description": "Only SYS_ADMIN can create and delete TNT_ADMIN users",
+      "item": [
+        {
+          "name": "Create TNT_ADMIN User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sys_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": 1,\n  \"userLogin\": \"tnt_admin_test\",\n  \"userName\": \"Test Tenant Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tnt-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tnt-admins"]
+            },
+            "description": "Create TNT_ADMIN user for a tenant (SYS_ADMIN only)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"tnt_admin_account_login_id\", data.id);",
+                  "    pm.environment.set(\"tnt_admin_user_role\", data.userRole);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete TNT_ADMIN User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sys_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/tnt-admins/{{tnt_admin_account_login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tnt-admins", "{{tnt_admin_account_login_id}}"]
+            },
+            "description": "Delete TNT_ADMIN user (SYS_ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Try Create TNT_ADMIN as GROUP_ADMIN (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{group_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": 1,\n  \"userLogin\": \"another_tnt_admin\",\n  \"userName\": \"Another Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tnt-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tnt-admins"]
+            },
+            "description": "Test: GROUP_ADMIN should NOT create TNT_ADMIN (403)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Forbidden\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GROUP_ADMIN Management (TNT_ADMIN)",
+      "description": "Only TNT_ADMIN can create and delete GROUP_ADMIN users",
+      "item": [
+        {
+          "name": "Create GROUP_ADMIN User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"group_admin_test\",\n  \"userName\": \"Test Group Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/group-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "group-admins"]
+            },
+            "description": "Create GROUP_ADMIN user (TNT_ADMIN only, tenant/client from context)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"group_admin_account_login_id\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete GROUP_ADMIN User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/group-admins/{{group_admin_account_login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "group-admins", "{{group_admin_account_login_id}}"]
+            },
+            "description": "Delete GROUP_ADMIN user (TNT_ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Try Create GROUP_ADMIN as SYS_ADMIN (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sys_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"another_group_admin\",\n  \"userName\": \"Another Group Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/group-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "group-admins"]
+            },
+            "description": "Test: SYS_ADMIN should NOT create GROUP_ADMIN (403)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Forbidden\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PRODUCT_ADMIN Management (GROUP_ADMIN)",
+      "description": "Only GROUP_ADMIN can create and edit PRODUCT_ADMIN users",
+      "item": [
+        {
+          "name": "Create PRODUCT_ADMIN User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{group_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"product_admin_test\",\n  \"userName\": \"Test Product Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-admins"]
+            },
+            "description": "Create PRODUCT_ADMIN user (GROUP_ADMIN only)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"product_admin_account_login_id\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update PRODUCT_ADMIN User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{group_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userRole\": \"PRODUCT_ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-admins/{{product_admin_account_login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-admins", "{{product_admin_account_login_id}}"]
+            },
+            "description": "Update PRODUCT_ADMIN user (GROUP_ADMIN only)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Try Create PRODUCT_ADMIN as TNT_ADMIN (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"another_product_admin\",\n  \"userName\": \"Another Product Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-admins"]
+            },
+            "description": "Test: TNT_ADMIN should NOT create PRODUCT_ADMIN (403)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Forbidden\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Product Roles Management (TNT_ADMIN)",
+      "description": "Only TNT_ADMIN can assign and revoke product roles",
+      "item": [
+        {
+          "name": "Assign Product Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": 1,\n  \"roleProductId\": 1,\n  \"canRead\": true,\n  \"canQuote\": true,\n  \"canPolicy\": true,\n  \"canAddendum\": false,\n  \"canCancel\": false,\n  \"canProlong\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles"]
+            },
+            "description": "Assign product role to account (TNT_ADMIN only)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"product_role_id\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke Product Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tnt_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles/{{product_role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles", "{{product_role_id}}"]
+            },
+            "description": "Revoke product role from account (TNT_ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Try Assign Product Role as GROUP_ADMIN (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{group_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": 2,\n  \"roleProductId\": 2,\n  \"canRead\": true,\n  \"canQuote\": false,\n  \"canPolicy\": false,\n  \"canAddendum\": false,\n  \"canCancel\": false,\n  \"canProlong\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles"]
+            },
+            "description": "Test: GROUP_ADMIN should NOT assign product roles (403)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Forbidden\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Complete Workflow Examples",
+      "description": "Full workflow examples showing role hierarchy",
+      "item": [
+        {
+          "name": "Workflow 1: Complete User Creation Chain",
+          "description": "SYS_ADMIN → TNT_ADMIN → GROUP_ADMIN → PRODUCT_ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}",
+              "host": ["{{base_url}}"]
+            }
+          }
+        },
+        {
+          "name": "Workflow 2: Product Role Assignment",
+          "description": "TNT_ADMIN assigns product roles to GROUP_ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}",
+              "host": ["{{base_url}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "sys_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tnt_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "group_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenant_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "tnt_admin_account_login_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "group_admin_account_login_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_admin_account_login_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_role_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sys_admin_token_expires",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+

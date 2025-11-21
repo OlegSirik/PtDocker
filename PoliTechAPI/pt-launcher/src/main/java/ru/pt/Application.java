@@ -12,8 +12,7 @@ import ru.pt.files.configuration.FilesModuleConfiguration;
 import ru.pt.numbers.configuration.NumbersModuleConfiguration;
 import ru.pt.process.configuration.ProcessModuleConfiguration;
 
-@SpringBootApplication(exclude = {SecurityAutoConfiguration.class,
-        ManagementWebSecurityAutoConfiguration.class})
+@SpringBootApplication()
 // spring по идее подтянет, но, лучше явно указать
 @Import({NumbersModuleConfiguration.class,
         ProcessModuleConfiguration.class,

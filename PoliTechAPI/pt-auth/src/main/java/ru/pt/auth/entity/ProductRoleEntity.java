@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
                 columnNames = {"account_id", "role_product_id", "role_account_id"}))
 public class ProductRoleEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.springframework.security:spring-security-core")
+//    compileOnly("org.springframework.security:spring-security-core")
     runtimeOnly("org.postgresql:postgresql")
     implementation(project(":pt-api"))
     implementation("org.springframework:spring-web")

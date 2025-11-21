@@ -5,5 +5,6 @@ public enum AccountNodeType {
     CLIENT,
     GROUP,
     ACCOUNT,    
-    SUBACCOUNT
+    SUBACCOUNT,
+    ADMIN
 }

@@ -1,0 +1,182 @@
+{
+  "info": {
+    "name": "Account Token API",
+    "description": "API для управления токенами аккаунтов",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userLogin\": \"sys_admin\",\n  \"clientId\": 1,\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzeXNfYWRtaW4iLCJpYXQiOjE3MDA0ODAwMDB9.example_signature\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens"]
+        },
+        "description": "Создает новый токен для пользователя. Требуются права SYS_ADMIN или TNT_ADMIN."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Token",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userLogin\": \"sys_admin\",\n  \"clientId\": 1,\n  \"newToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzeXNfYWRtaW4iLCJpYXQiOjE3MDA0ODAwMDB9.new_signature\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens"]
+        },
+        "description": "Обновляет существующий токен. Требуются права SYS_ADMIN или TNT_ADMIN."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Token by UserLogin and ClientId",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens?userLogin=sys_admin&clientId=1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens"],
+          "query": [
+            {
+              "key": "userLogin",
+              "value": "sys_admin"
+            },
+            {
+              "key": "clientId",
+              "value": "1"
+            }
+          ]
+        },
+        "description": "Получает токен по логину пользователя и ID клиента."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Tokens by UserLogin",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens/user/sys_admin",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens", "user", "sys_admin"]
+        },
+        "description": "Получает все токены для указанного пользователя."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Token",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens?userLogin=sys_admin&clientId=1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens"],
+          "query": [
+            {
+              "key": "userLogin",
+              "value": "sys_admin"
+            },
+            {
+              "key": "clientId",
+              "value": "1"
+            }
+          ]
+        },
+        "description": "Удаляет токен для пользователя и клиента. Требуются права SYS_ADMIN или TNT_ADMIN."
+      },
+      "response": []
+    },
+    {
+      "name": "Check Token Exists",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens/exists?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example&clientId=1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "tokens", "exists"],
+          "query": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example"
+            },
+            {
+              "key": "clientId",
+              "value": "1"
+            }
+          ]
+        },
+        "description": "Проверяет, существует ли токен в базе данных."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ]
+}
+

@@ -1,9 +1,5 @@
 package ru.pt.api.dto.auth;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +9,7 @@ import java.util.stream.Collectors;
  * DTO с авторизационной информацией
  * Предполагается заполнение после проверки токена в момент получения запроса
  */
-public class UserData implements UserDetails {
+public class UserData {
     // тип аккаунта
     private AccountType accountType;
     // почта пользователя
@@ -47,14 +43,6 @@ public class UserData implements UserDetails {
         this.accountType = accountType;
     }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    @Override
     public String getPassword() {
         return "";
     }
