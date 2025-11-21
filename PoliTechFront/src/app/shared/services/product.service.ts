@@ -206,7 +206,7 @@ export class ProductService {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<Product>(`${this.baseUrl}admin/products/${id}/versions/${versionNo}`).pipe(
+    return this.http.get<Product>(`${this.baseUrl}/admin/products/${id}/versions/${versionNo}`).pipe(
       tap(data => {
           this.mockData = data;
           this.fixProduct();
@@ -229,7 +229,7 @@ export class ProductService {
 
 
     if (this.http) {
-      return this.http.post<Product>(`${this.baseUrl}admin/products`, product).pipe(
+      return this.http.post<Product>(`${this.baseUrl}/admin/products`, product).pipe(
         tap(createdProduct => {
           this.mockData = { ...createdProduct };
           this.fixProduct();
@@ -250,7 +250,7 @@ export class ProductService {
     const versionNo = product.versionNo;
 
     if (this.http) {
-      return this.http.put<Product>(`${this.baseUrl}admin/products/${id}/versions/${versionNo}`, product).pipe(
+      return this.http.put<Product>(`${this.baseUrl}/admin/products/${id}/versions/${versionNo}`, product).pipe(
         tap(updatedProduct => {
           this.mockData = { ...updatedProduct };
           this.fixProduct();
@@ -350,7 +350,7 @@ handleHttpError(error: any): string {
       });
     }
 
-    const url = `${this.baseUrl}admin/products/${productId}/versions/${versionNo}/example_quote`;
+    const url = `${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/example_quote`;
     return this.http.get<any>(url).pipe(
       catchError((error) => {
         console.error('Error fetching test request:', error);
@@ -373,7 +373,7 @@ handleHttpError(error: any): string {
       });
     }
 
-    const url = `${this.baseUrl}admin/products/${productId}/versions/${versionNo}/example_save`;
+    const url = `${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/example_save`;
     return this.http.get<any>(url).pipe(
       catchError((error) => {
         console.error('Error fetching test request:', error);

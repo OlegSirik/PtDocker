@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import ru.pt.api.dto.db.PolicyStatus;
 
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 /**
@@ -30,22 +31,22 @@ public class PolicyIndexEntity {
     private String productCode;
 
     @Column(name = "create_date")
-    private OffsetDateTime createDate;
+    private ZonedDateTime createDate;
 
     @Column(name = "issue_date")
-    private OffsetDateTime issueDate;
+    private ZonedDateTime issueDate;
 
     @Column(name = "issue_timezone", length = 50)
     private String issueTimezone;
 
     @Column(name = "payment_date")
-    private OffsetDateTime paymentDate;
+    private ZonedDateTime paymentDate;
 
     @Column(name = "start_date")
-    private OffsetDateTime startDate;
+    private ZonedDateTime startDate;
 
     @Column(name = "end_date")
-    private OffsetDateTime endDate;
+    private ZonedDateTime endDate;
 
     @Column(name = "user_account_id")
     private Long userAccountId;
@@ -105,19 +106,19 @@ public class PolicyIndexEntity {
         this.productCode = productCode;
     }
 
-    public OffsetDateTime getCreateDate() {
+    public ZonedDateTime getCreateDate() {
         return createDate;
     }
 
-    public void setCreateDate(OffsetDateTime createDate) {
+    public void setCreateDate(ZonedDateTime createDate) {
         this.createDate = createDate;
     }
 
-    public OffsetDateTime getIssueDate() {
+    public ZonedDateTime getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(OffsetDateTime issueDate) {
+    public void setIssueDate(ZonedDateTime issueDate) {
         this.issueDate = issueDate;
     }
 
@@ -129,27 +130,27 @@ public class PolicyIndexEntity {
         this.issueTimezone = issueTimezone;
     }
 
-    public OffsetDateTime getPaymentDate() {
+    public ZonedDateTime getPaymentDate() {
         return paymentDate;
     }
 
-    public void setPaymentDate(OffsetDateTime paymentDate) {
+    public void setPaymentDate(ZonedDateTime paymentDate) {
         this.paymentDate = paymentDate;
     }
 
-    public OffsetDateTime getStartDate() {
+    public ZonedDateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(OffsetDateTime startDate) {
+    public void setStartDate(ZonedDateTime startDate) {
         this.startDate = startDate;
     }
 
-    public OffsetDateTime getEndDate() {
+    public ZonedDateTime getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(OffsetDateTime endDate) {
+    public void setEndDate(ZonedDateTime endDate) {
         this.endDate = endDate;
     }
 
