@@ -20,6 +20,27 @@ services:
       timeout: 10s
       retries: 3
 
+  # SSO Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.0
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: postgres
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_DB_SCHEMA: public
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "9000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
   # Бэкенд на Spring Boot 3
   backend:
     # build:
