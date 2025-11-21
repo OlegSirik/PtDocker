@@ -7,8 +7,10 @@ import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.db.entity.PolicyIndexEntity;
 
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
+
+import static ru.pt.api.utils.DateTimeUtils.formatter;
 
 @Component
 public class PolicyProjectionService {
@@ -35,14 +37,14 @@ public class PolicyProjectionService {
         try {
             String createDateStr = ctx.read("$.createDate", String.class);
             if (createDateStr != null) {
-                index.setCreateDate(OffsetDateTime.parse(createDateStr));
+                index.setCreateDate(ZonedDateTime.parse(createDateStr, formatter));
             }
         } catch (Exception e) {
         }
         try {
             String issueDateStr = ctx.read("$.issueDate", String.class);
             if (issueDateStr != null) {
-                index.setIssueDate(OffsetDateTime.parse(issueDateStr));
+                index.setIssueDate(ZonedDateTime.parse(issueDateStr, formatter));
             }
         } catch (Exception e) {
         }
@@ -53,21 +55,21 @@ public class PolicyProjectionService {
         try {
             String paymentDateStr = ctx.read("$.paymentDate", String.class);
             if (paymentDateStr != null) {
-                index.setPaymentDate(OffsetDateTime.parse(paymentDateStr));
+                index.setPaymentDate(ZonedDateTime.parse(paymentDateStr, formatter));
             }
         } catch (Exception e) {
         }
         try {
             String startDateStr = ctx.read("$.startDate", String.class);
             if (startDateStr != null) {
-                index.setStartDate(OffsetDateTime.parse(startDateStr));
+                index.setStartDate(ZonedDateTime.parse(startDateStr, formatter));
             }
         } catch (Exception e) {
         }
         try {
             String endDateStr = ctx.read("$.endDate", String.class);
             if (endDateStr != null) {
-                index.setEndDate(OffsetDateTime.parse(endDateStr));
+                index.setEndDate(ZonedDateTime.parse(endDateStr, formatter));
             }
         } catch (Exception e) {
         }
@@ -85,7 +87,7 @@ public class PolicyProjectionService {
 
         // Set default create date if not provided
         if (index.getCreateDate() == null) {
-            index.setCreateDate(OffsetDateTime.now());
+            index.setCreateDate(ZonedDateTime.now());
         }
 
         index.setPolicyStatus(PolicyStatus.NEW);

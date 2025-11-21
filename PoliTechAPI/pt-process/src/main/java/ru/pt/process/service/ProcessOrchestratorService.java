@@ -1,7 +1,10 @@
 package ru.pt.process.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.UserData;
 import ru.pt.api.dto.db.PolicyData;
@@ -36,6 +39,7 @@ import java.util.stream.Collectors;
 @Component
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
+    private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
 
     private final StorageService storageService;
     private final NumberGeneratorService numberGeneratorService;
@@ -111,13 +115,15 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         String calculated = calculate(policy);
 
+        logger.info("Result after calculation {}", calculated);
+
         var projection  = new JsonProjection(policy);
 
         var productCode = projection.getProductCode();
 
         var product = productService.getProductByCode(productCode, false);
 
-        LobModel lobModel = lobService.getByCode(productCode);
+        LobModel lobModel = lobService.getByCode(product.getLob());
 
         List<LobVar> vars = preProcessService.evaluateAndEnrichVariables(policy, lobModel, productCode);
 
@@ -139,15 +145,26 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         setter.setRawValue("policyNumber", nextNumber);
 
-        var userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserData userData;
+        if (authentication != null) {
+            userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        } else {
+            // TODO remove when auth module is ready
+            userData = new UserData();
+            userData.setAccountId(1L);
+            userData.setClientId(1L);
+        }
 
         var version = new Version(null, product.getVersionNo());
 
-        storageService.save(policy, userData, version, projection.getPolicyId());
+        var newPolicyJson = setter.writeValue();
+
+        storageService.save(newPolicyJson, userData, version, projection.getPolicyId());
 
         // TODO async send KID + draft print form
 
-        return setter.writeValue();
+        return newPolicyJson;
     }
 
     @Override

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static ru.pt.api.utils.DateTimeUtils.formatter;
+
 // TODO null -> Optional
 public class JsonProjection {
 
@@ -48,7 +50,7 @@ public class JsonProjection {
 
     public ZonedDateTime getIssueDate() {
         try {
-            return ZonedDateTime.parse(documentContext.read("$.issueDate", String.class));
+            return ZonedDateTime.parse(documentContext.read("$.issueDate", String.class), formatter);
         } catch (Exception e) {
             return null;
         }
@@ -56,7 +58,7 @@ public class JsonProjection {
 
     public ZonedDateTime getStartDate() {
         try {
-            return ZonedDateTime.parse(documentContext.read("$.startDate", String.class));
+            return ZonedDateTime.parse(documentContext.read("$.startDate", String.class), formatter);
         } catch (Exception e) {
             return null;
         }
@@ -64,7 +66,7 @@ public class JsonProjection {
 
     public ZonedDateTime getEndDate() {
         try {
-            return ZonedDateTime.parse(documentContext.read("$.endDate", String.class));
+            return ZonedDateTime.parse(documentContext.read("$.endDate", String.class), formatter);
         } catch (Exception e) {
             return null;
         }
@@ -109,7 +111,11 @@ public class JsonProjection {
     }
 
     public UUID getPolicyId() {
-        return UUID.fromString(documentContext.read("$.draftId", String.class));
+        try {
+            return UUID.fromString(documentContext.read("$.draftId", String.class));
+        } catch (Exception ignored) {
+            return UUID.randomUUID();
+        }
     }
 
     public String evaluateJsonPath(String path) {

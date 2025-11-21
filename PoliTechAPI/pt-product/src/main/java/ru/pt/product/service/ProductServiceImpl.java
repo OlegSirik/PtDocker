@@ -19,10 +19,13 @@ import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
 
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.pt.api.utils.DateTimeUtils.formattedNow;
+import static ru.pt.api.utils.DateTimeUtils.formatter;
+
 
 @Component
 public class ProductServiceImpl implements ProductService {
@@ -273,7 +276,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", ZonedDateTime.now().toString());
+        jsonValues.put("issueDate", formattedNow());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -281,7 +284,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("waitingPeriod", value);
         } else {
             jsonPaths.add("startDate");
-            jsonValues.put("startDate", ZonedDateTime.now().toString());
+            jsonValues.put("startDate", formattedNow());
         }
 
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
@@ -290,7 +293,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("policyTerm", value);
         } else {
             jsonPaths.add("endDate");
-            jsonValues.put("endDate", OffsetDateTime.now().plusYears(1).toString());
+            jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
         }
 
         Set<String> validatorKeys = new HashSet<>();
@@ -326,7 +329,7 @@ public class ProductServiceImpl implements ProductService {
         jsonValues.put("product.code", productVersionModel.getCode());
 
         jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", ZonedDateTime.now().toString());
+        jsonValues.put("issueDate", formattedNow());
 
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
             String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
@@ -334,7 +337,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("waitingPeriod", value);
         } else {
             jsonPaths.add("startDate");
-            jsonValues.put("startDate", OffsetDateTime.now().toString());
+            jsonValues.put("startDate", formattedNow());
         }
 
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
@@ -343,7 +346,7 @@ public class ProductServiceImpl implements ProductService {
             jsonValues.put("policyTerm", value);
         } else {
             jsonPaths.add("endDate");
-            jsonValues.put("endDate", OffsetDateTime.now().plusYears(1).toString());
+            jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
         }
 
         jsonPaths.add("insuredObject.packageCode");
