@@ -8,7 +8,7 @@ import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.auth.security.UserDetailsImpl;
 
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -102,9 +102,9 @@ public class DbController extends SecuredController {
     @PostMapping("/policies/{policyNumber}/paid")
     public ResponseEntity<Void> markPolicyAsPaid(@PathVariable("policyNumber") String policyNumber,
                                                   @RequestBody PaymentRequest request) {
-        OffsetDateTime paymentDate = request.getPaymentDate() != null 
+        ZonedDateTime paymentDate = request.getPaymentDate() != null
             ? request.getPaymentDate() 
-            : OffsetDateTime.now();
+            : ZonedDateTime.now();
         
         // policyDataService.policyStatusPaid(policyNumber, paymentDate);
         return ResponseEntity.ok().build();
@@ -115,16 +115,16 @@ public class DbController extends SecuredController {
      * Request class for payment
      */
     public static class PaymentRequest {
-        private OffsetDateTime paymentDate;
+        private ZonedDateTime paymentDate;
 
         public PaymentRequest() {
         }
 
-        public OffsetDateTime getPaymentDate() {
+        public ZonedDateTime getPaymentDate() {
             return paymentDate;
         }
 
-        public void setPaymentDate(OffsetDateTime paymentDate) {
+        public void setPaymentDate(ZonedDateTime paymentDate) {
             this.paymentDate = paymentDate;
         }
     }

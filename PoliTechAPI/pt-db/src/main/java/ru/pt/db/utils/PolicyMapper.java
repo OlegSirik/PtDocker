@@ -29,8 +29,8 @@ public class PolicyMapper {
     public PolicyIndexEntity toEntity(PolicyIndex entity) {
         var dto = new PolicyIndexEntity();
         dto.setPolicyId(entity.getPolicyId());
-        dto.setEndDate(entity.getEndDate().toOffsetDateTime());
-        dto.setStartDate(entity.getStartDate().toOffsetDateTime());
+        dto.setEndDate(entity.getEndDate());
+        dto.setStartDate(entity.getStartDate());
         dto.setPolicyNumber(entity.getPolicyNumber());
         dto.setPolicyStatus(entity.getPolicyStatus());
         dto.setProductCode(entity.getProductCode());

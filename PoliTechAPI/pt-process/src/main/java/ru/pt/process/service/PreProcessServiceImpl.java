@@ -339,7 +339,7 @@ public class PreProcessServiceImpl implements PreProcessService {
             }
         }
 
-        return policy;
+        return setter.writeValue();
     }
 
 

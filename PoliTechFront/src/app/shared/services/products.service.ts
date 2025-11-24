@@ -58,7 +58,7 @@ export class ProductsService {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<ProductList[]>(`${this.baseUrl}admin/products`).pipe(
+    return this.http.get<ProductList[]>(`${this.baseUrl}/admin/products`).pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
           this.mockData = data;
@@ -96,7 +96,7 @@ export class ProductsService {
 
     deleteProduct(id: number): Observable<boolean> {
       if (this.http) {
-        const url = `${this.baseUrl}admin/products/${id}`;
+        const url = `${this.baseUrl}/admin/products/${id}`;
         return this.http.delete(url).pipe(
           map(() => true),
           catchError(error => {
