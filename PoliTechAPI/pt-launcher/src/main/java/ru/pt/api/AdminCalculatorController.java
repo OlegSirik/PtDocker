@@ -17,7 +17,7 @@ import ru.pt.auth.security.UserDetailsImpl;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasAnyRoles('SYS_ADMIN')")
+@PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminCalculatorController extends SecuredController {
 
     private final CalculatorService calculateService;

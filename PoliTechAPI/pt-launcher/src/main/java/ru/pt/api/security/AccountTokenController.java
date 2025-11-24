@@ -2,7 +2,6 @@ package ru.pt.api.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.auth.AccountToken;
@@ -10,7 +9,6 @@ import ru.pt.api.service.auth.AccountTokenService;
 import ru.pt.auth.model.CreateTokenRequest;
 import ru.pt.auth.model.UpdateTokenRequest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class AccountTokenController {
      * POST /api/auth/tokens
      */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN')")
     public ResponseEntity<AccountToken> createToken(@RequestBody CreateTokenRequest request) {
         AccountToken token = accountTokenService.createToken(
                 request.getUserLogin(),
@@ -48,7 +46,7 @@ public class AccountTokenController {
      * PUT /api/auth/tokens
      */
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN')")
     public ResponseEntity<AccountToken> updateToken(@RequestBody UpdateTokenRequest request) {
         AccountToken token = accountTokenService.updateToken(
                 request.getUserLogin(),
@@ -63,7 +61,7 @@ public class AccountTokenController {
      * GET /api/auth/tokens?userLogin=xxx&clientId=123
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<AccountToken> getToken(
             @RequestParam String userLogin,
             @RequestParam Long clientId) {
@@ -77,7 +75,7 @@ public class AccountTokenController {
      * GET /api/auth/tokens/user/{userLogin}
      */
     @GetMapping("/user/{userLogin}")
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<List<AccountToken>> getTokensByUserLogin(@PathVariable String userLogin) {
         List<AccountToken> tokens = accountTokenService.getTokensByUserLogin(userLogin);
         return ResponseEntity.ok(tokens);
@@ -88,7 +86,7 @@ public class AccountTokenController {
      * DELETE /api/auth/tokens?userLogin=xxx&clientId=123
      */
     @DeleteMapping
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN')")
     public ResponseEntity<Map<String, String>> deleteToken(
             @RequestParam String userLogin,
             @RequestParam Long clientId) {
@@ -107,7 +105,7 @@ public class AccountTokenController {
      * GET /api/auth/tokens/exists?token=xxx&clientId=123
      */
     @GetMapping("/exists")
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Boolean>> tokenExists(
             @RequestParam String token,
             @RequestParam Long clientId) {
