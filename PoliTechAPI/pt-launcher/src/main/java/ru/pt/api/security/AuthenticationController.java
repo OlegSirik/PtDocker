@@ -5,11 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
 import ru.pt.auth.model.TokenResponse;
 import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.service.SimpleAuthService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,10 +26,14 @@ public class AuthenticationController {
 
     private final SecurityContextHelper securityContextHelper;
     private final JwtTokenUtil jwtTokenUtil;
+    private final SimpleAuthService simpleAuthService;
 
-    public AuthenticationController(SecurityContextHelper securityContextHelper, JwtTokenUtil jwtTokenUtil) {
+    public AuthenticationController(SecurityContextHelper securityContextHelper,
+                                   JwtTokenUtil jwtTokenUtil,
+                                   SimpleAuthService simpleAuthService) {
         this.securityContextHelper = securityContextHelper;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.simpleAuthService = simpleAuthService;
     }
 
     /**
@@ -109,6 +115,41 @@ public class AuthenticationController {
     }
 
     /**
+     * Простая аутентификация с логином и паролем (без Keycloak)
+     * POST /api/auth/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
+        if (request.getUserLogin() == null || request.getUserLogin().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new TokenResponse(null, "User login is required"));
+        }
+
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new TokenResponse(null, "Password is required"));
+        }
+
+        String token = simpleAuthService.authenticate(
+                request.getUserLogin(),
+                request.getPassword(),
+                request.getClientId()
+        );
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new TokenResponse(null, "Invalid credentials"));
+        }
+
+        TokenResponse response = new TokenResponse();
+        response.setAccessToken(token);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(24L * 60 * 60); // 24 часа в секундах
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Генерация JWT токена для пользователя
      * POST /api/auth/token
      */
@@ -150,6 +191,64 @@ public class AuthenticationController {
         response.setRefreshToken(refreshToken);
         response.setTokenType("Bearer");
         response.setExpiresIn(30L * 24 * 60 * 60); // 30 дней в секундах
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Установить пароль для пользователя (только для администраторов)
+     * POST /api/auth/set-password
+     */
+    @PostMapping("/set-password")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> setPassword(
+            @RequestBody LoginRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (request.getUserLogin() == null || request.getUserLogin().isEmpty()) {
+            response.put("success", false);
+            response.put("message", "User login is required");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Password is required");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        boolean success = simpleAuthService.setPassword(request.getUserLogin(), request.getPassword());
+
+        if (success) {
+            response.put("success", true);
+            response.put("message", "Password set successfully for user: " + request.getUserLogin());
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "Failed to set password. User not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    /**
+     * Проверить, есть ли у пользователя пароль (публичный endpoint для проверки типа авторизации)
+     * GET /api/auth/has-password?userLogin=xxx
+     */
+    @GetMapping("/has-password")
+    public ResponseEntity<Map<String, Object>> hasPassword(@RequestParam String userLogin) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (userLogin == null || userLogin.isEmpty()) {
+            response.put("error", "User login is required");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        boolean hasPassword = simpleAuthService.hasPassword(userLogin);
+        response.put("userLogin", userLogin);
+        response.put("hasPassword", hasPassword);
+        response.put("authType", hasPassword ? "password" : "keycloak");
 
         return ResponseEntity.ok(response);
     }

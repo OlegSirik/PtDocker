@@ -1,7 +1,6 @@
 package ru.pt.api.security;
 
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import ru.pt.api.ApiExceptionHandler;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.exception.UnauthorizedException;
 
@@ -9,7 +8,7 @@ import ru.pt.exception.UnauthorizedException;
  * Базовый класс для контроллеров с проверкой прав доступа.
  * Предоставляет утилиты для проверки ролей и прав на операции с продуктами.
  */
-public abstract class SecuredController {
+public abstract class SecuredController extends ApiExceptionHandler {
 
     /**
      * Проверяет, имеет ли пользователь роль ADMIN
