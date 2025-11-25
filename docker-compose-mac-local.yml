@@ -54,6 +54,8 @@ services:
       context: ./PoliTechFront
       dockerfile: DockerfileMacLocal
     # image: fant560/papi-front:latest
+    environment:
+      BASE_URL: http://localhost:8080
     ports:
       - "80:80"
     depends_on:
