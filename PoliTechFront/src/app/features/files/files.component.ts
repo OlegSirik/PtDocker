@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,10 +19,8 @@ import { DeleteConfirmDialogComponent } from './delete-confirm-dialog/delete-con
 import { ProcessFileDialogComponent } from './process-file-dialog/process-file-dialog.component';
 
 @Component({
-  selector: 'app-files',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-files',
+    imports: [
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -36,9 +34,9 @@ import { ProcessFileDialogComponent } from './process-file-dialog/process-file-d
     MatSnackBarModule,
     FormsModule,
     ReactiveFormsModule
-  ],
-  templateUrl: './files.component.html',
-  styleUrls: ['./files.component.scss']
+],
+    templateUrl: './files.component.html',
+    styleUrls: ['./files.component.scss']
 })
 export class FilesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;

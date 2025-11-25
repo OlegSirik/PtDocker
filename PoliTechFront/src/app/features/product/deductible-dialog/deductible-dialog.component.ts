@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,18 +9,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { Deductible } from '../../../shared/services/product.service';
 
 @Component({
-  selector: 'app-deductible-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-deductible-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить франшизу' : 'Редактировать франшизу' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
@@ -31,9 +29,11 @@ import { Deductible } from '../../../shared/services/product.service';
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип франшизы</mat-label>
           <mat-select [(ngModel)]="deductible.deductibleType" required>
-            <mat-option *ngFor="let option of data.deductibleTypeOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.deductibleTypeOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -45,9 +45,11 @@ import { Deductible } from '../../../shared/services/product.service';
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Единица</mat-label>
           <mat-select [(ngModel)]="deductible.deductibleUnit" required>
-            <mat-option *ngFor="let option of data.deductibleUnitOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.deductibleUnitOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -55,9 +57,11 @@ import { Deductible } from '../../../shared/services/product.service';
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Специфика</mat-label>
           <mat-select [(ngModel)]="deductible.deductibleSpecific" required>
-            <mat-option *ngFor="let option of data.deductibleSpecificOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.deductibleSpecificOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -68,8 +72,8 @@ import { Deductible } from '../../../shared/services/product.service';
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;

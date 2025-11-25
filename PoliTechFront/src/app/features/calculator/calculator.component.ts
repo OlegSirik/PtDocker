@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
@@ -25,10 +25,8 @@ import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
 import * as XLSX from 'xlsx';
 
 @Component({
-  selector: 'app-calculator',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-calculator',
+    imports: [
     FormsModule,
     MatTabsModule,
     MatCardModule,
@@ -41,9 +39,9 @@ import * as XLSX from 'xlsx';
     MatPaginatorModule,
     MatDialogModule,
     MatBadgeModule
-  ],
-  templateUrl: './calculator.component.html',
-  styleUrls: ['./calculator.component.scss']
+],
+    templateUrl: './calculator.component.html',
+    styleUrls: ['./calculator.component.scss']
 })
 export class CalculatorComponent implements OnInit {
   calculator: Calculator = {

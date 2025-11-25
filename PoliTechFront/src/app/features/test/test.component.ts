@@ -1,5 +1,4 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,13 +10,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
-import { TestService, TestContext, TestError, TestResponse, PfType } from '../../shared/services/test.service';
+import { TestService, TestContext, TestError, PfType } from '../../shared';
 
 @Component({
-  selector: 'app-test',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-test',
+    imports: [
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -29,9 +26,9 @@ import { TestService, TestContext, TestError, TestResponse, PfType } from '../..
     MatTabsModule,
     MatSnackBarModule,
     FormsModule
-  ],
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.scss']
+],
+    templateUrl: './test.component.html',
+    styleUrls: ['./test.component.scss']
 })
 export class TestComponent implements OnInit {
   @ViewChild('contextPaginator') contextPaginator!: MatPaginator;
@@ -98,7 +95,7 @@ export class TestComponent implements OnInit {
       this.snackBar.open('Введите данные в поле "Запрос"', 'Закрыть', { duration: 3000 });
       return
     }
-      
+
     const requestData = this.requestJson.trim();
 
       this.testService.validatePolicy(requestData).subscribe({
@@ -146,7 +143,7 @@ export class TestComponent implements OnInit {
       });
     }
     */
-  
+
 
   onPrintPfClick(): void {
     if (!this.selectedPfType) {

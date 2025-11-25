@@ -1,24 +1,22 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Package } from '../../../shared/services/product.service';
+import { Package } from '../../../shared';
 
 @Component({
-  selector: 'app-package-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-package-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить пакет' : 'Редактировать пакет' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
@@ -39,7 +37,7 @@ import { Package } from '../../../shared/services/product.service';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;

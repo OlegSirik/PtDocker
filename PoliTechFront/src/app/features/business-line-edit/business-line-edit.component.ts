@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -13,13 +13,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLineCover } from '../../shared/services/business-line-edit.service';
+import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLineCover } from '../../shared';
+import {JsonPipe} from '@angular/common';
 
 @Component({
-  selector: 'app-business-line-edit',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-business-line-edit',
+    imports: [
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -32,9 +31,9 @@ import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLin
     MatDialogModule,
     MatTabsModule,
     MatPaginatorModule
-  ],
-  templateUrl: './business-line-edit.component.html',
-  styleUrls: ['./business-line-edit.component.scss']
+],
+    templateUrl: './business-line-edit.component.html',
+    styleUrls: ['./business-line-edit.component.scss']
 })
 export class BusinessLineEditComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -88,7 +87,7 @@ export class BusinessLineEditComponent implements OnInit {
   get policyHolderVars(): any[] {
     // Filter vars that start with 'policyHolder.'
     const phVars = this.businessLine.mpVars.filter(v => v.varPath.startsWith('policyHolder.'));
-    
+
     // Sort by varNr; varNr exists on BusinessLineVar interface, which is the type of phVars elements
     // If varNr is null or does not exist, call findVarNrByVarPath and set varNr with value
     phVars.forEach(v => {
@@ -107,7 +106,7 @@ export class BusinessLineEditComponent implements OnInit {
       const pathAfterPh = v.varPath.substring('policyHolder.'.length);
       let category = 'Policy Holder';
       let field = pathAfterPh;
-      
+
       if (v.varPath.startsWith('policyHolder.person.')) {
         category = 'person';
         field = v.varPath.substring('policyHolder.person.'.length);
@@ -130,13 +129,13 @@ export class BusinessLineEditComponent implements OnInit {
         category = 'additionalProperties';
         field = v.varPath.substring('policyHolder.additionalProperties.'.length);
       }
-      
+
       if (category === prevCategory) {
         category = '';
       } else {
         prevCategory = category;
       }
-      
+
       return {
         category,
         field,
@@ -150,7 +149,7 @@ export class BusinessLineEditComponent implements OnInit {
   get policyInsObjectVars(): any[] {
     // Filter vars that start with 'insuredObject.'
     const phVars = this.businessLine.mpVars.filter(v => v.varPath.startsWith('insuredObject.'));
-    
+
     // Sort by varNr; varNr exists on BusinessLineVar interface, which is the type of phVars elements
     // If varNr is null or does not exist, call findVarNrByVarPath and set varNr with value
     phVars.forEach(v => {
@@ -169,7 +168,7 @@ export class BusinessLineEditComponent implements OnInit {
       const pathAfterPh = v.varPath.substring('insuredObject.'.length);
       let category = 'insuredObject';
       let field = pathAfterPh;
-      
+
       if (v.varPath.startsWith('insuredObject.person.')) {
         category = 'person';
         field = v.varPath.substring('insuredObject.person.'.length);
@@ -192,13 +191,13 @@ export class BusinessLineEditComponent implements OnInit {
         category = 'additionalProperties';
         field = v.varPath.substring('insuredObject.additionalProperties.'.length);
       }
-      
+
       if (category === prevCategory) {
         category = '';
       } else {
         prevCategory = category;
       }
-      
+
       return {
         category,
         field,
@@ -226,12 +225,12 @@ export class BusinessLineEditComponent implements OnInit {
       this.isNewRecord = false;
       this.svc.getBusinessLineByCode(code).subscribe(doc => {
         if (!doc) { this.router.navigate(['/business-line']); return; }
-        this.businessLine = { 
+        this.businessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
           mpInsObjectType: doc.mpInsObjectType || ''
         };
-        this.originalBusinessLine = { 
+        this.originalBusinessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
           mpInsObjectType: doc.mpInsObjectType || ''
@@ -247,7 +246,7 @@ export class BusinessLineEditComponent implements OnInit {
   updateChanges(): void {
     this.hasChanges = !this.originalBusinessLine || JSON.stringify(this.businessLine) !== JSON.stringify(this.originalBusinessLine);
   }
-  
+
   phTypeChanged(): void {
 
     // Remove all vars whose varPath starts with 'policyHolder.' from mpVars
@@ -277,12 +276,12 @@ export class BusinessLineEditComponent implements OnInit {
     const uniqueVarsToAdd = newVars.filter(v => !existingVarPaths.has(v.varPath));
     this.businessLine.mpVars = [...this.businessLine.mpVars, ...uniqueVarsToAdd];
     this.updateChanges();
-  
-  
+
+
   }
 
   ioChanged(): void {
-    
+
     // Remove all vars whose varPath starts with 'insuredObject.' from mpVars
     if (Array.isArray(this.businessLine.mpVars)) {
       this.businessLine.mpVars = this.businessLine.mpVars.filter(
@@ -290,7 +289,7 @@ export class BusinessLineEditComponent implements OnInit {
       );
     }
     let newVars: any[] = [];
-    
+
     // For 'person' type, transform policyHolder vars to insuredObject vars
     if (this.businessLine.mpInsObjectType === 'person') {
       const phVars = [
@@ -301,7 +300,7 @@ export class BusinessLineEditComponent implements OnInit {
         ...this.svc.phPersonDocumentVars,
         ...this.svc.phAddressVars
       ];
-      
+
       // Transform varPath from policyHolder.* to insuredObject.* and update varCode prefix
       newVars = phVars.map(v => ({
         ...v,
@@ -310,7 +309,7 @@ export class BusinessLineEditComponent implements OnInit {
         varNr: v.varNr ? v.varNr + 500 : 0 // Offset varNr to avoid conflicts
       }));
     }
-    
+
     if (this.businessLine.mpInsObjectType === 'device') {
       newVars = newVars.concat(this.svc.ioDeviceVars);
     }
@@ -318,7 +317,7 @@ export class BusinessLineEditComponent implements OnInit {
     if (this.businessLine.mpInsObjectType === 'property') {
       newVars = newVars.concat(this.svc.ioPropertyVars);
     }
-    
+
     const existingVarPaths = new Set(this.businessLine.mpVars.map(v => v.varPath));
     const uniqueVarsToAdd = newVars.filter(v => !existingVarPaths.has(v.varPath));
     this.businessLine.mpVars = [...this.businessLine.mpVars, ...uniqueVarsToAdd];
@@ -340,12 +339,12 @@ export class BusinessLineEditComponent implements OnInit {
       mpInsObjectType: this.businessLine.mpInsObjectType || ''
     };
     this.svc.saveBusinessLine(dataToSave).subscribe(saved => {
-      this.businessLine = { 
+      this.businessLine = {
         ...saved,
         mpPhType: saved.mpPhType || '',
         mpInsObjectType: saved.mpInsObjectType || ''
       };
-      this.originalBusinessLine = { 
+      this.originalBusinessLine = {
         ...saved,
         mpPhType: saved.mpPhType || '',
         mpInsObjectType: saved.mpInsObjectType || ''
@@ -445,11 +444,11 @@ export class BusinessLineEditComponent implements OnInit {
   addCover(): void {
     this.openCoverDialog({ coverCode: '', coverName: '', risks: '' }, (res) => {
       if (!res) return;
-      
+
         const model: BusinessLineCover = { coverCode: res.coverCode, coverName: res.coverName, risks: res.risks };
         this.businessLine.mpCovers = [...this.businessLine.mpCovers, model];
         this.updateChanges();
-      
+
     });
   }
 
@@ -558,7 +557,7 @@ export class BusinessLineEditComponent implements OnInit {
 
   showPolicyHolderJson(): void {
     const lobCode = this.businessLine.mpCode;
-    
+
     if (!lobCode) {
       this.snack.open('Please set mpCode first', 'Close', { duration: 2000 });
       return;
@@ -635,7 +634,7 @@ export class BusinessLineEditComponent implements OnInit {
 
   showInsObjectJson(): void {
     const lobCode = this.businessLine.mpCode;
-    
+
     if (!lobCode) {
       this.snack.open('Please set mpCode first', 'Close', { duration: 2000 });
       return;
@@ -650,15 +649,14 @@ export class BusinessLineEditComponent implements OnInit {
     });
   }
 
-  
+
 
 }
 
 @Component({
-  selector: 'app-var-edit-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule],
-  template: `
+    selector: 'app-var-edit-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule],
+    template: `
   <h2 mat-dialog-title>Переменная</h2>
   <div mat-dialog-content>
     <mat-form-field appearance="outline" style="min-width: 400px;">
@@ -704,10 +702,9 @@ export class VarEditDialog {
 }
 
 @Component({
-  selector: 'app-cover-edit-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-  template: `
+    selector: 'app-cover-edit-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+    template: `
   <h2 mat-dialog-title>Покрытие</h2>
   <div mat-dialog-content>
     <mat-form-field appearance="outline" style="min-width: 200px;">
@@ -735,10 +732,9 @@ export class CoverEditDialog {
 }
 
 @Component({
-  selector: 'app-confirm-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
-  template: `
+    selector: 'app-confirm-dialog',
+    imports: [MatDialogModule, MatButtonModule],
+    template: `
   <h2 mat-dialog-title>Подтверждение</h2>
   <div mat-dialog-content>{{data.message}}</div>
   <div mat-dialog-actions align="end">
@@ -752,10 +748,9 @@ export class ConfirmDialog {
 }
 
 @Component({
-  selector: 'app-json-view-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-  template: `
+    selector: 'app-json-view-dialog',
+    imports: [MatDialogModule, MatButtonModule, MatIconModule, JsonPipe],
+    template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <div mat-dialog-content style="max-height: 60vh; overflow: auto;">
       <pre style="background-color: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto;">{{ data.object | json }}</pre>
@@ -768,7 +763,7 @@ export class ConfirmDialog {
       <button mat-raised-button color="primary" mat-dialog-close>Close</button>
     </div>
   `,
-  styles: [`
+    styles: [`
     pre {
       margin: 0;
       font-family: 'Courier New', Courier, monospace;
@@ -791,30 +786,29 @@ export class JsonViewDialog {
 }
 
 @Component({
-  selector: 'app-add-policy-holder-var-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-  template: `
+    selector: 'app-add-policy-holder-var-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+    template: `
     <h2 mat-dialog-title>Add PolicyHolder Variable</h2>
     <div mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varCode</mat-label>
         <input matInput [(ngModel)]="varCode" placeholder="e.g., person.firstName">
       </mat-form-field>
-      
+
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varName</mat-label>
         <input matInput [(ngModel)]="varName" placeholder="e.g., First Name">
       </mat-form-field>
-      
+
       <p style="font-size: 12px; color: #666; margin: 0;">
         Variable path will be: <strong>policyHolder.additionalProperties.{{ varCode || '...' }}</strong>
       </p>
     </div>
     <div mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Cancel</button>
-      <button mat-raised-button 
-              color="primary" 
+      <button mat-raised-button
+              color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
         OK
@@ -828,30 +822,29 @@ export class AddPolicyHolderVarDialog {
 }
 
 @Component({
-  selector: 'app-add-ins-object-var-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-  template: `
+    selector: 'app-add-ins-object-var-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+    template: `
     <h2 mat-dialog-title>Add Insured Object Variable</h2>
     <div mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varCode</mat-label>
         <input matInput [(ngModel)]="varCode" placeholder="e.g., device.serialNumber">
       </mat-form-field>
-      
+
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varName</mat-label>
         <input matInput [(ngModel)]="varName" placeholder="e.g., Serial Number">
       </mat-form-field>
-      
+
       <p style="font-size: 12px; color: #666; margin: 0;">
         Variable path will be: <strong>insuredObject.additionalProperties.{{ varCode || '...' }}</strong>
       </p>
     </div>
     <div mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Cancel</button>
-      <button mat-raised-button 
-              color="primary" 
+      <button mat-raised-button
+              color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
         OK
@@ -862,4 +855,4 @@ export class AddPolicyHolderVarDialog {
 export class AddInsObjectVarDialog {
   varCode = '';
   varName = '';
-} 
+}

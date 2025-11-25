@@ -7,17 +7,22 @@ import { CalculatorComponent } from './features/calculator/calculator.component'
 import { FilesComponent } from './features/files/files.component';
 import { TestComponent } from './features/test/test.component';
 import { FormlyFormsComponent } from './features/formly-forms/formly-forms.component';
+import {authGuard} from './shared/guards/auth.guard';
+import {LoginComponent} from './features/login/login.component';
+import {ForbiddenComponent} from './features/forbidden/forbidden.component';
 
 export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+  { path: 'forbidden', component: ForbiddenComponent  },
   { path: '', redirectTo: '/business-line', pathMatch: 'full' },
-  { path: 'business-line', component: BusinessLineComponent },
-  { path: 'lob-edit', component: BusinessLineEditComponent },
-  { path: 'lob-edit/:mpCode', component: BusinessLineEditComponent },
-  { path: 'products', component: ProductsComponent },
-  { path: 'product/:id/version/:versionNo', component: ProductComponent },
-  { path: 'product/new', component: ProductComponent },
-  { path: 'product/:product-id/version/:version-no/form', component: FormlyFormsComponent },
-  { path: 'products/:productId/versions/:versionNo/packages/:packageNo/calculator', component: CalculatorComponent },
-  { path: 'files', component: FilesComponent },
-  { path: 'test', component: TestComponent }
+  { path: 'business-line', component: BusinessLineComponent, canActivate: [authGuard] },
+  { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
+  { path: 'lob-edit/:mpCode', component: BusinessLineEditComponent, canActivate: [authGuard] },
+  { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
+  { path: 'product/:id/version/:versionNo', component: ProductComponent, canActivate: [authGuard] },
+  { path: 'product/new', component: ProductComponent, canActivate: [authGuard] },
+  { path: 'product/:product-id/version/:version-no/form', component: FormlyFormsComponent, canActivate: [authGuard] },
+  { path: 'products/:productId/versions/:versionNo/packages/:packageNo/calculator', component: CalculatorComponent, canActivate: [authGuard] },
+  { path: 'files', component: FilesComponent, canActivate: [authGuard] },
+  { path: 'test', component: TestComponent, canActivate: [authGuard] }
 ];

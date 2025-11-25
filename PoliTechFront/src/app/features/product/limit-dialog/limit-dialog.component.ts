@@ -1,24 +1,22 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Limit } from '../../../shared/services/product.service';
+import { Limit } from '../../../shared';
 
 @Component({
-  selector: 'app-limit-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-limit-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
   <h2 mat-dialog-title>{{ data.isNew ? 'Добавить лимит' : 'Редактировать лимит' }}</h2>
   <div mat-dialog-content>
     <mat-form-field appearance="outline" style="min-width: 300px;">

@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,10 +11,8 @@ import { FilesService } from '../../../shared/services/files.service';
 import { ProductList } from '../../../shared/services/products.service';
 
 @Component({
-  selector: 'app-add-file-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-add-file-dialog',
+    imports: [
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -23,8 +21,8 @@ import { ProductList } from '../../../shared/services/products.service';
     MatIconModule,
     FormsModule,
     ReactiveFormsModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>Добавить новый файл</h2>
     <form [formGroup]="fileForm" (ngSubmit)="onSubmit()">
       <mat-dialog-content>
@@ -32,16 +30,20 @@ import { ProductList } from '../../../shared/services/products.service';
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Код продукта</mat-label>
             <mat-select formControlName="productCode" required>
-              <mat-option *ngFor="let product of data.products" [value]="product.code">
-                {{product.code}} - {{product.name}}
-              </mat-option>
+              @for (product of data.products; track product) {
+                <mat-option [value]="product.code">
+                  {{product.code}} - {{product.name}}
+                </mat-option>
+              }
             </mat-select>
-            <mat-error *ngIf="fileForm.get('productCode')?.hasError('required')">
-              Код продукта обязателен
-            </mat-error>
+            @if (fileForm.get('productCode')?.hasError('required')) {
+              <mat-error>
+                Код продукта обязателен
+              </mat-error>
+            }
           </mat-form-field>
         </div>
-
+    
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Тип файла</mat-label>
@@ -49,44 +51,52 @@ import { ProductList } from '../../../shared/services/products.service';
               <mat-option value="Policy">Policy</mat-option>
               <mat-option value="Kid">KID</mat-option>
             </mat-select>
-            <mat-error *ngIf="fileForm.get('fileType')?.hasError('required')">
-              Тип файла обязателен
-            </mat-error>
+            @if (fileForm.get('fileType')?.hasError('required')) {
+              <mat-error>
+                Тип файла обязателен
+              </mat-error>
+            }
           </mat-form-field>
         </div>
-
-
+    
+    
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Код пакета</mat-label>
             <input matInput formControlName="packageCode" required>
-            <mat-error *ngIf="fileForm.get('packageCode')?.hasError('required')">
-              Код пакета обязателен
-            </mat-error>
+            @if (fileForm.get('packageCode')?.hasError('required')) {
+              <mat-error>
+                Код пакета обязателен
+              </mat-error>
+            }
           </mat-form-field>
         </div>
-
+    
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Описание файла</mat-label>
             <input matInput formControlName="fileDescription" required>
-            <mat-error *ngIf="fileForm.get('fileDescription')?.hasError('required')">
-              Описание файла обязательно
-            </mat-error>
+            @if (fileForm.get('fileDescription')?.hasError('required')) {
+              <mat-error>
+                Описание файла обязательно
+              </mat-error>
+            }
           </mat-form-field>
         </div>
-
+    
         <div class="form-row">
           <label class="file-input-label">
             <span>Выберите файл</span>
             <input type="file" (change)="onFileSelected($event)" required>
           </label>
-          <div *ngIf="selectedFile" class="selected-file">
-            Выбран файл: {{selectedFile.name}}
-          </div>
+          @if (selectedFile) {
+            <div class="selected-file">
+              Выбран файл: {{selectedFile.name}}
+            </div>
+          }
         </div>
       </mat-dialog-content>
-
+    
       <mat-dialog-actions align="end">
         <button mat-button mat-dialog-close>Отмена</button>
         <button mat-raised-button color="primary" type="submit" [disabled]="!fileForm.valid || !selectedFile">
@@ -94,8 +104,8 @@ import { ProductList } from '../../../shared/services/products.service';
         </button>
       </mat-dialog-actions>
     </form>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .form-row {
       margin-bottom: 16px;
     }

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -13,15 +13,13 @@ import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angu
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ProductsService, ProductList } from '../../shared/services/products.service';
 import { MatSelectModule } from '@angular/material/select';
-import { ProductService, Product } from '../../shared/services/product.service';
-import { BusinessLineService } from '../../shared/services/business-line.service';
+import { ProductService, Product, BusinessLineService } from '../../shared';
 import { Observable } from 'rxjs';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
-  selector: 'app-products',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-products',
+    imports: [
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -32,9 +30,9 @@ import { Observable } from 'rxjs';
     MatSnackBarModule,
     MatDialogModule,
     MatPaginatorModule
-  ],
-  templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss']
+],
+    templateUrl: './products.component.html',
+    styleUrls: ['./products.component.scss']
 })
 export class ProductsComponent implements OnInit {
   private router = inject(Router);
@@ -130,10 +128,9 @@ export class ProductsComponent implements OnInit {
 
 // Confirm Dialog Component
 @Component({
-  selector: 'app-confirm-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
-  template: `
+    selector: 'app-confirm-dialog',
+    imports: [MatDialogModule, MatButtonModule],
+    template: `
     <h2 mat-dialog-title>Подтверждение</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -149,25 +146,26 @@ export class ConfirmDialogComponent {
 // Create Product Dialog Component
 
 @Component({
-  selector: 'app-create-product-dialog',
-  standalone: true,
+    selector: 'app-create-product-dialog',
   imports: [
-    CommonModule,
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSelectModule
+    MatSelectModule,
+    AsyncPipe
   ],
-  template: `
+    template: `
     <h2 mat-dialog-title>Новый продукт</h2>
     <mat-dialog-content>
       <div>
         <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 12px;">
           <mat-label>Линия бизнеса (lob)</mat-label>
           <mat-select [(ngModel)]="product.lob">
-            <mat-option *ngFor="let c of lobCodes$ | async" [value]="c">{{ c }}</mat-option>
+            @for (c of lobCodes$ | async; track c) {
+              <mat-option [value]="c">{{ c }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -188,7 +186,7 @@ export class ConfirmDialogComponent {
         Создать
       </button>
     </mat-dialog-actions>
-  `
+    `
 })
 export class CreateProductDialogComponent {
   lobCodes$: Observable<string[]>;
