@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnInit, Renderer2, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormGroup, ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -33,9 +33,7 @@ interface LoV {
   selector: 'app-formly-forms',
   templateUrl: './formly-forms.component.html',
   styleUrls: ['./formly-forms.component.scss'],
-  standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -43,9 +41,7 @@ interface LoV {
     MatInputModule,
     MatIconModule,
     MatSelectModule,
-    MatOption
-],
-
+  ]
 })
 export class FormlyFormsComponent implements OnInit {
 

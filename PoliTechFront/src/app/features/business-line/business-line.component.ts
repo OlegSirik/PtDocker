@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -13,21 +13,19 @@ import { MatInputModule } from '@angular/material/input';
 import { BusinessLineService, BusinessLine } from '../../shared/services/business-line.service';
 
 @Component({
-  selector: 'app-business-line',
-  standalone: true,
-  imports: [
-    CommonModule, 
+    selector: 'app-business-line',
+    imports: [
     FormsModule,
-    MatTableModule, 
-    MatButtonModule, 
-    MatIconModule, 
-    MatCardModule, 
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule
-  ],
-  templateUrl: './business-line.component.html',
-  styleUrls: ['./business-line.component.scss']
+],
+    templateUrl: './business-line.component.html',
+    styleUrls: ['./business-line.component.scss']
 })
 export class BusinessLineComponent implements OnInit {
   businessLines: BusinessLine[] = [];

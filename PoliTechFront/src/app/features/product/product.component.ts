@@ -37,26 +37,25 @@ import { BusinessLineService } from '../../shared/services/business-line.service
 import { BusinessLineEditService } from '../../shared/services/business-line-edit.service';
 
 @Component({
-  selector: 'app-product',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatTabsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatDialogModule,
-    MatBadgeModule
-  ],
-  templateUrl: './product.component.html',
-  styleUrls: ['./product.component.scss']
+    selector: 'app-product',
+    imports: [
+        CommonModule,
+        FormsModule,
+        MatTabsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatTableModule,
+        MatPaginatorModule,
+        MatDialogModule,
+        MatBadgeModule
+    ],
+    templateUrl: './product.component.html',
+    styleUrls: ['./product.component.scss']
 })
 export class ProductComponent implements OnInit {
   product: Product = {
@@ -958,10 +957,9 @@ export class ProductComponent implements OnInit {
 }
 
 @Component({
-  selector: 'app-test-request-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-  template: `
+    selector: 'app-test-request-dialog',
+    imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+    template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <div mat-dialog-content style="max-height: 60vh; overflow: auto;">
       <pre style="background-color: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto;">{{ data.object | json }}</pre>
@@ -974,7 +972,7 @@ export class ProductComponent implements OnInit {
       <button mat-raised-button color="primary" mat-dialog-close>Close</button>
     </div>
   `,
-  styles: [`
+    styles: [`
     pre {
       margin: 0;
       font-family: 'Courier New', Courier, monospace;
@@ -997,10 +995,9 @@ export class TestRequestDialog {
 }
 
 @Component({
-  selector: 'app-policy-var-details-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-  template: `
+    selector: 'app-policy-var-details-dialog',
+    imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+    template: `
     <h2 mat-dialog-title>Variable Details</h2>
     <div mat-dialog-content>
       <div style="margin-bottom: 16px;">

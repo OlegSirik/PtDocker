@@ -55,8 +55,8 @@
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>LOB</mat-label>
                 <input matInput [value]="product.lob" readonly>
-                  
-                
+
+
               </mat-form-field>
             </div>
             <div class="form-row">
@@ -92,9 +92,11 @@
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Тип валидатора</mat-label>
                 <mat-select [(ngModel)]="product.waitingPeriod.validatorType" (ngModelChange)="updateChanges()">
-                  <mat-option *ngFor="let option of validatorTypeOptions" [value]="option">
-                    {{ option }}
-                  </mat-option>
+                  @for (option of validatorTypeOptions; track option) {
+                    <mat-option [value]="option">
+                      {{ option }}
+                    </mat-option>
+                  }
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
@@ -115,9 +117,11 @@
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Тип валидатора</mat-label>
                 <mat-select [(ngModel)]="product.policyTerm.validatorType" (ngModelChange)="updateChanges()">
-                  <mat-option *ngFor="let option of validatorTypeOptions" [value]="option">
-                    {{ option }}
-                  </mat-option>
+                  @for (option of validatorTypeOptions; track option) {
+                    <mat-option [value]="option">
+                      {{ option }}
+                    </mat-option>
+                  }
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
@@ -148,9 +152,11 @@
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Политика сброса</mat-label>
                 <mat-select [(ngModel)]="product.numberGenerator.resetPolicy" (ngModelChange)="updateChanges()">
-                  <mat-option *ngFor="let option of resetPolicyOptions" [value]="option">
-                    {{ option }}
-                  </mat-option>
+                  @for (option of resetPolicyOptions; track option) {
+                    <mat-option [value]="option">
+                      {{ option }}
+                    </mat-option>
+                  }
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
@@ -181,25 +187,25 @@
 
             <div class="table-header">
               <h3>Проверки предрасчета</h3>
-<!--
+              <!--
               <mat-form-field class="search-field" appearance="outline">
                 <mat-label>Поиск</mat-label>
                 <input matInput [(ngModel)]="quoteValidatorSearchText" (ngModelChange)="updateQuoteValidatorTable()" placeholder="Поиск">
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
-            -->
-            <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-              <button mat-raised-button color="accent" class="action-button" (click)="getTestRequest()">
-                <mat-icon>science</mat-icon>
-                Тестовый запрос
-              </button>
-              <button mat-raised-button color="primary" class="add-button" (click)="addQuoteValidator()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
+              -->
+              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
+                <button mat-raised-button color="accent" class="action-button" (click)="getTestRequest()">
+                  <mat-icon>science</mat-icon>
+                  Тестовый запрос
+                </button>
+                <button mat-raised-button color="primary" class="add-button" (click)="addQuoteValidator()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+              </div>
 
-          </div>
+            </div>
 
             <table mat-table [dataSource]="paginatedQuoteValidators" class="product-table">
               <ng-container matColumnDef="lineNr">
@@ -254,8 +260,8 @@
               <tr mat-header-row *matHeaderRowDef="quoteValidatorDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: quoteValidatorDisplayedColumns;"></tr>
             </table>
-<!--
-            <mat-paginator 
+            <!--
+            <mat-paginator
               [length]="filteredQuoteValidators.length"
               [pageSize]="quoteValidatorPageSize"
               [pageIndex]="quoteValidatorPageIndex"
@@ -270,13 +276,13 @@
     </mat-tab>
 
     <!-- Save Validator Tab -->
- 
+
 
     <mat-tab label="Проверки договора">
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
-<!---
+            <!---
             <div class="button-section">
               <button mat-raised-button color="primary" class="add-button" (click)="addSaveValidator()">
                 <mat-icon>add</mat-icon>
@@ -287,27 +293,27 @@
                 Get Test Request Save
               </button>
             </div>
-          -->
+            -->
             <div class="table-header">
               <h3>Проверки договора</h3>
-<!--
+              <!--
               <mat-form-field class="search-field" appearance="outline">
                 <mat-label>Поиск</mat-label>
                 <input matInput [(ngModel)]="saveValidatorSearchText" (ngModelChange)="updateSaveValidatorTable()" placeholder="Поиск">
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
-            -->            
-            <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-              <button mat-raised-button color="accent" class="action-button" (click)="getTestRequestSave()">
-                <mat-icon>science</mat-icon>
-                Тестовый запрос
-              </button>
-              <button mat-raised-button color="primary" class="add-button" (click)="addSaveValidator()">
-              <mat-icon>add</mat-icon>
-              Добавить
-            </button>
+              -->
+              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
+                <button mat-raised-button color="accent" class="action-button" (click)="getTestRequestSave()">
+                  <mat-icon>science</mat-icon>
+                  Тестовый запрос
+                </button>
+                <button mat-raised-button color="primary" class="add-button" (click)="addSaveValidator()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+              </div>
             </div>
-          </div>
 
             <table mat-table [dataSource]="paginatedSaveValidators" class="product-table">
               <ng-container matColumnDef="lineNr">
@@ -363,7 +369,7 @@
               <tr mat-row *matRowDef="let row; columns: saveValidatorDisplayedColumns;"></tr>
             </table>
 
-            <mat-paginator 
+            <mat-paginator
               [length]="filteredSaveValidators.length"
               [pageSize]="saveValidatorPageSize"
               [pageIndex]="saveValidatorPageIndex"
@@ -438,7 +444,7 @@
               <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;"></tr>
             </table>
 
-            <mat-paginator 
+            <mat-paginator
               [length]="filteredPolicyVars.length"
               [pageSize]="policyVarsPageSize"
               [pageIndex]="policyVarsPageIndex"
@@ -457,27 +463,27 @@
         <!-- Packages Card -->
         <mat-card class="datatable-card">
           <mat-card-content>
-<!--
+            <!--
             <div class="button-section">
               <button mat-raised-button color="primary" class="add-button" (click)="addPackage()">
                 <mat-icon>add</mat-icon>
                 add Package
               </button>
             </div>
--->
+            -->
             <div class="table-header">
               <h3>Пакеты покрытий</h3>
               <button mat-raised-button color="primary" class="add-button" (click)="addPackage()">
                 <mat-icon>add</mat-icon>
                 Добавить
               </button>
-<!--
+              <!--
               <mat-form-field class="search-field" appearance="outline">
                 <mat-label>Поиск</mat-label>
                 <input matInput [(ngModel)]="packagesSearchText" (ngModelChange)="updatePackagesTable()" placeholder="Поиск">
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
--->
+              -->
             </div>
 
             <table mat-table [dataSource]="paginatedPackages" class="product-table">
@@ -497,7 +503,7 @@
                   <div class="action-buttons">
                     <button mat-button color="primary" matBadge="{{element.covers.length}}"  class="action-button1" (click)="showCovers(element, i)">
                       covers
-                  
+
                     </button>
                     <button mat-button color="accent" class="action-button1" (click)="openCalculator(element)">
                       Calculator
@@ -515,8 +521,8 @@
               <tr mat-header-row *matHeaderRowDef="packagesDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;"></tr>
             </table>
-<!--
-            <mat-paginator 
+            <!--
+            <mat-paginator
               [length]="filteredPackages.length"
               [pageSize]="packagesPageSize"
               [pageIndex]="packagesPageIndex"
@@ -524,259 +530,242 @@
               (page)="onPackagesPageChange($event)"
               showFirstLastButtons>
             </mat-paginator>
-          -->
+            -->
           </mat-card-content>
         </mat-card>
 
         <!-- Covers Card -->
-        <mat-card class="datatable-card" *ngIf="selectedPackageIndex !== -1">
-          <mat-card-content>
-<!--
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
-                <mat-icon>add</mat-icon>
-                add Cover
-              </button>
-            </div>
-          -->
-            <div class="table-header">
-              <h3>Покрытия</h3>
-              <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-
+        @if (selectedPackageIndex !== -1) {
+          <mat-card class="datatable-card">
+            <mat-card-content>
               <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="coversSearchText" (ngModelChange)="updateCoversTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-            -->
-            </div>
-
-            <table mat-table [dataSource]="paginatedCovers" class="product-table">
-              <ng-container matColumnDef="code">
-                <th mat-header-cell *matHeaderCellDef>Код</th>
-                <td mat-cell *matCellDef="let element">{{element.code}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Название</th>
-                <td mat-cell *matCellDef="let element">{{element.code}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="isMandatory">
-                <th mat-header-cell *matHeaderCellDef>Обязательное</th>
-                <td mat-cell *matCellDef="let element">{{element.isMandatory ? 'Да' : 'Нет'}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="waitingPeriod">
-                <th mat-header-cell *matHeaderCellDef>Период исключения</th>
-                <td mat-cell *matCellDef="let element">{{element.waitingPeriod}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="coverageTerm">
-                <th mat-header-cell *matHeaderCellDef>Срок покрытия</th>
-                <td mat-cell *matCellDef="let element">{{element.coverageTerm}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="isDeductibleMandatory">
-                <th mat-header-cell *matHeaderCellDef>Франшиза обязательна</th>
-                <td mat-cell *matCellDef="let element">{{element.isDeductibleMandatory ? 'Да' : 'Нет'}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button1" matBadge="{{element.deductibles.length}}" (click)="showDeductibles(element, i)">
-                      deductibles
-                    </button>
-                    <button mat-button color="accent" class="action-button1" matBadge="{{element.limits.length}}" (click)="showLimits(element, i)">
-                      limits
-                    </button>
-                    <button mat-button color="primary" class="action-button" (click)="editCover(element, i)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteCover(element, i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="coversDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: coversDisplayedColumns;"></tr>
-            </table>
-<!--
-            <mat-paginator 
-              [length]="filteredCovers.length"
-              [pageSize]="coversPageSize"
-              [pageIndex]="coversPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onCoversPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
--->
-          </mat-card-content>
-        </mat-card>
+              <div class="button-section">
+                <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
+                  <mat-icon>add</mat-icon>
+                  add Cover
+                </button>
+              </div>
+              -->
+              <div class="table-header">
+                <h3>Покрытия</h3>
+                <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+                <!--
+                <mat-form-field class="search-field" appearance="outline">
+                  <mat-label>Поиск</mat-label>
+                  <input matInput [(ngModel)]="coversSearchText" (ngModelChange)="updateCoversTable()" placeholder="Поиск">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+                -->
+              </div>
+              <table mat-table [dataSource]="paginatedCovers" class="product-table">
+                <ng-container matColumnDef="code">
+                  <th mat-header-cell *matHeaderCellDef>Код</th>
+                  <td mat-cell *matCellDef="let element">{{element.code}}</td>
+                </ng-container>
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Название</th>
+                  <td mat-cell *matCellDef="let element">{{element.code}}</td>
+                </ng-container>
+                <ng-container matColumnDef="isMandatory">
+                  <th mat-header-cell *matHeaderCellDef>Обязательное</th>
+                  <td mat-cell *matCellDef="let element">{{element.isMandatory ? 'Да' : 'Нет'}}</td>
+                </ng-container>
+                <ng-container matColumnDef="waitingPeriod">
+                  <th mat-header-cell *matHeaderCellDef>Период исключения</th>
+                  <td mat-cell *matCellDef="let element">{{element.waitingPeriod}}</td>
+                </ng-container>
+                <ng-container matColumnDef="coverageTerm">
+                  <th mat-header-cell *matHeaderCellDef>Срок покрытия</th>
+                  <td mat-cell *matCellDef="let element">{{element.coverageTerm}}</td>
+                </ng-container>
+                <ng-container matColumnDef="isDeductibleMandatory">
+                  <th mat-header-cell *matHeaderCellDef>Франшиза обязательна</th>
+                  <td mat-cell *matCellDef="let element">{{element.isDeductibleMandatory ? 'Да' : 'Нет'}}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>...</th>
+                  <td mat-cell *matCellDef="let element; let i = index">
+                    <div class="action-buttons">
+                      <button mat-button color="primary" class="action-button1" matBadge="{{element.deductibles.length}}" (click)="showDeductibles(element, i)">
+                        deductibles
+                      </button>
+                      <button mat-button color="accent" class="action-button1" matBadge="{{element.limits.length}}" (click)="showLimits(element, i)">
+                        limits
+                      </button>
+                      <button mat-button color="primary" class="action-button" (click)="editCover(element, i)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-button color="warn" class="action-button" (click)="deleteCover(element, i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="coversDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: coversDisplayedColumns;"></tr>
+              </table>
+              <!--
+              <mat-paginator
+                [length]="filteredCovers.length"
+                [pageSize]="coversPageSize"
+                [pageIndex]="coversPageIndex"
+                [pageSizeOptions]="[5, 10, 25]"
+                (page)="onCoversPageChange($event)"
+                showFirstLastButtons>
+              </mat-paginator>
+              -->
+            </mat-card-content>
+          </mat-card>
+        }
 
         <!-- Deductibles Card -->
-        <mat-card class="datatable-card" *ngIf="selectedPackageIndex !== -1 && selectedCoverIndex !== -1">
-          <mat-card-content>
-<!--
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addDeductible()">
-                <mat-icon>add</mat-icon>
-                add Deductible
-              </button>
-            </div>
--->
-            <div class="table-header">
-              <h3>Франшизы</h3>
-<!--              
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="deductiblesSearchText" (ngModelChange)="updateDeductiblesTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-            -->
-            <button mat-raised-button color="primary" class="add-button" (click)="addDeductible()">
-              <mat-icon>add</mat-icon>
-              Добавить
-            </button>
-
-          </div>
-
-            <table mat-table [dataSource]="paginatedDeductibles" class="product-table">
-              <ng-container matColumnDef="nr">
-                <th mat-header-cell *matHeaderCellDef>№</th>
-                <td mat-cell *matCellDef="let element">{{element.nr || ''}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="deductibleType">
-                <th mat-header-cell *matHeaderCellDef>Тип франшизы</th>
-                <td mat-cell *matCellDef="let element">{{element.deductibleType}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="deductible">
-                <th mat-header-cell *matHeaderCellDef>Франшиза</th>
-                <td mat-cell *matCellDef="let element">{{element.deductible}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="deductibleUnit">
-                <th mat-header-cell *matHeaderCellDef>Единица</th>
-                <td mat-cell *matCellDef="let element">{{element.deductibleUnit}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="deductibleSpecific">
-                <th mat-header-cell *matHeaderCellDef>Специфика</th>
-                <td mat-cell *matCellDef="let element">{{element.deductibleSpecific}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="editDeductible(element, i)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteDeductible(element, i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="deductiblesDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: deductiblesDisplayedColumns;"></tr>
-            </table>
-<!--
-            <mat-paginator 
-              [length]="filteredDeductibles.length"
-              [pageSize]="deductiblesPageSize"
-              [pageIndex]="deductiblesPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onDeductiblesPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-          -->            
-          </mat-card-content>
-        </mat-card>
+        @if (selectedPackageIndex !== -1 && selectedCoverIndex !== -1) {
+          <mat-card class="datatable-card">
+            <mat-card-content>
+              <!--
+              <div class="button-section">
+                <button mat-raised-button color="primary" class="add-button" (click)="addDeductible()">
+                  <mat-icon>add</mat-icon>
+                  add Deductible
+                </button>
+              </div>
+              -->
+              <div class="table-header">
+                <h3>Франшизы</h3>
+                <!--
+                <mat-form-field class="search-field" appearance="outline">
+                  <mat-label>Поиск</mat-label>
+                  <input matInput [(ngModel)]="deductiblesSearchText" (ngModelChange)="updateDeductiblesTable()" placeholder="Поиск">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+                -->
+                <button mat-raised-button color="primary" class="add-button" (click)="addDeductible()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+              </div>
+              <table mat-table [dataSource]="paginatedDeductibles" class="product-table">
+                <ng-container matColumnDef="nr">
+                  <th mat-header-cell *matHeaderCellDef>№</th>
+                  <td mat-cell *matCellDef="let element">{{element.nr || ''}}</td>
+                </ng-container>
+                <ng-container matColumnDef="deductibleType">
+                  <th mat-header-cell *matHeaderCellDef>Тип франшизы</th>
+                  <td mat-cell *matCellDef="let element">{{element.deductibleType}}</td>
+                </ng-container>
+                <ng-container matColumnDef="deductible">
+                  <th mat-header-cell *matHeaderCellDef>Франшиза</th>
+                  <td mat-cell *matCellDef="let element">{{element.deductible}}</td>
+                </ng-container>
+                <ng-container matColumnDef="deductibleUnit">
+                  <th mat-header-cell *matHeaderCellDef>Единица</th>
+                  <td mat-cell *matCellDef="let element">{{element.deductibleUnit}}</td>
+                </ng-container>
+                <ng-container matColumnDef="deductibleSpecific">
+                  <th mat-header-cell *matHeaderCellDef>Специфика</th>
+                  <td mat-cell *matCellDef="let element">{{element.deductibleSpecific}}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>...</th>
+                  <td mat-cell *matCellDef="let element; let i = index">
+                    <div class="action-buttons">
+                      <button mat-button color="primary" class="action-button" (click)="editDeductible(element, i)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-button color="warn" class="action-button" (click)="deleteDeductible(element, i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="deductiblesDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: deductiblesDisplayedColumns;"></tr>
+              </table>
+              <!--
+              <mat-paginator
+                [length]="filteredDeductibles.length"
+                [pageSize]="deductiblesPageSize"
+                [pageIndex]="deductiblesPageIndex"
+                [pageSizeOptions]="[5, 10, 25]"
+                (page)="onDeductiblesPageChange($event)"
+                showFirstLastButtons>
+              </mat-paginator>
+              -->
+            </mat-card-content>
+          </mat-card>
+        }
 
         <!-- Limits Card -->
-        <mat-card class="datatable-card" *ngIf="selectedPackageIndex !== -1 && selectedCoverIndex !== -1">
-          <mat-card-content>
-<!--
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addLimit()">
-                <mat-icon>add</mat-icon>
-                add Limit
-              </button>
-            </div>
--->
-            <div class="table-header">
-              <h3>Лимиты</h3>
-              <button mat-raised-button color="primary" class="add-button" (click)="addLimit()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-
+        @if (selectedPackageIndex !== -1 && selectedCoverIndex !== -1) {
+          <mat-card class="datatable-card">
+            <mat-card-content>
               <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="limitsSearchText" (ngModelChange)="updateLimitsTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
--->
-            </div>
-
-            <table mat-table [dataSource]="paginatedLimits" class="product-table">
-              <ng-container matColumnDef="nr">
-                <th mat-header-cell *matHeaderCellDef>№</th>
-                <td mat-cell *matCellDef="let element">{{element.nr || ''}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="sumInsured">
-                <th mat-header-cell *matHeaderCellDef>Страховая сумма</th>
-                <td mat-cell *matCellDef="let element">{{element.sumInsured}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="premium">
-                <th mat-header-cell *matHeaderCellDef>Премия</th>
-                <td mat-cell *matCellDef="let element">{{element.premium}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="editLimit(element, i)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteLimit(element, i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="limitsDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: limitsDisplayedColumns;"></tr>
-            </table>
-<!--
-            <mat-paginator 
-              [length]="filteredLimits.length"
-              [pageSize]="limitsPageSize"
-              [pageIndex]="limitsPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onLimitsPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
--->
-          </mat-card-content>
-        </mat-card>
+              <div class="button-section">
+                <button mat-raised-button color="primary" class="add-button" (click)="addLimit()">
+                  <mat-icon>add</mat-icon>
+                  add Limit
+                </button>
+              </div>
+              -->
+              <div class="table-header">
+                <h3>Лимиты</h3>
+                <button mat-raised-button color="primary" class="add-button" (click)="addLimit()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+                <!--
+                <mat-form-field class="search-field" appearance="outline">
+                  <mat-label>Поиск</mat-label>
+                  <input matInput [(ngModel)]="limitsSearchText" (ngModelChange)="updateLimitsTable()" placeholder="Поиск">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+                -->
+              </div>
+              <table mat-table [dataSource]="paginatedLimits" class="product-table">
+                <ng-container matColumnDef="nr">
+                  <th mat-header-cell *matHeaderCellDef>№</th>
+                  <td mat-cell *matCellDef="let element">{{element.nr || ''}}</td>
+                </ng-container>
+                <ng-container matColumnDef="sumInsured">
+                  <th mat-header-cell *matHeaderCellDef>Страховая сумма</th>
+                  <td mat-cell *matCellDef="let element">{{element.sumInsured}}</td>
+                </ng-container>
+                <ng-container matColumnDef="premium">
+                  <th mat-header-cell *matHeaderCellDef>Премия</th>
+                  <td mat-cell *matCellDef="let element">{{element.premium}}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>...</th>
+                  <td mat-cell *matCellDef="let element; let i = index">
+                    <div class="action-buttons">
+                      <button mat-button color="primary" class="action-button" (click)="editLimit(element, i)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-button color="warn" class="action-button" (click)="deleteLimit(element, i)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="limitsDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: limitsDisplayedColumns;"></tr>
+              </table>
+              <!--
+              <mat-paginator
+                [length]="filteredLimits.length"
+                [pageSize]="limitsPageSize"
+                [pageIndex]="limitsPageIndex"
+                [pageSizeOptions]="[5, 10, 25]"
+                (page)="onLimitsPageChange($event)"
+                showFirstLastButtons>
+              </mat-paginator>
+              -->
+            </mat-card-content>
+          </mat-card>
+        }
       </div>
     </mat-tab>
   </mat-tab-group>

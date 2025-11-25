@@ -14,13 +14,15 @@
       <mat-icon>calculate</mat-icon>
       Расчет
     </button>
-    
+
     <mat-form-field appearance="outline" class="pf-type-field">
       <mat-label>Тип формы</mat-label>
       <mat-select [(ngModel)]="selectedPfType">
-        <mat-option *ngFor="let pfType of pfTypes" [value]="pfType.code">
-          {{pfType.name}}
-        </mat-option>
+        @for (pfType of pfTypes; track pfType) {
+          <mat-option [value]="pfType.code">
+            {{pfType.name}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -40,10 +42,10 @@
     <mat-card-content>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>JSON запрос</mat-label>
-        <textarea 
-          matInput 
-          [(ngModel)]="requestJson" 
-          rows="8" 
+        <textarea
+          matInput
+          [(ngModel)]="requestJson"
+          rows="8"
           placeholder='{"key": "value"}'
           class="json-textarea">
         </textarea>
@@ -75,9 +77,9 @@
         <tr mat-row *matRowDef="let row; columns: errorDisplayedColumns;"></tr>
       </table>
 
-      <mat-paginator 
+      <mat-paginator
         #errorPaginator
-        [pageSizeOptions]="[5, 10, 25]" 
+        [pageSizeOptions]="[5, 10, 25]"
         showFirstLastButtons>
       </mat-paginator>
     </mat-card-content>
@@ -93,9 +95,9 @@
     <mat-card-content>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Результат</mat-label>
-        <textarea 
-          matInput 
-          [ngModel]="calculationResult" 
+        <textarea
+          matInput
+          [ngModel]="calculationResult"
           readonly
           rows="10"
           class="result-textarea">
@@ -127,9 +129,9 @@
         <tr mat-row *matRowDef="let row; columns: contextDisplayedColumns;"></tr>
       </table>
 
-      <mat-paginator 
+      <mat-paginator
         #contextPaginator
-        [pageSizeOptions]="[5, 10, 25]" 
+        [pageSizeOptions]="[5, 10, 25]"
         showFirstLastButtons>
       </mat-paginator>
     </mat-card-content>

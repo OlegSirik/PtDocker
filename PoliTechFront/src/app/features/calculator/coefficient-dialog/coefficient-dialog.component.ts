@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,18 +9,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { CalculatorCoefficient, CalculatorVar } from '../../../shared/services/calculator.service';
 
 @Component({
-  selector: 'app-coefficient-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-coefficient-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить коэффициент' : 'Редактировать коэффициент' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
@@ -43,7 +41,7 @@ import { CalculatorCoefficient, CalculatorVar } from '../../../shared/services/c
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr;

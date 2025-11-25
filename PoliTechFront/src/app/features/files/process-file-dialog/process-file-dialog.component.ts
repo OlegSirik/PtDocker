@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,18 +8,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-process-file-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-process-file-dialog',
+    imports: [
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
     FormsModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>
       <mat-icon>play_arrow</mat-icon>
       Обработка файла
@@ -45,7 +43,7 @@ import { FormsModule } from '@angular/forms';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     mat-dialog-title {
       display: flex;
       align-items: center;

@@ -1,26 +1,24 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { QuoteValidator } from '../../../shared/services/product.service';
+import { QuoteValidator } from '../../../shared';
 
 @Component({
-  selector: 'app-validator-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-validator-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить проверку' : 'Редактировать проверку' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
@@ -31,34 +29,40 @@ import { QuoteValidator } from '../../../shared/services/product.service';
       </div>
 
       <div class="form-row">
-      <mat-form-field class="form-field" appearance="outline">
+        <mat-form-field class="form-field" appearance="outline">
           <mat-label>Ключ слева</mat-label>
           <mat-select [(ngModel)]="validator.keyLeft" required>
-            <mat-option *ngFor="let option of data.keyLeftOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.keyLeftOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип правила</mat-label>
           <mat-select [(ngModel)]="validator.ruleType" required>
-            <mat-option *ngFor="let option of data.ruleTypeOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.ruleTypeOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Ключ справа</mat-label>
           <mat-select [(ngModel)]="validator.keyRight">
-            <mat-option *ngFor="let option of data.keyLeftOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.keyLeftOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
 
       <div class="form-row">
-      <div></div>
+        <div></div>
 
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип данных</mat-label>
@@ -88,8 +92,8 @@ import { QuoteValidator } from '../../../shared/services/product.service';
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;

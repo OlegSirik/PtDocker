@@ -1,0 +1,65 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-card-title>Вход в систему</mat-card-title>
+      <mat-card-subtitle>Введите ваши учетные данные</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width" color="primary">
+          <mat-label>Логин</mat-label>
+          <input
+            matInput
+            formControlName="userLogin"
+            placeholder="Введите ваш логин"
+            autocomplete="username"
+            required>
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="loginForm.get('userLogin')?.hasError('required')">
+            Логин обязателен для заполнения
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="Введите ваш пароль"
+            autocomplete="current-password"
+            required>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Hide password'"
+            [attr.aria-pressed]="hidePassword">
+            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+            Пароль обязателен для заполнения
+          </mat-error>
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="full-width login-button"
+          type="submit"
+          [disabled]="!loginForm.valid || isLoading">
+          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+          <span *ngIf="!isLoading">Войти</span>
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions *ngIf="!isLoading" class="actions">
+      <button mat-button color="accent" type="button" (click)="fillDemoCredentials()">
+        Доступ sys_admin
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

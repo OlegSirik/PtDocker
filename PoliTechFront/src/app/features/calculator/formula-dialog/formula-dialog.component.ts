@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,18 +9,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { CalculatorFormula, CalculatorVar } from '../../../shared/services/calculator.service';
 
 @Component({
-  selector: 'app-formula-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-formula-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить формулу' : 'Редактировать формулу' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
@@ -41,7 +39,7 @@ import { CalculatorFormula, CalculatorVar } from '../../../shared/services/calcu
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;

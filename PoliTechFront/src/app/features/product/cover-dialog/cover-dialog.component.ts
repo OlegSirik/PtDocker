@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,10 +10,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { Cover } from '../../../shared/services/product.service';
 
 @Component({
-  selector: 'app-cover-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-cover-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -21,17 +19,19 @@ import { Cover } from '../../../shared/services/product.service';
     MatSelectModule,
     MatCheckboxModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить покрытие' : 'Редактировать покрытие' }}</h2>
     <mat-dialog-content>
       <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Код покрытия</mat-label>
           <mat-select [(ngModel)]="cover.code" required>
-            <mat-option *ngFor="let option of data.coverCodeOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.coverCodeOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-checkbox [(ngModel)]="cover.isMandatory" class="checkbox-field">
@@ -60,8 +60,8 @@ import { Cover } from '../../../shared/services/product.service';
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;

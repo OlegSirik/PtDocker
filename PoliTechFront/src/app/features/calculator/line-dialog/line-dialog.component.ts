@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,18 +9,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.service';
 
 @Component({
-  selector: 'app-line-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-line-dialog',
+    imports: [
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule
-  ],
-  template: `
+],
+    template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить строку' : 'Редактировать строку' }}</h2>
     <mat-dialog-content>
       <!-- Row 1: nr -->
@@ -30,83 +28,99 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
           <input matInput [(ngModel)]="line.nr" required placeholder="1">
         </mat-form-field>
       </div>
-
+    
       <!-- Row 2: conditionLeft, conditionOperator, conditionRight -->
       <div class="row row-2">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Условие слева</mat-label>
           <mat-select [(ngModel)]="line.conditionLeft" >
-            <mat-option *ngFor="let varItem of data.vars" [value]="varItem.varCode">
-              {{ varItem.varCode }} - {{ varItem.varName }}
-            </mat-option>
+            @for (varItem of data.vars; track varItem) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} - {{ varItem.varName }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="field" appearance="outline">
           <mat-label>Оператор условия</mat-label>
           <mat-select [(ngModel)]="line.conditionOperator" >
-            <mat-option *ngFor="let option of data.conditionOperatorOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.conditionOperatorOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="field" appearance="outline">
           <mat-label>Условие справа</mat-label>
           <mat-select [(ngModel)]="line.conditionRight" >
-            <mat-option *ngFor="let varItem of data.vars" [value]="varItem.varCode">
-              {{ varItem.varCode }} - {{ varItem.varName }}
-            </mat-option>
+            @for (varItem of data.vars; track varItem) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} - {{ varItem.varName }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
-
+    
       <!-- Row 3: expressionResult -->
       <div class="row row-3">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Результат выражения</mat-label>
           <mat-select [(ngModel)]="line.expressionResult" required>
-            <mat-option *ngFor="let varItem of data.vars" [value]="varItem.varCode">
-              {{ varItem.varCode }} - {{ varItem.varName }}
-            </mat-option>
+            @for (varItem of data.vars; track varItem) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} - {{ varItem.varName }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
-
+    
       <!-- Row 4: expressionLeft, expressionOperator, expressionRight -->
       <div class="row row-4">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Выражение слева</mat-label>
           <mat-select [(ngModel)]="line.expressionLeft" required>
-            <mat-option *ngFor="let varItem of data.vars" [value]="varItem.varCode">
-              {{ varItem.varCode }} - {{ varItem.varName }}
-            </mat-option>
+            @for (varItem of data.vars; track varItem) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} - {{ varItem.varName }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="field" appearance="outline">
           <mat-label>Оператор выражения</mat-label>
           <mat-select [(ngModel)]="line.expressionOperator" >
-            <mat-option *ngFor="let option of data.expressionOperatorOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.expressionOperatorOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
         <mat-form-field class="field" appearance="outline">
           <mat-label>Выражение справа</mat-label>
           <mat-select [(ngModel)]="line.expressionRight" >
-            <mat-option *ngFor="let varItem of data.vars" [value]="varItem.varCode">
-              {{ varItem.varCode }} - {{ varItem.varName }}
-            </mat-option>
+            @for (varItem of data.vars; track varItem) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} - {{ varItem.varName }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
-
+    
       <!-- Row 5: postProcessor -->
       <div class="row row-5">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Постпроцессор</mat-label>
           <mat-select [(ngModel)]="line.postProcessor">
-            <mat-option *ngFor="let option of data.postProcessorOptions" [value]="option">
-              {{ option }}
-            </mat-option>
+            @for (option of data.postProcessorOptions; track option) {
+              <mat-option [value]="option">
+                {{ option }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -117,8 +131,8 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>
-  `,
-  styles: [`
+    `,
+    styles: [`
     .row {
       display: grid;
       gap: 16px;
