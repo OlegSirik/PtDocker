@@ -231,26 +231,4 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
-
-    /**
-     * Проверить, есть ли у пользователя пароль (публичный endpoint для проверки типа авторизации)
-     * GET /api/auth/has-password?userLogin=xxx
-     */
-    @GetMapping("/has-password")
-    public ResponseEntity<Map<String, Object>> hasPassword(@RequestParam String userLogin) {
-        Map<String, Object> response = new HashMap<>();
-
-        if (userLogin == null || userLogin.isEmpty()) {
-            response.put("error", "User login is required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        boolean hasPassword = simpleAuthService.hasPassword(userLogin);
-        response.put("userLogin", userLogin);
-        response.put("hasPassword", hasPassword);
-        response.put("authType", hasPassword ? "password" : "keycloak");
-
-        return ResponseEntity.ok(response);
-    }
 }
-

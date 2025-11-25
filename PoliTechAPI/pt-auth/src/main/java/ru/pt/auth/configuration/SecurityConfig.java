@@ -31,7 +31,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/public/**", "/actuator/health").permitAll()
-                .requestMatchers("/api/auth/token").permitAll() // Для первоначальной генерации токена
+                .requestMatchers("/api/auth/token").permitAll()
+                .requestMatchers("/api/auth/login").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->
