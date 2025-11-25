@@ -13,6 +13,8 @@ import java.util.List;
         uniqueConstraints = @UniqueConstraint(name = "acc_logins_uk", columnNames = {"user_login", "tid"}))
 public class LoginEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -21,6 +23,9 @@ public class LoginEntity {
 
     @Column(name = "user_login", nullable = false)
     private String userLogin;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -58,6 +63,14 @@ public class LoginEntity {
 
     public void setUserLogin(String userLogin) {
         this.userLogin = userLogin;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public LocalDateTime getCreatedAt() {
