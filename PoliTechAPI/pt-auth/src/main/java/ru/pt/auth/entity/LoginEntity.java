@@ -24,8 +24,17 @@ public class LoginEntity {
     @Column(name = "user_login", nullable = false)
     private String userLogin;
 
-    @Column(name = "password_hash")
-    private String passwordHash;
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
+
+    @Column(name = "position")
+    private String position;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -65,12 +74,36 @@ public class LoginEntity {
         this.userLogin = userLogin;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     public LocalDateTime getCreatedAt() {

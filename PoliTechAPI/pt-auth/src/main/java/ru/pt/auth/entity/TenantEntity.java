@@ -28,6 +28,9 @@ public class TenantEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "code", length = 100, unique = true, nullable = false)
+    private String code;
+
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -37,6 +40,14 @@ public class TenantEntity {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {

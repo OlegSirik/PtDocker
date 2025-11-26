@@ -54,12 +54,12 @@ public class SimpleAuthService {
             LoginEntity loginEntity = loginEntityOpt.get();
 
             // Проверить пароль
-            if (loginEntity.getPasswordHash() == null || loginEntity.getPasswordHash().isEmpty()) {
+            if (loginEntity.getPassword() == null || loginEntity.getPassword().isEmpty()) {
                 logger.warn("User {} has no password set (Keycloak only)", userLogin);
                 return null;
             }
 
-            if (!passwordEncoder.matches(password, loginEntity.getPasswordHash())) {
+            if (!passwordEncoder.matches(password, loginEntity.getPassword())) {
                 logger.warn("Invalid password for user: {}", userLogin);
                 return null;
             }
@@ -79,51 +79,6 @@ public class SimpleAuthService {
             logger.error("Authentication error for user: {}", userLogin, e);
             return null;
         }
-    }
-
-    /**
-     * Установить пароль для пользователя (только хэш)
-     *
-     * @param userLogin логин пользователя
-     * @param password пароль в открытом виде
-     * @return true если пароль успешно установлен
-     */
-    @Transactional
-    public boolean setPassword(String userLogin, String password) {
-        try {
-            Optional<LoginEntity> loginEntityOpt = loginRepository.findByUserLogin(userLogin);
-
-            if (loginEntityOpt.isEmpty()) {
-                logger.warn("User not found: {}", userLogin);
-                return false;
-            }
-
-            LoginEntity loginEntity = loginEntityOpt.get();
-            String hash = passwordEncoder.encode(password);
-            loginEntity.setPasswordHash(hash);
-            loginRepository.save(loginEntity);
-
-            logger.info("Password set for user: {}", userLogin);
-            return true;
-
-        } catch (Exception e) {
-            logger.error("Failed to set password for user: {}", userLogin, e);
-            return false;
-        }
-    }
-
-    /**
-     * Проверить, есть ли у пользователя установленный пароль
-     *
-     * @param userLogin логин пользователя
-     * @return true если пароль установлен
-     */
-    @Transactional(readOnly = true)
-    public boolean hasPassword(String userLogin) {
-        Optional<LoginEntity> loginEntityOpt = loginRepository.findByUserLogin(userLogin);
-        return loginEntityOpt.map(loginEntity ->
-            loginEntity.getPasswordHash() != null && !loginEntity.getPasswordHash().isEmpty()
-        ).orElse(false);
     }
 }
 

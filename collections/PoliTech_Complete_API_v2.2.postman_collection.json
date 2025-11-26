@@ -1,0 +1,854 @@
+{
+  "info": {
+    "name": "PoliTech Complete API v2.2",
+    "description": "Полная коллекция API для системы PoliTech включая управление пользователями, аккаунтами, ролями, логинами и продуктами",
+    "version": "2.2.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{current_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Аутентификация и получение JWT токенов",
+      "item": [
+        {
+          "name": "Login with credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"admin@company.com\",\n  \"password\": \"password123\",\n  \"clientId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Простая аутентификация с логином и паролем"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('current_token', data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"admin@company.com\",\n  \"clientId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Генерация JWT токена без пароля"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('current_token', data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Получить информацию о текущем пользователе"
+          }
+        },
+        {
+          "name": "Get Current User Context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/context",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "context"]
+            },
+            "description": "Получить контекст текущего пользователя"
+          }
+        },
+        {
+          "name": "Set Password (SYS_ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent@company.com\",\n  \"password\": \"SecurePass123\",\n  \"clientId\": \"1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/set-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "set-password"]
+            },
+            "description": "Установка/обновление пароля для пользователя (только SYS_ADMIN)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Tenant Management (SYS_ADMIN)",
+      "description": "Управление тенантами - доступно только для SYS_ADMIN",
+      "item": [
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantName\": \"Страховая компания Альфа\",\n  \"tenantCode\": \"ALPHA\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tenants"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('tenant_id', data.id);",
+                  "    pm.environment.set('tenant_code', 'ALPHA');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/tenants/{{tenant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tenants", "{{tenant_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Login Management",
+      "description": "Управление пользователями (логинами) согласно документации acc_logins.md",
+      "item": [
+        {
+          "name": "Create Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent@company.com\",\n  \"fullName\": \"Иванов Иван Иванович\",\n  \"position\": \"Страховой агент\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tnts/{{tenant_code}}/logins",
+              "host": ["{{base_url}}"],
+              "path": ["tnts", "{{tenant_code}}", "logins"]
+            },
+            "description": "Создание пользователя (логина) для тенанта"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('login_id', data.id);",
+                  "    pm.environment.set('user_login', data.userLogin);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Logins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tnts/{{tenant_code}}/logins",
+              "host": ["{{base_url}}"],
+              "path": ["tnts", "{{tenant_code}}", "logins"]
+            },
+            "description": "Получить всех пользователей тенанта"
+          }
+        },
+        {
+          "name": "Update Login",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Петров Иван Иванович\",\n  \"position\": \"Старший страховой агент\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tnts/{{tenant_code}}/logins/{{login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tnts", "{{tenant_code}}", "logins", "{{login_id}}"]
+            },
+            "description": "Обновление данных пользователя"
+          }
+        },
+        {
+          "name": "Delete Login (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tnts/{{tenant_code}}/logins/{{login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tnts", "{{tenant_code}}", "logins", "{{login_id}}"]
+            },
+            "description": "Удаление пользователя (soft delete - устанавливается флаг is_deleted)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Management",
+      "description": "Управление администраторами всех уровней",
+      "item": [
+        {
+          "name": "TNT_ADMIN",
+          "item": [
+            {
+              "name": "Create TNT_ADMIN",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tenantId\": {{tenant_id}},\n  \"userLogin\": \"tnt.admin@company.com\",\n  \"userName\": \"Администратор тенанта\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/tnt-admins",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "tnt-admins"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    var data = pm.response.json();",
+                      "    pm.environment.set('tnt_admin_id', data.id);",
+                      "    pm.environment.set('tnt_admin_account_id', data.accountId);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete TNT_ADMIN",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/tnt-admins/{{tnt_admin_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "tnt-admins", "{{tnt_admin_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "GROUP_ADMIN",
+          "item": [
+            {
+              "name": "Create GROUP_ADMIN",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userLogin\": \"group.admin@company.com\",\n  \"userName\": \"Администратор группы\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/group-admins",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "group-admins"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    var data = pm.response.json();",
+                      "    pm.environment.set('group_admin_id', data.id);",
+                      "    pm.environment.set('group_admin_account_id', data.accountId);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete GROUP_ADMIN",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/group-admins/{{group_admin_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "group-admins", "{{group_admin_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "PRODUCT_ADMIN",
+          "item": [
+            {
+              "name": "Create PRODUCT_ADMIN",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userLogin\": \"product.admin@company.com\",\n  \"userName\": \"Администратор продукта\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/product-admins",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "product-admins"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    var data = pm.response.json();",
+                      "    pm.environment.set('product_admin_id', data.id);",
+                      "    pm.environment.set('product_admin_account_id', data.accountId);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update PRODUCT_ADMIN",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userRole\": \"PRODUCT_ADMIN_SENIOR\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/admins/product-admins/{{product_admin_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "admins", "product-admins", "{{product_admin_id}}"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Client Management (TNT_ADMIN)",
+      "description": "Управление клиентами (приложениями)",
+      "item": [
+        {
+          "name": "Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"web-portal\",\n  \"clientName\": \"Веб-портал страхования\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/clients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "clients"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('client_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/clients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "clients"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Account Management",
+      "description": "Управление аккаунтами и иерархией",
+      "item": [
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parentAccountId\": null,\n  \"accountName\": \"Головной офис\",\n  \"nodeType\": \"GROUP\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/accounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "accounts"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('parent_account_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Sub-Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parentAccountId\": {{parent_account_id}},\n  \"accountName\": \"Региональный офис Москва\",\n  \"nodeType\": \"SUBACCOUNT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/accounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "accounts"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('sub_account_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Accounts Hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/accounts/hierarchy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "accounts", "hierarchy"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. User Management (PRODUCT_ADMIN)",
+      "description": "Управление обычными пользователями",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent001@company.com\",\n  \"accountId\": {{sub_account_id}},\n  \"userRole\": \"AGENT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('user_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userRole\": \"SENIOR_AGENT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Product Role Management",
+      "description": "Управление ролями на продукты",
+      "item": [
+        {
+          "name": "Assign Product Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": {{sub_account_id}},\n  \"roleProductId\": 100,\n  \"roleAccountId\": {{parent_account_id}},\n  \"canRead\": true,\n  \"canQuote\": true,\n  \"canPolicy\": true,\n  \"canAddendum\": false,\n  \"canCancel\": false,\n  \"canProlong\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('product_role_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Product Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canRead\": true,\n  \"canQuote\": true,\n  \"canPolicy\": true,\n  \"canAddendum\": true,\n  \"canCancel\": true,\n  \"canProlong\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles/{{product_role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles", "{{product_role_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Product Roles by Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles/account/{{sub_account_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles", "account", "{{sub_account_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Product Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/product-roles/{{product_role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "product-roles", "{{product_role_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Account Token Management",
+      "description": "Управление токенами аккаунтов",
+      "item": [
+        {
+          "name": "Create Account Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent001@company.com\",\n  \"clientId\": {{client_id}},\n  \"token\": \"external_token_123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "Get Account Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens?userLogin=agent001@company.com&clientId={{client_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "tokens"],
+              "query": [
+                {
+                  "key": "userLogin",
+                  "value": "agent001@company.com"
+                },
+                {
+                  "key": "clientId",
+                  "value": "{{client_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Account Token",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent001@company.com\",\n  \"clientId\": {{client_id}},\n  \"newToken\": \"new_external_token_789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account Token",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens?userLogin=agent001@company.com&clientId={{client_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "tokens"],
+              "query": [
+                {
+                  "key": "userLogin",
+                  "value": "agent001@company.com"
+                },
+                {
+                  "key": "clientId",
+                  "value": "{{client_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import java.util.List;
@@ -19,7 +20,8 @@ public class AdminProductController extends SecuredController {
 
     private final ProductService productService;
 
-    public AdminProductController(ProductService productService) {
+    public AdminProductController(ProductService productService, SecurityContextHelper securityContextHelper) {
+        super(securityContextHelper);
         this.productService = productService;
     }
 
