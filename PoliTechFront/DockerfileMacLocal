@@ -21,7 +21,10 @@ COPY --from=build /app/dist/ng-front4/browser /usr/share/nginx/html
 # Copy runtime env templating assets
 COPY public/assets/env.template.js /usr/share/nginx/html/assets/env.template.js
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN apk add --no-cache dos2unix && \
+    dos2unix /entrypoint.sh && \
+    chmod +x /entrypoint.sh && \
+    apk del dos2unix
 
 EXPOSE 80
 ARG BASE_URL
