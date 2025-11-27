@@ -45,7 +45,7 @@ jobs:
           # curl -f http://localhost:8080/health || exit 1
 
       - name: Push images to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           # Тегируем и пушим backend
           docker tag myapp-backend:latest ${{ env.BACKEND_IMAGE }}:latest
