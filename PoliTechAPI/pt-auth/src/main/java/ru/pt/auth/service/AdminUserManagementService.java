@@ -12,7 +12,9 @@ import ru.pt.auth.repository.*;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Сервис для управления администраторами и пользователями
@@ -54,24 +56,25 @@ public class AdminUserManagementService {
      * SYS_ADMIN: Создание нового tenant
      */
     @Transactional
-    public TenantEntity createTenant(String tenantName) {
-        // Проверка прав: только SYS_ADMIN
+    public TenantEntity createTenant(String name, String code) {
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only SYS_ADMIN can create tenants");
         }
 
         // Проверка уникальности имени
-        if (tenantRepository.findByName(tenantName).isPresent()) {
-            throw new BadRequestException("Tenant with name '" + tenantName + "' already exists");
+        if (tenantRepository.findByName(name).isPresent()) {
+            throw new BadRequestException("Tenant with name '" + name + "' already exists");
         }
 
         TenantEntity tenant = new TenantEntity();
-        tenant.setName(tenantName);
+        tenant.setName(name);
+        tenant.setCode(code);
+
         tenant.setDeleted(false);
 
         TenantEntity saved = tenantRepository.save(tenant);
-        logger.info("Tenant '{}' created by SYS_ADMIN", tenantName);
+        logger.info("Tenant '{}' created by SYS_ADMIN", name);
         return saved;
     }
 
@@ -278,24 +281,34 @@ public class AdminUserManagementService {
     // ========== PRODUCT_ROLES MANAGEMENT (TNT_ADMIN) ==========
 
     /**
-     * TNT_ADMIN: Выдача роли на продажу продукта GROUP_ADMIN'у
+     * TNT_ADMIN / GROUP_ADMIN: Выдача роли на продажу продукта
      */
     @Transactional
-    public ProductRoleEntity assignProductRole(Long accountId, Long roleProductId, Boolean canRead,
-                                               Boolean canQuote, Boolean canPolicy, Boolean canAddendum,
-                                               Boolean canCancel, Boolean canProlong) {
+    public ProductRoleEntity assignProductRole(Long accountId, Long roleProductId, Long roleAccountId,
+                                               Boolean canRead, Boolean canQuote, Boolean canPolicy,
+                                               Boolean canAddendum, Boolean canCancel, Boolean canProlong) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can assign product roles");
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can assign product roles");
         }
 
         AccountEntity account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Account not found"));
 
+        AccountEntity roleAccount = accountRepository.findById(roleAccountId)
+                .orElseThrow(() -> new NotFoundException("Role account not found"));
+
         // Проверка: account должен быть в том же tenant
         if (!account.getTenant().getId().equals(currentUser.getTenantId())) {
             throw new ForbiddenException("Cannot assign role to account in different tenant");
+        }
+
+        // Для GROUP_ADMIN - дополнительная проверка на client
+        if ("GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            if (!account.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only assign roles within their client");
+            }
         }
 
         // Создать ProductRole
@@ -304,7 +317,7 @@ public class AdminUserManagementService {
         role.setClient(account.getClient());
         role.setAccount(account);
         role.setRoleProductId(roleProductId);
-        role.setRoleAccount(account); // Роль привязана к account который получает доступ
+        role.setRoleAccount(roleAccount);
         role.setCanRead(canRead != null && canRead);
         role.setCanQuote(canQuote != null && canQuote);
         role.setCanPolicy(canPolicy != null && canPolicy);
@@ -316,14 +329,14 @@ public class AdminUserManagementService {
     }
 
     /**
-     * TNT_ADMIN: Отзыв роли на продажу продукта
+     * TNT_ADMIN / GROUP_ADMIN: Отзыв роли на продажу продукта
      */
     @Transactional
     public void revokeProductRole(Long productRoleId) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can revoke product roles");
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can revoke product roles");
         }
 
         ProductRoleEntity role = productRoleRepository.findById(productRoleId)
@@ -332,6 +345,13 @@ public class AdminUserManagementService {
         // Проверка: role должен быть в том же tenant
         if (!role.getTenant().getId().equals(currentUser.getTenantId())) {
             throw new ForbiddenException("Cannot revoke role from different tenant");
+        }
+
+        // Для GROUP_ADMIN - дополнительная проверка на client
+        if ("GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            if (!role.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only revoke roles within their client");
+            }
         }
 
         productRoleRepository.deleteById(productRoleId);
@@ -407,6 +427,292 @@ public class AdminUserManagementService {
         accountLogin.setUserRole(role);
         accountLogin.setDefault(true);
         return accountLoginRepository.save(accountLogin);
+    }
+
+    // ========== CLIENT MANAGEMENT (TNT_ADMIN) ==========
+
+    /**
+     * TNT_ADMIN: Создание нового клиента
+     */
+    @Transactional
+    public Map<String, Object> createClient(String clientId, String clientName) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN can create clients");
+        }
+
+        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        // Проверка уникальности clientId
+        if (clientRepository.findByClientId(clientId).isPresent()) {
+            throw new BadRequestException("Client with ID '" + clientId + "' already exists");
+        }
+
+        ClientEntity client = new ClientEntity();
+        client.setTenant(tenant);
+        client.setClientId(clientId);
+        client.setName(clientName);
+        client.setDeleted(false);
+        ClientEntity saved = clientRepository.save(client);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", saved.getId());
+        result.put("clientId", saved.getClientId());
+        result.put("name", saved.getName());
+        return result;
+    }
+
+    /**
+     * TNT_ADMIN: Получить список всех клиентов
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listClients() {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN can list clients");
+        }
+
+        List<ClientEntity> clients = clientRepository.findByTenantId(currentUser.getTenantId());
+        return clients.stream().map(client -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", client.getId());
+            map.put("clientId", client.getClientId());
+            map.put("name", client.getName());
+            map.put("isDeleted", client.getDeleted());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    // ========== ACCOUNT MANAGEMENT (GROUP_ADMIN, PRODUCT_ADMIN) ==========
+
+    /**
+     * GROUP_ADMIN / PRODUCT_ADMIN: Создание аккаунта
+     */
+    @Transactional
+    public Map<String, Object> createAccount(Long parentAccountId, String accountName, String nodeType) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"GROUP_ADMIN".equals(currentUser.getUserRole()) && !"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can create accounts");
+        }
+
+        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        ClientEntity client = clientRepository.findById(currentUser.getClientId())
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        AccountEntity parent = null;
+        if (parentAccountId != null) {
+            parent = accountRepository.findById(parentAccountId)
+                    .orElseThrow(() -> new NotFoundException("Parent account not found"));
+
+            // Проверка: родительский аккаунт должен быть в том же tenant и client
+            if (!parent.getTenant().getId().equals(currentUser.getTenantId()) ||
+                !parent.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("Cannot create account under parent from different tenant/client");
+            }
+        }
+
+        AccountNodeType accountNodeType;
+        try {
+            accountNodeType = AccountNodeType.valueOf(nodeType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid node type: " + nodeType);
+        }
+
+        AccountEntity account = new AccountEntity();
+        account.setTenant(tenant);
+        account.setClient(client);
+        account.setParent(parent);
+        account.setNodeType(accountNodeType);
+        account.setName(accountName);
+        AccountEntity saved = accountRepository.save(account);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", saved.getId());
+        result.put("name", saved.getName());
+        result.put("nodeType", saved.getNodeType().toString());
+        result.put("parentId", parent != null ? parent.getId() : null);
+        return result;
+    }
+
+    /**
+     * GROUP_ADMIN / PRODUCT_ADMIN: Получить иерархию аккаунтов
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getAccountsHierarchy() {
+        UserDetailsImpl currentUser = getCurrentUser();
+
+        List<AccountEntity> accounts = accountRepository.findByTenantIdAndClientId(
+                currentUser.getTenantId(),
+                currentUser.getClientId()
+        );
+
+        return accounts.stream().map(account -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", account.getId());
+            map.put("name", account.getName());
+            map.put("nodeType", account.getNodeType().toString());
+            map.put("parentId", account.getParent() != null ? account.getParent().getId() : null);
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    // ========== USER MANAGEMENT (PRODUCT_ADMIN) ==========
+
+    /**
+     * PRODUCT_ADMIN: Создание обычного пользователя
+     */
+    @Transactional
+    public AccountLoginEntity createUser(String userLogin, Long accountId, String userRole) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only PRODUCT_ADMIN can create users");
+        }
+
+        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        ClientEntity client = clientRepository.findById(currentUser.getClientId())
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        // Проверка: аккаунт должен быть в том же tenant и client
+        if (!account.getTenant().getId().equals(currentUser.getTenantId()) ||
+            !account.getClient().getId().equals(currentUser.getClientId())) {
+            throw new ForbiddenException("Cannot create user in account from different tenant/client");
+        }
+
+        // Проверка уникальности логина
+        if (loginRepository.findByUserLogin(userLogin).isPresent()) {
+            throw new BadRequestException("Login '" + userLogin + "' already exists");
+        }
+
+        // Создать Login
+        LoginEntity login = new LoginEntity();
+        login.setTenant(tenant);
+        login.setUserLogin(userLogin);
+        LoginEntity savedLogin = loginRepository.save(login);
+
+        // Создать AccountLogin
+        return createAccountLogin(savedLogin, client, account, userRole != null ? userRole : "USER");
+    }
+
+    /**
+     * PRODUCT_ADMIN: Обновление пользователя
+     */
+    @Transactional
+    public AccountLoginEntity updateUser(Long accountLoginId, String userRole) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only PRODUCT_ADMIN can update users");
+        }
+
+        AccountLoginEntity accountLogin = accountLoginRepository.findById(accountLoginId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        // Проверка: пользователь должен быть в том же client
+        if (!accountLogin.getClient().getId().equals(currentUser.getClientId())) {
+            throw new ForbiddenException("Cannot update user from different client");
+        }
+
+        accountLogin.setUserRole(userRole);
+        return accountLoginRepository.save(accountLogin);
+    }
+
+    /**
+     * PRODUCT_ADMIN: Удаление пользователя
+     */
+    @Transactional
+    public void deleteUser(Long accountLoginId) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only PRODUCT_ADMIN can delete users");
+        }
+
+        AccountLoginEntity accountLogin = accountLoginRepository.findById(accountLoginId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        // Проверка: пользователь должен быть в том же client
+        if (!accountLogin.getClient().getId().equals(currentUser.getClientId())) {
+            throw new ForbiddenException("Cannot delete user from different client");
+        }
+
+        accountLoginRepository.deleteById(accountLoginId);
+        logger.info("User deleted: {}", accountLogin.getUserLogin());
+    }
+
+    /**
+     * TNT_ADMIN / GROUP_ADMIN: Обновление роли на продукт
+     */
+    @Transactional
+    public ProductRoleEntity updateProductRole(Long productRoleId, Boolean canRead, Boolean canQuote,
+                                               Boolean canPolicy, Boolean canAddendum, Boolean canCancel,
+                                               Boolean canProlong) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can update product roles");
+        }
+
+        ProductRoleEntity role = productRoleRepository.findById(productRoleId)
+                .orElseThrow(() -> new NotFoundException("ProductRole not found"));
+
+        // Проверка: role должен быть в том же tenant
+        if (!role.getTenant().getId().equals(currentUser.getTenantId())) {
+            throw new ForbiddenException("Cannot update role from different tenant");
+        }
+
+        // Для GROUP_ADMIN - дополнительная проверка на client
+        if ("GROUP_ADMIN".equals(currentUser.getUserRole())) {
+            if (!role.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only update roles within their client");
+            }
+        }
+
+        // Обновление permissions
+        if (canRead != null) role.setCanRead(canRead);
+        if (canQuote != null) role.setCanQuote(canQuote);
+        if (canPolicy != null) role.setCanPolicy(canPolicy);
+        if (canAddendum != null) role.setCanAddendum(canAddendum);
+        if (canCancel != null) role.setCanCancel(canCancel);
+        if (canProlong != null) role.setCanProlongate(canProlong);
+
+        return productRoleRepository.save(role);
+    }
+
+    /**
+     * Получить все роли на продукты для аккаунта
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getProductRolesByAccount(Long accountId) {
+        UserDetailsImpl currentUser = getCurrentUser();
+
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        // Проверка: аккаунт должен быть в том же tenant
+        if (!account.getTenant().getId().equals(currentUser.getTenantId())) {
+            throw new ForbiddenException("Cannot access account from different tenant");
+        }
+
+        List<ProductRoleEntity> roles = productRoleRepository.findByAccountId(accountId);
+
+        return roles.stream().map(role -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", role.getId());
+            map.put("roleProductId", role.getRoleProductId());
+            map.put("roleAccountId", role.getRoleAccount().getId());
+            map.put("canRead", role.getCanRead());
+            map.put("canQuote", role.getCanQuote());
+            map.put("canPolicy", role.getCanPolicy());
+            map.put("canAddendum", role.getCanAddendum());
+            map.put("canCancel", role.getCanCancel());
+            map.put("canProlongate", role.getCanProlongate());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }
 

@@ -51,4 +51,10 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      */
     @Query(value = "SELECT nextval('account_seq')", nativeQuery = true)
     Long getNextAccountId();
+
+    /**
+     * Find accounts by tenant and client
+     */
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.id = :tenantId AND a.clientEntity.id = :clientId ORDER BY a.name")
+    List<AccountEntity> findByTenantIdAndClientId(Long tenantId, Long clientId);
 }

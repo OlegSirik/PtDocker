@@ -27,5 +27,17 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
      */
     @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantId AND c.name = :name AND c.isDeleted = false")
     Optional<ClientEntity> findByTenantAndName(@Param("tenantId") Long tenantId, @Param("name") String name);
+
+    /**
+     * Найти client по clientId
+     */
+    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId AND c.isDeleted = false")
+    Optional<ClientEntity> findByClientId(@Param("clientId") String clientId);
+
+    /**
+     * Найти все clients для tenant (включая deleted)
+     */
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantId ORDER BY c.name")
+    List<ClientEntity> findByTenantId(@Param("tenantId") Long tenantId);
 }
 

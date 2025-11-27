@@ -20,4 +20,10 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
     Optional<AccountLoginEntity> findByUserLoginAndAccountId(@Param("userLogin") String userLogin,
                                                               @Param("accountId") Long accountId);
 
+    /**
+     * Проверка существования записи для пользователя и клиента
+     */
+    @Query("SELECT COUNT(al) > 0 FROM AccountLoginEntity al WHERE al.userLogin = :userLogin AND al.clientEntity.id = :clientId")
+    boolean existsByUserLoginAndClientId(@Param("userLogin") String userLogin, @Param("clientId") Long clientId);
+
 }

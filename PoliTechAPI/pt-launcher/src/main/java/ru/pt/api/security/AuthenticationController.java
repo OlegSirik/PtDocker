@@ -2,7 +2,7 @@ package ru.pt.api.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.auth.model.LoginRequest;
@@ -97,24 +97,6 @@ public class AuthenticationController {
     }
 
     /**
-     * Endpoint доступный только для пользователей с ролью ADMIN
-     */
-    @GetMapping("/admin-only")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> adminOnly() {
-        return ResponseEntity.ok("You have ADMIN role!");
-    }
-
-    /**
-     * Endpoint доступный для пользователей с правом чтения продукта
-     */
-    @GetMapping("/product-read")
-    @PreAuthorize("hasRole('PRODUCT_CODE_READ')")
-    public ResponseEntity<String> productRead() {
-        return ResponseEntity.ok("You can read PRODUCT_CODE!");
-    }
-
-    /**
      * Простая аутентификация с логином и паролем (без Keycloak)
      * POST /api/auth/login
      */
@@ -193,42 +175,5 @@ public class AuthenticationController {
         response.setExpiresIn(30L * 24 * 60 * 60); // 30 дней в секундах
 
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Установить пароль для пользователя (только для администраторов)
-     * POST /api/auth/set-password
-     */
-    @PostMapping("/set-password")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> setPassword(
-            @RequestBody LoginRequest request,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        if (request.getUserLogin() == null || request.getUserLogin().isEmpty()) {
-            response.put("success", false);
-            response.put("message", "User login is required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Password is required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        boolean success = simpleAuthService.setPassword(request.getUserLogin(), request.getPassword());
-
-        if (success) {
-            response.put("success", true);
-            response.put("message", "Password set successfully for user: " + request.getUserLogin());
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("success", false);
-            response.put("message", "Failed to set password. User not found.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
     }
 }
