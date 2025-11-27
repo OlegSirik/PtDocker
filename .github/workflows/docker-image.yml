@@ -32,6 +32,9 @@ jobs:
         run: |
           # Собираем образы
           docker compose -f docker-compose-mac-local.yml build
+
+          echo "=== Built images ==="
+          docker compose images
           
           # Запускаем сервисы
           docker compose -f docker-compose-mac-local.yml up -d
