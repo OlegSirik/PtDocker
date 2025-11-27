@@ -59,7 +59,7 @@ jobs:
           # Тегируем и пушим frontend
           docker tag papi-f:latest ${{ env.FRONTEND_IMAGE }}:latest
           #docker tag frontend:latest ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          docker push ptdocker-frontend:latest
+          docker push ${{ env.FRONTEND_IMAGE }}:latest
           #docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
       - name: Cleanup
