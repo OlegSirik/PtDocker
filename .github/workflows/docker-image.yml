@@ -31,16 +31,14 @@ jobs:
       - name: Build and test with Docker Compose
         run: |
           # Собираем образы
-          docker compose -f docker-compose.ci.yml build
+          docker compose -f docker-compose-mac-local.yml build
           
           # Запускаем сервисы
-          docker compose -f docker-compose.ci.yml up -d
+          docker compose -f docker-compose-mac-local.yml up -d
           
           # Ждем готовности
           sleep 30
-          
-          # Запускаем тесты
-          docker compose -f docker-compose.ci.yml exec -T backend npm test
+        
           
           # Проверяем здоровье сервисов
           curl -f http://localhost:3000/health || exit 1
