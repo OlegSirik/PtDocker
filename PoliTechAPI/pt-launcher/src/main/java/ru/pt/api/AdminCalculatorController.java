@@ -12,6 +12,7 @@ import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 
@@ -25,8 +26,10 @@ public class AdminCalculatorController extends SecuredController {
 
     public AdminCalculatorController(
             CalculatorService calculateService,
+            SecurityContextHelper securityContextHelper,
             CoefficientService coefficientService
     ) {
+        super(securityContextHelper);
         this.calculateService = calculateService;
         this.coefficientService = coefficientService;
     }

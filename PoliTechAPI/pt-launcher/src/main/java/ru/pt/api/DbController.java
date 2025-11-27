@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.process.ProcessOrchestrator;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import java.time.ZonedDateTime;
@@ -22,7 +23,8 @@ public class DbController extends SecuredController {
 
     private final ProcessOrchestrator processOrchestrator;
 
-    public DbController(ProcessOrchestrator processOrchestrator) {
+    public DbController(ProcessOrchestrator processOrchestrator, SecurityContextHelper securityContextHelper) {
+        super(securityContextHelper);
         this.processOrchestrator = processOrchestrator;
     }
 

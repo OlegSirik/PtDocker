@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.pt.api.dto.file.FileModel;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.file.FileService;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import java.io.IOException;
@@ -22,7 +23,9 @@ public class AdminFileController extends SecuredController {
 
     private final FileService fileService;
 
-    public AdminFileController(FileService fileService) {
+    public AdminFileController(FileService fileService,
+                               SecurityContextHelper securityContextHelper) {
+        super(securityContextHelper);
         this.fileService = fileService;
     }
 
