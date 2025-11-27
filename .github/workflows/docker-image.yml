@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  BACKEND_IMAGE: olegsirik/politechapi/ptdocker-backend
-  FRONTEND_IMAGE: olegsirik/ptdocker-frontend
+  BACKEND_IMAGE: olegsirik/papi-b
+  FRONTEND_IMAGE: olegsirik/papi-f
 
 jobs:
   build-and-test:
@@ -51,13 +51,13 @@ jobs:
         # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           # Тегируем и пушим backend
-          docker tag backend:latest ${{ env.BACKEND_IMAGE }}:latest
+          docker tag papi-b:latest ${{ env.BACKEND_IMAGE }}:latest
           #docker tag backend:latest ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           docker push ${{ env.BACKEND_IMAGE }}:latest 
           #docker push ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           
           # Тегируем и пушим frontend
-          docker tag frontend:latest ${{ env.FRONTEND_IMAGE }}:latest
+          docker tag papi-f:latest ${{ env.FRONTEND_IMAGE }}:latest
           #docker tag frontend:latest ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           docker push ptdocker-frontend:latest
           #docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
