@@ -12,7 +12,7 @@ env:
   FRONTEND_IMAGE: olegsirik/papi-f
 
 jobs:
-  build-and-test:
+  build-and-test: 
     runs-on: ubuntu-latest
     
     steps:
