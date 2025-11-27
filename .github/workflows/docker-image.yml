@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  BACKEND_IMAGE: olegsirik/PtDocker-backend
-  FRONTEND_IMAGE: olegsirik/PtDocker-frontend
+  BACKEND_IMAGE: olegsirik/ptdocker-backend
+  FRONTEND_IMAGE: olegsirik/ptdocker-frontend
 
 jobs:
   build-and-test:
