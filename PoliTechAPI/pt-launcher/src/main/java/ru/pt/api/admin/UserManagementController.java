@@ -14,9 +14,12 @@ import java.util.Map;
 /**
  * Контроллер для управления обычными пользователями
  * Доступен для PRODUCT_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantId}/admin/users
+ * tenantId: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/v1/{tenantId}/admin/users")
 public class UserManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -29,11 +32,13 @@ public class UserManagementController extends SecuredController {
 
     /**
      * PRODUCT_ADMIN: Создание обычного пользователя (USER роль)
-     * POST /api/admin/users
+     * POST /api/v1/{tenantId}/admin/users
      */
     @PostMapping
     @PreAuthorize("hasRole('PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<Map<String, Object>> createUser(
+            @PathVariable String tenantId,
+            @RequestBody CreateUserRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createUser(
                     request.getUserLogin(),
@@ -56,16 +61,17 @@ public class UserManagementController extends SecuredController {
 
     /**
      * PRODUCT_ADMIN: Обновление роли пользователя
-     * PUT /api/admin/users/{accountLoginId}
+     * PUT /api/v1/{tenantId}/admin/users/{userId}
      */
-    @PutMapping("/{accountLoginId}")
+    @PutMapping("/{userId}")
     @PreAuthorize("hasRole('PRODUCT_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateUser(
-            @PathVariable Long accountLoginId,
+            @PathVariable String tenantId,
+            @PathVariable Long userId,
             @RequestBody UpdateUserRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.updateUser(
-                    accountLoginId,
+                    userId,
                     request.getUserRole()
             );
 
@@ -82,16 +88,18 @@ public class UserManagementController extends SecuredController {
 
     /**
      * PRODUCT_ADMIN: Удаление пользователя
-     * DELETE /api/admin/users/{accountLoginId}
+     * DELETE /api/v1/{tenantId}/admin/users/{userId}
      */
-    @DeleteMapping("/{accountLoginId}")
+    @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long accountLoginId) {
+    public ResponseEntity<Map<String, Object>> deleteUser(
+            @PathVariable String tenantId,
+            @PathVariable Long userId) {
         try {
-            adminUserManagementService.deleteUser(accountLoginId);
+            adminUserManagementService.deleteUser(userId);
 
             Map<String, Object> response = buildSimpleResponse("User deleted successfully");
-            response.put("accountLoginId", accountLoginId);
+            response.put("userId", userId);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

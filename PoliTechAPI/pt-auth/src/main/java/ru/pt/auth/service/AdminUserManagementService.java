@@ -103,7 +103,11 @@ public class AdminUserManagementService {
      * SYS_ADMIN: Создание TNT_ADMIN пользователя для tenant
      */
     @Transactional
-    public AccountLoginEntity createTntAdmin(Long tenantId, String userLogin, String userName) {
+    public AccountLoginEntity createTntAdmin(
+            Long tenantId,
+            String fullName,
+            String userLogin,
+            String userName) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
@@ -121,6 +125,7 @@ public class AdminUserManagementService {
         // Создать Login
         LoginEntity login = new LoginEntity();
         login.setTenant(tenant);
+        login.setFullName(fullName);
         login.setUserLogin(userLogin);
         LoginEntity savedLogin = loginRepository.save(login);
 
@@ -158,17 +163,17 @@ public class AdminUserManagementService {
      * TNT_ADMIN: Создание GROUP_ADMIN пользователя
      */
     @Transactional
-    public AccountLoginEntity createGroupAdmin(String userLogin, String userName) {
+    public AccountLoginEntity createGroupAdmin(String userLogin, String userName, String fullName) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can create GROUP_ADMIN users");
         }
 
-        Long currentTenantId = currentUser.getTenantId();
+        String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findById(currentTenantId)
+        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -182,6 +187,7 @@ public class AdminUserManagementService {
         // Создать Login
         LoginEntity login = new LoginEntity();
         login.setTenant(tenant);
+        login.setFullName(fullName);
         login.setUserLogin(userLogin);
         LoginEntity savedLogin = loginRepository.save(login);
 
@@ -207,7 +213,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("AccountLogin not found"));
 
         // Проверка: GROUP_ADMIN должен быть в том же tenant
-        if (!accountLogin.getTenant().getId().equals(currentUser.getTenantId())) {
+        if (!accountLogin.getTenant().getId().equals(currentUser.getTenantCode())) {
             throw new ForbiddenException("Cannot delete GROUP_ADMIN from different tenant");
         }
 
@@ -221,17 +227,17 @@ public class AdminUserManagementService {
      * GROUP_ADMIN: Создание PRODUCT_ADMIN пользователя
      */
     @Transactional
-    public AccountLoginEntity createProductAdmin(String userLogin, String userName) {
+    public AccountLoginEntity createProductAdmin(String userLogin, String userName, String fullName) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"GROUP_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only GROUP_ADMIN can create PRODUCT_ADMIN users");
         }
 
-        Long currentTenantId = currentUser.getTenantId();
+        String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findById(currentTenantId)
+        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -245,6 +251,7 @@ public class AdminUserManagementService {
         // Создать Login
         LoginEntity login = new LoginEntity();
         login.setTenant(tenant);
+        login.setFullName(fullName);
         login.setUserLogin(userLogin);
         LoginEntity savedLogin = loginRepository.save(login);
 
@@ -300,7 +307,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("Role account not found"));
 
         // Проверка: account должен быть в том же tenant
-        if (!account.getTenant().getId().equals(currentUser.getTenantId())) {
+        if (!account.getTenant().getCode().equals(currentUser.getTenantCode())) {
             throw new ForbiddenException("Cannot assign role to account in different tenant");
         }
 
@@ -343,7 +350,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("ProductRole not found"));
 
         // Проверка: role должен быть в том же tenant
-        if (!role.getTenant().getId().equals(currentUser.getTenantId())) {
+        if (!role.getTenant().getCode().equals(currentUser.getTenantCode())) {
             throw new ForbiddenException("Cannot revoke role from different tenant");
         }
 
@@ -441,7 +448,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only TNT_ADMIN can create clients");
         }
 
-        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
@@ -473,7 +480,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only TNT_ADMIN can list clients");
         }
 
-        List<ClientEntity> clients = clientRepository.findByTenantId(currentUser.getTenantId());
+        List<ClientEntity> clients = clientRepository.findByTenantCodeActive(currentUser.getTenantCode());
         return clients.stream().map(client -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", client.getId());
@@ -496,7 +503,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can create accounts");
         }
 
-        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentUser.getClientId())
@@ -508,7 +515,7 @@ public class AdminUserManagementService {
                     .orElseThrow(() -> new NotFoundException("Parent account not found"));
 
             // Проверка: родительский аккаунт должен быть в том же tenant и client
-            if (!parent.getTenant().getId().equals(currentUser.getTenantId()) ||
+            if (!parent.getTenant().getCode().equals(currentUser.getTenantCode()) ||
                 !parent.getClient().getId().equals(currentUser.getClientId())) {
                 throw new ForbiddenException("Cannot create account under parent from different tenant/client");
             }
@@ -544,8 +551,8 @@ public class AdminUserManagementService {
     public List<Map<String, Object>> getAccountsHierarchy() {
         UserDetailsImpl currentUser = getCurrentUser();
 
-        List<AccountEntity> accounts = accountRepository.findByTenantIdAndClientId(
-                currentUser.getTenantId(),
+        List<AccountEntity> accounts = accountRepository.findByTenantCodeAndClientId(
+                currentUser.getTenantCode(),
                 currentUser.getClientId()
         );
 
@@ -571,7 +578,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only PRODUCT_ADMIN can create users");
         }
 
-        TenantEntity tenant = tenantRepository.findById(currentUser.getTenantId())
+        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentUser.getClientId())
@@ -581,7 +588,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("Account not found"));
 
         // Проверка: аккаунт должен быть в том же tenant и client
-        if (!account.getTenant().getId().equals(currentUser.getTenantId()) ||
+        if (!account.getTenant().getCode().equals(currentUser.getTenantCode()) ||
             !account.getClient().getId().equals(currentUser.getClientId())) {
             throw new ForbiddenException("Cannot create user in account from different tenant/client");
         }
@@ -661,7 +668,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("ProductRole not found"));
 
         // Проверка: role должен быть в том же tenant
-        if (!role.getTenant().getId().equals(currentUser.getTenantId())) {
+        if (!role.getTenant().getCode().equals(currentUser.getTenantCode())) {
             throw new ForbiddenException("Cannot update role from different tenant");
         }
 
@@ -694,7 +701,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("Account not found"));
 
         // Проверка: аккаунт должен быть в том же tenant
-        if (!account.getTenant().getId().equals(currentUser.getTenantId())) {
+        if (!account.getTenant().getCode().equals(currentUser.getTenantCode())) {
             throw new ForbiddenException("Cannot access account from different tenant");
         }
 

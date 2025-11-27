@@ -60,10 +60,10 @@ public class SecurityContextHelper {
     }
 
     /**
-     * Получает ID текущего тенанта
+     * Получает Code текущего тенанта
      */
-    public Optional<Long> getCurrentTenantId() {
-        return getCurrentUser().map(UserDetailsImpl::getTenantId);
+    public Optional<String> getCurrentTenantCode() {
+        return getCurrentUser().map(UserDetailsImpl::getTenantCode);
     }
 
     /**

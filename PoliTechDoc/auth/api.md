@@ -25,7 +25,7 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Client
 ```
-/tnts/{tenantId}/clients
+/tnts/{tenantCode}/clients
 ```
 Настройка интеграции, подключения партнера.
 В 1 версии поддерживаем только партнеркую интеграцию, без поддержки пользовательских учеток.
@@ -42,7 +42,7 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Users
 ```
-/tnts/{tenantId}/users
+/tnts/{tenantCode}/users
 ```
 Список подключенных пользователей.
 Сразу не нужно.
@@ -59,7 +59,7 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Tokens
 ```
-/tnts/{tenantId}/tokens
+/tnts/{tenantCode}/tokens
 ```
 Список кодов для анонимных продаж.
 Сразу не нужно.
@@ -76,7 +76,7 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Accounts
 ```
-/tnts/{tenantId}/clients/{clientId}/accounts
+/tnts/{tenantCode}/clients/{clientId}/accounts
 ```
 Страховой портфель. Основная единица авторизации.
 
@@ -92,7 +92,7 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Accounts
 ```
-/tnts/{tenantId}/clients/{clientId}/accounts/{accountId}/sub
+/tnts/{tenantCode}/clients/{clientId}/accounts/{accountId}/sub
 ```
 Настройка прав для страхового портфеля. 
 
@@ -108,12 +108,12 @@ https://app.swaggerhub.com/apis/insur/PoliTechAccounts/2
 
 ## Me
 ```
-/tnts/{tenantId}/me/account
+/tnts/{tenantCode}/me/account
 ```
 Данные текущего account текущего пользователя. Нужно сразу.
 
 ```
-/tnts/{tenantId}/me/roles
+/tnts/{tenantCode}/me/roles
 ```
 Список ролей текущего account текущего пользователя. Нужно сразу.
 

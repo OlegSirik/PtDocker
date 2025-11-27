@@ -52,7 +52,7 @@ public class AuthenticationController {
         Map<String, Object> response = new HashMap<>();
         response.put("id", userDetails.getId());
         response.put("username", userDetails.getUsername());
-        response.put("tenantId", userDetails.getTenantId());
+        response.put("tenantCode", userDetails.getTenantCode());
         response.put("accountId", userDetails.getAccountId());
         response.put("accountName", userDetails.getAccountName());
         response.put("clientId", userDetails.getClientId());
@@ -77,7 +77,7 @@ public class AuthenticationController {
             response.put("username", user.getUsername());
             response.put("accountId", user.getAccountId());
             response.put("clientId", user.getClientId());
-            response.put("tenantId", user.getTenantId());
+            response.put("tenantCode", user.getTenantCode());
         });
 
         response.put("isAuthenticated", securityContextHelper.isAuthenticated());

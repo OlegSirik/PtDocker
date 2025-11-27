@@ -19,7 +19,7 @@ public class UserDetailsImpl implements UserDetails {
 
     private final Long id;
     private final String username;
-    private final Long tenantId;
+    private final String tenantCode;
     private final Long accountId;
     private final String accountName;
     private final Long clientId;
@@ -32,12 +32,12 @@ public class UserDetailsImpl implements UserDetails {
     private final boolean accountNonLocked;
     private final boolean credentialsNonExpired;
 
-    public UserDetailsImpl(Long id, String username, Long tenantId,
+    public UserDetailsImpl(Long id, String username, String tenantCode,
                           Long accountId, String accountName, Long clientId, String clientName,
                           String userRole, Set<String> productRoles, boolean isDefault) {
         this.id = id;
         this.username = username;
-        this.tenantId = tenantId;
+        this.tenantCode = tenantCode;
         this.accountId = accountId;
         this.accountName = accountName;
         this.clientId = clientId;
@@ -59,7 +59,7 @@ public class UserDetailsImpl implements UserDetails {
         return new UserDetailsImpl(
                 accountLoginEntity.getId(),
                 loginEntity.getUserLogin(),
-                loginEntity.getTenant().getId(),
+                loginEntity.getTenant().getCode(),
                 accountLoginEntity.getAccount().getId(),
                 accountLoginEntity.getAccount().getName(),
                 accountLoginEntity.getClient().getId(),
@@ -123,8 +123,8 @@ public class UserDetailsImpl implements UserDetails {
         return id;
     }
 
-    public Long getTenantId() {
-        return tenantId;
+    public String getTenantCode() {
+        return tenantCode;
     }
 
     public Long getAccountId() {

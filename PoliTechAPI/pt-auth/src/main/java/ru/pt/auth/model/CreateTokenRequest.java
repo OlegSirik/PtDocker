@@ -1,5 +1,7 @@
 package ru.pt.auth.model;
 
+import javax.annotation.processing.Generated;
+
 /**
  * DTO для создания токена
  */

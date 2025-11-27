@@ -1,0 +1,721 @@
+{
+  "info": {
+    "name": "PoliTech API v1 - Unified Endpoints",
+    "description": "PoliTech API v1 с унифицированным URL форматом /api/v1/{tenantId}/{domain}/{resource}",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "tenant",
+      "value": "pt",
+      "type": "string",
+      "description": "Tenant ID: pt, vsk, msg"
+    },
+    {
+      "key": "current_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{current_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Logins Management",
+      "description": "/api/v1/{tenantCode}/logins - Управление логинами пользователей",
+      "item": [
+        {
+          "name": "Create Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"agent@company.com\",\n  \"fullName\": \"Иванов Иван Иванович\",\n  \"position\": \"Страховой агент\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/logins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "logins"]
+            },
+            "description": "Создать новый логин пользователя (SYS_ADMIN, TNT_ADMIN, GROUP_ADMIN)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('login_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Logins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/logins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "logins"]
+            },
+            "description": "Получить всех пользователей тенанта (SYS_ADMIN, TNT_ADMIN, GROUP_ADMIN, PRODUCT_ADMIN)"
+          }
+        },
+        {
+          "name": "Update Login",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Петров Иван Иванович\",\n  \"position\": \"Старший страховой агент\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/logins/{{login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "logins", "{{login_id}}"]
+            },
+            "description": "Обновление данных пользователя (SYS_ADMIN, TNT_ADMIN, GROUP_ADMIN)"
+          }
+        },
+        {
+          "name": "Delete Login",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/logins/{{login_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "logins", "{{login_id}}"]
+            },
+            "description": "Удаление пользователя - soft delete (SYS_ADMIN, TNT_ADMIN, GROUP_ADMIN)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. ADMIN Domain - Tenants",
+      "description": "/api/v1/{tenant}/admin/tenants",
+      "item": [
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantName\": \"PoliTech PT\",\n  \"tenantCode\": \"pt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "tenants"]
+            },
+            "description": "Создание нового tenant (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/tenants/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "tenants", "1"]
+            },
+            "description": "Удаление tenant (SYS_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. ADMIN Domain - Users",
+      "description": "/api/v1/{tenant}/admin/users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"user@company.com\",\n  \"accountId\": 1,\n  \"userRole\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "users"]
+            },
+            "description": "Создание обычного пользователя (PRODUCT_ADMIN only)"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userRole\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "users", "1"]
+            },
+            "description": "Обновление роли пользователя (PRODUCT_ADMIN only)"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "users", "1"]
+            },
+            "description": "Удаление пользователя (PRODUCT_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. ADMIN Domain - Administrators",
+      "description": "/api/v1/{tenant}/admin/admins",
+      "item": [
+        {
+          "name": "TNT_ADMIN - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": 1,\n  \"userLogin\": \"tnt.admin@company.com\",\n  \"userName\": \"TNT Administrator\",\n  \"fullName\": \"Дмитрий Владимирович\"\n }"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/admins/tnt-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "admins", "tnt-admins"]
+            },
+            "description": "Создание TNT_ADMIN (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "TNT_ADMIN - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/admins/tnt-admins/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "admins", "tnt-admins", "1"]
+            },
+            "description": "Удаление TNT_ADMIN (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "GROUP_ADMIN - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"group.admin@company.com\",\n  \"userName\": \"GROUP Administrator\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/admins/group-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "admins", "group-admins"]
+            },
+            "description": "Создание GROUP_ADMIN (TNT_ADMIN only)"
+          }
+        },
+        {
+          "name": "PRODUCT_ADMIN - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"product.admin@company.com\",\n  \"userName\": \"PRODUCT Administrator\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/admins/product-admins",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "admins", "product-admins"]
+            },
+            "description": "Создание PRODUCT_ADMIN (GROUP_ADMIN only)"
+          }
+        },
+        {
+          "name": "PRODUCT_ADMIN - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userRole\": \"PRODUCT_ADMIN_SENIOR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/admins/product-admins/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "admins", "product-admins", "1"]
+            },
+            "description": "Обновление PRODUCT_ADMIN (GROUP_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. ADMIN Domain - Clients",
+      "description": "/api/v1/{tenant}/admin/clients",
+      "item": [
+        {
+          "name": "Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"web-app\",\n  \"clientName\": \"Web Application\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/clients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "clients"]
+            },
+            "description": "Создание нового клиента (TNT_ADMIN only)"
+          }
+        },
+        {
+          "name": "List Clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/clients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "clients"]
+            },
+            "description": "Получить список всех клиентов (TNT_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. ADMIN Domain - Accounts",
+      "description": "/api/v1/{tenant}/admin/accounts",
+      "item": [
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parentAccountId\": 1,\n  \"accountName\": \"New Account\",\n  \"nodeType\": \"ACCOUNT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/accounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "accounts"]
+            },
+            "description": "Создание аккаунта (GROUP_ADMIN, PRODUCT_ADMIN)"
+          }
+        },
+        {
+          "name": "Get Accounts Hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/accounts/hierarchy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "accounts", "hierarchy"]
+            },
+            "description": "Получить иерархию аккаунтов (GROUP_ADMIN, PRODUCT_ADMIN)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. ADMIN Domain - Products",
+      "description": "/api/v1/{tenant}/admin/products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "products"]
+            },
+            "description": "Получить список всех продуктов (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO_INS\",\n  \"productName\": \"Автомобильное страхование\",\n  \"versionNo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "products"]
+            },
+            "description": "Создание нового продукта (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "Get Product Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/products/1/versions/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "products", "1", "versions", "1"]
+            },
+            "description": "Получить версию продукта (SYS_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. ADMIN Domain - Calculators",
+      "description": "/api/v1/{tenant}/admin/calculators",
+      "item": [
+        {
+          "name": "Get Calculator",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/calculators/products/1/versions/1/packages/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "calculators", "products", "1", "versions", "1", "packages", "1"]
+            },
+            "description": "Получить калькулятор (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "Get Coefficients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/calculators/1/coefficients/AGE",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "calculators", "1", "coefficients", "AGE"]
+            },
+            "description": "Получить таблицу коэффициентов (SYS_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. ADMIN Domain - LOBs",
+      "description": "/api/v1/{tenant}/admin/lobs",
+      "item": [
+        {
+          "name": "List LOBs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/lobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "lobs"]
+            },
+            "description": "Получить список всех LOB (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "Get LOB by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/lobs/AUTO",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "lobs", "AUTO"]
+            },
+            "description": "Получить LOB по коду (SYS_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. ADMIN Domain - Files",
+      "description": "/api/v1/{tenant}/admin/files",
+      "item": [
+        {
+          "name": "Create File Meta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileType\": \"PDF\",\n  \"fileDescription\": \"Шаблон полиса\",\n  \"productCode\": \"AUTO\",\n  \"packageCode\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/files",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "files"]
+            },
+            "description": "Создать метаданные файла (SYS_ADMIN only)"
+          }
+        },
+        {
+          "name": "List Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/admin/files?product_code=AUTO",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "admin", "files"],
+              "query": [
+                {
+                  "key": "product_code",
+                  "value": "AUTO"
+                }
+              ]
+            },
+            "description": "Получить список файлов (SYS_ADMIN only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. SALES Domain - Policies",
+      "description": "/api/v1/{tenant}/sales/policies",
+      "item": [
+        {
+          "name": "Create Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO\",\n  \"policyData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/sales/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "sales", "policies"]
+            },
+            "description": "Создать новую политику (Authenticated)"
+          }
+        },
+        {
+          "name": "Get Policy by Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/sales/policies/by-number/POL-001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "sales", "policies", "by-number", "POL-001"]
+            },
+            "description": "Получить политику по номеру"
+          }
+        },
+        {
+          "name": "Mark Policy as Paid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentDate\": \"2024-11-27T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/sales/policies/POL-001/paid",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "sales", "policies", "POL-001", "paid"]
+            },
+            "description": "Отметить политику как оплаченную"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. TEST Domain",
+      "description": "/api/v1/{tenant}/test",
+      "item": [
+        {
+          "name": "Create Client (Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Client\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/test/create-client",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "test", "create-client"]
+            },
+            "description": "Тестовый эндпоинт для создания клиента"
+          }
+        },
+        {
+          "name": "Quote Validator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO\",\n  \"quoteData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/test/quote/validator",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "test", "quote", "validator"]
+            },
+            "description": "Валидация и расчет quote"
+          }
+        },
+        {
+          "name": "Policy Validator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO\",\n  \"policyData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/{{tenant}}/test/policy/validator",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "{{tenant}}", "test", "policy", "validator"]
+            },
+            "description": "Валидация и сохранение policy"
+          }
+        }
+      ]
+    }
+  ]
+}
+

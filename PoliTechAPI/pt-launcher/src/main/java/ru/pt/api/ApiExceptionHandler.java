@@ -8,9 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.pt.api.dto.exception.ForbiddenException;
-import ru.pt.domain.error.ErrorModel;
-import ru.pt.exception.*;
+import ru.pt.api.dto.errors.ErrorModel;
+import ru.pt.api.dto.exception.*;
 
 @ControllerAdvice
 public class ApiExceptionHandler {

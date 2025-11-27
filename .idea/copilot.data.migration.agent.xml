@@ -4,7 +4,12 @@
     <option name="migrationStatus" value="IN_PROGRESS" />
     <option name="pendingSessionIds">
       <option value="2bd1f5eb-c670-4d27-bc3c-eb4eff05bfec" />
+      <option value="6b73fff9-0f85-4f3b-8806-9d852c4ef5ff" />
+      <option value="963c4488-2678-4179-81c1-3dc6fcdd3905" />
+      <option value="a238c2d5-866a-4ade-9fbd-0ba6983bf2b7" />
       <option value="b03c09fd-5ef3-40d4-9338-680c808a3a1d" />
+      <option value="b8ca9cea-7aea-424c-9626-53f4b5bba6b6" />
+      <option value="baf9267e-519b-49ba-9d01-a84b3b4d48df" />
     </option>
     <option name="pendingTurns">
       <map>
@@ -23,10 +28,79 @@
             </set>
           </value>
         </entry>
+        <entry key="963c4488-2678-4179-81c1-3dc6fcdd3905">
+          <value>
+            <set>
+              <option value="09fbac8c-751d-408a-8f7f-09c1d5653490" />
+              <option value="138de5af-0aa4-4ca4-bda3-40e9c3755617" />
+              <option value="15523616-2848-48ab-b9c2-6c7062f7f209" />
+              <option value="1c7968c7-c9c7-484d-8d70-8e3bb9e33617" />
+              <option value="843c1bc2-9875-4769-ba2f-46734194ff01" />
+              <option value="9373356b-883c-4e37-b590-6fd00a7ef72f" />
+              <option value="ab22f022-246b-4d68-adc0-685d17f26cf7" />
+              <option value="b6c0175d-fb4d-464e-9e67-c4cac47fa162" />
+              <option value="cf109483-60a0-4af3-a039-f8e4c385a10a" />
+              <option value="ed0b7d94-cc16-4f25-8945-cf95b406a101" />
+              <option value="fae58ab0-ca77-48b5-9d01-3f6c6e7b13f0" />
+            </set>
+          </value>
+        </entry>
+        <entry key="a238c2d5-866a-4ade-9fbd-0ba6983bf2b7">
+          <value>
+            <set>
+              <option value="71f8da41-29c4-4294-ac8c-ab53f3b6775f" />
+            </set>
+          </value>
+        </entry>
+        <entry key="b8ca9cea-7aea-424c-9626-53f4b5bba6b6">
+          <value>
+            <set>
+              <option value="1ec63d8c-27ac-4cf6-b3fd-7719be63f6e5" />
+              <option value="9ea2e8de-70de-4afe-87b5-cf9954eed525" />
+            </set>
+          </value>
+        </entry>
+        <entry key="baf9267e-519b-49ba-9d01-a84b3b4d48df">
+          <value>
+            <set>
+              <option value="a3fac307-ccc6-4260-8f2e-9c29721b7257" />
+              <option value="6e19bbe4-1418-4e18-a387-234e3eecd755" />
+              <option value="46732b4d-eaaa-47b7-b3ba-e98f0962ae2e" />
+              <option value="07e23d43-6292-473e-9c6c-c447f32030cb" />
+              <option value="e4696b8e-005c-47fd-b8ef-c9c7222769ca" />
+              <option value="d965a916-906e-41e6-95d3-487bf4e4913d" />
+              <option value="5cb855d8-0ee8-4ee5-9f2c-7c37f9eb504e" />
+              <option value="4dcb97df-ecd0-405a-8c28-71fa48d82251" />
+            </set>
+          </value>
+        </entry>
       </map>
     </option>
     <pendingWorkingSetItems>
       <entry key="2bd1f5eb-c670-4d27-bc3c-eb4eff05bfec" />
+      <entry key="963c4488-2678-4179-81c1-3dc6fcdd3905" />
+      <entry key="baf9267e-519b-49ba-9d01-a84b3b4d48df">
+        <set>
+          <option value="file://$PROJECT_DIR$/collections/PoliTech_Complete_API_v2.2.postman_collection.json" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/UserManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/TenantManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/AdminManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/ClientManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/AccountManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/admin/LoginManagementController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/DbController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/AdminProductController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/AdminCalculatorController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/AdminLobController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/AdminFileController.java" />
+          <option value="file://$PROJECT_DIR$/PoliTechAPI/pt-launcher/src/main/java/ru/pt/api/Test.java" />
+          <option value="file://$PROJECT_DIR$/API_ENDPOINTS_REFACTORING.md" />
+          <option value="file://$PROJECT_DIR$/collections/PoliTech_API_v1_Unified.postman_collection.json" />
+          <option value="file://$PROJECT_DIR$/REFACTORING_REPORT.md" />
+          <option value="file://$PROJECT_DIR$/MIGRATION_GUIDE.md" />
+          <option value="file://$PROJECT_DIR$/LOGINS_UPDATE.md" />
+        </set>
+      </entry>
     </pendingWorkingSetItems>
   </component>
 </project>

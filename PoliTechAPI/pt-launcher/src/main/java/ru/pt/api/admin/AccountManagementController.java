@@ -15,9 +15,12 @@ import java.util.Map;
 /**
  * Контроллер для управления аккаунтами
  * Доступен для GROUP_ADMIN и PRODUCT_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantCode}/admin/accounts
+ * tenantCode: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/api/admin/accounts")
+@RequestMapping("/api/v1/{tenantCode}/admin/accounts")
 public class AccountManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -30,11 +33,12 @@ public class AccountManagementController extends SecuredController {
 
     /**
      * GROUP_ADMIN / PRODUCT_ADMIN: Создание аккаунта
-     * POST /api/admin/accounts
+     * POST /api/v1/{tenantCode}/admin/accounts
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<Map<String, Object>> createAccount(
+            @RequestBody CreateAccountRequest request) {
         try {
             requireAnyRole("GROUP_ADMIN", "PRODUCT_ADMIN");
 
@@ -58,11 +62,11 @@ public class AccountManagementController extends SecuredController {
 
     /**
      * GROUP_ADMIN / PRODUCT_ADMIN: Получить иерархию аккаунтов
-     * GET /api/admin/accounts/hierarchy
+     * GET /api/v1/{tenantId}/admin/accounts/hierarchy
      */
     @GetMapping("/hierarchy")
     @PreAuthorize("hasAnyRole('GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getAccountsHierarchy() {
+    public ResponseEntity<List<Map<String, Object>>> getAccountsHierarchy(@PathVariable String tenantId) {
         try {
             requireAnyRole("GROUP_ADMIN", "PRODUCT_ADMIN");
 

@@ -16,9 +16,14 @@ import java.util.UUID;
 /**
  * Only for storage operations! Assumes no additional business logic
  * Требует аутентификации для всех операций
+ *
+ * URL Pattern: /api/v1/{tenantCode}/sales/policies
+ * tenantCode: pt, vsk, msg
+ * domain: sales
+ * resource: policies
  */
 @RestController
-@RequestMapping("/db")
+@RequestMapping("/api/v1/{tenantCode}/sales/policies")
 public class DbController extends SecuredController {
 
     private final ProcessOrchestrator processOrchestrator;
@@ -31,11 +36,12 @@ public class DbController extends SecuredController {
 
     /**
      * Create a new policy
-     * POST /sales/policies
+     * POST /api/v1/{tenantCode}/sales/policies
      * Требуется право POLICY на продукт
      */
-    @PostMapping("/policies")
+    @PostMapping
     public ResponseEntity<PolicyData> createPolicy(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody String request) {
         requireAuthenticated(user);
@@ -46,11 +52,12 @@ public class DbController extends SecuredController {
 
     /**
      * Update an existing policy
-     * PUT /sales/policies/{id}
+     * PUT /api/v1/{tenantCode}/sales/policies/{policyNumber}
      * Требуется право ADDENDUM на продукт
      */
-    @PutMapping("/policies/{policyNumber}")
+    @PutMapping("/{policyNumber}")
     public ResponseEntity<PolicyData> updatePolicy(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("policyNumber") String policyNumber,
             @RequestBody String request) {
@@ -63,47 +70,52 @@ public class DbController extends SecuredController {
 
     /**
      * Get policy by ID
-     * GET /sales/policies/{id}
+     * GET /api/v1/{tenantCode}/sales/policies/{policyId}
      * Требуется право READ на продукт
      */
-    @GetMapping("/policies/{id}")
+    @GetMapping("/{policyId}")
     public ResponseEntity<PolicyData> getPolicyById(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") UUID id) {
+            @PathVariable("policyId") UUID policyId) {
         requireAuthenticated(user);
-        PolicyData policy = processOrchestrator.getPolicyById(id);
+        PolicyData policy = processOrchestrator.getPolicyById(policyId);
         return ResponseEntity.ok(policy);
     }
 
     /**
      * Get policy by policy number
-     * GET /sales/policies/by-number/{policyNumber}
+     * GET /api/v1/{tenantCode}/sales/policies/by-number/{policyNumber}
      */
-    @GetMapping("/policies/by-number/{policyNumber}")
-    public ResponseEntity<PolicyData> getPolicyByNumber(@PathVariable("policyNumber") String policyNumber) {
+    @GetMapping("/by-number/{policyNumber}")
+    public ResponseEntity<PolicyData> getPolicyByNumber(
+            @PathVariable String tenantCode,
+            @PathVariable("policyNumber") String policyNumber) {
         PolicyData policy = processOrchestrator.getPolicyByNumber(policyNumber);
         return ResponseEntity.ok(policy);
     }
 
     /**
      * Get all policies by user account ID
-     * GET /sales/policies/by-account/{userAccountId}
+     * GET /api/v1/{tenantCode}/sales/policies/by-account/{userAccountId}
      */
-    // TODO securityContext and token
-    @GetMapping("/policies/by-account/{userAccountId}")
-    public ResponseEntity<List<PolicyData>> getPoliciesByUserAccountId(@PathVariable("userAccountId") Long userAccountId) {
+    @GetMapping("/by-account/{userAccountId}")
+    public ResponseEntity<List<PolicyData>> getPoliciesByUserAccountId(
+            @PathVariable String tenantCode,
+            @PathVariable("userAccountId") Long userAccountId) {
         // List<PolicyData> policies = policyDataService.getPoliciesByUserAccountId(userAccountId);
         return ResponseEntity.ok(null);
     }
 
     /**
      * Mark policy as paid
-     * POST /sales/policies/{policyNumber}/paid
-     * TODO не тут должно быть + не та dto
+     * POST /api/v1/{tenantCode}/sales/policies/{policyNumber}/paid
      */
-    @PostMapping("/policies/{policyNumber}/paid")
-    public ResponseEntity<Void> markPolicyAsPaid(@PathVariable("policyNumber") String policyNumber,
-                                                  @RequestBody PaymentRequest request) {
+    @PostMapping("/{policyNumber}/paid")
+    public ResponseEntity<Void> markPolicyAsPaid(
+            @PathVariable String tenantId,
+            @PathVariable("policyNumber") String policyNumber,
+            @RequestBody PaymentRequest request) {
         ZonedDateTime paymentDate = request.getPaymentDate() != null
             ? request.getPaymentDate() 
             : ZonedDateTime.now();

@@ -16,8 +16,8 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     /**
      * Поиск логина по userLogin и tenant ID
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.id = :tenantId AND l.userLogin = :userLogin")
-    Optional<LoginEntity> findByTenantIdAndUserLogin(@Param("tenantId") Long tenantId, @Param("userLogin") String userLogin);
+    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.userLogin = :userLogin")
+    Optional<LoginEntity> findByTenantCodeAndUserLogin(@Param("tenantCode") String tenantCode, @Param("userLogin") String userLogin);
 
     /**
      * Получить все логины для тенанта
@@ -34,7 +34,7 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     /**
      * Проверка существования логина для тенанта
      */
-    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l WHERE l.tenantEntity.id = :tenantId AND l.userLogin = :userLogin")
-    boolean existsByTenantIdAndUserLogin(@Param("tenantId") Long tenantId, @Param("userLogin") String userLogin);
+    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l WHERE l.tenantEntity.code = :tenantId AND l.userLogin = :userLogin")
+    boolean existsByTenantCodeAndUserLogin(@Param("tenantId") String tenantCode, @Param("userLogin") String userLogin);
 
 }

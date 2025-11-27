@@ -13,8 +13,15 @@ import ru.pt.auth.security.UserDetailsImpl;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Контроллер для управления продуктами
+ * Доступен только для SYS_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantCode}/admin/products
+ * tenantCode: pt, vsk, msg
+ */
 @RestController
-@RequestMapping("/admin/products")
+@RequestMapping("/api/v1/{tenantCode}/admin/products")
 @PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminProductController extends SecuredController {
 
@@ -26,13 +33,16 @@ public class AdminProductController extends SecuredController {
     }
 
     @GetMapping
-    public List<Map<String, Object>> list(@AuthenticationPrincipal UserDetailsImpl user) {
+    public List<Map<String, Object>> list(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user) {
         requireAdmin(user);
         return productService.listSummaries();
     }
 
     @PostMapping
     public ResponseEntity<ProductVersionModel> create(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody ProductVersionModel payload) {
         requireAdmin(user);
@@ -40,71 +50,76 @@ public class AdminProductController extends SecuredController {
         return ResponseEntity.ok(created);
     }
 
-    @GetMapping("/{id}/versions/{versionNo}")
+    @GetMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> getVersion(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
         requireAdmin(user);
-        return ResponseEntity.ok(productService.getVersion(id, versionNo));
+        return ResponseEntity.ok(productService.getVersion(productId, versionNo));
     }
 
-    @PostMapping("/{id}/versions/{versionNo}/cmd/create")
+    @PostMapping("/{productId}/versions/{versionNo}/cmd/create")
     public ResponseEntity<ProductVersionModel> createVersion(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
         requireRole(user, "SYS_ADMIN");
-        return ResponseEntity.ok(productService.createVersionFrom(id, versionNo));
+        return ResponseEntity.ok(productService.createVersionFrom(productId, versionNo));
     }
 
-    @PutMapping("/{id}/versions/{versionNo}")
+    @PutMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> updateVersion(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
             @RequestBody ProductVersionModel payload) {
         requireAdmin(user);
-        return ResponseEntity.ok(productService.updateVersion(id, versionNo, payload));
+        return ResponseEntity.ok(productService.updateVersion(productId, versionNo, payload));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{productId}")
     public ResponseEntity<Void> deleteProduct(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id) {
+            @PathVariable("productId") Integer productId) {
         requireAdmin(user);
-        productService.softDeleteProduct(id);
+        productService.softDeleteProduct(productId);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}/versions/{versionNo}")
+    @DeleteMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<Void> deleteVersion(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
         requireAdmin(user);
-        productService.deleteVersion(id, versionNo);
+        productService.deleteVersion(productId, versionNo);
         return ResponseEntity.noContent().build();
     }
 
-    // get /admin/lobs/example returns json example
-    @GetMapping("/{id}/versions/{versionNo}/example_quote")
+    @GetMapping("/{productId}/versions/{versionNo}/example_quote")
     public ResponseEntity<String> getJsonExampleQuote(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
         requireAdmin(user);
-        return ResponseEntity.ok(productService.getJsonExampleQuote(id, versionNo));
+        return ResponseEntity.ok(productService.getJsonExampleQuote(productId, versionNo));
     }
 
-    // get /admin/lobs/example returns json example
-    @GetMapping("/{id}/versions/{versionNo}/example_save")
+    @GetMapping("/{productId}/versions/{versionNo}/example_save")
     public ResponseEntity<String> getJsonExampleSave(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
         requireAdmin(user);
-        return ResponseEntity.ok(productService.getJsonExampleSave(id, versionNo));
+        return ResponseEntity.ok(productService.getJsonExampleSave(productId, versionNo));
     }
 }
 

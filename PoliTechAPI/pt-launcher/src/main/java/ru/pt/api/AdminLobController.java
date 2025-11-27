@@ -17,8 +17,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Контроллер для управления LOB (Line of Business)
+ * Доступен только для SYS_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantCode}/admin/lobs
+ * tenantCode: pt, vsk, msg
+ */
 @RestController
-@RequestMapping("/admin/lobs")
+@RequestMapping("/api/v1/{tenantCode}/admin/lobs")
 @PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminLobController extends SecuredController {
 
@@ -32,7 +39,9 @@ public class AdminLobController extends SecuredController {
 
     // get /admin/lobs return id, Code, Name from repository
     @GetMapping
-    public List<Map<String, Object>> listLobs(@AuthenticationPrincipal UserDetailsImpl user) {
+    public List<Map<String, Object>> listLobs(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user) {
         requireAdmin(user);
         return lobService.listActiveSummaries().stream()
                 .map(row -> Map.of(
@@ -46,6 +55,7 @@ public class AdminLobController extends SecuredController {
     // get /admin/lobs/{lob_code} returns json
     @GetMapping("/{code}")
     public ResponseEntity<LobModel> getByCode(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("code") String code) {
         requireAdmin(user);
@@ -55,6 +65,7 @@ public class AdminLobController extends SecuredController {
     // post /admin/lobs insert new record
     @PostMapping
     public ResponseEntity<LobModel> createLob(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody LobModel payload) {
         requireAdmin(user);
@@ -62,9 +73,10 @@ public class AdminLobController extends SecuredController {
         return ResponseEntity.ok(created);
     }
 
-// put /admin/lobs/{lob_code} replace json, fix name and mpCode/id rules
+    // put /admin/lobs/{lob_code} replace json, fix name and mpCode/id rules
     @PutMapping("/{code}")
     public ResponseEntity<LobModel> updateLob(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("code") String code,
             @RequestBody LobModel payload) {
@@ -75,6 +87,7 @@ public class AdminLobController extends SecuredController {
     // delete /admin/lobs/{lob_code} soft delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLob(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("id") Integer id) {
         requireAdmin(user);
@@ -85,6 +98,7 @@ public class AdminLobController extends SecuredController {
     // get /admin/lobs/example returns json example
     @GetMapping("/{code}/example")
     public ResponseEntity<String> getJsonExample(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("code") String code) {
         requireAdmin(user);
