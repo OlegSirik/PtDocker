@@ -1,6 +1,6 @@
 -- Initial database schema for PT application
 -- This migration creates all the base tables and sequences
-create database if not exists pt_db;
+--create database if not exists pt_db;
 -- Sequences
 create sequence if not exists pt_seq start with 1 increment by 1;
 

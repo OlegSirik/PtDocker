@@ -2,15 +2,18 @@ package ru.pt.api.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.admin.dto.SetPasswordRequest;
 import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
 import ru.pt.auth.model.TokenResponse;
 import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.service.LoginManagementService;
 import ru.pt.auth.service.SimpleAuthService;
 
 import java.util.HashMap;
@@ -27,11 +30,14 @@ public class AuthenticationController {
     private final SecurityContextHelper securityContextHelper;
     private final JwtTokenUtil jwtTokenUtil;
     private final SimpleAuthService simpleAuthService;
+    private final LoginManagementService loginManagementService;
 
     public AuthenticationController(SecurityContextHelper securityContextHelper,
                                    JwtTokenUtil jwtTokenUtil,
+                                   LoginManagementService loginManagementService,
                                    SimpleAuthService simpleAuthService) {
         this.securityContextHelper = securityContextHelper;
+        this.loginManagementService = loginManagementService;
         this.jwtTokenUtil = jwtTokenUtil;
         this.simpleAuthService = simpleAuthService;
     }
@@ -94,24 +100,6 @@ public class AuthenticationController {
         response.put("canPolicyProduct", userDetails.canPerformAction("PRODUCT_CODE", "POLICY"));
 
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Endpoint доступный только для пользователей с ролью ADMIN
-     */
-    @GetMapping("/admin-only")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> adminOnly() {
-        return ResponseEntity.ok("You have ADMIN role!");
-    }
-
-    /**
-     * Endpoint доступный для пользователей с правом чтения продукта
-     */
-    @GetMapping("/product-read")
-    @PreAuthorize("hasRole('PRODUCT_CODE_READ')")
-    public ResponseEntity<String> productRead() {
-        return ResponseEntity.ok("You can read PRODUCT_CODE!");
     }
 
     /**
@@ -196,39 +184,29 @@ public class AuthenticationController {
     }
 
     /**
-     * Установить пароль для пользователя (только для администраторов)
+     * Установка/обновление пароля для пользователя
      * POST /api/auth/set-password
+     * Требуется роль SYS_ADMIN
      */
     @PostMapping("/set-password")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> setPassword(
-            @RequestBody LoginRequest request,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<Map<String, Object>> setPassword(@RequestBody SetPasswordRequest request) {
+        try {
+            loginManagementService.setPassword(
+                    request.getUserLogin(),
+                    request.getPassword(),
+                    request.getClientId()
+            );
 
-        Map<String, Object> response = new HashMap<>();
-
-        if (request.getUserLogin() == null || request.getUserLogin().isEmpty()) {
-            response.put("success", false);
-            response.put("message", "User login is required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Password is required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        boolean success = simpleAuthService.setPassword(request.getUserLogin(), request.getPassword());
-
-        if (success) {
+            Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Password set successfully for user: " + request.getUserLogin());
+
             return ResponseEntity.ok(response);
-        } else {
-            response.put("success", false);
-            response.put("message", "Failed to set password. User not found.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(403).body(response);
         }
     }
 }

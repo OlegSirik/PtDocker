@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.pt.api.dto.exception.ForbiddenException;
@@ -24,10 +25,17 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleAuthException(AuthenticationException ex) {
+    public ResponseEntity<ErrorModel> handleAuthException(AuthenticationException ex) {
         log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ex.getMessage());
+                .body(new ErrorModel(403, ex.getMessage()));
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorModel> handleAuthException(AuthorizationDeniedException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorModel(403, ex.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)

@@ -9,6 +9,7 @@ import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.product.LobService;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.hz.JsonExampleBuilder;
 
@@ -23,7 +24,9 @@ public class AdminLobController extends SecuredController {
 
     private final LobService lobService;
 
-    public AdminLobController(LobService lobService) {
+    public AdminLobController(LobService lobService,
+                              SecurityContextHelper securityContextHelper) {
+        super(securityContextHelper);
         this.lobService = lobService;
     }
 

@@ -15,20 +15,28 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ru.pt.api.dto.auth.Account;
+import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.ProcessOrchestrator;
+import ru.pt.auth.security.SecurityContextHelper;
 
 
 @RestController
 @RequestMapping("/test")
-public class Test {
+public class Test extends SecuredController {
 
     private final AccountService accountService;
     private final ProcessOrchestrator processOrchestrator;
     private final FileService fileService;
 
-    public Test(AccountService accountService, ProcessOrchestrator processOrchestrator, FileService fileService) {
+    public Test(
+            AccountService accountService,
+            ProcessOrchestrator processOrchestrator,
+            FileService fileService,
+            SecurityContextHelper securityContextHelper
+    ) {
+        super(securityContextHelper);
         this.accountService = accountService;
         this.processOrchestrator = processOrchestrator;
         this.fileService = fileService;
