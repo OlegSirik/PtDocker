@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  BACKEND_IMAGE: olegsirik/ptdocker-backend
+  BACKEND_IMAGE: olegsirik/politechapi/ptdocker-backend
   FRONTEND_IMAGE: olegsirik/ptdocker-frontend
 
 jobs:
