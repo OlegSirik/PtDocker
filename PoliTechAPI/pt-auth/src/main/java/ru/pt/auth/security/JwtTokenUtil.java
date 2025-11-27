@@ -156,7 +156,7 @@ public class JwtTokenUtil {
 
             // Добавляем дополнительные данные
             if (accountLogin.getTenant() != null) {
-                payload.put("tenantId", accountLogin.getTenant().getId());
+                payload.put("tenantCode", accountLogin.getTenant().getId());
                 payload.put("tenantName", accountLogin.getTenant().getName());
             }
 

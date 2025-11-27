@@ -6,9 +6,9 @@ import ru.pt.api.ApiExceptionHandler;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.exception.UnauthorizedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -128,11 +128,11 @@ public abstract class SecuredController extends ApiExceptionHandler {
     }
 
     /**
-     * Получает ID тенанта текущего пользователя
+     * Получает Code тенанта текущего пользователя
      */
-    protected Long getTenantId(UserDetailsImpl user) {
+    protected String getTenantCode(UserDetailsImpl user) {
         requireAuthenticated(user);
-        return user.getTenantId();
+        return user.getTenantCode();
     }
 
     /**

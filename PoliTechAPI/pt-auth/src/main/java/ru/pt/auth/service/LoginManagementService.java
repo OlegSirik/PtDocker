@@ -3,13 +3,10 @@ package ru.pt.auth.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.BadRequestException;
-import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
@@ -17,7 +14,6 @@ import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.repository.TenantRepository;
 
-import java.util.stream.Collectors;
 import java.util.List;
 
 /**
@@ -65,7 +61,7 @@ public class LoginManagementService {
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 3: Проверка уникальности пользователя для данного тенанта
-        if (loginRepository.existsByTenantIdAndUserLogin(tenant.getId(), userLogin)) {
+        if (loginRepository.existsByTenantCodeAndUserLogin(tenant.getCode(), userLogin)) {
             throw new BadRequestException("User with login '" + userLogin + "' already exists for tenant '" + tenantCode + "'");
         }
 

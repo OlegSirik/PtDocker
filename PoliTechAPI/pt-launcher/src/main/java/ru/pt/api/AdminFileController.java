@@ -17,8 +17,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Контроллер для управления файлами
+ * Доступен для SYS_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantCode}/admin/files
+ * tenantCode: pt, vsk, msg
+ */
 @RestController
-@RequestMapping("/admin/files")
+@RequestMapping("/api/v1/{tenantCode}/admin/files")
 public class AdminFileController extends SecuredController {
 
     private final FileService fileService;
@@ -29,10 +36,11 @@ public class AdminFileController extends SecuredController {
         this.fileService = fileService;
     }
 
-    // POST /admin/files body json
+    // POST /api/v1/{tenantCode}/admin/files body json
     @PostMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, String>> createMeta(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody Map<String, String> body) {
         requireAdmin(user);
@@ -46,65 +54,70 @@ public class AdminFileController extends SecuredController {
         return ResponseEntity.ok(body);
     }
 
-    // POST /admin/files/{id} multipart file upload
-    @PostMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // POST /api/v1/{tenantCode}/admin/files/{fileId} multipart file upload
+    @PostMapping(path = "/{fileId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> upload(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Long id,
+            @PathVariable("fileId") Long fileId,
             @RequestPart("file") MultipartFile file) {
         requireAdmin(user);
         try {
-            fileService.uploadBody(id, file.getBytes());
+            fileService.uploadBody(fileId, file.getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return ResponseEntity.noContent().build();
     }
 
-    // DELETE /admin/files/{id}
-    @DeleteMapping("/{id}")
+    // DELETE /api/v1/{tenantCode}/admin/files/{fileId}
+    @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> delete(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Long id) {
+            @PathVariable("fileId") Long fileId) {
         requireAdmin(user);
-        fileService.softDelete(id);
+        fileService.softDelete(fileId);
         return ResponseEntity.noContent().build();
     }
 
-    // GET /admin/files?product_code=***
+    // GET /api/v1/{tenantCode}/admin/files?product_code=***
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestParam(value = "product_code", required = false) String productCode) {
         requireAdmin(user);
         return ResponseEntity.ok(fileService.list(productCode));
     }
 
-    // GET /admin/files/{id} -> file body
-    @GetMapping("/{id}")
+    // GET /api/v1/{tenantCode}/admin/files/{fileId} -> file body
+    @GetMapping("/{fileId}")
     public ResponseEntity<byte[]> download(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Long id) {
+            @PathVariable("fileId") Long fileId) {
         requireAdmin(user);
-        byte[] bytes = fileService.download(id);
+        byte[] bytes = fileService.download(fileId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=output.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(bytes);
     }
 
-    // POST /admin/files/{ID}/cmd/process
-    @PostMapping("/{id}/cmd/process")
+    // POST /api/v1/{tenantCode}/admin/files/{fileId}/cmd/process
+    @PostMapping("/{fileId}/cmd/process")
     public ResponseEntity<byte[]> process(
+            @PathVariable String tenantId,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Long id,
+            @PathVariable("fileId") Long fileId,
             @RequestBody List<Map<String, String>> pairs) {
         requireAdmin(user);
         java.util.Map<String, String> kv = new java.util.HashMap<>();
         for (Map<String, String> p : pairs) {
             kv.put(p.get("varCode"), p.get("varValue"));
         }
-        byte[] bytes = fileService.process(id, kv);
+        byte[] bytes = fileService.process(fileId, kv);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=processed.pdf")
                 .contentType(MediaType.APPLICATION_PDF)

@@ -17,9 +17,12 @@ import java.util.Map;
 /**
  * Контроллер для управления клиентами (приложениями)
  * Доступен для TNT_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantId}/admin/clients
+ * tenantId: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/api/admin/clients")
+@RequestMapping("/api/v1/{tenantId}/admin/clients")
 public class ClientManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -32,11 +35,13 @@ public class ClientManagementController extends SecuredController {
 
     /**
      * TNT_ADMIN: Создание нового клиента (приложения)
-     * POST /api/admin/clients
+     * POST /api/v1/{tenantId}/admin/clients
      */
     @PostMapping
     @PreAuthorize("hasRole('TNT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createClient(@RequestBody CreateClientRequest request) {
+    public ResponseEntity<Map<String, Object>> createClient(
+            @PathVariable String tenantId,
+            @RequestBody CreateClientRequest request) {
         try {
             Map<String, Object> result = adminUserManagementService.createClient(
                     request.getClientId(),
@@ -56,11 +61,11 @@ public class ClientManagementController extends SecuredController {
 
     /**
      * TNT_ADMIN: Получить список всех клиентов
-     * GET /api/admin/clients
+     * GET /api/v1/{tenantId}/admin/clients
      */
     @GetMapping
     @PreAuthorize("hasRole('TNT_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> listClients() {
+    public ResponseEntity<List<Map<String, Object>>> listClients(@PathVariable String tenantId) {
         try {
             List<Map<String, Object>> clients = adminUserManagementService.listClients();
             return ResponseEntity.ok(clients);
