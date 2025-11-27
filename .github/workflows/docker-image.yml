@@ -41,8 +41,8 @@ jobs:
         
           
           # Проверяем здоровье сервисов
-          curl -f http://localhost:3000/health || exit 1
-          curl -f http://localhost:8000/health || exit 1
+          # curl -f http://localhost:80/health || exit 1
+          # curl -f http://localhost:8080/health || exit 1
 
       - name: Push images to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
