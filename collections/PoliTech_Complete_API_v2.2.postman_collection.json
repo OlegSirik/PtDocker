@@ -848,6 +848,804 @@
           }
         }
       ]
+    },
+    {
+      "name": "10. Launcher - DB Operations",
+      "description": "Операции с политиками и хранилищем (DbController)",
+      "item": [
+        {
+          "name": "Create Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"INSURANCE_PRODUCT\",\n  \"policyData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/db/policies",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies"]
+            },
+            "description": "Создать новую политику (требует аутентификацию и право POLICY)"
+          }
+        },
+        {
+          "name": "Update Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"INSURANCE_PRODUCT\",\n  \"policyData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/db/policies/POL-001",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies", "POL-001"]
+            },
+            "description": "Обновить существующую политику (требует право ADDENDUM)"
+          }
+        },
+        {
+          "name": "Get Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/db/policies/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies", "550e8400-e29b-41d4-a716-446655440000"]
+            },
+            "description": "Получить политику по UUID (требует право READ)"
+          }
+        },
+        {
+          "name": "Get Policy by Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/db/policies/by-number/POL-001",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies", "by-number", "POL-001"]
+            },
+            "description": "Получить политику по номеру"
+          }
+        },
+        {
+          "name": "Get Policies by User Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/db/policies/by-account/123",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies", "by-account", "123"]
+            },
+            "description": "Получить все политики пользователя по accountId"
+          }
+        },
+        {
+          "name": "Mark Policy as Paid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentDate\": \"2024-11-27T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/db/policies/POL-001/paid",
+              "host": ["{{base_url}}"],
+              "path": ["db", "policies", "POL-001", "paid"]
+            },
+            "description": "Отметить политику как оплаченную"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Launcher - Admin Products",
+      "description": "Управление продуктами (AdminProductController) - требует SYS_ADMIN",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products"]
+            },
+            "description": "Получить список всех продуктов с кратким описанием"
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"NEW_PRODUCT\",\n  \"productName\": \"Новый продукт\",\n  \"versionNo\": 1,\n  \"description\": \"Описание продукта\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/products",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products"]
+            },
+            "description": "Создать новый продукт (требует SYS_ADMIN)"
+          }
+        },
+        {
+          "name": "Get Product Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1"]
+            },
+            "description": "Получить конкретную версию продукта"
+          }
+        },
+        {
+          "name": "Create New Version from Existing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/cmd/create",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "cmd", "create"]
+            },
+            "description": "Создать новую версию продукта на основе существующей"
+          }
+        },
+        {
+          "name": "Update Product Version",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"PRODUCT_CODE\",\n  \"productName\": \"Обновленное название\",\n  \"description\": \"Обновленное описание\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1"]
+            },
+            "description": "Обновить версию продукта"
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1"]
+            },
+            "description": "Удалить продукт (soft delete)"
+          }
+        },
+        {
+          "name": "Delete Product Version",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1"]
+            },
+            "description": "Удалить конкретную версию продукта"
+          }
+        },
+        {
+          "name": "Get Product Example Quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/example_quote",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "example_quote"]
+            },
+            "description": "Получить пример JSON для quote из продукта"
+          }
+        },
+        {
+          "name": "Get Product Example Save",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/example_save",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "example_save"]
+            },
+            "description": "Получить пример JSON для save из продукта"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Launcher - Admin Calculator",
+      "description": "Управление калькуляторами и коэффициентами (AdminCalculatorController) - требует SYS_ADMIN",
+      "item": [
+        {
+          "name": "Get Calculator",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/packages/1/calculator",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "packages", "1", "calculator"]
+            },
+            "description": "Получить калькулятор для пакета продукта"
+          }
+        },
+        {
+          "name": "Create Calculator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calculatorName\": \"Basic Calculator\",\n  \"rules\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/packages/1/calculator?productCode=PRODUCT_CODE",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "packages", "1", "calculator"],
+              "query": [
+                {
+                  "key": "productCode",
+                  "value": "PRODUCT_CODE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Создать новый калькулятор если его нет"
+          }
+        },
+        {
+          "name": "Replace Calculator",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calculatorName\": \"Updated Calculator\",\n  \"rules\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/products/1/versions/1/packages/1/calculator?productCode=PRODUCT_CODE",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "1", "versions", "1", "packages", "1", "calculator"],
+              "query": [
+                {
+                  "key": "productCode",
+                  "value": "PRODUCT_CODE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Полностью заменить калькулятор"
+          }
+        },
+        {
+          "name": "Get Coefficients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/calculator/1/coefficients/AGE_COEFF",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "calculator", "1", "coefficients", "AGE_COEFF"]
+            },
+            "description": "Получить таблицу коэффициентов по коду"
+          }
+        },
+        {
+          "name": "Create Coefficients",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\"age\": \"18-25\", \"coefficient\": 1.5},\n    {\"age\": \"26-40\", \"coefficient\": 1.0},\n    {\"age\": \"41-60\", \"coefficient\": 1.2}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/calculator/1/coefficients/AGE_COEFF",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "calculator", "1", "coefficients", "AGE_COEFF"]
+            },
+            "description": "Создать таблицу коэффициентов (ошибка если уже существует)"
+          }
+        },
+        {
+          "name": "Replace Coefficients",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\"age\": \"18-25\", \"coefficient\": 1.8},\n    {\"age\": \"26-40\", \"coefficient\": 1.2},\n    {\"age\": \"41-60\", \"coefficient\": 1.4}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/calculator/1/coefficients/AGE_COEFF",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "calculator", "1", "coefficients", "AGE_COEFF"]
+            },
+            "description": "Заменить таблицу коэффициентов"
+          }
+        },
+        {
+          "name": "Sync Variables",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/calculator/1/prc/syncvars",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "calculator", "1", "prc", "syncvars"]
+            },
+            "description": "Синхронизировать переменные калькулятора"
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Launcher - Admin LOB",
+      "description": "Управление LOB (Line of Business) (AdminLobController) - требует SYS_ADMIN",
+      "item": [
+        {
+          "name": "List LOBs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/lobs",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs"]
+            },
+            "description": "Получить список всех активных LOB с сводкой"
+          }
+        },
+        {
+          "name": "Get LOB by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/lobs/AUTO",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs", "AUTO"]
+            },
+            "description": "Получить LOB по коду"
+          }
+        },
+        {
+          "name": "Create LOB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mpCode\": \"AUTO_NEW\",\n  \"mpName\": \"Автомобильное страхование\",\n  \"mpVars\": [\n    {\n      \"varCode\": \"CAR_TYPE\",\n      \"varPath\": \"vehicle.type\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/lobs",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs"]
+            },
+            "description": "Создать новый LOB"
+          }
+        },
+        {
+          "name": "Update LOB",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mpCode\": \"AUTO\",\n  \"mpName\": \"Автомобильное страхование обновлено\",\n  \"mpVars\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/lobs/AUTO",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs", "AUTO"]
+            },
+            "description": "Обновить LOB по коду"
+          }
+        },
+        {
+          "name": "Delete LOB",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/lobs/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs", "1"]
+            },
+            "description": "Удалить LOB по ID (soft delete)"
+          }
+        },
+        {
+          "name": "Get LOB JSON Example",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/lobs/AUTO/example",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "lobs", "AUTO", "example"]
+            },
+            "description": "Получить пример JSON структуры для LOB"
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Launcher - Admin Files",
+      "description": "Управление файлами (AdminFileController) - требует SYS_ADMIN",
+      "item": [
+        {
+          "name": "Create File Meta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileType\": \"PDF\",\n  \"fileDescription\": \"Шаблон полиса\",\n  \"productCode\": \"AUTO_INSURANCE\",\n  \"packageCode\": \"1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/files",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files"]
+            },
+            "description": "Создать метаданные файла"
+          }
+        },
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/files/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files", "1"]
+            },
+            "description": "Загрузить файл по ID"
+          }
+        },
+        {
+          "name": "List Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/files?product_code=AUTO_INSURANCE",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files"],
+              "query": [
+                {
+                  "key": "product_code",
+                  "value": "AUTO_INSURANCE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Получить список файлов по коду продукта"
+          }
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/files/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files", "1"]
+            },
+            "description": "Скачать файл по ID"
+          }
+        },
+        {
+          "name": "Process File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"varCode\": \"POLICY_NUMBER\",\n    \"varValue\": \"POL-001\"\n  },\n  {\n    \"varCode\": \"CLIENT_NAME\",\n    \"varValue\": \"John Doe\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/files/1/cmd/process",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files", "1", "cmd", "process"]
+            },
+            "description": "Обработать файл с подстановкой переменных"
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/files/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "files", "1"]
+            },
+            "description": "Удалить файл (soft delete)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15. Launcher - Test Endpoints",
+      "description": "Тестовые эндпоинты для разработки и отладки (Test Controller)",
+      "item": [
+        {
+          "name": "Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Client\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/create-client",
+              "host": ["{{base_url}}"],
+              "path": ["test", "create-client"]
+            },
+            "description": "Создать тестовый клиент"
+          }
+        },
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Group\",\n  \"parentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/create-group",
+              "host": ["{{base_url}}"],
+              "path": ["test", "create-group"]
+            },
+            "description": "Создать тестовую группу"
+          }
+        },
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Account\",\n  \"parentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/create-account",
+              "host": ["{{base_url}}"],
+              "path": ["test", "create-account"]
+            },
+            "description": "Создать тестовый аккаунт"
+          }
+        },
+        {
+          "name": "Create SubAccount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test SubAccount\",\n  \"parentId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/create-subaccount",
+              "host": ["{{base_url}}"],
+              "path": ["test", "create-subaccount"]
+            },
+            "description": "Создать тестовый суб-аккаунт"
+          }
+        },
+        {
+          "name": "Get Product Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/test/get-product-roles/1",
+              "host": ["{{base_url}}"],
+              "path": ["test", "get-product-roles", "1"]
+            },
+            "description": "Получить все роли продуктов для аккаунта"
+          }
+        },
+        {
+          "name": "Get Account Login",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "login",
+                "value": "admin@company.com"
+              },
+              {
+                "key": "client",
+                "value": "1"
+              },
+              {
+                "key": "accountNr",
+                "value": "1",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/test/get-account-login",
+              "host": ["{{base_url}}"],
+              "path": ["test", "get-account-login"]
+            },
+            "description": "Получить информацию о логине аккаунта по headers"
+          }
+        },
+        {
+          "name": "Quote Validator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO_INSURANCE\",\n  \"quoteData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/quote/validator",
+              "host": ["{{base_url}}"],
+              "path": ["test", "quote", "validator"]
+            },
+            "description": "Валидация и расчет quote"
+          }
+        },
+        {
+          "name": "Save Validator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"AUTO_INSURANCE\",\n  \"policyData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/policy/validator",
+              "host": ["{{base_url}}"],
+              "path": ["test", "policy", "validator"]
+            },
+            "description": "Валидация и сохранение policy"
+          }
+        }
+      ]
     }
   ]
 }

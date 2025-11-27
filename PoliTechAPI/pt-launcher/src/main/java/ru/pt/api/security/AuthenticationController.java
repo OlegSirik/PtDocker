@@ -3,14 +3,17 @@ package ru.pt.api.security;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.admin.dto.SetPasswordRequest;
 import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
 import ru.pt.auth.model.TokenResponse;
 import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.service.LoginManagementService;
 import ru.pt.auth.service.SimpleAuthService;
 
 import java.util.HashMap;
@@ -27,11 +30,14 @@ public class AuthenticationController {
     private final SecurityContextHelper securityContextHelper;
     private final JwtTokenUtil jwtTokenUtil;
     private final SimpleAuthService simpleAuthService;
+    private final LoginManagementService loginManagementService;
 
     public AuthenticationController(SecurityContextHelper securityContextHelper,
                                    JwtTokenUtil jwtTokenUtil,
+                                   LoginManagementService loginManagementService,
                                    SimpleAuthService simpleAuthService) {
         this.securityContextHelper = securityContextHelper;
+        this.loginManagementService = loginManagementService;
         this.jwtTokenUtil = jwtTokenUtil;
         this.simpleAuthService = simpleAuthService;
     }
@@ -175,5 +181,32 @@ public class AuthenticationController {
         response.setExpiresIn(30L * 24 * 60 * 60); // 30 дней в секундах
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Установка/обновление пароля для пользователя
+     * POST /api/auth/set-password
+     * Требуется роль SYS_ADMIN
+     */
+    @PostMapping("/set-password")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> setPassword(@RequestBody SetPasswordRequest request) {
+        try {
+            loginManagementService.setPassword(
+                    request.getUserLogin(),
+                    request.getPassword(),
+                    request.getClientId()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Password set successfully for user: " + request.getUserLogin());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(403).body(response);
+        }
     }
 }
