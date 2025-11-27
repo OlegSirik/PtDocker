@@ -62,5 +62,5 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker compose -f docker-compose.ci.yml down
+          docker compose -f docker-compose-mac-local.yml down
           docker system prune -f
