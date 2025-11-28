@@ -33,6 +33,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**", "/actuator/health").permitAll()
                 .requestMatchers("/api/auth/token").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
+                // Swagger UI и OpenAPI docs доступны без авторизации
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml",
+                    "/api-docs/**",
+                    "/webjars/**"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->
