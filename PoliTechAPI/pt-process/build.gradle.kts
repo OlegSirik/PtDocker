@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     implementation(project(":pt-api"))
+    implementation(project(":pt-auth"))
     implementation(project(":pt-db"))
     implementation(project(":pt-numbers"))
     implementation(project(":pt-product"))

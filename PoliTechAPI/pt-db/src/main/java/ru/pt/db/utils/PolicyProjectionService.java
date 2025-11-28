@@ -1,8 +1,8 @@
 package ru.pt.db.utils;
 
 import com.jayway.jsonpath.JsonPath;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import ru.pt.api.dto.auth.UserData;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.db.entity.PolicyIndexEntity;
@@ -15,7 +15,7 @@ import static ru.pt.api.utils.DateTimeUtils.formatter;
 @Component
 public class PolicyProjectionService {
 
-    public PolicyIndexEntity readPolicyIndex(UUID uuid, Version version, UserData userData, String policy) {
+    public PolicyIndexEntity readPolicyIndex(UUID uuid, Version version, UserDetails userData, String policy) {
         var index = new PolicyIndexEntity();
         index.setPolicyId(uuid);
 
@@ -74,9 +74,9 @@ public class PolicyProjectionService {
         } catch (Exception e) {
         }
 
-
-        index.setUserAccountId(userData.getAccountId());
-        index.setClientAccountId(userData.getClientId());
+//
+//        index.setUserAccountId(userData.getAccountId());
+//        index.setClientAccountId(userData.getClientId());
 
         if (version.getDevVersion() != null) {
             index.setVersionStatus("dev");

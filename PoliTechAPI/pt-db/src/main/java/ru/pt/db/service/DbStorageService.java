@@ -1,11 +1,13 @@
 package ru.pt.db.service;
 
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import ru.pt.api.dto.auth.UserData;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.db.StorageService;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.db.entity.PolicyEntity;
 import ru.pt.db.entity.PolicyIndexEntity;
 import ru.pt.db.repository.PolicyIndexRepository;
@@ -23,12 +25,16 @@ import java.util.stream.Collectors;
 public class DbStorageService implements StorageService {
 
     private final PolicyRepository policyRepository;
+    private final SecurityContextHelper securityContextHelper;
     private final PolicyIndexRepository policyIndexRepository;
     private final PolicyProjectionService policyProjectionService;
     private final PolicyMapper policyMapper;
 
-    public DbStorageService(PolicyRepository policyRepository, PolicyIndexRepository policyIndexRepository, PolicyProjectionService policyProjectionService, PolicyMapper policyMapper) {
+    public DbStorageService(PolicyRepository policyRepository,
+                            SecurityContextHelper securityContextHelper,
+                            PolicyIndexRepository policyIndexRepository, PolicyProjectionService policyProjectionService, PolicyMapper policyMapper) {
         this.policyRepository = policyRepository;
+        this.securityContextHelper = securityContextHelper;
         this.policyIndexRepository = policyIndexRepository;
         this.policyProjectionService = policyProjectionService;
         this.policyMapper = policyMapper;
@@ -36,7 +42,7 @@ public class DbStorageService implements StorageService {
 
     @Transactional
     @Override
-    public PolicyData save(String policy, UserData userData, Version version, UUID uuid) {
+    public PolicyData save(String policy, UserDetails userData, Version version, UUID uuid) {
         var entity = new PolicyEntity();
         entity.setId(uuid);
         entity.setPolicy(policy);
@@ -66,7 +72,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     @Transactional
-    public PolicyData update(String policy, UserData userData, Version version, String policyNumber) {
+    public PolicyData update(String policy, UserDetails userData, Version version, String policyNumber) {
         return policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
                 .map(idx -> {
                     var uuid = idx.getPolicyId();
@@ -120,8 +126,11 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public List<PolicyData> getPoliciesForUser(UserData userData) {
-        var policies = policyIndexRepository.findAllByClientAccountIdAndUserAccountId(userData.getClientId(), userData.getAccountId());
+    public List<PolicyData> getPoliciesForUser() {
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+        var policies = policyIndexRepository.findAllByClientAccountIdAndUserAccountId(
+                userData.getClientId(), userData.getAccountId());
 
         var idToData = policies.stream().collect(Collectors.toMap(PolicyIndexEntity::getPolicyId, Function.identity()));
 

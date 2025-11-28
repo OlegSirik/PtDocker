@@ -2,11 +2,7 @@ package ru.pt.process.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
-import ru.pt.api.dto.auth.UserData;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.errors.ValidationError;
@@ -28,6 +24,7 @@ import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.VersionManager;
+import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.process.utils.JsonProjection;
 import ru.pt.process.utils.JsonSetter;
 
@@ -42,6 +39,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
 
     private final StorageService storageService;
+    private final SecurityContextHelper securityContextHelper;
     private final NumberGeneratorService numberGeneratorService;
     private final ProductService productService;
     private final VersionManager versionManager;
@@ -51,12 +49,24 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final PreProcessService preProcessService;
     private final PostProcessService postProcessService;
 
-    public ProcessOrchestratorService(StorageService storageService, NumberGeneratorService numberGeneratorService, ProductService productService, VersionManager versionManager, CalculatorService calculatorService, LobService lobService, ValidatorService validatorService, PreProcessService preProcessService, PostProcessService postProcessService) {
+    public ProcessOrchestratorService(
+            StorageService storageService,
+            NumberGeneratorService numberGeneratorService,
+            ProductService productService,
+            VersionManager versionManager,
+            CalculatorService calculatorService,
+            LobService lobService,
+            ValidatorService validatorService,
+            PreProcessService preProcessService,
+            PostProcessService postProcessService,
+            SecurityContextHelper securityContextHelper
+    ) {
         this.storageService = storageService;
         this.numberGeneratorService = numberGeneratorService;
         this.productService = productService;
         this.versionManager = versionManager;
         this.calculatorService = calculatorService;
+        this.securityContextHelper = securityContextHelper;
         this.lobService = lobService;
         this.validatorService = validatorService;
         this.preProcessService = preProcessService;
@@ -145,16 +155,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         setter.setRawValue("policyNumber", nextNumber);
 
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserData userData;
-        if (authentication != null) {
-            userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        } else {
-            // TODO remove when auth module is ready
-            userData = new UserData();
-            userData.setAccountId(1L);
-            userData.setClientId(1L);
-        }
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var version = new Version(null, product.getVersionNo());
 
@@ -190,16 +192,19 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         var version = versionManager.getLatestVersionByProductCode(productCode);
 
-        var userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        var uuid = UUID.fromString(MDC.get("correlationId"));
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+//        TODO: добавить в контекст MDC данные
+        var uuid = UUID.randomUUID();
 
         return storageService.save(policy, userData, version, uuid);
     }
 
     @Override
     public PolicyData updatePolicy(String policyNumber, String policy) {
-        var userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var policyData = storageService.getPolicyByNumber(policyNumber);
         if (policyData.getPolicyStatus() != PolicyStatus.NEW) {
@@ -225,7 +230,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public PolicyData getPolicyById(UUID id) {
-        var userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var policyData = storageService.getPolicyById(id);
 
@@ -242,7 +248,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public PolicyData getPolicyByNumber(String policyNumber) {
-        var userData = (UserData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var userData = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var policyData = storageService.getPolicyByNumber(policyNumber);
 
