@@ -36,6 +36,16 @@ management:
       exposure:
         include: health,info
 
+# Swagger / OpenAPI Configuration
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
