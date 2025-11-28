@@ -1,7 +1,5 @@
 package ru.pt.api.admin;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -148,8 +146,7 @@ public class ProductRoleManagementController extends SecuredController {
         return permissions;
     }
 
-    @Getter
-    @Setter
+    // DTO Classes
     public static class AssignProductRoleRequest {
         private Long accountId;
         private Long roleProductId;
@@ -160,10 +157,81 @@ public class ProductRoleManagementController extends SecuredController {
         private Boolean canAddendum;
         private Boolean canCancel;
         private Boolean canProlong;
+
+        // Getters and Setters
+        public Long getAccountId() {
+            return accountId;
+        }
+
+        public void setAccountId(Long accountId) {
+            this.accountId = accountId;
+        }
+
+        public Long getRoleProductId() {
+            return roleProductId;
+        }
+
+        public void setRoleProductId(Long roleProductId) {
+            this.roleProductId = roleProductId;
+        }
+
+        public Long getRoleAccountId() {
+            return roleAccountId;
+        }
+
+        public void setRoleAccountId(Long roleAccountId) {
+            this.roleAccountId = roleAccountId;
+        }
+
+        public Boolean getCanRead() {
+            return canRead;
+        }
+
+        public void setCanRead(Boolean canRead) {
+            this.canRead = canRead;
+        }
+
+        public Boolean getCanQuote() {
+            return canQuote;
+        }
+
+        public void setCanQuote(Boolean canQuote) {
+            this.canQuote = canQuote;
+        }
+
+        public Boolean getCanPolicy() {
+            return canPolicy;
+        }
+
+        public void setCanPolicy(Boolean canPolicy) {
+            this.canPolicy = canPolicy;
+        }
+
+        public Boolean getCanAddendum() {
+            return canAddendum;
+        }
+
+        public void setCanAddendum(Boolean canAddendum) {
+            this.canAddendum = canAddendum;
+        }
+
+        public Boolean getCanCancel() {
+            return canCancel;
+        }
+
+        public void setCanCancel(Boolean canCancel) {
+            this.canCancel = canCancel;
+        }
+
+        public Boolean getCanProlong() {
+            return canProlong;
+        }
+
+        public void setCanProlong(Boolean canProlong) {
+            this.canProlong = canProlong;
+        }
     }
 
-    @Getter
-    @Setter
     public static class UpdateProductRoleRequest {
         private Boolean canRead;
         private Boolean canQuote;
@@ -171,6 +239,54 @@ public class ProductRoleManagementController extends SecuredController {
         private Boolean canAddendum;
         private Boolean canCancel;
         private Boolean canProlong;
+
+        public Boolean getCanRead() {
+            return canRead;
+        }
+
+        public void setCanRead(Boolean canRead) {
+            this.canRead = canRead;
+        }
+
+        public Boolean getCanQuote() {
+            return canQuote;
+        }
+
+        public void setCanQuote(Boolean canQuote) {
+            this.canQuote = canQuote;
+        }
+
+        public Boolean getCanPolicy() {
+            return canPolicy;
+        }
+
+        public void setCanPolicy(Boolean canPolicy) {
+            this.canPolicy = canPolicy;
+        }
+
+        public Boolean getCanAddendum() {
+            return canAddendum;
+        }
+
+        public void setCanAddendum(Boolean canAddendum) {
+            this.canAddendum = canAddendum;
+        }
+
+        public Boolean getCanCancel() {
+            return canCancel;
+        }
+
+        public void setCanCancel(Boolean canCancel) {
+            this.canCancel = canCancel;
+        }
+
+        public Boolean getCanProlong() {
+            return canProlong;
+        }
+
+        public void setCanProlong(Boolean canProlong) {
+            this.canProlong = canProlong;
+        }
     }
 }
 

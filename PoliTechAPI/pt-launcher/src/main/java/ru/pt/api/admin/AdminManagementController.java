@@ -197,26 +197,86 @@ public class AdminManagementController extends SecuredController {
     }
 
     // DTO Classes
-    @Getter
-    @Setter
     public static class CreateTntAdminRequest {
         private Long tenantId;
         private String userLogin;
         private String userName;
         private String fullName;
+
+        public Long getTenantId() {
+            return tenantId;
+        }
+
+        public void setTenantId(Long tenantId) {
+            this.tenantId = tenantId;
+        }
+
+        public String getUserLogin() {
+            return userLogin;
+        }
+
+        public void setUserLogin(String userLogin) {
+            this.userLogin = userLogin;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String fullName) {
+            this.userName = userName;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
         }
 
 
-    @Setter
-    @Getter
+    }
+
     public static class CreateAdminRequest {
         private String userLogin;
         private String userName;
         private String fullName;
+
+        public String getUserLogin() {
+            return userLogin;
+        }
+
+        public void setUserLogin(String userLogin) {
+            this.userLogin = userLogin;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
+        }
     }
-    @Setter
-    @Getter
+
     public static class UpdateAdminRequest {
         private String userRole;
+
+        public String getUserRole() {
+            return userRole;
+        }
+
+        public void setUserRole(String userRole) {
+            this.userRole = userRole;
+        }
     }
 }
