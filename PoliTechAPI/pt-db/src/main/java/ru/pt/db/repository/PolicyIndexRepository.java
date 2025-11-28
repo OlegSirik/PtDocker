@@ -13,4 +13,6 @@ public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, 
 
     List<PolicyIndexEntity> findAllByClientAccountIdAndUserAccountId(Long clientAccountId, Long userAccountId);
 
+    Optional<PolicyIndexEntity> findByPolicyNumber(String policyNumber);
+
 }
