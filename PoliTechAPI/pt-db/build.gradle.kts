@@ -20,9 +20,10 @@ repositories {
 }
 
 dependencies {
-//    compileOnly("org.springframework.security:spring-security-core")
+    implementation("org.springframework.security:spring-security-core")
     runtimeOnly("org.postgresql:postgresql")
     implementation(project(":pt-api"))
+    implementation(project(":pt-auth"))
     implementation("org.springframework:spring-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     // TODO version remove/const
