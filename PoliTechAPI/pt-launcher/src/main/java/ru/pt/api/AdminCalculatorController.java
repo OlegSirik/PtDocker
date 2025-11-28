@@ -16,8 +16,15 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 
+/**
+ * Контроллер для управления калькуляторами
+ * Доступен только для SYS_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantCode}/admin/calculators
+ * tenantCode: pt, vsk, msg
+ */
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/v1/{tenantCode}/admin/calculators")
 @PreAuthorize("hasRole('SYS_ADMIN')")
 public class AdminCalculatorController extends SecuredController {
 
@@ -34,8 +41,9 @@ public class AdminCalculatorController extends SecuredController {
         this.coefficientService = coefficientService;
     }
 
-    @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator")
+    @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
     public ResponseEntity<CalculatorModel> getCalculator(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
@@ -46,8 +54,9 @@ public class AdminCalculatorController extends SecuredController {
     }
 
     // coefficients endpoints
-    @GetMapping("/calculator/{calculatorId}/coefficients/{code}")
+    @GetMapping("/{calculatorId}/coefficients/{code}")
     public ResponseEntity<JsonNode> getCoefficients(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code) {
@@ -55,8 +64,9 @@ public class AdminCalculatorController extends SecuredController {
         return ResponseEntity.ok(coefficientService.getTable(calculatorId, code));
     }
 
-    @PostMapping("/calculator/{calculatorId}/coefficients/{code}")
+    @PostMapping("/{calculatorId}/coefficients/{code}")
     public ResponseEntity<ArrayNode> createCoefficients(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
@@ -69,8 +79,9 @@ public class AdminCalculatorController extends SecuredController {
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }
 
-    @PutMapping("/calculator/{calculatorId}/coefficients/{code}")
+    @PutMapping("/{calculatorId}/coefficients/{code}")
     public ResponseEntity<ArrayNode> replaceCoefficients(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
@@ -79,8 +90,9 @@ public class AdminCalculatorController extends SecuredController {
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }
 
-    @PostMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator")
+    @PostMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
     public ResponseEntity<CalculatorModel> createCalculator(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
@@ -91,8 +103,9 @@ public class AdminCalculatorController extends SecuredController {
         return ResponseEntity.ok(json);
     }
 
-    @PutMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/calculator")
+    @PutMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
     public ResponseEntity<CalculatorModel> replaceCalculator(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
@@ -104,11 +117,11 @@ public class AdminCalculatorController extends SecuredController {
         return ResponseEntity.ok(json);
     }
 
-// INSERT_YOUR_CODE
-    @PostMapping("/calculator/{id}/prc/syncvars")
+    @PostMapping("/{calculatorId}/prc/syncvars")
     public ResponseEntity<Void> syncVars(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer calculatorId) {
+            @PathVariable("calculatorId") Integer calculatorId) {
         requireAdmin(user);
         calculateService.syncVars(calculatorId);
         return ResponseEntity.ok().build();

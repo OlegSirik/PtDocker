@@ -14,9 +14,12 @@ import java.util.Map;
 /**
  * Контроллер для управления тенантами
  * Доступен только для SYS_ADMIN
+ *
+ * URL Pattern: /api/v1/{tenantId}/admin/tenants
+ * tenantId: pt, vsk, msg (глобальный для SYS_ADMIN операций)
  */
 @RestController
-@RequestMapping("/api/admin/tenants")
+@RequestMapping("/api/v1/{tenantId}/admin/tenants")
 public class TenantManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -29,11 +32,13 @@ public class TenantManagementController extends SecuredController {
 
     /**
      * SYS_ADMIN: Создание нового tenant
-     * POST /api/admin/tenants
+     * POST /api/v1/{tenantId}/admin/tenants
      */
     @PostMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createTenant(@RequestBody CreateTenantRequest request) {
+    public ResponseEntity<Map<String, Object>> createTenant(
+            @PathVariable String tenantId,
+            @RequestBody CreateTenantRequest request) {
         try {
             TenantEntity tenant = adminUserManagementService.createTenant(request.getTenantName(),
                     request.getTenantCode());
@@ -51,16 +56,18 @@ public class TenantManagementController extends SecuredController {
 
     /**
      * SYS_ADMIN: Удаление tenant (soft delete)
-     * DELETE /api/admin/tenants/{tenantId}
+     * DELETE /api/v1/{tenantId}/admin/tenants/{tenantResourceId}
      */
-    @DeleteMapping("/{tenantId}")
+    @DeleteMapping("/{tenantResourceId}")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteTenant(@PathVariable Long tenantId) {
+    public ResponseEntity<Map<String, Object>> deleteTenant(
+            @PathVariable String tenantId,
+            @PathVariable Long tenantResourceId) {
         try {
-            adminUserManagementService.deleteTenant(tenantId);
+            adminUserManagementService.deleteTenant(tenantResourceId);
 
             Map<String, Object> response = buildSimpleResponse("Tenant deleted successfully");
-            response.put("tenantId", tenantId);
+            response.put("tenantId", tenantResourceId);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

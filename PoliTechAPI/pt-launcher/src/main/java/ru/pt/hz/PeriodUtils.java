@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Period;
 
-import ru.pt.exception.BadRequestException;
-
 public class PeriodUtils {
     public static int comparePeriods(Period p1, Period p2) {
         // Опорная дата

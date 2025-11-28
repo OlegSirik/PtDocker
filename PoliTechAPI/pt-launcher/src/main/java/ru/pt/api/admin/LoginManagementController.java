@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.CreateLoginRequest;
 import ru.pt.api.admin.dto.LoginResponse;
 import ru.pt.api.admin.dto.UpdateLoginRequest;
-import ru.pt.api.dto.exception.BadRequestException;
-import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -23,9 +21,12 @@ import java.util.stream.Collectors;
 /**
  * Контроллер для управления пользователями (логинами)
  * Работа по документации acc_logins.md
+ *
+ * URL Pattern: /api/v1/{tenantCode}/logins
+ * tenantCode: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/tnts/{tenantCode}/logins")
+@RequestMapping("/api/v1/{tenantCode}/logins")
 public class LoginManagementController extends SecuredController {
 
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
@@ -40,7 +41,7 @@ public class LoginManagementController extends SecuredController {
 
     /**
      * Создание пользователя (логина)
-     * POST /tnts/{tenantCode}/logins
+     * POST /api/v1/{tenantCode}/logins
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
@@ -59,6 +60,7 @@ public class LoginManagementController extends SecuredController {
 
             LoginResponse response = new LoginResponse();
             response.setId(String.valueOf(login.getId()));
+            response.setTenantCode(String.valueOf(tenantCode));
             response.setUserLogin(login.getUserLogin());
             response.setFullName(login.getFullName());
             response.setPosition(login.getPosition());
@@ -71,18 +73,18 @@ public class LoginManagementController extends SecuredController {
 
     /**
      * Обновление данных пользователя
-     * PATCH /tnts/{tenantCode}/logins/{id}
+     * PATCH /tnts/{tenantCode}/logins/{loginId}
      */
-    @PatchMapping("/{id}")
+    @PatchMapping("/{loginId}")
     @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateLogin(
             @PathVariable String tenantCode,
-            @PathVariable Long id,
+            @PathVariable Long loginId,
             @RequestBody UpdateLoginRequest request) {
         try {
             LoginEntity login = loginManagementService.updateLogin(
                     tenantCode,
-                    id,
+                    loginId,
                     request.getFullName(),
                     request.getPosition(),
                     request.getIsDeleted()
@@ -129,17 +131,17 @@ public class LoginManagementController extends SecuredController {
 
     /**
      * Удаление пользователя (soft delete)
-     * DELETE /tnts/{tenantCode}/logins/{id}
+     * DELETE /api/v1/{tenantCode}/auth/logins/{loginId}
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{loginId}")
     @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteLogin(
             @PathVariable String tenantCode,
-            @PathVariable Long id) {
+            @PathVariable Long loginId) {
         try {
             requireAnyRole("SYS_ADMIN", "TNT_ADMIN", "GROUP_ADMIN");
 
-            LoginEntity login = loginManagementService.deleteLogin(tenantCode, id);
+            LoginEntity login = loginManagementService.deleteLogin(tenantCode, loginId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("id", String.valueOf(login.getId()));

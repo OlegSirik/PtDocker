@@ -6,8 +6,8 @@ services:
     image: postgres:15
     environment:
       POSTGRES_DB: pt-db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
@@ -24,15 +24,14 @@ services:
   backend:
     build:
       context: ./PoliTechAPI
-      dockerfile: DockerfileMacLocal
+      dockerfile: Dockerfile
       no_cache: true
-    image: papi-b:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pt-db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SERVER_PORT: 8080
-      DEBUG: true
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      DEBUG: ${DEBUG:-false}
     ports:
       - "8080:8080"
       - "5005:5005"
@@ -52,10 +51,9 @@ services:
   frontend:
     build:
       context: ./PoliTechFront
-      dockerfile: DockerfileMacLocal
-    image: papi-f:latest
+      dockerfile: Dockerfile
     environment:
-      BASE_URL: http://localhost:8080
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
     ports:
       - "80:80"
     depends_on:

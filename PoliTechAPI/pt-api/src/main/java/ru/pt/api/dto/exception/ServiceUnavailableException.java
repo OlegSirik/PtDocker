@@ -1,6 +1,7 @@
-package ru.pt.exception;
+package ru.pt.api.dto.exception;
 
-import ru.pt.domain.error.ErrorModel;
+
+import ru.pt.api.dto.errors.ErrorModel;
 
 public class ServiceUnavailableException extends RuntimeException {
     private final ErrorModel errorModel;

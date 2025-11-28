@@ -13,14 +13,14 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по ID tenant и client_id
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantId AND c.clientId = :clientId AND c.isDeleted = false")
-    Optional<ClientEntity> findByTenantAndClientId(@Param("tenantId") Long tenantId, @Param("clientId") String clientId);
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode AND c.clientId = :clientId AND c.isDeleted = false")
+    Optional<ClientEntity> findByTenantAndClientId(@Param("tenantCode") Long tenantCode, @Param("clientId") String clientId);
 
     /**
      * Найти все active clients для tenant
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantId AND c.isDeleted = false ORDER BY c.name")
-    List<ClientEntity> findByTenantIdActive(@Param("tenantId") Long tenantId);
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.isDeleted = false ORDER BY c.name")
+    List<ClientEntity> findByTenantCodeActive(@Param("tenantCode") String tenantCode);
 
     /**
      * Найти client по имени в tenant
