@@ -106,7 +106,7 @@ jobs:
         run: |
           echo "=== STEP 1: Create SSH key file ==="
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/test_key
+          echo "${{ secrets.SERVER_SSH_KEY  }}" > ~/.ssh/test_key
           chmod 600 ~/.ssh/test_key
           
           echo "=== STEP 2: Check key format ==="
