@@ -67,3 +67,32 @@ jobs:
         run: |
           docker compose -f docker-compose-mac-local.yml down
           docker system prune -f
+  
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # Pull latest code
+            cd /opt/my-app
+            git pull origin main
+            
+            # Build on server
+            docker build -t my-app:latest .
+            
+            # Deploy
+            docker compose down
+            docker compose up -d --build
+            
+            # Health check
+            sleep 30
+            curl -f http://localhost:3000/health || exit 1
