@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":pt-process"))
     implementation(project(":pt-calculator"))
     implementation(project(":pt-files"))
+    implementation(project(":pt-product"))
 
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -44,6 +45,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("org.springframework.boot:spring-boot-starter-security")
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation("io.swagger.core.v3:swagger-models-jakarta:2.2.20")
+    implementation("io.swagger.core.v3:swagger-core-jakarta:2.2.20")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")

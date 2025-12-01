@@ -10,12 +10,19 @@ group = "ru.pt"
 // TODO версию родителя взять
 version = "unspecified"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
     implementation(project(":pt-api"))
+    implementation(project(":pt-auth"))
     implementation(project(":pt-db"))
     implementation(project(":pt-numbers"))
     implementation(project(":pt-product"))
@@ -28,6 +35,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web"){
         exclude("org.springframework.boot", "spring-boot-starter-tomcat")
     }
+
+    // Lombok for annotations like @Data, @Getter, @Setter
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

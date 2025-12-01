@@ -160,6 +160,7 @@ public class LoginManagementController extends SecuredController {
     private LoginResponse convertToResponse(LoginEntity login) {
         LoginResponse response = new LoginResponse();
         response.setId(String.valueOf(login.getId()));
+        response.setTenantCode(login.getTenant().getCode());
         response.setUserLogin(login.getUserLogin());
         response.setFullName(login.getFullName());
         response.setPosition(login.getPosition());

@@ -8,6 +8,12 @@ plugins {
 group = "ru.pt"
 version = "unspecified"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -23,6 +29,13 @@ dependencies {
     // PDF Processing
     implementation("org.apache.pdfbox:pdfbox:3.0.2")
     implementation("org.apache.pdfbox:pdfbox-io:3.0.2")
+
+    // Lombok for annotations like @Data, @Getter, @Setter
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

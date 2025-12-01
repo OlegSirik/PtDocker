@@ -9,18 +9,32 @@ plugins {
 group = "ru.pt"
 version = "unspecified"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-//    compileOnly("org.springframework.security:spring-security-core")
+    implementation("org.springframework.security:spring-security-core")
     runtimeOnly("org.postgresql:postgresql")
     implementation(project(":pt-api"))
+    implementation(project(":pt-auth"))
     implementation("org.springframework:spring-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     // TODO version remove/const
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+
+    // Lombok for annotations like @Data, @Getter, @Setter
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

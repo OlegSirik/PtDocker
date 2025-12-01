@@ -25,8 +25,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: olegsirik
-          password: dckr_pat_4TRi4iZNO9x6MquIFlPUGd2HLUk
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and test with Docker Compose
         run: |
@@ -67,3 +67,63 @@ jobs:
         run: |
           docker compose -f docker-compose-mac-local.yml down
           docker system prune -f
+
+  
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |          
+            # Pull latest code
+            cd PtDocker
+            git pull origin master
+            echo "Текущий статус репозитория:"
+            git status
+            
+            # Build on server
+            docker compose build
+            
+            # Deploy
+            docker compose down
+            docker compose up -d --build
+            
+            # Health check
+            sleep 30
+            curl -f http://localhost:3000/health || exit 1
+
+  debug:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Run diagnostics
+        run: |
+          echo "=== STEP 1: Create SSH key file ==="
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY  }}" > ~/.ssh/test_key
+          chmod 600 ~/.ssh/test_key
+          
+          echo "=== STEP 2: Check key format ==="
+          echo "Line count: $(wc -l ~/.ssh/test_key)"
+          echo "First line: $(head -1 ~/.ssh/test_key)"
+          echo "Last line:  $(tail -1 ~/.ssh/test_key)"
+          
+          echo "=== STEP 3: Verify key ==="
+          ssh-keygen -lf ~/.ssh/test_key 2>&1 || echo "Key verification failed"
+          
+          echo "=== STEP 4: Test connection with verbose output ==="
+          ssh -i ~/.ssh/test_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -v \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+              "echo test" 2>&1 | grep -A10 -B10 "authenticate\|failed\|success"
+              
