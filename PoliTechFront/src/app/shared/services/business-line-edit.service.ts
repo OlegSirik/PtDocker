@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
-import { catchError, delay, map, Observable, of, tap } from 'rxjs';
-import { BASE_URL } from '../tokens';
+import { Injectable } from '@angular/core';
+import { catchError, map, Observable, of, tap } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface BusinessLineVar {
   varCode: string;
@@ -33,7 +33,10 @@ export interface BusinessLineEdit {
   providedIn: 'root'
 })
 export class BusinessLineEditService {
-  constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {};
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {};
 
   private mockData: BusinessLineEdit =
     {
@@ -85,7 +88,7 @@ export class BusinessLineEditService {
       return of(this.mockData);
     }
 
-    return this.http.get<BusinessLineEdit>(`${this.baseUrl}/admin/lobs/${code}`).pipe(
+    return this.http.get<BusinessLineEdit>(`${this.authService.baseApiUrl}/admin/lobs/${code}`).pipe(
       tap((data: BusinessLineEdit) => {
         // Replace the item in mockData with the fetched one, or add if not present
           this.mockData = data;
@@ -109,7 +112,7 @@ export class BusinessLineEditService {
     if (this.http) {
       // Also update backend with the full mockData
       const code = businessLine.mpCode;
-      const url = `${this.baseUrl}/admin/lobs/${code}`;
+      const url = `${this.authService.baseApiUrl}/admin/lobs/${code}`;
       // INSERT_YOUR_CODE
       console.log('HTTP PUT Request:', {
         url,
@@ -140,7 +143,7 @@ export class BusinessLineEditService {
     if (this.http) {
       // Also save to backend if http is available
 
-      this.http.post(`${this.baseUrl}/admin/lobs`, businessLine).subscribe({
+      this.http.post(`${this.authService.baseApiUrl}/admin/lobs`, businessLine).subscribe({
         next: () => {},
         error: (err) => {
           console.error('Error saving business line to backend:', err);
@@ -264,7 +267,7 @@ export class BusinessLineEditService {
       });
     }
 
-    return this.http.get<any>(`${this.baseUrl}/admin/lobs/${lobCode}/example`).pipe(
+    return this.http.get<any>(`${this.authService.baseApiUrl}/admin/lobs/${lobCode}/example`).pipe(
       catchError((error) => {
         console.error('Error fetching example JSON:', error);
         return of({

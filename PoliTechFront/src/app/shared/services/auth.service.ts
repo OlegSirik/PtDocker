@@ -1,7 +1,7 @@
 // rest auth - temporary file
 import {Injectable, inject, Inject} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import {BehaviorSubject, Observable, tap} from 'rxjs';
 import {BASE_URL} from '../tokens';
 
 export interface LoginData {
@@ -31,6 +31,7 @@ export interface User {
   accountName: string;
   clientName: string;
   tenantId: number;
+  tenantCode: string;
   id: number;
   userRole: string;
   authorities: Authority[];
@@ -41,9 +42,13 @@ export interface User {
 export class AuthService {
   private http = inject(HttpClient);
   private baseUrl: string = inject(BASE_URL);
-
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public get baseApiUrl() {
+    return `${this.baseUrl}/api/v1/${this.tenant}`;
+  }
   public currentUser$ = this.currentUserSubject.asObservable();
+  public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
+  public tenant = '';
 
   login(credentials: LoginData): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, credentials)
@@ -60,21 +65,23 @@ export class AuthService {
   getCurrentUser(): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
       .pipe(
-        tap(user => this.currentUserSubject.next(user))
+        tap(user => {
+          this.currentUserSubject.next(user);
+          this.tenant = user.tenantCode;
+          console.log('this.tenant', this.tenant);
+          this.isAuthenticated.next(true);
+        })
       );
   }
 
   logout(): void {
     localStorage.removeItem('accessToken');
     this.currentUserSubject.next(null);
+    this.isAuthenticated.next(false);
   }
 
   getToken(): string | null {
     return localStorage.getItem('accessToken');
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.getToken();
   }
 
   hasRole(role: string): boolean {
