@@ -1,21 +1,30 @@
 package ru.pt.api.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
 public class LobVar {
 
+    @Getter
     @JsonProperty("varDataType")
     private VarDataType varDataType;
 
+    // Getters and Setters
+    @Getter
     @JsonProperty("varCode")
     private String varCode;
 
+    @Getter
     @JsonProperty("varName")
     private String varName;
 
+    @Getter
     @JsonProperty("varPath")
     private String varPath;
 
+    @Getter
     @JsonProperty("varType")
     private String varType;
 
@@ -43,55 +52,8 @@ public class LobVar {
         this.varDataType = varDataType;
     }
 
-    // Getters and Setters
-    public String getVarCode() {
-        return varCode;
-    }
-
-    public void setVarCode(String varCode) {
-        this.varCode = varCode;
-    }
-
-    public String getVarName() {
-        return varName;
-    }
-
-    public void setVarName(String varName) {
-        this.varName = varName;
-    }
-
-    public String getVarPath() {
-        return varPath;
-    }
-
-    public void setVarPath(String varPath) {
-        this.varPath = varPath;
-    }
-
-    public String getVarType() {
-        return varType;
-    }
-
-    public void setVarType(String varType) {
-        this.varType = varType;
-    }
-
     public String getVarValue() {
         if (varValue == null) varValue = "";
         return varValue;
     }
-
-    public void setVarValue(String varValue) {
-        this.varValue = varValue;
-    }
-
-    public VarDataType getVarDataType() {
-        return varDataType;
-    }
-
-    public void setVarDataType(VarDataType varDataType) {
-        this.varDataType = varDataType;
-    }
-
-
 }
