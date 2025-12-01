@@ -67,6 +67,7 @@ jobs:
         run: |
           docker compose -f docker-compose-mac-local.yml down
           docker system prune -f
+
   
   deploy:
     runs-on: ubuntu-latest
