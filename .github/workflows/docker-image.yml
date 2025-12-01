@@ -82,13 +82,15 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
+          script: |          
             # Pull latest code
-            cd /opt/my-app
-            git pull origin main
+            cd PtDocker
+            git pull origin master
+            echo "Текущий статус репозитория:"
+            git status
             
             # Build on server
-            docker build -t my-app:latest .
+            docker compose build
             
             # Deploy
             docker compose down
