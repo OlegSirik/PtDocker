@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { tap, catchError, delay, map } from 'rxjs/operators';
-import { BASE_URL } from '../tokens';
+import { tap, catchError, map } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 export interface BusinessLine {
   id: number;
@@ -14,7 +14,10 @@ export interface BusinessLine {
   providedIn: 'root'
 })
 export class BusinessLineService {
-  constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {};
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {};
 
   private mockData: BusinessLine[] = [
     { id: 1, mpCode: 'MORTGAGE', mpName: 'Ипотека' },
@@ -30,9 +33,9 @@ export class BusinessLineService {
       throw new Error('HttpClient is not initialized');
     }
 
-    console.log("getting from backend " + this.baseUrl + "/admin/lobs")
+    console.log("getting from backend " + this.authService.baseApiUrl + "/admin/lobs")
 
-    return this.http.get<BusinessLine[]>(`${this.baseUrl}/admin/lobs`).pipe(
+    return this.http.get<BusinessLine[]>(`${this.authService.baseApiUrl}/admin/lobs`).pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
           this.mockData = data;
@@ -66,7 +69,7 @@ export class BusinessLineService {
 
   deleteBusinessLine(id: number): Observable<boolean> {
     if (this.http) {
-      const url = `${this.baseUrl}/admin/lobs/${id}`;
+      const url = `${this.authService.baseApiUrl}/admin/lobs/${id}`;
       return this.http.delete(url).pipe(
         map(() => true),
         catchError(error => {

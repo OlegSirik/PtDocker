@@ -1,0 +1,58 @@
+<div class="page-container">
+  <mat-card>
+    <mat-card-header>
+      <div class="header-content">
+        <mat-card-title>
+          <mat-icon>groups</mat-icon>
+          Clients
+        </mat-card-title>
+        <div class="header-actions">
+          <button mat-raised-button color="primary" (click)="addClient()">
+            <mat-icon>add</mat-icon>
+            Add
+          </button>
+        </div>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">Loading clients...</div>
+      <table mat-table [dataSource]="clients" class="clients-table" *ngIf="!loading">
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let client">{{ client.code }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let client">{{ client.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="trusted_email">
+          <th mat-header-cell *matHeaderCellDef>Trusted Email</th>
+          <td mat-cell *matCellDef="let client">{{ client.trusted_email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let client">
+            <mat-chip [ngClass]="'status-' + client.status">
+              {{ client.status }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Created At</th>
+          <td mat-cell *matCellDef="let client">
+            {{ client.createdAt | date: 'short' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" 
+            (click)="editClient(row)" 
+            class="client-row"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

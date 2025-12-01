@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { BASE_URL } from '../tokens';
 import { catchError } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 export interface TestContext {
   varCode: string;
@@ -35,16 +35,19 @@ export class TestService {
     { code: 'kid', name: 'КИД' }
   ];
 
-  constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {}
 
   getPfTypes(): Observable<PfType[]> {
-    return this.http.get<PfType[]>(`${this.baseUrl}/test/pf-types`).pipe(
+    return this.http.get<PfType[]>(`${this.authService.baseApiUrl}/test/pf-types`).pipe(
       catchError(() => of(this.mockPfTypes))
     );
   }
 
   validateQuote(requestJson: string): Observable<TestResponse> {
-    return this.http.post<TestResponse>(`${this.baseUrl}/test/quote/validator`, requestJson, {
+    return this.http.post<TestResponse>(`${this.authService.baseApiUrl}/test/quote/validator`, requestJson, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       catchError(() => {
@@ -74,7 +77,7 @@ export class TestService {
   }
 
   validatePolicy(requestJson: string): Observable<TestResponse> {
-    return this.http.post<TestResponse>(`${this.baseUrl}/test/policy/validator`, requestJson, {
+    return this.http.post<TestResponse>(`${this.authService.baseApiUrl}/test/policy/validator`, requestJson, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       catchError(() => {
@@ -100,7 +103,7 @@ export class TestService {
   }
 
   calculateQuote(requestJson: string): Observable<string> {
-    return this.http.post(`${this.baseUrl}/test/quote/calculator`, requestJson, {
+    return this.http.post(`${this.authService.baseApiUrl}/test/quote/calculator`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text'
     }).pipe(
@@ -119,7 +122,7 @@ export class TestService {
   }
 
   calculatePolicy(requestJson: string): Observable<string> {
-    return this.http.post(`${this.baseUrl}/test/policy/calculator`, requestJson, {
+    return this.http.post(`${this.authService.baseApiUrl}/test/policy/calculator`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text'
     }).pipe(
@@ -138,7 +141,7 @@ export class TestService {
   }
 
   printPf(requestJson: string, pfType: string): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/test/policy/printpf/${pfType}`, requestJson, {
+    return this.http.post(`${this.authService.baseApiUrl}/test/policy/printpf/${pfType}`, requestJson, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'blob'
     }).pipe(

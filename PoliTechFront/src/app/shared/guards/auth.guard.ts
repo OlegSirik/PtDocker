@@ -2,6 +2,8 @@ import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, Url
 import { inject } from '@angular/core';
 import { AuthGuardData, createAuthGuard } from 'keycloak-angular';
 import {AuthService} from '../services/auth.service';
+import {map} from 'rxjs';
+import {filter} from 'rxjs/operators';
 
 const isAccessAllowed = async (
   route: ActivatedRouteSnapshot,
@@ -36,6 +38,13 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  return authService.isAuthenticated.pipe(
+    filter(Boolean),
+    map(isAuthenticated => {
+      return isAuthenticated ? true : router.createUrlTree(['/login']);
+    })
+  );
+  /*
   if (authService.isAuthenticated()) {
     const requiredRole = route.data['role'] as string | string[];
 
@@ -52,5 +61,5 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   }
 
   router.navigate(['/login']);
-  return false;
+  return false;*/
 };

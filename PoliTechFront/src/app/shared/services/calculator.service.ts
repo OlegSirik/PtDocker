@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, delay, tap } from 'rxjs/operators';
-import { BASE_URL } from '../tokens';
+import { AuthService } from './auth.service';
 
 export interface Calculator {
   id?: string;
@@ -71,7 +71,10 @@ export interface CoefficientDataRow {
   providedIn: 'root'
 })
 export class CalculatorService {
-  constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {}
 
   private mockData: Calculator = {
     id: 'calc-1',
@@ -139,7 +142,7 @@ export class CalculatorService {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<Calculator>(`${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`).pipe(
+    return this.http.get<Calculator>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`).pipe(
       tap(data => {
         this.mockData = data;
       }),
@@ -160,7 +163,7 @@ export class CalculatorService {
     };
 
     if (this.http) {
-      return this.http.post<Calculator>(`${this.baseUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`, body).pipe(
+      return this.http.post<Calculator>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`, body).pipe(
         tap(createdCalculator => {
           this.mockData = { ...createdCalculator };
         }),
@@ -179,7 +182,7 @@ export class CalculatorService {
   // PUT calculator (update)
   updateCalculator(calculator: Calculator): Observable<Calculator> {
     if (this.http) {
-      return this.http.put<Calculator>(`${this.baseUrl}/admin/products/${calculator.productId}/versions/${calculator.versionNo}/packages/${calculator.packageNo}/calculator`, calculator).pipe(
+      return this.http.put<Calculator>(`${this.authService.baseApiUrl}/admin/products/${calculator.productId}/versions/${calculator.versionNo}/packages/${calculator.packageNo}/calculator`, calculator).pipe(
         tap(updatedCalculator => {
           this.mockData = { ...updatedCalculator };
         }),
@@ -220,7 +223,7 @@ export class CalculatorService {
     if (!this.http) {
       throw new Error('HttpClient is not initialized');
     }
-    return this.http.get<CoefficientDataRow[]>(`${this.baseUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`).pipe(
+    return this.http.get<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`).pipe(
       catchError(error => {
         console.error('Error fetching coefficient data:', error);
         // Return mock empty data
@@ -233,7 +236,7 @@ export class CalculatorService {
     if (!this.http) {
       throw new Error('HttpClient is not initialized');
     }
-    return this.http.post<CoefficientDataRow[]>(`${this.baseUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
+    return this.http.post<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
       catchError(error => {
         console.error('Error creating coefficient data:', error);
         return of(rows);
@@ -245,7 +248,7 @@ export class CalculatorService {
     if (!this.http) {
       throw new Error('HttpClient is not initialized');
     }
-    return this.http.put<CoefficientDataRow[]>(`${this.baseUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
+    return this.http.put<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
       catchError(error => {
         console.error('Error updating coefficient data:', error);
         return of(rows);
