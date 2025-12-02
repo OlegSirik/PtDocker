@@ -1,0 +1,61 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+mat-card-header {
+  width: 100%;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions {
+  margin-left: auto;
+}
+
+.tenants-table {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.tenant-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tenant-row:hover {
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+.status-active {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.status-suspended {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.status-deleted {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+

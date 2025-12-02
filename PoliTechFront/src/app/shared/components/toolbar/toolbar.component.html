@@ -8,6 +8,9 @@
       <button mat-button routerLink="/products" class="nav-button">Продукты</button>
       <button mat-button routerLink="/files" class="nav-button">Файлы</button>
       <button mat-button routerLink="/test" class="nav-button">Тестирование</button>
+      <button mat-button routerLink="/admin/tenants" class="nav-button">Тенанты</button>
+      <button mat-button routerLink="/admin/clients" class="nav-button">Клиенты</button>
+      <button mat-button routerLink="/admin/accounts/1" class="nav-button">Аккаунты</button>
       @if ((currentUser$ | async); as user) {
         <button mat-button (click)="logout()" class="nav-button">Выйти из {{user.username}}</button>
       } @else {

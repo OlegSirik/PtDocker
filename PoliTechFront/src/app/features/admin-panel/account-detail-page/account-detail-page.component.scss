@@ -1,0 +1,74 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-card {
+  margin-bottom: 20px;
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+mat-card-header {
+  width: 100%;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions {
+  margin-left: auto;
+}
+
+.accounts-table {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+.clickable {
+  color: #3f51b5;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clickable:hover {
+  color: #2c3e99;
+}
+
+.empty-message {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.actions-column {
+  text-align: right;
+}
+

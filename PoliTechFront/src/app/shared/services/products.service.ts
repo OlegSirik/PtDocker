@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { BASE_URL } from '../tokens';
+import { AuthService } from './auth.service';
 
 export interface ProductList {
   id?: number;
@@ -16,7 +16,10 @@ export interface ProductList {
   providedIn: 'root'
 })
 export class ProductsService {
-  constructor(private http: HttpClient, @Inject(BASE_URL) private baseUrl: string) {};
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {};
 
   private mockData: ProductList[] = [
     {
@@ -58,7 +61,7 @@ export class ProductsService {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<ProductList[]>(`${this.baseUrl}/admin/products`).pipe(
+    return this.http.get<ProductList[]>(`${this.authService.baseApiUrl}/admin/products`).pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
           this.mockData = data;
@@ -96,7 +99,7 @@ export class ProductsService {
 
     deleteProduct(id: number): Observable<boolean> {
       if (this.http) {
-        const url = `${this.baseUrl}/admin/products/${id}`;
+        const url = `${this.authService.baseApiUrl}/admin/products/${id}`;
         return this.http.delete(url).pipe(
           map(() => true),
           catchError(error => {

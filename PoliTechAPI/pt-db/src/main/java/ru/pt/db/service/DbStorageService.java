@@ -49,6 +49,7 @@ public class DbStorageService implements StorageService {
         policyRepository.save(entity);
 
         var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
+        index.setVersionNo(1);
         policyIndexRepository.save(index);
 
         var policyData = new PolicyData();
