@@ -96,31 +96,4 @@ jobs:
             # Health check
             sleep 30
             curl -f http://localhost:3000/health || exit 1
-
-  debug:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Run diagnostics
-        run: |
-          echo "=== STEP 1: Create SSH key file ==="
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY  }}" > ~/.ssh/test_key
-          chmod 600 ~/.ssh/test_key
-          
-          echo "=== STEP 2: Check key format ==="
-          echo "Line count: $(wc -l ~/.ssh/test_key)"
-          echo "First line: $(head -1 ~/.ssh/test_key)"
-          echo "Last line:  $(tail -1 ~/.ssh/test_key)"
-          
-          echo "=== STEP 3: Verify key ==="
-          ssh-keygen -lf ~/.ssh/test_key 2>&1 || echo "Key verification failed"
-          
-          echo "=== STEP 4: Test connection with verbose output ==="
-          ssh -i ~/.ssh/test_key \
-              -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              -v \
-              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-              "echo test" 2>&1 | grep -A10 -B10 "authenticate\|failed\|success"
               
