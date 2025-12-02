@@ -1,0 +1,32 @@
+import { HttpClient } from '@angular/common/http';
+import { Inject, Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { tap, catchError, delay, map } from 'rxjs/operators';
+import { EnvService } from '../env.service';
+import { AuthService } from '../auth.service';
+import { BaseApiService } from './base-api.service';
+
+export interface TntAdmin {
+    id?: number;
+    tenantId: number;
+    tenantCode: string;
+    userLogin: string;
+    userName: string;
+    fullName: string;
+  }
+
+@Injectable({
+  providedIn: 'root'
+})
+
+export class TntAdminService extends BaseApiService<TntAdmin> {
+  constructor(http: HttpClient, env: EnvService, authService: AuthService) {
+    super(http, env, 'admin/admins/tnt-admins', authService);
+  }
+
+  /** Получить TNT admins по tenant code */
+  getByTenantCode(tenantCode: string): Observable<TntAdmin[]> {
+    const url = this.env.BASE_URL + '/api/v1/' + tenantCode + '/' + this.resourcePath;
+    return this.http.get<TntAdmin[]>(url);
+  }
+}
