@@ -1,5 +1,6 @@
 package ru.pt.api.admin;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ import java.util.Map;
  * Доступен для TNT_ADMIN и GROUP_ADMIN
  */
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/admin/product-roles")
 public class ProductRoleManagementController extends SecuredController {
 

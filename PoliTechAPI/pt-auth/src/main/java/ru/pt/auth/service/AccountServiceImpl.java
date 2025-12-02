@@ -27,22 +27,14 @@ public class AccountServiceImpl implements AccountService {
     private final ProductRoleRepository productRoleRepository;
     private final AccountLoginRepository accountLoginRepository;
     private final AccountMapper accountMapper;
-    private final AccountLoginMapper accountLoginMapper;
-    private final ClientMapper clientMapper;
-    private final LoginMapper loginMapper;
     private final ProductRoleMapper productRoleMapper;
-    private final TenantMapper tenantMapper;
 
     public AccountServiceImpl(AccountRepository accountRepository, ProductRoleRepository productRoleRepository, AccountLoginRepository accountLoginRepository, AccountMapper accountMapper, AccountLoginMapper accountLoginMapper, ClientMapper clientMapper, LoginMapper loginMapper, ProductRoleMapper productRoleMapper, TenantMapper tenantMapper) {
         this.accountRepository = accountRepository;
         this.productRoleRepository = productRoleRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.accountMapper = accountMapper;
-        this.accountLoginMapper = accountLoginMapper;
-        this.clientMapper = clientMapper;
-        this.loginMapper = loginMapper;
         this.productRoleMapper = productRoleMapper;
-        this.tenantMapper = tenantMapper;
     }
 
 

@@ -1,15 +1,17 @@
-package ru.pt.api;
+package ru.pt.api.sales;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.micrometer.common.util.StringUtils;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.admin.dto.PaymentRequest;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -27,7 +29,10 @@ import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Only for storage operations! Assumes no additional business logic
@@ -39,10 +44,11 @@ import java.util.*;
  * resource: policies
  */
 @RestController
-@RequestMapping("/api/v1/{tenantCode}/sales/policies")
-public class DbController extends SecuredController {
+@SecurityRequirement(name = "bearerAuth")
+@RequestMapping("/api/v1/{tenantCode}/sales")
+public class SalesController extends SecuredController {
 
-    private static final Logger logger = LoggerFactory.getLogger(DbController.class);
+    private static final Logger logger = LoggerFactory.getLogger(SalesController.class);
 
     private final ProcessOrchestrator processOrchestrator;
     private final PolicyIndexRepository policyIndexRepository;
@@ -52,7 +58,14 @@ public class DbController extends SecuredController {
     private final FileService fileService;
     private final PreProcessService preProcessService;
 
-    public DbController(ProcessOrchestrator processOrchestrator, SecurityContextHelper securityContextHelper, PolicyIndexRepository policyIndexRepository, PolicyRepository policyRepository, ProductVersionRepository productVersionRepository, ProductRepository productRepository, FileService fileService, PreProcessService preProcessService) {
+    public SalesController(ProcessOrchestrator processOrchestrator,
+                           SecurityContextHelper securityContextHelper,
+                           PolicyIndexRepository policyIndexRepository,
+                           PolicyRepository policyRepository,
+                           ProductVersionRepository productVersionRepository,
+                           ProductRepository productRepository,
+                           FileService fileService,
+                           PreProcessService preProcessService) {
         super(securityContextHelper);
         this.processOrchestrator = processOrchestrator;
         this.policyIndexRepository = policyIndexRepository;
@@ -69,7 +82,24 @@ public class DbController extends SecuredController {
      * POST /api/v1/{tenantCode}/sales/policies
      * Требуется право POLICY на продукт
      */
-    @PostMapping
+    @PostMapping("/quotes")
+    public ResponseEntity<String> calculatePolicy(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody String request) {
+        requireAuthenticated(user);
+        // TODO: Извлечь productCode из request и проверить права
+        // requireProductPolicy(user, productCode);
+        return ResponseEntity.ok(processOrchestrator.calculate(request));
+    }
+
+
+    /**
+     * Create a new policy
+     * POST /api/v1/{tenantCode}/sales/policies
+     * Требуется право POLICY на продукт
+     */
+    @PostMapping("/policies")
     public ResponseEntity<PolicyData> createPolicy(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -85,7 +115,7 @@ public class DbController extends SecuredController {
      * PUT /api/v1/{tenantCode}/sales/policies/{policyNumber}
      * Требуется право ADDENDUM на продукт
      */
-    @PutMapping("/{policyNumber}")
+    @PutMapping("/policies/{policyNumber}")
     public ResponseEntity<PolicyData> updatePolicy(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -93,31 +123,17 @@ public class DbController extends SecuredController {
             @RequestBody String request) {
         requireAuthenticated(user);
         // TODO: Извлечь productCode из существующей политики и проверить права
-        // requireProductWrite(user, productCode);
+//         requireProductWrite(user, productCode);
         PolicyData updated = processOrchestrator.updatePolicy(policyNumber, request);
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Get policy by ID
-     * GET /api/v1/{tenantCode}/sales/policies/{policyId}
-     * Требуется право READ на продукт
-     */
-    @GetMapping("/{policyId}")
-    public ResponseEntity<PolicyData> getPolicyById(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("policyId") UUID policyId) {
-        requireAuthenticated(user);
-        PolicyData policy = processOrchestrator.getPolicyById(policyId);
-        return ResponseEntity.ok(policy);
-    }
 
     /**
      * Get policy by policy number
-     * GET /api/v1/{tenantCode}/sales/policies/by-number/{policyNumber}
+     * GET /api/v1/{tenantCode}/sales/policies/{policyNumber}
      */
-    @GetMapping("/by-number/{policyNumber}")
+    @GetMapping("/{policyNumber}")
     public ResponseEntity<PolicyData> getPolicyByNumber(
             @PathVariable String tenantCode,
             @PathVariable("policyNumber") String policyNumber) {
@@ -126,70 +142,74 @@ public class DbController extends SecuredController {
     }
 
     /**
-     * Get all policies by user account ID
-     * GET /api/v1/{tenantCode}/sales/policies/by-account/{userAccountId}
-     */
-    @GetMapping("/by-account/{userAccountId}")
-    public ResponseEntity<List<PolicyData>> getPoliciesByUserAccountId(
-            @PathVariable String tenantCode,
-            @PathVariable("userAccountId") Long userAccountId) {
-        // List<PolicyData> policies = policyDataService.getPoliciesByUserAccountId(userAccountId);
-        return ResponseEntity.ok(null);
-    }
-
-    /**
      * Mark policy as paid
      * POST /api/v1/{tenantCode}/sales/policies/{policyNumber}/paid
      */
     @PostMapping("/{policyNumber}/paid")
     public ResponseEntity<Void> markPolicyAsPaid(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @PathVariable("policyNumber") String policyNumber,
             @RequestBody PaymentRequest request) {
         ZonedDateTime paymentDate = request.getPaymentDate() != null
-            ? request.getPaymentDate() 
-            : ZonedDateTime.now();
-        
+                ? request.getPaymentDate()
+                : ZonedDateTime.now();
+
         // policyDataService.policyStatusPaid(policyNumber, paymentDate);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/printpf/{policy-nr}/{pf-type}")
+    @PostMapping("/quotes/validator")
+    public ResponseEntity<String> quoteValidator(
+            @PathVariable("tenantCode") String tenantCode,
+            @RequestBody String requestBody) {
+        String result = processOrchestrator.calculate(requestBody);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/policies/validator")
+    public ResponseEntity<String> saveValidator(
+            @PathVariable("tenantCode") String tenantCode,
+            @RequestBody String requestBody) {
+        String result = processOrchestrator.save(requestBody);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/policies/{policy-nr}/printpf/{pf-type}")
     public byte[] printPolicy(
-        @PathVariable("policy-nr") String policyNr,
-        @PathVariable("pf-type") String pfType,
-        @PathVariable("tenantCode") String tenantCode) throws JsonProcessingException {
+            @PathVariable("policy-nr") String policyNr,
+            @PathVariable("pf-type") String pfType,
+            @PathVariable("tenantCode") String tenantCode) throws JsonProcessingException {
 
         var policyIndex = policyIndexRepository
-            .findByPolicyNumber(policyNr)
-            .orElseThrow(() ->
-                new NotFoundException("Не удалось найти полис по номеру - %s".formatted(policyNr))
-            );
+                .findByPolicyNumber(policyNr)
+                .orElseThrow(() ->
+                        new NotFoundException("Не удалось найти полис по номеру - %s".formatted(policyNr))
+                );
         var policy = policyRepository.findById(policyIndex.getPolicyId())
-            .orElseThrow(() ->
-                new NotFoundException("Не удалось найти полис по id - %s".formatted(policyIndex.getPolicyId()))
-            );
+                .orElseThrow(() ->
+                        new NotFoundException("Не удалось найти полис по id - %s".formatted(policyIndex.getPolicyId()))
+                );
         var productId = productRepository.findByCodeAndIsDeletedFalse(policyIndex.getProductCode())
-            .orElseThrow(() ->
-                new NotFoundException(
-                    "Не удалось найти продукт; productCode %s".formatted(policyIndex.getProductCode())
-                )
-            ).getId();
+                .orElseThrow(() ->
+                        new NotFoundException(
+                                "Не удалось найти продукт; productCode %s".formatted(policyIndex.getProductCode())
+                        )
+                ).getId();
 
         var productVersion = productVersionRepository.findByProductIdAndVersionNo(
-            productId, policyIndex.getVersionNo()
+                productId, policyIndex.getVersionNo()
         ).orElseThrow(() ->
-            {
-                logger.error(
-                    "Не удалось найти версию продукта; productId {}, versionNo {}",
-                    productId, policyIndex.getVersionNo()
-                );
+                {
+                    logger.error(
+                            "Не удалось найти версию продукта; productId {}, versionNo {}",
+                            productId, policyIndex.getVersionNo()
+                    );
 //                return new InternalServerErrorException("Обратитесь к администратору");
-                return new InternalServerErrorException(
-                    "Не удалось найти версию продукта; productId %s, versionNo %s".formatted(
-                        productId, policyIndex.getVersionNo())
-                );
-            }
+                    return new InternalServerErrorException(
+                            "Не удалось найти версию продукта; productId %s, versionNo %s".formatted(
+                                    productId, policyIndex.getVersionNo())
+                    );
+                }
         );
 
         var json = productVersion.getProduct();
@@ -206,7 +226,7 @@ public class DbController extends SecuredController {
                 logger.error("Не удалось спарcить productVersion.product.vars[{}]", i);
 //                throw new InternalServerErrorException("Обратитесь к администратору");
                 throw new InternalServerErrorException(
-                    "Не удалось спарcить productVersion.product.vars[%s]".formatted(i)
+                        "Не удалось спарcить productVersion.product.vars[%s]".formatted(i)
                 );
             }
         }
@@ -227,22 +247,6 @@ public class DbController extends SecuredController {
         return fileService.getFile(pfType, keyValues);
     }
 
-    /**
-     * Request class for payment
-     */
-    public static class PaymentRequest {
-        private ZonedDateTime paymentDate;
 
-        public PaymentRequest() {
-        }
 
-        public ZonedDateTime getPaymentDate() {
-            return paymentDate;
-        }
-
-        public void setPaymentDate(ZonedDateTime paymentDate) {
-            this.paymentDate = paymentDate;
-        }
-    }
 }
-

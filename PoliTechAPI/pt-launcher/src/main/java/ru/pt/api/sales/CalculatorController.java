@@ -1,8 +1,9 @@
-package ru.pt.api;
+package ru.pt.api.sales;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,13 +26,14 @@ import ru.pt.auth.security.UserDetailsImpl;
  */
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/calculators")
+@SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('SYS_ADMIN')")
-public class AdminCalculatorController extends SecuredController {
+public class CalculatorController extends SecuredController {
 
     private final CalculatorService calculateService;
     private final CoefficientService coefficientService;
 
-    public AdminCalculatorController(
+    public CalculatorController(
             CalculatorService calculateService,
             SecurityContextHelper securityContextHelper,
             CoefficientService coefficientService
