@@ -89,9 +89,6 @@ jobs:
             echo "Текущий статус репозитория:"
             git status
             
-            # Build on server
-            docker compose build
-            
             # Deploy
             docker compose down
             docker compose up -d --build
