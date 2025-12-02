@@ -158,7 +158,6 @@ public class SalesController extends SecuredController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/printpf/{policy-nr}/{pf-type}")
     @PostMapping("/quotes/validator")
     public ResponseEntity<String> quoteValidator(
             @PathVariable("tenantCode") String tenantCode,
