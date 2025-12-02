@@ -1,13 +1,16 @@
 package ru.pt.api.admin;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.service.AccountServiceImpl;
 import ru.pt.auth.service.AdminUserManagementService;
 
 import java.util.HashMap;
@@ -18,29 +21,34 @@ import java.util.Map;
  * Контроллер для управления клиентами (приложениями)
  * Доступен для TNT_ADMIN
  *
- * URL Pattern: /api/v1/{tenantId}/admin/clients
- * tenantId: pt, vsk, msg
+ * URL Pattern: /api/v1/{tenantCode}/admin/clients
+ * tenantCode: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/api/v1/{tenantId}/admin/clients")
+@SecurityRequirement(name = "bearerAuth")
+@RequestMapping("/api/v1/{tenantCode}/admin/clients")
 public class ClientManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
+    private final AccountServiceImpl accountService;
 
     public ClientManagementController(SecurityContextHelper securityContextHelper,
-                                      AdminUserManagementService adminUserManagementService) {
+                                      AdminUserManagementService adminUserManagementService,
+                                      AccountServiceImpl accountService
+    ) {
         super(securityContextHelper);
+        this.accountService = accountService;
         this.adminUserManagementService = adminUserManagementService;
     }
 
     /**
      * TNT_ADMIN: Создание нового клиента (приложения)
-     * POST /api/v1/{tenantId}/admin/clients
+     * POST /api/v1/{tenantCode}/admin/clients
      */
     @PostMapping
     @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> createClient(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @RequestBody CreateClientRequest request) {
         try {
             Map<String, Object> result = adminUserManagementService.createClient(
@@ -59,13 +67,22 @@ public class ClientManagementController extends SecuredController {
         }
     }
 
+    @PostMapping("/createGroup")
+    @PreAuthorize("hasRole('TNT_ADMIN')")
+    public ResponseEntity<Account> createGroup(
+            @PathVariable("tenantCode") String tenantCode,
+            @RequestBody Account account) {
+        Account result = accountService.createGroup(account.getName(), account.getParentId());
+        return ResponseEntity.ok(result);
+    }
+
     /**
      * TNT_ADMIN: Получить список всех клиентов
-     * GET /api/v1/{tenantId}/admin/clients
+     * GET /api/v1/{tenantCode}/admin/clients
      */
     @GetMapping
     @PreAuthorize("hasRole('TNT_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> listClients(@PathVariable String tenantId) {
+    public ResponseEntity<List<Map<String, Object>>> listClients(@PathVariable String tenantCode) {
         try {
             List<Map<String, Object>> clients = adminUserManagementService.listClients();
             return ResponseEntity.ok(clients);

@@ -10,10 +10,10 @@ import org.hibernate.type.SqlTypes;
 public class ProductVersionEntity {
 
     @Id
-    @Column(name = "pk")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_product_versions_seq")
     @SequenceGenerator(name = "pt_product_versions_seq", sequenceName = "pt_product_versions_seq", allocationSize = 1)
-    private Integer pk;
+    private Integer id;
 
     @Column(name = "product_id", nullable = false)
     private Integer productId;
@@ -25,12 +25,12 @@ public class ProductVersionEntity {
     @Column(name = "product", columnDefinition = "jsonb", nullable = false)
     private String product;
 
-    public Integer getPk() {
-        return pk;
+    public Integer getId() {
+        return id;
     }
 
-    public void setPk(Integer pk) {
-        this.pk = pk;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Integer getProductId() {

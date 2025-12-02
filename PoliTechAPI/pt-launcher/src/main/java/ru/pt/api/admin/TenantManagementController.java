@@ -1,5 +1,6 @@
 package ru.pt.api.admin;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +16,12 @@ import java.util.Map;
  * Контроллер для управления тенантами
  * Доступен только для SYS_ADMIN
  *
- * URL Pattern: /api/v1/{tenantId}/admin/tenants
- * tenantId: pt, vsk, msg (глобальный для SYS_ADMIN операций)
+ * URL Pattern: /api/v1/{tenantCode}/admin/tenants
+ * tenantCode: pt, vsk, msg (глобальный для SYS_ADMIN операций)
  */
 @RestController
-@RequestMapping("/api/v1/{tenantId}/admin/tenants")
+@SecurityRequirement(name = "bearerAuth")
+@RequestMapping("/api/v1/{tenantCode}/admin/tenants")
 public class TenantManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -32,12 +34,12 @@ public class TenantManagementController extends SecuredController {
 
     /**
      * SYS_ADMIN: Создание нового tenant
-     * POST /api/v1/{tenantId}/admin/tenants
+     * POST /api/v1/{tenantCode}/admin/tenants
      */
     @PostMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> createTenant(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @RequestBody CreateTenantRequest request) {
         try {
             TenantEntity tenant = adminUserManagementService.createTenant(request.getTenantName(),
@@ -56,18 +58,17 @@ public class TenantManagementController extends SecuredController {
 
     /**
      * SYS_ADMIN: Удаление tenant (soft delete)
-     * DELETE /api/v1/{tenantId}/admin/tenants/{tenantResourceId}
+     * DELETE /api/v1/{tenantCode}/admin/tenants/{tenantResourceId}
      */
-    @DeleteMapping("/{tenantResourceId}")
+    @DeleteMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteTenant(
-            @PathVariable String tenantId,
-            @PathVariable Long tenantResourceId) {
+            @PathVariable String tenantCode) {
         try {
-            adminUserManagementService.deleteTenant(tenantResourceId);
+            adminUserManagementService.deleteTenant(tenantCode);
 
             Map<String, Object> response = buildSimpleResponse("Tenant deleted successfully");
-            response.put("tenantId", tenantResourceId);
+            response.put("tenantCode", tenantCode);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

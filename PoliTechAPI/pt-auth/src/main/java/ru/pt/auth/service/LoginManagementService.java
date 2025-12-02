@@ -137,7 +137,7 @@ public class LoginManagementService {
         }
 
         // Шаг 3: Проверка наличия пользователя для данного тенанта
-        LoginEntity login = loginRepository.findByIdAndTenantId(id, tenant.getId())
+        LoginEntity login = loginRepository.findByIdAndTenantCode(id, tenant.getCode())
                 .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tenantCode + "'"));
 
         // Шаг 4: Обновление данных
@@ -174,7 +174,7 @@ public class LoginManagementService {
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 2: Получение всех логинов для тенанта
-        List<LoginEntity> logins = loginRepository.findByTenantId(tenant.getId());
+        List<LoginEntity> logins = loginRepository.findByTenantCode(tenant.getCode());
 
         if (logins.isEmpty()) {
             logger.warn("No logins found for tenant '{}'", tenantCode);
@@ -198,7 +198,7 @@ public class LoginManagementService {
         }
 
         // Шаг 3: Проверка наличия пользователя для данного тенанта
-        LoginEntity login = loginRepository.findByIdAndTenantId(id, tenant.getId())
+        LoginEntity login = loginRepository.findByIdAndTenantCode(id, tenant.getCode())
                 .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tenantCode + "'"));
 
         // Шаг 4: Установка флага удаления

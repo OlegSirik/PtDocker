@@ -1,5 +1,6 @@
 package ru.pt.api.security;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -46,7 +47,8 @@ public class AuthenticationController {
      * Получить информацию о текущем пользователе через @AuthenticationPrincipal
      */
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(
+    @SecurityRequirement(name = "bearerAuth")
+    private ResponseEntity<Map<String, Object>> getCurrentUser(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         Map<String, Object> response = new HashMap<>();
@@ -69,7 +71,8 @@ public class AuthenticationController {
      * Получить информацию о текущем пользователе через SecurityContextHelper
      */
     @GetMapping("/context")
-    public ResponseEntity<Map<String, Object>> getCurrentUserContext() {
+    @SecurityRequirement(name = "bearerAuth")
+    private ResponseEntity<Map<String, Object>> getCurrentUserContext() {
         Map<String, Object> response = new HashMap<>();
 
         securityContextHelper.getCurrentUser().ifPresent(user -> {
@@ -189,6 +192,7 @@ public class AuthenticationController {
      * Требуется роль SYS_ADMIN
      */
     @PostMapping("/set-password")
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> setPassword(@RequestBody SetPasswordRequest request) {
         try {

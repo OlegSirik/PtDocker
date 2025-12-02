@@ -1,5 +1,6 @@
-package ru.pt.api;
+package ru.pt.api.sales;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,13 +27,14 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/lobs")
+@SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('SYS_ADMIN')")
-public class AdminLobController extends SecuredController {
+public class LobController extends SecuredController {
 
     private final LobService lobService;
 
-    public AdminLobController(LobService lobService,
-                              SecurityContextHelper securityContextHelper) {
+    public LobController(LobService lobService,
+                         SecurityContextHelper securityContextHelper) {
         super(securityContextHelper);
         this.lobService = lobService;
     }

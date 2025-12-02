@@ -1,5 +1,6 @@
-package ru.pt.api;
+package ru.pt.api.sales;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,12 +23,13 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/products")
+@SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('SYS_ADMIN')")
-public class AdminProductController extends SecuredController {
+public class ProductController extends SecuredController {
 
     private final ProductService productService;
 
-    public AdminProductController(ProductService productService, SecurityContextHelper securityContextHelper) {
+    public ProductController(ProductService productService, SecurityContextHelper securityContextHelper) {
         super(securityContextHelper);
         this.productService = productService;
     }

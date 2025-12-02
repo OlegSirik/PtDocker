@@ -1,5 +1,6 @@
 package ru.pt.api.admin;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  * tenantCode: pt, vsk, msg
  */
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/logins")
 public class LoginManagementController extends SecuredController {
 

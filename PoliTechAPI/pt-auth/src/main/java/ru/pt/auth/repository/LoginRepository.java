@@ -22,19 +22,19 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     /**
      * Получить все логины для тенанта
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.id = :tenantId ORDER BY l.createdAt DESC")
-    List<LoginEntity> findByTenantId(@Param("tenantId") Long tenantId);
+    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.id = :tenantCode ORDER BY l.createdAt DESC")
+    List<LoginEntity> findByTenantCode(@Param("tenantCode") String tenantCode);
 
     /**
      * Получить логин по ID и tenant ID
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.id = :id AND l.tenantEntity.id = :tenantId")
-    Optional<LoginEntity> findByIdAndTenantId(@Param("id") Long id, @Param("tenantId") Long tenantId);
+    @Query("SELECT l FROM LoginEntity l WHERE l.id = :id AND l.tenantEntity.id = :tenantCode")
+    Optional<LoginEntity> findByIdAndTenantCode(@Param("id") Long id, @Param("tenantCode") String tenantCode);
 
     /**
      * Проверка существования логина для тенанта
      */
-    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l WHERE l.tenantEntity.code = :tenantId AND l.userLogin = :userLogin")
-    boolean existsByTenantCodeAndUserLogin(@Param("tenantId") String tenantCode, @Param("userLogin") String userLogin);
+    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.userLogin = :userLogin")
+    boolean existsByTenantCodeAndUserLogin(@Param("tenantCode") String tenantCode, @Param("userLogin") String userLogin);
 
 }
