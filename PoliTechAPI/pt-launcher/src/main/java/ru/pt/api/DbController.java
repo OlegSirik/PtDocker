@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Only for storage operations! Assumes no additional business logic
  * Требует аутентификации для всех операций
- *
+ * <p>
  * URL Pattern: /api/v1/{tenantCode}/sales/policies
  * tenantCode: pt, vsk, msg
  * domain: sales
@@ -154,7 +154,7 @@ public class DbController extends SecuredController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/policy/printpf/{policy-nr}/{pf-type}")
+    @PostMapping("/printpf/{policy-nr}/{pf-type}")
     public byte[] printPolicy(
         @PathVariable("policy-nr") String policyNr,
         @PathVariable("pf-type") String pfType,
@@ -201,7 +201,7 @@ public class DbController extends SecuredController {
         for (int i = 0; i < context.size(); i++) {
             JsonNode val = context.get(i);
             try {
-                vars.add(new ObjectMapper().readValue(val.asText(), LobVar.class));
+                vars.add(new ObjectMapper().readValue(val.toString(), LobVar.class));
             } catch (JsonProcessingException e) {
                 logger.error("Не удалось спарcить productVersion.product.vars[{}]", i);
 //                throw new InternalServerErrorException("Обратитесь к администратору");
