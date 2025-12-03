@@ -154,8 +154,10 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional(readOnly = true)
     public CalculatorModel getCalculatorModel(Integer productId, Integer versionNo, Integer packageNo) {
-        CalculatorEntity entity = calculatorRepository.findByKeys(productId, versionNo, packageNo)
-                .orElseThrow(() -> new IllegalArgumentException("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo));
+        CalculatorEntity entity = calculatorRepository.findByKeys(productId, versionNo, packageNo).orElse(null);
+        if (entity == null) {
+            return null;
+        }
         String calculatorJson = entity.getCalculator();
         CalculatorModel calculatorModel = null;
         try {

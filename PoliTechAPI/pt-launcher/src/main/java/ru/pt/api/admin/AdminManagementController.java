@@ -1,8 +1,6 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import lombok.Getter;
-import lombok.Setter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +11,6 @@ import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +73,7 @@ public class AdminManagementController extends SecuredController {
             @RequestBody CreateAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createSysAdmin(
+                    tenantCode,
                     request.getUserLogin(),
                     request.getUserName()
             );

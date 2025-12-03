@@ -25,7 +25,7 @@ public class AdminUserManagementService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminUserManagementService.class);
 
-    private final TenantRepository tenantRepository;
+    private final TenantService tenantService;
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
     private final LoginRepository loginRepository;
@@ -34,14 +34,14 @@ public class AdminUserManagementService {
     private final SecurityContextHelper securityContextHelper;
 
     public AdminUserManagementService(
-            TenantRepository tenantRepository,
+            TenantService tenantService,
             ClientRepository clientRepository,
             AccountRepository accountRepository,
             LoginRepository loginRepository,
             AccountLoginRepository accountLoginRepository,
             ProductRoleRepository productRoleRepository,
             SecurityContextHelper securityContextHelper) {
-        this.tenantRepository = tenantRepository;
+        this.tenantService = tenantService;
         this.clientRepository = clientRepository;
         this.accountRepository = accountRepository;
         this.loginRepository = loginRepository;
@@ -53,7 +53,7 @@ public class AdminUserManagementService {
     // ========== TENANT MANAGEMENT (SYS_ADMIN only) ==========
 
     public List<TenantEntity> getTenants() {
-        return tenantRepository.findAll();
+        return tenantService.findAll();
     }
 
     /**
@@ -67,17 +67,16 @@ public class AdminUserManagementService {
         }
 
         // Проверка уникальности имени
-        if (tenantRepository.findByName(name).isPresent()) {
+        if (tenantService.findByName(name).isPresent()) {
             throw new BadRequestException("Tenant with name '" + name + "' already exists");
         }
 
         TenantEntity tenant = new TenantEntity();
         tenant.setName(name);
         tenant.setCode(code);
-
         tenant.setDeleted(false);
 
-        TenantEntity saved = tenantRepository.save(tenant);
+        TenantEntity saved = tenantService.save(tenant);
         logger.info("Tenant '{}' created by SYS_ADMIN", name);
         return saved;
     }
@@ -92,11 +91,11 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only SYS_ADMIN can update tenants");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(code)
+        TenantEntity tenant = tenantService.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         tenant.setName(name);
-        return tenantRepository.save(tenant);
+        return tenantService.save(tenant);
     }
 
     /**
@@ -110,11 +109,11 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantCode));
 
         tenant.setDeleted(true);
-        tenantRepository.save(tenant);
+        tenantService.save(tenant);
         logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
     }
 
@@ -129,6 +128,7 @@ public class AdminUserManagementService {
      */
     @Transactional
     public AccountLoginEntity createSysAdmin(
+                String tenantCode,
                 String userLogin,
                 String userName) {
 
@@ -138,7 +138,7 @@ public class AdminUserManagementService {
                 throw new ForbiddenException("Only SYS_ADMIN can create TNT_ADMIN users");
             }
     
-            TenantEntity tenant = tenantRepository.findByCode("SYS")
+            TenantEntity tenant = tenantService.findByCode(tenantCode)
                     .orElseThrow(() -> new NotFoundException("Tenant not found"));
     
             // Проверка уникальности логина в tenant
@@ -160,7 +160,6 @@ public class AdminUserManagementService {
             // Создать AccountLogin с ролью TNT_ADMIN
             return createAccountLogin(savedLogin, client, tenantAccount, "SYS_ADMIN");
         }
-    
     
 
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
@@ -184,7 +183,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only SYS_ADMIN can create TNT_ADMIN users");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности логина в tenant
@@ -243,7 +242,7 @@ public class AdminUserManagementService {
         String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
+        TenantEntity tenant = tenantService.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -307,7 +306,7 @@ public class AdminUserManagementService {
         String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
+        TenantEntity tenant = tenantService.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -518,7 +517,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only TNT_ADMIN can create clients");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
+        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
@@ -573,7 +572,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can create accounts");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
+        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentUser.getClientId())
