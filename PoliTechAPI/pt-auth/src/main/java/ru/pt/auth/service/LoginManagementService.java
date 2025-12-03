@@ -12,7 +12,6 @@ import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
-import ru.pt.auth.repository.TenantRepository;
 
 import java.util.List;
 
@@ -26,16 +25,16 @@ public class LoginManagementService {
     private static final Logger logger = LoggerFactory.getLogger(LoginManagementService.class);
 
     private final LoginRepository loginRepository;
-    private final TenantRepository tenantRepository;
+    private final TenantService tenantService;
     private final AccountLoginRepository accountLoginRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LoginManagementService(LoginRepository loginRepository,
-                                 TenantRepository tenantRepository,
+                                 TenantService tenantService,
                                  AccountLoginRepository accountLoginRepository
     ) {
         this.loginRepository = loginRepository;
-        this.tenantRepository = tenantRepository;
+        this.tenantService = tenantService;
         this.accountLoginRepository = accountLoginRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
@@ -57,7 +56,7 @@ public class LoginManagementService {
         }
 
         // Шаг 2: Проверка наличия тенанта по tenantCode
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 3: Проверка уникальности пользователя для данного тенанта
@@ -128,7 +127,7 @@ public class LoginManagementService {
      */
     public LoginEntity updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
         // Шаг 1: Проверка наличия тенанта
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 2: Проверка наличия пользователя
@@ -170,7 +169,7 @@ public class LoginManagementService {
     @Transactional(readOnly = true)
     public List<LoginEntity> getLoginsByTenant(String tenantCode) {
         // Шаг 1: Проверка наличия тенанта
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 2: Получение всех логинов для тенанта
@@ -189,7 +188,7 @@ public class LoginManagementService {
      */
     public LoginEntity deleteLogin(String tenantCode, Long id) {
         // Шаг 1: Проверка наличия тенанта
-        TenantEntity tenant = tenantRepository.findByCode(tenantCode)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 2: Проверка наличия пользователя
