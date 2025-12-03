@@ -1,21 +1,29 @@
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { EnvService } from '../env.service';
+import { AuthService } from '../auth.service';
 
 export abstract class BaseApiService<T> {
   protected constructor(
     protected http: HttpClient,
     protected env: EnvService,
-    protected resourcePath: string // например "users"
+    protected resourcePath: string, // например "users"
+    protected authService: AuthService
   ) {}
 
   getUrl(id?: (number | string)): string {
+
     let url = this.resourcePath;
-    
+    let tenantId = this.env.TENANT_HEADER;
     if (id) {
       url += '/' + id;
     }
-    return this.env.BASE_URL + '/' + url;
+    console.log('getUrl: ' + this.env.BASE_URL + '/api/v1/' + tenantId + '/' + url);
+
+    let url2 = this.authService.baseApiUrl.toString();
+    console.log('url2', url2);
+    return url2 + '/' + url;
+    //return this.env.BASE_URL + '/api/v1/' + tenantId + '/' + url;
   }
   
   /** Получить все записи */

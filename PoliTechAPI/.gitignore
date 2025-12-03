@@ -60,6 +60,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# pt-launcher bin directory
+pt-launcher/bin/
+
 # Node.js (if any frontend components)
 node_modules/
 npm-debug.log*

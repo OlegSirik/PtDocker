@@ -6,25 +6,22 @@ import { EnvService } from '../env.service';
 import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
 
-export interface Client {
+export interface Tenant {
     id?: number;
-    tid: number;
-    code: string;
     name: string;
-    description: string;
-    trusted_email: string;
+    code: string;
+    isDeleted: boolean;
     createdAt?: Date | string;
-    updateAt?: Date | string;
-    status: 'ACTIVE' | 'DELETED' | 'SUSPENDED';
+    updatedAt?: Date | string;
   }
 
 @Injectable({
   providedIn: 'root'
 })
 
-export class ClientsService extends BaseApiService<Client> {
+export class TenantsService extends BaseApiService<Tenant> {
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
-    super(http, env, 'admin/clients', authService);
+    super(http, env, 'admin/tenants', authService);
   }
 
 

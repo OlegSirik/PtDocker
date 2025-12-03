@@ -3,6 +3,8 @@ package ru.pt.api.admin;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.Getter;
 import lombok.Setter;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,8 +13,11 @@ import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Контроллер для управления администраторами всех уровней
@@ -34,7 +39,85 @@ public class AdminManagementController extends SecuredController {
         this.adminUserManagementService = adminUserManagementService;
     }
 
+    // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN) ==========
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/sys-admins
+     */
+    @GetMapping("/sys-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getSysAdmins() {
+        try {
+            List<AccountLoginEntity> accountLogins = adminUserManagementService.getSysAdmins();
+
+            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", accountLogin.getId());
+                response.put("userLogin", accountLogin.getUserLogin());
+                response.put("userRole", accountLogin.getUserRole());
+                response.put("accountId", accountLogin.getAccount().getId());
+                return response;
+            }).collect(Collectors.toList()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
+     */
+    @PostMapping("/sys-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> createSysAdmin(
+            @PathVariable String tenantCode,
+            @RequestBody CreateAdminRequest request) {
+        try {
+            AccountLoginEntity accountLogin = adminUserManagementService.createSysAdmin(
+                    request.getUserLogin(),
+                    request.getUserName()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", accountLogin.getId());
+            response.put("userLogin", accountLogin.getUserLogin());
+            response.put("userRole", accountLogin.getUserRole());
+            response.put("accountId", accountLogin.getAccount().getId());
+
+            return buildCreatedResponse(response, "SYS_ADMIN user created successfully");
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN) ==========
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
+     */
+    @GetMapping("/tnt-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getTntAdmins(
+            @PathVariable String tenantCode) {
+        try {
+            List<AccountLoginEntity> accountLogins = adminUserManagementService.getTntAdmins(tenantCode);
+
+            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", accountLogin.getId());
+                response.put("userLogin", accountLogin.getUserLogin());
+                response.put("userRole", accountLogin.getUserRole());
+                response.put("accountId", accountLogin.getAccount().getId());
+                return response;
+            }).collect(Collectors.toList()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
 
     /**
      * SYS_ADMIN: Создание TNT_ADMIN пользователя

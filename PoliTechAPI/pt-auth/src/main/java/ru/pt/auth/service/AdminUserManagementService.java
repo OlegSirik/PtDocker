@@ -52,6 +52,10 @@ public class AdminUserManagementService {
 
     // ========== TENANT MANAGEMENT (SYS_ADMIN only) ==========
 
+    public List<TenantEntity> getTenants() {
+        return tenantRepository.findAll();
+    }
+
     /**
      * SYS_ADMIN: Создание нового tenant
      */
@@ -79,6 +83,23 @@ public class AdminUserManagementService {
     }
 
     /**
+     * SYS_ADMIN: Обновление tenant
+     */
+    @Transactional
+    public TenantEntity updateTenant(String name, String code) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only SYS_ADMIN can update tenants");
+        }
+
+        TenantEntity tenant = tenantRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        tenant.setName(name);
+        return tenantRepository.save(tenant);
+    }
+
+    /**
      * SYS_ADMIN: Удаление tenant (soft delete)
      */
     @Transactional
@@ -97,7 +118,56 @@ public class AdminUserManagementService {
         logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
     }
 
+    // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
+
+    public List<AccountLoginEntity> getSysAdmins() {
+        return accountLoginRepository.findByTenantAndUserRole("SYS", "SYS_ADMIN");
+    }
+
+        /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя для tenant
+     */
+    @Transactional
+    public AccountLoginEntity createSysAdmin(
+                String userLogin,
+                String userName) {
+
+            // Проверка прав
+            UserDetailsImpl currentUser = getCurrentUser();
+            if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
+                throw new ForbiddenException("Only SYS_ADMIN can create TNT_ADMIN users");
+            }
+    
+            TenantEntity tenant = tenantRepository.findByCode("SYS")
+                    .orElseThrow(() -> new NotFoundException("Tenant not found"));
+    
+            // Проверка уникальности логина в tenant
+            LoginEntity savedLogin = loginRepository.findByTenantCodeAndUserLogin("SYS", userLogin)
+                .orElseGet(() -> {
+                    LoginEntity newLogin = new LoginEntity();
+                    newLogin.setTenant(tenant);
+                    newLogin.setFullName("SYS_ADMIN");
+                    newLogin.setUserLogin(userLogin);
+                    return loginRepository.save(newLogin);
+                });
+    
+            // Создать или получить TENANT account
+            AccountEntity tenantAccount = getOrCreateTenantAccount(tenant);
+    
+            // Создать Client для этого tenant
+            ClientEntity client = createDefaultClient(tenant);
+    
+            // Создать AccountLogin с ролью TNT_ADMIN
+            return createAccountLogin(savedLogin, client, tenantAccount, "SYS_ADMIN");
+        }
+    
+    
+
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
+
+    public List<AccountLoginEntity> getTntAdmins(String tenantCode) {
+        return accountLoginRepository.findByTenantAndUserRole(tenantCode, "TNT_ADMIN");
+    }
 
     /**
      * SYS_ADMIN: Создание TNT_ADMIN пользователя для tenant
@@ -635,5 +705,6 @@ public class AdminUserManagementService {
             return map;
         }).collect(java.util.stream.Collectors.toList());
     }
+
 }
 

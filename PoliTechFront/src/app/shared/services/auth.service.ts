@@ -43,9 +43,11 @@ export class AuthService {
   private http = inject(HttpClient);
   private baseUrl: string = inject(BASE_URL);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+
   public get baseApiUrl() {
     return `${this.baseUrl}/api/v1/${this.tenant}`;
   }
+
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
   public tenant = '';
@@ -65,7 +67,7 @@ export class AuthService {
   getCurrentUser(): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
       .pipe(
-        tap(user => {
+        tap(user=> {
           this.currentUserSubject.next(user);
           this.tenant = user.tenantCode;
           console.log('this.tenant', this.tenant);
