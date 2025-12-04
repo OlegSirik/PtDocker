@@ -57,4 +57,6 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      */
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId ORDER BY a.name")
     List<AccountEntity> findByTenantCodeAndClientId(String tenantCode, Long clientId);
+
+    List<AccountEntity> findAllByParent_Id(Long parentId);
 }

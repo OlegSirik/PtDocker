@@ -1,5 +1,6 @@
 package ru.pt.api.service.product;
 
+import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
 
 import java.util.List;
@@ -91,4 +92,10 @@ public interface ProductService {
      */
     ProductVersionModel getProductByCode(String code, boolean forDev);
 
+    /**
+     * Получить продукт по идентификатору аккаунта
+     * @param accountId идентификатору аккаунта
+     * @return список продуктов
+     */
+    List<Product> getProductByAccountId(String accountId);
 }
