@@ -57,11 +57,11 @@ public class AuthenticationController {
         response.put("authorities", userDetails.getAuthorities());
         response.put("isDefault", userDetails.isDefault());
 
-        var accountId = userDetails.getAccountId();
-        var accounts = accountService.getAccountsByParentId(accountId);
-
-        response.put("accountId", accountId);
-        response.put("accounts", accounts);
+//        var accountId = userDetails.getAccountId();
+//        var accounts = accountService.getAccountsByParentId(accountId);
+//
+//        response.put("accountId", accountId);
+//        response.put("accounts", accounts);
 
         return ResponseEntity.ok(response);
     }
