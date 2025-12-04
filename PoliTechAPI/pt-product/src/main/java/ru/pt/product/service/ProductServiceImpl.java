@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,10 @@ import ru.pt.api.service.product.ProductService;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 import ru.pt.product.repository.ProductRepository;
+import ru.pt.product.repository.ProductRoleRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
+import ru.pt.product.utils.ProductMapper;
 
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -28,23 +31,18 @@ import static ru.pt.api.utils.DateTimeUtils.formatter;
 
 
 @Component
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final ProductRepository productRepository;
+    private final ProductRoleRepository productRoleRepository;
+    private final ProductMapper productMapper;
     private final LobService lobService;
     private final ObjectMapper objectMapper;
     private final ProductVersionRepository productVersionRepository;
     private final NumberGeneratorService numberGeneratorService;
-
-    public ProductServiceImpl(ProductRepository productRepository, LobService lobService, ObjectMapper objectMapper, ProductVersionRepository productVersionRepository, NumberGeneratorService numberGeneratorService) {
-        this.productRepository = productRepository;
-        this.lobService = lobService;
-        this.objectMapper = objectMapper;
-        this.productVersionRepository = productVersionRepository;
-        this.numberGeneratorService = numberGeneratorService;
-    }
 
     @Override
     public List<Map<String, Object>> listSummaries() {
@@ -410,6 +408,12 @@ public class ProductServiceImpl implements ProductService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<Product> getProductByAccountId(String accountId) {
+        var productId = productRepository.findProductIdEntityByAccountId(accountId);
+        return productRepository.findAllById(productId).stream().map(productMapper::toDto).toList();
     }
 
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +22,8 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
+import ru.pt.db.service.DbStorageService;
+import ru.pt.process.utils.JsonProjection;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 
@@ -32,7 +33,7 @@ import java.util.*;
 /**
  * Only for storage operations! Assumes no additional business logic
  * Требует аутентификации для всех операций
- *
+ * <p>
  * URL Pattern: /api/v1/{tenantCode}/sales/policies
  * tenantCode: pt, vsk, msg
  * domain: sales
@@ -51,8 +52,13 @@ public class DbController extends SecuredController {
     private final ProductRepository productRepository;
     private final FileService fileService;
     private final PreProcessService preProcessService;
+    private final DbStorageService dbStorageService;
 
-    public DbController(ProcessOrchestrator processOrchestrator, SecurityContextHelper securityContextHelper, PolicyIndexRepository policyIndexRepository, PolicyRepository policyRepository, ProductVersionRepository productVersionRepository, ProductRepository productRepository, FileService fileService, PreProcessService preProcessService) {
+    public DbController(ProcessOrchestrator processOrchestrator, SecurityContextHelper securityContextHelper,
+                        PolicyIndexRepository policyIndexRepository, PolicyRepository policyRepository,
+                        ProductVersionRepository productVersionRepository, ProductRepository productRepository,
+                        FileService fileService, PreProcessService preProcessService, DbStorageService dbStorageService
+    ) {
         super(securityContextHelper);
         this.processOrchestrator = processOrchestrator;
         this.policyIndexRepository = policyIndexRepository;
@@ -61,8 +67,8 @@ public class DbController extends SecuredController {
         this.productRepository = productRepository;
         this.fileService = fileService;
         this.preProcessService = preProcessService;
+        this.dbStorageService = dbStorageService;
     }
-
 
     /**
      * Create a new policy
@@ -75,8 +81,7 @@ public class DbController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody String request) {
         requireAuthenticated(user);
-        // TODO: Извлечь productCode из request и проверить права
-        // requireProductPolicy(user, productCode);
+        requireProductPolicy(user, new JsonProjection(request).getProductCode());
         return ResponseEntity.ok(processOrchestrator.createPolicy(request));
     }
 
@@ -111,6 +116,19 @@ public class DbController extends SecuredController {
         requireAuthenticated(user);
         PolicyData policy = processOrchestrator.getPolicyById(policyId);
         return ResponseEntity.ok(policy);
+    }
+
+    /**
+     * Get policy by ID
+     * GET /api/v1/{tenantCode}/sales/policies
+     * Требуется право READ на продукт
+     */
+    @GetMapping
+    public ResponseEntity<List<PolicyData>> getPolicies(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user) {
+        requireAuthenticated(user);
+        return ResponseEntity.ok(dbStorageService.getPoliciesForUser());
     }
 
     /**
@@ -212,15 +230,13 @@ public class DbController extends SecuredController {
         }
 
         lobModel.setMpVars(vars);
+        vars.forEach(it -> it.setVarValue(null));
         vars = preProcessService.evaluateAndEnrichVariables(policy.getPolicy(), lobModel, productVersion.getProduct());
         Map<String, String> keyValues = new HashMap<>();
 
         for (LobVar node : vars) {
             String key = node.getVarCode();
             String value = node.getVarValue();
-            if (StringUtils.isBlank(value)) {
-                value = node.getVarPath();
-            }
             System.out.println(key + " " + value);
             keyValues.put(key, value);
         }
@@ -245,4 +261,3 @@ public class DbController extends SecuredController {
         }
     }
 }
-

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
@@ -19,8 +20,10 @@ import ru.pt.auth.repository.ProductRoleRepository;
 import ru.pt.auth.utils.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
@@ -32,19 +35,6 @@ public class AccountServiceImpl implements AccountService {
     private final LoginMapper loginMapper;
     private final ProductRoleMapper productRoleMapper;
     private final TenantMapper tenantMapper;
-
-    public AccountServiceImpl(AccountRepository accountRepository, ProductRoleRepository productRoleRepository, AccountLoginRepository accountLoginRepository, AccountMapper accountMapper, AccountLoginMapper accountLoginMapper, ClientMapper clientMapper, LoginMapper loginMapper, ProductRoleMapper productRoleMapper, TenantMapper tenantMapper) {
-        this.accountRepository = accountRepository;
-        this.productRoleRepository = productRoleRepository;
-        this.accountLoginRepository = accountLoginRepository;
-        this.accountMapper = accountMapper;
-        this.accountLoginMapper = accountLoginMapper;
-        this.clientMapper = clientMapper;
-        this.loginMapper = loginMapper;
-        this.productRoleMapper = productRoleMapper;
-        this.tenantMapper = tenantMapper;
-    }
-
 
     @Override
     public Account getAccountById(Long id) {
@@ -67,7 +57,9 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account createGroup(String name, Long parentId) {
         AccountEntity parentAccount = accountRepository.findById(parentId).orElseThrow();
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT && parentAccount.getNodeType() != AccountNodeType.GROUP) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT
+            && parentAccount.getNodeType() != AccountNodeType.GROUP
+        ) {
             throw new BadRequestException("Parent ID must be a client or group account");
         }
         if (name == null || name.trim().isEmpty()) {
@@ -229,7 +221,8 @@ public class AccountServiceImpl implements AccountService {
 
         ArrayNode arrayNode2 = jsonNode.putArray("productRoles");
 
-        List<Map<String, Object>> roles = productRoleRepository.findAllProductRolesByAccountId(accountLogin.getAccount().getId());
+        List<Map<String, Object>> roles =
+            productRoleRepository.findAllProductRolesByAccountId(accountLogin.getAccount().getId());
         HashSet<String> allRoles = new HashSet();
         for (Map<String, Object> role : roles) {
             String productName = role.get("roleProductCode").toString();
@@ -253,7 +246,13 @@ public class AccountServiceImpl implements AccountService {
             }
         }
 
-
         return jsonNode;
+    }
+
+    @Override
+    public List<Account> getAccountsByParentId(Long parentId) {
+        return accountRepository.findAllByParent_Id(parentId)
+            .stream().map(accountMapper::toDto)
+            .collect(Collectors.toList());
     }
 }

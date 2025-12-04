@@ -1,7 +1,8 @@
-package ru.pt.auth.entity;
+package ru.pt.product.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 @Table(name = "acc_product_roles",
         uniqueConstraints = @UniqueConstraint(name = "acc_product_roles_uk",
                 columnNames = {"account_id", "role_product_id", "role_account_id"}))
@@ -67,8 +69,4 @@ public class ProductRoleEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    // constructors, getters, setters
-    public ProductRoleEntity() {
-    }
 }
