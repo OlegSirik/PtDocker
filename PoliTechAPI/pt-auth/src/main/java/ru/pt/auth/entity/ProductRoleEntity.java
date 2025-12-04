@@ -1,15 +1,12 @@
 package ru.pt.auth.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+
 @Entity
 @Table(name = "acc_product_roles",
         uniqueConstraints = @UniqueConstraint(name = "acc_product_roles_uk",
@@ -70,5 +67,125 @@ public class ProductRoleEntity {
 
     // constructors, getters, setters
     public ProductRoleEntity() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public TenantEntity getTenant() {
+        return tenantEntity;
+    }
+
+    public void setTenant(TenantEntity tenantEntity) {
+        this.tenantEntity = tenantEntity;
+    }
+
+    public ClientEntity getClient() {
+        return clientEntity;
+    }
+
+    public void setClient(ClientEntity clientEntity) {
+        this.clientEntity = clientEntity;
+    }
+
+    public AccountEntity getAccount() {
+        return accountEntity;
+    }
+
+    public void setAccount(AccountEntity accountEntity) {
+        this.accountEntity = accountEntity;
+    }
+
+    public Long getRoleProductId() {
+        return roleProductId;
+    }
+
+    public void setRoleProductId(Long roleProductId) {
+        this.roleProductId = roleProductId;
+    }
+
+    public AccountEntity getRoleAccount() {
+        return roleAccountEntity;
+    }
+
+    public void setRoleAccount(AccountEntity roleAccountEntity) {
+        this.roleAccountEntity = roleAccountEntity;
+    }
+
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public Boolean getCanRead() {
+        return canRead;
+    }
+
+    public void setCanRead(Boolean canRead) {
+        this.canRead = canRead;
+    }
+
+    public Boolean getCanQuote() {
+        return canQuote;
+    }
+
+    public void setCanQuote(Boolean canQuote) {
+        this.canQuote = canQuote;
+    }
+
+    public Boolean getCanPolicy() {
+        return canPolicy;
+    }
+
+    public void setCanPolicy(Boolean canPolicy) {
+        this.canPolicy = canPolicy;
+    }
+
+    public Boolean getCanAddendum() {
+        return canAddendum;
+    }
+
+    public void setCanAddendum(Boolean canAddendum) {
+        this.canAddendum = canAddendum;
+    }
+
+    public Boolean getCanCancel() {
+        return canCancel;
+    }
+
+    public void setCanCancel(Boolean canCancel) {
+        this.canCancel = canCancel;
+    }
+
+    public Boolean getCanProlongate() {
+        return canProlongate;
+    }
+
+    public void setCanProlongate(Boolean canProlongate) {
+        this.canProlongate = canProlongate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

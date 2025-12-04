@@ -17,7 +17,6 @@ import ru.pt.api.service.product.ProductService;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 import ru.pt.product.repository.ProductRepository;
-import ru.pt.product.repository.ProductRoleRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
 import ru.pt.product.utils.ProductMapper;
@@ -37,7 +36,6 @@ public class ProductServiceImpl implements ProductService {
     private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final ProductRepository productRepository;
-    private final ProductRoleRepository productRoleRepository;
     private final ProductMapper productMapper;
     private final LobService lobService;
     private final ObjectMapper objectMapper;
