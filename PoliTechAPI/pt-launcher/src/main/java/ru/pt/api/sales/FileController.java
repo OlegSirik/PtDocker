@@ -1,5 +1,6 @@
-package ru.pt.api;
+package ru.pt.api.sales;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +26,14 @@ import java.util.Map;
  * tenantCode: pt, vsk, msg
  */
 @RestController
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin/files")
-public class AdminFileController extends SecuredController {
+public class FileController extends SecuredController {
 
     private final FileService fileService;
 
-    public AdminFileController(FileService fileService,
-                               SecurityContextHelper securityContextHelper) {
+    public FileController(FileService fileService,
+                          SecurityContextHelper securityContextHelper) {
         super(securityContextHelper);
         this.fileService = fileService;
     }
@@ -108,7 +110,7 @@ public class AdminFileController extends SecuredController {
     // POST /api/v1/{tenantCode}/admin/files/{fileId}/cmd/process
     @PostMapping("/{fileId}/cmd/process")
     public ResponseEntity<byte[]> process(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("fileId") Long fileId,
             @RequestBody List<Map<String, String>> pairs) {

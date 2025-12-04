@@ -6,25 +6,21 @@ import { EnvService } from '../env.service';
 import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
 
-export interface Client {
+export interface SysAdmin {
     id?: number;
-    tid: number;
-    code: string;
-    name: string;
-    description: string;
-    trusted_email: string;
-    createdAt?: Date | string;
-    updateAt?: Date | string;
-    status: 'ACTIVE' | 'DELETED' | 'SUSPENDED';
+    tenantId: number;
+    userLogin: string;
+    userName: string;
+    fullName: string;
   }
 
 @Injectable({
   providedIn: 'root'
 })
 
-export class ClientsService extends BaseApiService<Client> {
+export class SysAdminService extends BaseApiService<SysAdmin> {
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
-    super(http, env, 'admin/clients', authService);
+    super(http, env, 'admin/admins/sys-admins', authService);
   }
 
 

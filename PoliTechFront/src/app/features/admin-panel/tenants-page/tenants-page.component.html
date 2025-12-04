@@ -1,46 +1,180 @@
-<div class="page-container">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>apartment</mat-icon>
-        Tenants
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <table mat-table [dataSource]="tenants" class="tenants-table">
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef>ID</th>
-          <td mat-cell *matCellDef="let tenant">{{ tenant.id }}</td>
-        </ng-container>
+<div class="tenants-container">
+  <div class="page-header">
+    <h1 class="page-title">Tenants</h1>
+  </div>
 
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let tenant">{{ tenant.name }}</td>
-        </ng-container>
+  <mat-tab-group>
+    <!-- Tenants Tab -->
+    <mat-tab label="Tenants">
+      <mat-card class="datatable-card">
+        <mat-card-content>
+          <div class="button-section">
+            <button mat-raised-button color="primary" class="add-button" (click)="createNewTenant()">
+              <mat-icon>add</mat-icon>
+              Новый tenant
+            </button>
+          </div>
 
-        <ng-container matColumnDef="trusted_email">
-          <th mat-header-cell *matHeaderCellDef>Trusted Email</th>
-          <td mat-cell *matCellDef="let tenant">{{ tenant.trusted_email }}</td>
-        </ng-container>
+          <div class="table-header">
+            <h3>список tenants</h3>
+          </div>
 
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let tenant">
-            <mat-chip>{{ tenant.status }}</mat-chip>
-          </td>
-        </ng-container>
+          <table mat-table [dataSource]="filteredTenants" class="business-table">
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let element">{{element.id}}</td>
+            </ng-container>
 
-        <ng-container matColumnDef="createdAt">
-          <th mat-header-cell *matHeaderCellDef>Created At</th>
-          <td mat-cell *matCellDef="let tenant">
-            {{ tenant.createdAt | date: 'short' }}
-          </td>
-        </ng-container>
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let element">{{element.name}}</td>
+            </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+            <ng-container matColumnDef="code">
+              <th mat-header-cell *matHeaderCellDef>Code</th>
+              <td mat-cell *matCellDef="let element">{{element.code}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Created At</th>
+              <td mat-cell *matCellDef="let element">{{element.createdAt | date: 'short'}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>...</th>
+              <td mat-cell *matCellDef="let element">
+                <div class="action-buttons">
+                  <button mat-button color="warn" class="action-button" (click)="deleteTenant(element)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="tenantsDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: tenantsDisplayedColumns;" (click)="editTenant(row)" class="clickable-row"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- Sys Admins Tab -->
+    <mat-tab label="Sys Admins">
+      <mat-card class="datatable-card">
+        <mat-card-content>
+          <div class="button-section">
+            <button mat-raised-button color="primary" class="add-button" (click)="createNewSysAdmin()">
+              <mat-icon>add</mat-icon>
+              Новый sys admin
+            </button>
+          </div>
+
+          <div class="table-header">
+            <h3>список sys admins</h3>
+          </div>
+
+          <table mat-table [dataSource]="filteredSysAdmins" class="business-table">
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let element">{{element.id}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="userLogin">
+              <th mat-header-cell *matHeaderCellDef>User Login</th>
+              <td mat-cell *matCellDef="let element">{{element.userLogin}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="userName">
+              <th mat-header-cell *matHeaderCellDef>User Name</th>
+              <td mat-cell *matCellDef="let element">{{element.userName}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="fullName">
+              <th mat-header-cell *matHeaderCellDef>Full Name</th>
+              <td mat-cell *matCellDef="let element">{{element.fullName}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>...</th>
+              <td mat-cell *matCellDef="let element">
+                <div class="action-buttons">
+                  <button mat-button color="warn" class="action-button" (click)="deleteSysAdmin(element)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="sysAdminsDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: sysAdminsDisplayedColumns;" (click)="editSysAdmin(row)" class="clickable-row"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- TNT Admins Tab -->
+    <mat-tab label="TNT Admins">
+      <mat-card class="datatable-card">
+        <mat-card-content>
+          <div class="button-section">
+            <button mat-raised-button color="primary" class="add-button" (click)="createNewTntAdmin()">
+              <mat-icon>add</mat-icon>
+              Новый tnt admin
+            </button>
+          </div>
+
+          <div class="table-header">
+            <h3>список tnt admins</h3>
+            <div style="display: flex; gap: 12px;">
+              <mat-form-field class="search-field" appearance="outline">
+                <mat-label>Tenant</mat-label>
+                <mat-select [(ngModel)]="tntAdminsFilterTenantCode" (ngModelChange)="onTntAdminsFilterChange($event)">
+                  <mat-option [value]="null">Все tenants</mat-option>
+                  @for (tenant of tenantListItems; track tenant.id) {
+                    <mat-option [value]="tenant.code">{{ tenant.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <table mat-table [dataSource]="filteredTntAdmins" class="business-table">
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let element">{{element.id}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="userLogin">
+              <th mat-header-cell *matHeaderCellDef>User Login</th>
+              <td mat-cell *matCellDef="let element">{{element.userLogin}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="userName">
+              <th mat-header-cell *matHeaderCellDef>User Name</th>
+              <td mat-cell *matCellDef="let element">{{element.userName}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="fullName">
+              <th mat-header-cell *matHeaderCellDef>Full Name</th>
+              <td mat-cell *matCellDef="let element">{{element.fullName}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>...</th>
+              <td mat-cell *matCellDef="let element">
+                <div class="action-buttons">
+                  <button mat-button color="warn" class="action-button" (click)="deleteTntAdmin(element)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="tntAdminsDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: tntAdminsDisplayedColumns;" (click)="editTntAdmin(row)" class="clickable-row"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
 </div>
-

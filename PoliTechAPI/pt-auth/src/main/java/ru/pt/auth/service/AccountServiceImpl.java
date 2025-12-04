@@ -30,11 +30,7 @@ public class AccountServiceImpl implements AccountService {
     private final ProductRoleRepository productRoleRepository;
     private final AccountLoginRepository accountLoginRepository;
     private final AccountMapper accountMapper;
-    private final AccountLoginMapper accountLoginMapper;
-    private final ClientMapper clientMapper;
-    private final LoginMapper loginMapper;
     private final ProductRoleMapper productRoleMapper;
-    private final TenantMapper tenantMapper;
 
     @Override
     public Account getAccountById(Long id) {

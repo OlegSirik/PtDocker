@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Бэкенд на Spring Boot 3
+  backend:
+    build:
+      context: ./PoliTechAPI
+      dockerfile: DockerfileMacLocal
+      no_cache: true
+    # image: fant560/papi:2.0
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/pt-db
+      SPRING_DATASOURCE_USERNAME: spring
+      SPRING_DATASOURCE_PASSWORD: spring
+      SERVER_PORT: 8080
+      DEBUG: true
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Фронтенд
+  frontend:
+    build:
+      context: ./PoliTechFront
+      dockerfile: DockerfileMacLocal
+    # image: fant560/papi-front:latest
+    environment:
+      BASE_URL: http://localhost:8080
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+

@@ -1,4 +1,4 @@
-package ru.pt.api;
+package ru.pt.api.handler;
 
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.slf4j.Logger;
@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.pt.api.dto.errors.ErrorModel;
@@ -21,6 +22,13 @@ public class ApiExceptionHandler {
         log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ex.getErrorModel());
+    }
+
+    @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<ErrorModel> handleNotSupported(HttpRequestMethodNotSupportedException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorModel(400, ex.getMessage()));
     }
 
     @ExceptionHandler(AuthenticationException.class)

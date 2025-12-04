@@ -1,5 +1,6 @@
 package ru.pt.files.service;
 
+import com.jayway.jsonpath.JsonPath;
 import jakarta.transaction.Transactional;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -11,13 +12,8 @@ import ru.pt.api.service.file.FileService;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
 
-import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,11 +23,9 @@ import java.util.Map;
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
-    private final DataSource dataSource;
 
-    public FileServiceImpl(FileRepository fileRepository, DataSource dataSource) {
+    public FileServiceImpl(FileRepository fileRepository) {
         this.fileRepository = fileRepository;
-        this.dataSource = dataSource;
     }
 
     @Transactional
@@ -133,7 +127,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public byte[] getFile(String fileType, Map<String, String> keyValues) {
 
-        String productCode = keyValues.get("product");
+        String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
         String packageCode = keyValues.get("packageCode");
 
         FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))

@@ -1,7 +1,8 @@
 package ru.pt.api.admin;
 
-import lombok.Getter;
-import lombok.Setter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,17 +12,20 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Контроллер для управления администраторами всех уровней
  * TNT_ADMIN, GROUP_ADMIN, PRODUCT_ADMIN
  *
- * URL Pattern: /api/v1/{tenantId}/admin/admins
- * tenantId: pt, vsk, msg
+ * URL Pattern: /api/v1/{tenantCode}/admin/admins
+ * tenantCode: pt, vsk, msg
  */
 @RestController
-@RequestMapping("/api/v1/{tenantId}/admin/admins")
+@SecurityRequirement(name = "bearerAuth")
+@RequestMapping("/api/v1/{tenantCode}/admin/admins")
 public class AdminManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -32,20 +36,99 @@ public class AdminManagementController extends SecuredController {
         this.adminUserManagementService = adminUserManagementService;
     }
 
+    // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN) ==========
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/sys-admins
+     */
+    @GetMapping("/sys-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getSysAdmins() {
+        try {
+            List<AccountLoginEntity> accountLogins = adminUserManagementService.getSysAdmins();
+
+            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", accountLogin.getId());
+                response.put("userLogin", accountLogin.getUserLogin());
+                response.put("userRole", accountLogin.getUserRole());
+                response.put("accountId", accountLogin.getAccount().getId());
+                return response;
+            }).collect(Collectors.toList()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
+     */
+    @PostMapping("/sys-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> createSysAdmin(
+            @PathVariable String tenantCode,
+            @RequestBody CreateAdminRequest request) {
+        try {
+            AccountLoginEntity accountLogin = adminUserManagementService.createSysAdmin(
+                    tenantCode,
+                    request.getUserLogin(),
+                    request.getUserName()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", accountLogin.getId());
+            response.put("userLogin", accountLogin.getUserLogin());
+            response.put("userRole", accountLogin.getUserRole());
+            response.put("accountId", accountLogin.getAccount().getId());
+
+            return buildCreatedResponse(response, "SYS_ADMIN user created successfully");
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN) ==========
 
     /**
      * SYS_ADMIN: Создание TNT_ADMIN пользователя
-     * POST /api/v1/{tenantId}/admin/admins/tnt-admins
+     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
+     */
+    @GetMapping("/tnt-admins")
+    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getTntAdmins(
+            @PathVariable String tenantCode) {
+        try {
+            List<AccountLoginEntity> accountLogins = adminUserManagementService.getTntAdmins(tenantCode);
+
+            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", accountLogin.getId());
+                response.put("userLogin", accountLogin.getUserLogin());
+                response.put("userRole", accountLogin.getUserRole());
+                response.put("accountId", accountLogin.getAccount().getId());
+                return response;
+            }).collect(Collectors.toList()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+
+    /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя
+     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
      */
     @PostMapping("/tnt-admins")
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> createTntAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @RequestBody CreateTntAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createTntAdmin(
-                    request.getTenantId(),
+                    request.getTenantCode(),
                     request.getFullName(),
                     request.getUserLogin(),
                     request.getUserName()
@@ -65,12 +148,12 @@ public class AdminManagementController extends SecuredController {
 
     /**
      * SYS_ADMIN: Удаление TNT_ADMIN пользователя
-     * DELETE /api/v1/{tenantId}/admin/admins/tnt-admins/{adminId}
+     * DELETE /api/v1/{tenantCode}/admin/admins/tnt-admins/{adminId}
      */
     @DeleteMapping("/tnt-admins/{adminId}")
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteTntAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @PathVariable Long adminId) {
         try {
 
@@ -89,12 +172,12 @@ public class AdminManagementController extends SecuredController {
 
     /**
      * TNT_ADMIN: Создание GROUP_ADMIN пользователя
-     * POST /api/v1/{tenantId}/admin/admins/group-admins
+     * POST /api/v1/{tenantCode}/admin/admins/group-admins
      */
     @PostMapping("/group-admins")
     @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> createGroupAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @RequestBody CreateAdminRequest request) {
         try {
 
@@ -118,12 +201,12 @@ public class AdminManagementController extends SecuredController {
 
     /**
      * TNT_ADMIN: Удаление GROUP_ADMIN пользователя
-     * DELETE /api/v1/{tenantId}/admin/admins/group-admins/{adminId}
+     * DELETE /api/v1/{tenantCode}/admin/admins/group-admins/{adminId}
      */
     @DeleteMapping("/group-admins/{adminId}")
     @PreAuthorize("hasRole('TNT_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteGroupAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @PathVariable Long adminId) {
         try {
 
@@ -142,12 +225,12 @@ public class AdminManagementController extends SecuredController {
 
     /**
      * GROUP_ADMIN: Создание PRODUCT_ADMIN пользователя
-     * POST /api/v1/{tenantId}/admin/admins/product-admins
+     * POST /api/v1/{tenantCode}/admin/admins/product-admins
      */
     @PostMapping("/product-admins")
     @PreAuthorize("hasRole('GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> createProductAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @RequestBody CreateAdminRequest request) {
         try {
             AccountLoginEntity accountLogin = adminUserManagementService.createProductAdmin(
@@ -171,12 +254,12 @@ public class AdminManagementController extends SecuredController {
 
     /**
      * GROUP_ADMIN: Редактирование PRODUCT_ADMIN пользователя
-     * PUT /api/v1/{tenantId}/admin/admins/product-admins/{adminId}
+     * PUT /api/v1/{tenantCode}/admin/admins/product-admins/{adminId}
      */
     @PutMapping("/product-admins/{adminId}")
     @PreAuthorize("hasRole('GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateProductAdmin(
-            @PathVariable String tenantId,
+            @PathVariable String tenantCode,
             @PathVariable Long adminId,
             @RequestBody UpdateAdminRequest request) {
         try {
@@ -198,17 +281,17 @@ public class AdminManagementController extends SecuredController {
 
     // DTO Classes
     public static class CreateTntAdminRequest {
-        private Long tenantId;
+        private String tenantCode;
         private String userLogin;
         private String userName;
         private String fullName;
 
-        public Long getTenantId() {
-            return tenantId;
+        public String getTenantCode() {
+            return tenantCode;
         }
 
-        public void setTenantId(Long tenantId) {
-            this.tenantId = tenantId;
+        public void setTenantCode(String tenantCode) {
+            this.tenantCode = tenantCode;
         }
 
         public String getUserLogin() {

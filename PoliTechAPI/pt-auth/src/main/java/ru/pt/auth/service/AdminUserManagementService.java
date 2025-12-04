@@ -25,7 +25,7 @@ public class AdminUserManagementService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminUserManagementService.class);
 
-    private final TenantRepository tenantRepository;
+    private final TenantService tenantService;
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
     private final LoginRepository loginRepository;
@@ -34,14 +34,14 @@ public class AdminUserManagementService {
     private final SecurityContextHelper securityContextHelper;
 
     public AdminUserManagementService(
-            TenantRepository tenantRepository,
+            TenantService tenantService,
             ClientRepository clientRepository,
             AccountRepository accountRepository,
             LoginRepository loginRepository,
             AccountLoginRepository accountLoginRepository,
             ProductRoleRepository productRoleRepository,
             SecurityContextHelper securityContextHelper) {
-        this.tenantRepository = tenantRepository;
+        this.tenantService = tenantService;
         this.clientRepository = clientRepository;
         this.accountRepository = accountRepository;
         this.loginRepository = loginRepository;
@@ -51,6 +51,10 @@ public class AdminUserManagementService {
     }
 
     // ========== TENANT MANAGEMENT (SYS_ADMIN only) ==========
+
+    public List<TenantEntity> getTenants() {
+        return tenantService.findAll();
+    }
 
     /**
      * SYS_ADMIN: Создание нового tenant
@@ -63,48 +67,113 @@ public class AdminUserManagementService {
         }
 
         // Проверка уникальности имени
-        if (tenantRepository.findByName(name).isPresent()) {
+        if (tenantService.findByName(name).isPresent()) {
             throw new BadRequestException("Tenant with name '" + name + "' already exists");
         }
 
         TenantEntity tenant = new TenantEntity();
         tenant.setName(name);
         tenant.setCode(code);
-
         tenant.setDeleted(false);
 
-        TenantEntity saved = tenantRepository.save(tenant);
+        TenantEntity saved = tenantService.save(tenant);
         logger.info("Tenant '{}' created by SYS_ADMIN", name);
         return saved;
+    }
+
+    /**
+     * SYS_ADMIN: Обновление tenant
+     */
+    @Transactional
+    public TenantEntity updateTenant(String name, String code) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only SYS_ADMIN can update tenants");
+        }
+
+        TenantEntity tenant = tenantService.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        tenant.setName(name);
+        return tenantService.save(tenant);
     }
 
     /**
      * SYS_ADMIN: Удаление tenant (soft delete)
      */
     @Transactional
-    public void deleteTenant(Long tenantId) {
+    public void deleteTenant(String tenantCode) {
         // Проверка прав
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
         }
 
-        TenantEntity tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantId));
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
+                .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantCode));
 
         tenant.setDeleted(true);
-        tenantRepository.save(tenant);
+        tenantService.save(tenant);
         logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
     }
 
+    // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
+
+    public List<AccountLoginEntity> getSysAdmins() {
+        return accountLoginRepository.findByTenantAndUserRole("SYS", "SYS_ADMIN");
+    }
+
+        /**
+     * SYS_ADMIN: Создание TNT_ADMIN пользователя для tenant
+     */
+    @Transactional
+    public AccountLoginEntity createSysAdmin(
+                String tenantCode,
+                String userLogin,
+                String userName) {
+
+            // Проверка прав
+            UserDetailsImpl currentUser = getCurrentUser();
+            if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
+                throw new ForbiddenException("Only SYS_ADMIN can create TNT_ADMIN users");
+            }
+    
+            TenantEntity tenant = tenantService.findByCode(tenantCode)
+                    .orElseThrow(() -> new NotFoundException("Tenant not found"));
+    
+            // Проверка уникальности логина в tenant
+            LoginEntity savedLogin = loginRepository.findByTenantCodeAndUserLogin("SYS", userLogin)
+                .orElseGet(() -> {
+                    LoginEntity newLogin = new LoginEntity();
+                    newLogin.setTenant(tenant);
+                    newLogin.setFullName("SYS_ADMIN");
+                    newLogin.setUserLogin(userLogin);
+                    return loginRepository.save(newLogin);
+                });
+    
+            // Создать или получить TENANT account
+            AccountEntity tenantAccount = getOrCreateTenantAccount(tenant);
+    
+            // Создать Client для этого tenant
+            ClientEntity client = createDefaultClient(tenant);
+    
+            // Создать AccountLogin с ролью TNT_ADMIN
+            return createAccountLogin(savedLogin, client, tenantAccount, "SYS_ADMIN");
+        }
+    
+
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
+
+    public List<AccountLoginEntity> getTntAdmins(String tenantCode) {
+        return accountLoginRepository.findByTenantAndUserRole(tenantCode, "TNT_ADMIN");
+    }
 
     /**
      * SYS_ADMIN: Создание TNT_ADMIN пользователя для tenant
      */
     @Transactional
     public AccountLoginEntity createTntAdmin(
-            Long tenantId,
+            String tenantCode,
             String fullName,
             String userLogin,
             String userName) {
@@ -114,7 +183,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only SYS_ADMIN can create TNT_ADMIN users");
         }
 
-        TenantEntity tenant = tenantRepository.findById(tenantId)
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности логина в tenant
@@ -173,7 +242,7 @@ public class AdminUserManagementService {
         String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
+        TenantEntity tenant = tenantService.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -237,7 +306,7 @@ public class AdminUserManagementService {
         String currentTenantCode = currentUser.getTenantCode();
         Long currentClientId = currentUser.getClientId();
 
-        TenantEntity tenant = tenantRepository.findByCode(currentTenantCode)
+        TenantEntity tenant = tenantService.findByCode(currentTenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentClientId)
@@ -448,7 +517,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only TNT_ADMIN can create clients");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
+        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
@@ -503,7 +572,7 @@ public class AdminUserManagementService {
             throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can create accounts");
         }
 
-        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
+        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         ClientEntity client = clientRepository.findById(currentUser.getClientId())
@@ -564,92 +633,6 @@ public class AdminUserManagementService {
             map.put("parentId", account.getParent() != null ? account.getParent().getId() : null);
             return map;
         }).collect(java.util.stream.Collectors.toList());
-    }
-
-    // ========== USER MANAGEMENT (PRODUCT_ADMIN) ==========
-
-    /**
-     * PRODUCT_ADMIN: Создание обычного пользователя
-     */
-    @Transactional
-    public AccountLoginEntity createUser(String userLogin, Long accountId, String userRole) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only PRODUCT_ADMIN can create users");
-        }
-
-        TenantEntity tenant = tenantRepository.findByCode(currentUser.getTenantCode())
-                .orElseThrow(() -> new NotFoundException("Tenant not found"));
-
-        ClientEntity client = clientRepository.findById(currentUser.getClientId())
-                .orElseThrow(() -> new NotFoundException("Client not found"));
-
-        AccountEntity account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new NotFoundException("Account not found"));
-
-        // Проверка: аккаунт должен быть в том же tenant и client
-        if (!account.getTenant().getCode().equals(currentUser.getTenantCode()) ||
-            !account.getClient().getId().equals(currentUser.getClientId())) {
-            throw new ForbiddenException("Cannot create user in account from different tenant/client");
-        }
-
-        // Проверка уникальности логина
-        if (loginRepository.findByUserLogin(userLogin).isPresent()) {
-            throw new BadRequestException("Login '" + userLogin + "' already exists");
-        }
-
-        // Создать Login
-        LoginEntity login = new LoginEntity();
-        login.setTenant(tenant);
-        login.setUserLogin(userLogin);
-        LoginEntity savedLogin = loginRepository.save(login);
-
-        // Создать AccountLogin
-        return createAccountLogin(savedLogin, client, account, userRole != null ? userRole : "USER");
-    }
-
-    /**
-     * PRODUCT_ADMIN: Обновление пользователя
-     */
-    @Transactional
-    public AccountLoginEntity updateUser(Long accountLoginId, String userRole) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only PRODUCT_ADMIN can update users");
-        }
-
-        AccountLoginEntity accountLogin = accountLoginRepository.findById(accountLoginId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        // Проверка: пользователь должен быть в том же client
-        if (!accountLogin.getClient().getId().equals(currentUser.getClientId())) {
-            throw new ForbiddenException("Cannot update user from different client");
-        }
-
-        accountLogin.setUserRole(userRole);
-        return accountLoginRepository.save(accountLogin);
-    }
-
-    /**
-     * PRODUCT_ADMIN: Удаление пользователя
-     */
-    @Transactional
-    public void deleteUser(Long accountLoginId) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only PRODUCT_ADMIN can delete users");
-        }
-
-        AccountLoginEntity accountLogin = accountLoginRepository.findById(accountLoginId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        // Проверка: пользователь должен быть в том же client
-        if (!accountLogin.getClient().getId().equals(currentUser.getClientId())) {
-            throw new ForbiddenException("Cannot delete user from different client");
-        }
-
-        accountLoginRepository.deleteById(accountLoginId);
-        logger.info("User deleted: {}", accountLogin.getUserLogin());
     }
 
     /**
@@ -721,5 +704,6 @@ public class AdminUserManagementService {
             return map;
         }).collect(java.util.stream.Collectors.toList());
     }
+
 }
 
