@@ -24,6 +24,8 @@ public class TenantService {
     }
 
     public TenantEntity save(TenantEntity tenantEntity) {
+        tenantEntity.setCode(tenantEntity.getCode().toUpperCase());
+        tenantEntity.setName(tenantEntity.getName().toUpperCase());
         return tenantRepository.save(tenantEntity);
     }
 
