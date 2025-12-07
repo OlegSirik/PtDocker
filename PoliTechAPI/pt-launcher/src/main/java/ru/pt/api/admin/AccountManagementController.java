@@ -52,7 +52,64 @@ public class AccountManagementController extends SecuredController {
 
             Map<String, Object> result = adminUserManagementService.createAccount(
                     request.getParentAccountId(),
-                    request.getAccountName(),
+                    request.getName(),
+                    request.getNodeType()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", result.get("id"));
+            response.put("name", result.get("name"));
+            response.put("nodeType", result.get("nodeType"));
+            response.put("parentId", result.get("parentId"));
+
+            return buildCreatedResponse(response, "Account created successfully");
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    /** Get /api/v1/{tenantCode}/admin/accounts/{accuntId}
+    */
+    @GetMapping("/{accountId}")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
+    public ResponseEntity<Map<String, Object>> getAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        try {
+            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
+            Map<String, Object> account = adminUserManagementService.getAccount(accountId);
+            return ResponseEntity.ok(account);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
+    */
+    @GetMapping("/{accountId}/accounts")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
+    public ResponseEntity<?> getAccountAccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        try {
+            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
+            List<Map<String, Object>> accounts = adminUserManagementService.getAccountAccounts(accountId);
+            return ResponseEntity.ok(accounts);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    /**
+     * GROUP_ADMIN / PRODUCT_ADMIN: Создание аккаунта
+     * POST /api/v1/{tenantCode}/admin/accounts
+     */
+    @PostMapping("/{accountId}/accounts")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
+    public ResponseEntity<Map<String, Object>> createAccountAccount(
+            @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
+        try {
+            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
+
+            Map<String, Object> result = adminUserManagementService.createAccount(
+                    accountId,
+                    request.getName(),
                     request.getNodeType()
             );
 
@@ -73,10 +130,10 @@ public class AccountManagementController extends SecuredController {
      * GET /api/v1/{tenantCode}/admin/accounts/hierarchy
      */
     @GetMapping("/hierarchy")
-    @PreAuthorize("hasAnyRole('GROUP_ADMIN', 'PRODUCT_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> getAccountsHierarchy(@PathVariable String tenantCode) {
         try {
-            requireAnyRole("GROUP_ADMIN", "PRODUCT_ADMIN");
+            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
 
             List<Map<String, Object>> hierarchy = adminUserManagementService.getAccountsHierarchy();
             return ResponseEntity.ok(hierarchy);
@@ -104,8 +161,10 @@ public class AccountManagementController extends SecuredController {
 
     // DTO Classes
     public static class CreateAccountRequest {
+
+    
         private Long parentAccountId;
-        private String accountName;
+        private String name;
         private String nodeType;
 
         public Long getParentAccountId() {
@@ -116,12 +175,12 @@ public class AccountManagementController extends SecuredController {
             this.parentAccountId = parentAccountId;
         }
 
-        public String getAccountName() {
-            return accountName;
+        public String getName() {
+            return name;
         }
 
-        public void setAccountName(String accountName) {
-            this.accountName = accountName;
+        public void setName(String name) {
+            this.name = name;
         }
 
         public String getNodeType() {

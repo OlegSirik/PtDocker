@@ -1,0 +1,65 @@
+<h2 mat-dialog-title>Пользователь</h2>
+<mat-dialog-content>
+  <form [formGroup]="loginForm">
+    <!-- Main Information Card -->
+    <mat-card class="info-card">
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>ФИО</mat-label>
+          <input matInput formControlName="fullName" required>
+          <mat-error *ngIf="loginForm.get('fullName')?.hasError('required')">
+            ФИО обязательно для заполнения
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Должность</mat-label>
+          <input matInput formControlName="position" required>
+          <mat-error *ngIf="loginForm.get('position')?.hasError('required')">
+            Должность обязательна для заполнения
+          </mat-error>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Login and Password Card -->
+    <mat-card class="credentials-card">
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Логин</mat-label>
+          <input matInput formControlName="userLogin" [readonly]="isEditMode" required>
+          <mat-error *ngIf="loginForm.get('userLogin')?.hasError('required')">
+            Логин обязателен для заполнения
+          </mat-error>
+        </mat-form-field>
+
+        <div *ngIf="isEditMode" class="password-checkbox">
+          <mat-checkbox [(ngModel)]="changePassword" 
+                        [ngModelOptions]="{standalone: true}"
+                        (change)="onPasswordChangeToggle()">
+            Изменить пароль
+          </mat-checkbox>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width" *ngIf="!isEditMode || changePassword">
+          <mat-label>Пароль</mat-label>
+          <input matInput type="password" formControlName="password" 
+                 [required]="!isEditMode || changePassword">
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+            Пароль обязателен для заполнения
+          </mat-error>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Отмена</button>
+  <button mat-raised-button color="warn" *ngIf="isEditMode" (click)="onDelete()">
+    Удалить
+  </button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loginForm.invalid">
+    {{ isEditMode ? 'Сохранить' : 'Создать' }}
+  </button>
+</mat-dialog-actions>
+

@@ -1,17 +1,20 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { tap, catchError, delay, map } from 'rxjs/operators';
+import { Injectable } from '@angular/core';
 import { EnvService } from '../env.service';
 import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
 
 export interface SysAdmin {
     id?: number;
-    tenantId: number;
+    tid?: number;
+    clientId?: number;
+    accountId?: number;
+    tenantCode: string;
     userLogin: string;
-    userName: string;
     fullName: string;
+    position?: string;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
 @Injectable({

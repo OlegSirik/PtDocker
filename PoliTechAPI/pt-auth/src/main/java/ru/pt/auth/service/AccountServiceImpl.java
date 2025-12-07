@@ -109,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
         AccountEntity account = new AccountEntity();
         account.setId(accountRepository.getNextAccountId());
         account.setName(name);
-        account.setNodeType(AccountNodeType.SUBACCOUNT);
+        account.setNodeType(AccountNodeType.SUB);
         account.setParent(parentAccount);
         return accountMapper.toDto(
                 accountRepository.save(account)

@@ -17,6 +17,8 @@ repositories {
 dependencies {
     implementation(project(":pt-api"))
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.20")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
     implementation("org.springframework:spring-beans")
     implementation("org.springframework:spring-context")
     implementation("org.springframework:spring-web")

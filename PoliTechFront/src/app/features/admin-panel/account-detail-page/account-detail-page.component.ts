@@ -9,6 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantService, Account, Product, LoginAccount } from '../../../shared/services/tenant.service';
 import { MatChipListbox, MatChipOption } from "@angular/material/chips";
+import { MatTabsModule } from '@angular/material/tabs';
 import { EMPTY, Subject } from 'rxjs';
 import { filter, map, switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { AddGroupDialogComponent } from '../components/add-group-dialog/add-group-dialog.component';
@@ -26,7 +27,8 @@ import { TextDialogComponent } from '../components/text-dialog/text-dialog.compo
     MatIconModule,
     MatButtonModule,
     MatChipListbox,
-    MatChipOption
+    MatChipOption,
+    MatTabsModule
 ],
   templateUrl: './account-detail-page.component.html',
   styleUrls: ['./account-detail-page.component.scss']
@@ -83,19 +85,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.tenantService.getAccount(this.accountId).subscribe({
       next: (account: Account) => {
-        this.account = account;
-        this.products = account.products || [];
-        this.logins = account.logins || [];
-        this.tokens = account.tokens || [];
-        
-        this.loadChildAccounts();
-
-        if (!this.account) return;
-        this.tenantService.getLogins(this.account.id, 10, 0).subscribe({
-          next: (logins: LoginAccount[]) => {
-            this.admins = logins;
-          }
-        });
+        this.account = account;        
     
         this.loading = false;
       },
@@ -104,6 +94,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
         this.loading = false;
       }
     });
+    this.loadChildAccounts();
   }
 
   goToAccount(id: string) {

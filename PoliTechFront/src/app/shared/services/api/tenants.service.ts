@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { tap, catchError, delay, map } from 'rxjs/operators';
+import { tap, catchError, delay, map, switchMap } from 'rxjs/operators';
 import { EnvService } from '../env.service';
 import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
+import { ClientsService, Client } from './clients.service';
 
 export interface Tenant {
     id?: number;
@@ -20,6 +21,7 @@ export interface Tenant {
 })
 
 export class TenantsService extends BaseApiService<Tenant> {
+
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
     super(http, env, 'admin/tenants', authService);
   }

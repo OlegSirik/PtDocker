@@ -248,19 +248,10 @@
               <mat-icon>add</mat-icon>
               add var
             </button>
-            <button mat-raised-button color="accent" class="add-button" (click)="addAllVars()">
-              <mat-icon>playlist_add</mat-icon>
-              AddAllVars
-            </button>
           </div>
 
           <div class="table-header">
             <h3>vars</h3>
-            <mat-form-field class="search-field" appearance="outline">
-              <mat-label>Поиск</mat-label>
-              <input matInput [(ngModel)]="varSearchText" placeholder="Поиск">
-              <mat-icon matSuffix>search</mat-icon>
-            </mat-form-field>
           </div>
 
           <table mat-table [dataSource]="paginatedVars" class="business-table">
@@ -307,14 +298,6 @@
             <tr mat-row *matRowDef="let row; columns: varDisplayedColumns;"></tr>
           </table>
 
-          <mat-paginator 
-            [length]="filteredVars.length"
-            [pageSize]="varPageSize"
-            [pageIndex]="varPageIndex"
-            [pageSizeOptions]="[5, 10, 25]"
-            (page)="onVarPageChange($event)"
-            showFirstLastButtons>
-          </mat-paginator>
         </mat-card-content>
       </mat-card>
     </mat-tab>

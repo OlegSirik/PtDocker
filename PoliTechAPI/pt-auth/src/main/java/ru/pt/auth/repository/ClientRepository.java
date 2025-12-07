@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.pt.auth.entity.ClientEntity;
+import ru.pt.auth.entity.TenantEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,13 +32,22 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по clientId
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId AND c.isDeleted = false")
-    Optional<ClientEntity> findByClientId(@Param("clientId") String clientId);
+    @Query("SELECT c FROM ClientEntity c WHERE c.id = :Id")
+    Optional<ClientEntity> findById(@Param("Id") Long id);
 
     /**
      * Найти все clients для tenant (включая deleted)
      */
     @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode ORDER BY c.name")
     List<ClientEntity> findBytenantCode(@Param("tenantCode") Long tenantCode);
+
+
+    /**
+     * Найти client по clientId и tenantCode
+     */
+    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId AND c.tenantEntity.code = :tenantCode")
+    Optional<ClientEntity> findByClientIdandTenantCode(@Param("clientId") String clientId, @Param("tenantCode") String tenantCode);
+
+    
 }
 

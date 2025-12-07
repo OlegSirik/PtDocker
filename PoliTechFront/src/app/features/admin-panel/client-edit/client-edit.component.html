@@ -1,0 +1,81 @@
+<div class="client-edit-container">
+  <div class="page-header">
+    <h1 class="page-title">Client</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" class="save-button" [disabled]="!hasChanges || loading" (click)="save()">
+        <mat-icon>save</mat-icon>
+        Сохранить
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="segment-card">
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">Загрузка...</div>
+      <div *ngIf="!loading" class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Tenant</mat-label>
+          <mat-select [(ngModel)]="client.tid" (ngModelChange)="onFieldChange()" [disabled]="!isNewRecord">
+            <mat-option [value]="0">Выберите tenant</mat-option>
+            @for (tenant of tenants; track tenant.id) {
+              @if (tenant.id) {
+                <mat-option [value]="tenant.id">{{ tenant.name }} ({{ tenant.code }})</mat-option>
+              }
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Client ID</mat-label>
+          <input matInput [(ngModel)]="client.clientId" (ngModelChange)="onFieldChange()" [disabled]="!isNewRecord">
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="!loading" class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput [(ngModel)]="client.name" (ngModelChange)="onFieldChange()">
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="!loading" class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput [(ngModel)]="client.description" (ngModelChange)="onFieldChange()" rows="3"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="!loading" class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Trusted Email</mat-label>
+          <input matInput type="email" [(ngModel)]="client.trusted_email" (ngModelChange)="onFieldChange()">
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="client.status" (ngModelChange)="onFieldChange()">
+            <mat-option value="ACTIVE">ACTIVE</mat-option>
+            <mat-option value="SUSPENDED">SUSPENDED</mat-option>
+            <mat-option value="DELETED">DELETED</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Account ID</mat-label>
+          <input matInput [(ngModel)]="client.accountId" (ngModelChange)="onFieldChange()">
+        </mat-form-field>
+
+        <div class="form-action-row" style="margin-top: 16px; display: flex; gap: 8px;">
+          <button mat-raised-button color="primary" type="button" 
+                  [disabled]="loading || !client.accountId"
+                  (click)="gotoAccount(client)">
+            <mat-icon>account_circle</mat-icon>
+            Goto account
+          </button>
+        </div>
+
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
