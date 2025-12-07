@@ -1,18 +1,10 @@
-<div class="page-container">
+<div class="account-container">
   <div *ngIf="loading" class="loading">Loading account...</div>
   
   <div *ngIf="!loading && account">
-    <mat-card class="header-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>
-            {{ account.name }}
-          </mat-card-title>
-        </div>
-
-    
-      </mat-card-header>
-      <mat-card-content>
+    <div class="page-header">
+      <h1 class="page-title">{{ account.name }}</h1>
+      <div class="path-section">
         <mat-chip-listbox>    
           <!-- Папки пути -->
           @for (item of account.path; track item.id; let last = $last) {
@@ -26,288 +18,283 @@
             </mat-chip-option>
           }
         </mat-chip-listbox>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
-    @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
-    <!-- Groups Table -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Groups</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addGroup()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="groups" class="accounts-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let group">{{ group.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="path">
-            <th mat-header-cell *matHeaderCellDef>Path</th>
-            <td mat-cell *matCellDef="let group">{{ group.path }}</td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="groupsColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: groupsColumns" 
-              (click)="editGroup(row)" 
-              class="clickable-row"></tr>
-        </table>
-        <div *ngIf="groups.length === 0" class="empty-message">No groups found</div>
-      </mat-card-content>
-    </mat-card>
-    }
-
-    @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
-    <!-- Accounts Table -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Accounts</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addAccount()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="accounts" class="accounts-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let account">{{ account.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="path">
-            <th mat-header-cell *matHeaderCellDef>Path</th>
-            <td mat-cell *matCellDef="let account">{{ account.path }}</td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="accountsColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: accountsColumns" 
-              (click)="editAccount(row)" 
-              class="clickable-row"></tr>
-        </table>
-        <div *ngIf="accounts.length === 0" class="empty-message">No accounts found</div>
-      </mat-card-content>
-    </mat-card>
-    }
-
-
-    <!-- Products Card -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Products</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addProduct()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="products" class="accounts-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let product">{{ product.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="can_read">
-            <th mat-header-cell *matHeaderCellDef>Can Read</th>
-            <td mat-cell *matCellDef="let product">{{ product.can_read ? 'Yes' : 'No' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="can_quote">
-            <th mat-header-cell *matHeaderCellDef>Can Quote</th>
-            <td mat-cell *matCellDef="let product">{{ product.can_quote ? 'Yes' : 'No' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="can_policy">
-            <th mat-header-cell *matHeaderCellDef>Can Policy</th>
-            <td mat-cell *matCellDef="let product">{{ product.can_policy ? 'Yes' : 'No' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-            <td mat-cell *matCellDef="let product" class="actions-column">
-              <button mat-icon-button (click)="editProduct(product); $event.stopPropagation()" color="primary">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button (click)="deleteProduct(product); $event.stopPropagation()" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="productsColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: productsColumns" class="clickable-row" (click)="editProduct(row)"></tr>
-        </table>
-        <div *ngIf="products.length === 0" class="empty-message">No products found</div>
-      </mat-card-content>
-    </mat-card>
-
-    @if (account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB') {
-    <!-- Logins Card -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Logins</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addLogin()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="logins" class="accounts-table">
-          <ng-container matColumnDef="login">
-            <th mat-header-cell *matHeaderCellDef>Login</th>
-            <td mat-cell *matCellDef="let login; let i = index">{{ login }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-            <td mat-cell *matCellDef="let login; let i = index" class="actions-column">
-              <button mat-icon-button (click)="deleteLogin(i); $event.stopPropagation()" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="loginsColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: loginsColumns; let i = index" class="clickable-row" (click)="editLogin(row, i)"></tr>
-        </table>
-        <div *ngIf="logins.length === 0" class="empty-message">No logins found</div>
-      </mat-card-content>
-    </mat-card>
-    }
-
-    @if (account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB') {
-    <!-- Tokens Card -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Tokens</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addToken()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="tokens" class="accounts-table">
-          <ng-container matColumnDef="token">
-            <th mat-header-cell *matHeaderCellDef>Token</th>
-            <td mat-cell *matCellDef="let token; let i = index">{{ token }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-            <td mat-cell *matCellDef="let token; let i = index" class="actions-column">
-              <button mat-icon-button (click)="deleteToken(i); $event.stopPropagation()" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="tokensColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: tokensColumns; let i = index" class="clickable-row" (click)="editToken(row, i)"></tr>
-        </table>
-        <div *ngIf="tokens.length === 0" class="empty-message">No tokens found</div>
-      </mat-card-content>
-    </mat-card>
-    }
-
-    @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
-    <!-- Admins Card -->
-    <mat-card class="table-card">
-      <mat-card-header>
-        <div class="header-content">
-          <mat-card-title>Admins</mat-card-title>
-          <div class="header-actions">
-            <button mat-raised-button color="primary" (click)="addAdmin()">
-              <mat-icon>add</mat-icon>
-              Add
-            </button>
-          </div>
-        </div>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="admins" class="accounts-table">
-          <ng-container matColumnDef="admin">
-            <th mat-header-cell *matHeaderCellDef>Admin</th>
-            <td mat-cell *matCellDef="let admin; let i = index">{{ admin.userLogin }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-            <td mat-cell *matCellDef="let admin; let i = index" class="actions-column">
-              <button mat-icon-button (click)="deleteAdmin(i); $event.stopPropagation()" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="adminsColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: adminsColumns; let i = index" class="clickable-row" (click)="editAdmin(row, i)"></tr>
-        </table>
-        <div *ngIf="admins.length === 0" class="empty-message">No admins found</div>
-      </mat-card-content>
-    </mat-card>
-    }
-
-    @if (account.nodeType === 'ACCOUNT') {
-      <!-- SubAccounts Table -->
-      <mat-card class="table-card">
-        <mat-card-header>
-          <div class="header-content">
-            <mat-card-title>Sub Accounts</mat-card-title>
-            <div class="header-actions">
-              <button mat-raised-button color="primary" (click)="addSub()">
+    <!-- Tabs for Tables -->
+    <mat-tab-group>
+      @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
+      <mat-tab label="Groups">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addGroup()">
                 <mat-icon>add</mat-icon>
-                Add
+                Add Group
               </button>
             </div>
-          </div>
-        </mat-card-header>
-        <mat-card-content>
-          <table mat-table [dataSource]="accounts" class="accounts-table">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Name</th>
-              <td mat-cell *matCellDef="let account">{{ account.name }}</td>
-            </ng-container>
-  
-  
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
-              <td mat-cell *matCellDef="let account" class="actions-column">
-                
-              </td>
-            </ng-container>
-  
-          <tr mat-header-row *matHeaderRowDef="subColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: subColumns" 
-                (click)="editAccount(row)" 
-                class="clickable-row"></tr>
-          </table>
-        <div *ngIf="subs.length === 0" class="empty-message">No accounts found</div>
-        </mat-card-content>
-      </mat-card>
+            <div class="table-header">
+              <h3>Groups</h3>
+            </div>
+            <table mat-table [dataSource]="groups" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let group">{{ group.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="path">
+                <th mat-header-cell *matHeaderCellDef>Path</th>
+                <td mat-cell *matCellDef="let group">{{ group.path }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="groupsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: groupsColumns" 
+                  (click)="editGroup(row)" 
+                  class="clickable-row"></tr>
+            </table>
+            <div *ngIf="groups.length === 0" class="empty-message">No groups found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
       }
+
+      @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
+      <mat-tab label="Accounts">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addAccount()">
+                <mat-icon>add</mat-icon>
+                Add Account
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Accounts</h3>
+            </div>
+            <table mat-table [dataSource]="accounts" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let account">{{ account.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="path">
+                <th mat-header-cell *matHeaderCellDef>Path</th>
+                <td mat-cell *matCellDef="let account">{{ account.path }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="accountsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: accountsColumns" 
+                  (click)="editAccount(row)" 
+                  class="clickable-row"></tr>
+            </table>
+            <div *ngIf="accounts.length === 0" class="empty-message">No accounts found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+      }
+
+      <mat-tab label="Products">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addProduct()">
+                <mat-icon>add</mat-icon>
+                Add Product
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Products</h3>
+            </div>
+            <table mat-table [dataSource]="products" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let product">{{ product.name }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="can_read">
+                <th mat-header-cell *matHeaderCellDef>Can Read</th>
+                <td mat-cell *matCellDef="let product">{{ product.can_read ? 'Yes' : 'No' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="can_quote">
+                <th mat-header-cell *matHeaderCellDef>Can Quote</th>
+                <td mat-cell *matCellDef="let product">{{ product.can_quote ? 'Yes' : 'No' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="can_policy">
+                <th mat-header-cell *matHeaderCellDef>Can Policy</th>
+                <td mat-cell *matCellDef="let product">{{ product.can_policy ? 'Yes' : 'No' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+                <td mat-cell *matCellDef="let product" class="actions-column">
+                  <button mat-icon-button (click)="editProduct(product); $event.stopPropagation()" color="primary">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="deleteProduct(product); $event.stopPropagation()" color="warn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="productsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: productsColumns" class="clickable-row" (click)="editProduct(row)"></tr>
+            </table>
+            <div *ngIf="products.length === 0" class="empty-message">No products found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+
+      @if (account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB') {
+      <mat-tab label="Logins">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addLogin()">
+                <mat-icon>add</mat-icon>
+                Add Login
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Logins</h3>
+            </div>
+            <table mat-table [dataSource]="logins" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="login">
+                <th mat-header-cell *matHeaderCellDef>Login</th>
+                <td mat-cell *matCellDef="let login; let i = index">{{ login }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+                <td mat-cell *matCellDef="let login; let i = index" class="actions-column">
+                  <button mat-icon-button (click)="deleteLogin(i); $event.stopPropagation()" color="warn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="loginsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: loginsColumns; let i = index" class="clickable-row" (click)="editLogin(row, i)"></tr>
+            </table>
+            <div *ngIf="logins.length === 0" class="empty-message">No logins found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+      }
+
+      @if (account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB') {
+      <mat-tab label="Tokens">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addToken()">
+                <mat-icon>add</mat-icon>
+                Add Token
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Tokens</h3>
+            </div>
+            <table mat-table [dataSource]="tokens" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="token">
+                <th mat-header-cell *matHeaderCellDef>Token</th>
+                <td mat-cell *matCellDef="let token; let i = index">{{ token }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+                <td mat-cell *matCellDef="let token; let i = index" class="actions-column">
+                  <button mat-icon-button (click)="deleteToken(i); $event.stopPropagation()" color="warn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="tokensColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: tokensColumns; let i = index" class="clickable-row" (click)="editToken(row, i)"></tr>
+            </table>
+            <div *ngIf="tokens.length === 0" class="empty-message">No tokens found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+      }
+
+      @if (account.nodeType === 'CLIENT' || account.nodeType === 'GROUP') {
+      <mat-tab label="Admins">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addAdmin()">
+                <mat-icon>add</mat-icon>
+                Add Admin
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Admins</h3>
+            </div>
+            <table mat-table [dataSource]="admins" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="admin">
+                <th mat-header-cell *matHeaderCellDef>Admin</th>
+                <td mat-cell *matCellDef="let admin; let i = index">{{ admin.userLogin }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+                <td mat-cell *matCellDef="let admin; let i = index" class="actions-column">
+                  <button mat-icon-button (click)="deleteAdmin(i); $event.stopPropagation()" color="warn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="adminsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: adminsColumns; let i = index" class="clickable-row" (click)="editAdmin(row, i)"></tr>
+            </table>
+            <div *ngIf="admins.length === 0" class="empty-message">No admins found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+      }
+
+      @if (account.nodeType === 'ACCOUNT') {
+      <mat-tab label="Sub Accounts">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="addSub()">
+                <mat-icon>add</mat-icon>
+                Add Sub Account
+              </button>
+            </div>
+            <div class="table-header">
+              <h3>Sub Accounts</h3>
+            </div>
+            <table mat-table [dataSource]="accounts" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let account">{{ account.name }}</td>
+              </ng-container>
+  
+  
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let account" class="actions-column">
+                  
+                </td>
+              </ng-container>
+  
+            <tr mat-header-row *matHeaderRowDef="subColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: subColumns" 
+                  (click)="editAccount(row)" 
+                  class="clickable-row"></tr>
+            </table>
+          <div *ngIf="subs.length === 0" class="empty-message">No accounts found</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+      }
+    </mat-tab-group>
   
   </div>
 </div>

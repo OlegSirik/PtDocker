@@ -57,16 +57,12 @@ export class BusinessLineEditComponent implements OnInit {
   exampleJsonText = '';
 
   // Pagination properties
-  varPageSize = 25;
-  varPageIndex = 0;
-  coverPageSize = 25;
-  coverPageIndex = 0;
+  //varPageSize = 25;
+  //varPageIndex = 0;
+  //coverPageSize = 25;
+  //coverPageIndex = 0;
 
-  get filteredVars(): BusinessLineVar[] {
-    const s = this.varSearchText.trim().toLowerCase();
-    if (!s) return this.businessLine.mpVars;
-    return this.businessLine.mpVars.filter(v => v.varCode.toLowerCase().includes(s) || v.varPath.toLowerCase().includes(s) || v.varName.toLowerCase().includes(s));
-  }
+
 
   get filteredCovers(): BusinessLineCover[] {
     const s = this.coverSearchText.trim().toLowerCase();
@@ -75,13 +71,13 @@ export class BusinessLineEditComponent implements OnInit {
   }
 
   get paginatedVars(): BusinessLineVar[] {
-    const startIndex = this.varPageIndex * this.varPageSize;
-    return this.filteredVars.slice(startIndex, startIndex + this.varPageSize);
+    return this.businessLine.mpVars.filter(v => v.varType == 'MAGIC' || v.varType == 'VAR' || v.varType == 'CONST');
   }
 
   get paginatedCovers(): BusinessLineCover[] {
-    const startIndex = this.coverPageIndex * this.coverPageSize;
-    return this.filteredCovers.slice(startIndex, startIndex + this.coverPageSize);
+    //const startIndex = this.coverPageIndex * this.coverPageSize;
+    //return this.filteredCovers.slice(startIndex, startIndex + this.coverPageSize);
+    return this.filteredCovers;
   }
 
   get policyHolderVars(): any[] {
@@ -209,15 +205,6 @@ export class BusinessLineEditComponent implements OnInit {
   }
 
 
-  onVarPageChange(event: PageEvent): void {
-    this.varPageIndex = event.pageIndex;
-    this.varPageSize = event.pageSize;
-  }
-
-  onCoverPageChange(event: PageEvent): void {
-    this.coverPageIndex = event.pageIndex;
-    this.coverPageSize = event.pageSize;
-  }
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('mpCode');

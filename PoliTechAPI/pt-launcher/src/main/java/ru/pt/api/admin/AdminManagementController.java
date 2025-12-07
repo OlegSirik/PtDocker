@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.model.AdminResponse;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
 
@@ -44,18 +45,11 @@ public class AdminManagementController extends SecuredController {
      */
     @GetMapping("/sys-admins")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getSysAdmins() {
+    public ResponseEntity<List<AdminResponse>> getSysAdmins() {
         try {
-            List<AccountLoginEntity> accountLogins = adminUserManagementService.getSysAdmins();
-
-            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
-                Map<String, Object> response = new HashMap<>();
-                response.put("id", accountLogin.getId());
-                response.put("userLogin", accountLogin.getUserLogin());
-                response.put("userRole", accountLogin.getUserRole());
-                response.put("accountId", accountLogin.getAccount().getId());
-                return response;
-            }).collect(Collectors.toList()));
+            List<AdminResponse> admins = adminUserManagementService.getSysAdmins();
+            
+            return ResponseEntity.ok(admins);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -98,19 +92,12 @@ public class AdminManagementController extends SecuredController {
      */
     @GetMapping("/tnt-admins")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getTntAdmins(
+    public ResponseEntity<List<AdminResponse>> getTntAdmins(
             @PathVariable String tenantCode) {
         try {
-            List<AccountLoginEntity> accountLogins = adminUserManagementService.getTntAdmins(tenantCode);
+            List<AdminResponse> admins = adminUserManagementService.getTntAdmins(tenantCode);
 
-            return ResponseEntity.ok(accountLogins.stream().map(accountLogin -> {
-                Map<String, Object> response = new HashMap<>();
-                response.put("id", accountLogin.getId());
-                response.put("userLogin", accountLogin.getUserLogin());
-                response.put("userRole", accountLogin.getUserRole());
-                response.put("accountId", accountLogin.getAccount().getId());
-                return response;
-            }).collect(Collectors.toList()));
+            return ResponseEntity.ok(admins);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

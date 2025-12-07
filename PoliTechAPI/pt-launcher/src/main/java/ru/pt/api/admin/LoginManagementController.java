@@ -11,6 +11,7 @@ import ru.pt.api.admin.dto.UpdateLoginRequest;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.LoginManagementService;
 
 import java.time.format.DateTimeFormatter;
@@ -53,8 +54,17 @@ public class LoginManagementController extends SecuredController {
         try {
             requireAnyRole("SYS_ADMIN", "TNT_ADMIN", "GROUP_ADMIN");
 
+            String tntCode = tenantCode;
+
+            UserDetailsImpl curUser = getCurrentUser();
+            if ( "SYS_ADMIN".equals(curUser.getUserRole()) )
+            {
+                /* SYS_ADMIN can create logins for any tenant */
+                tntCode = request.getTenantCode();
+            }
+            
             LoginEntity login = loginManagementService.createLogin(
-                    tenantCode,
+                    tntCode,
                     request.getUserLogin(),
                     request.getFullName(),
                     request.getPosition()
@@ -62,7 +72,7 @@ public class LoginManagementController extends SecuredController {
 
             LoginResponse response = new LoginResponse();
             response.setId(String.valueOf(login.getId()));
-            response.setTenantCode(String.valueOf(tenantCode));
+            response.setTenantCode(String.valueOf(tntCode));
             response.setUserLogin(login.getUserLogin());
             response.setFullName(login.getFullName());
             response.setPosition(login.getPosition());
@@ -80,6 +90,50 @@ public class LoginManagementController extends SecuredController {
     @PatchMapping("/{loginId}")
     @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateLogin(
+            @PathVariable String tenantCode,
+            @PathVariable Long loginId,
+            @RequestBody UpdateLoginRequest request) {
+        try {
+            String tntCode = tenantCode;
+
+            UserDetailsImpl curUser = getCurrentUser();
+            if ( "SYS_ADMIN".equals(curUser.getUserRole()) )
+            {
+                /* SYS_ADMIN can update logins for any tenant */
+                tntCode = request.getTenantCode();
+            }
+            LoginEntity login = loginManagementService.updateLogin(
+                    tenantCode,
+                    loginId,
+                    request.getFullName(),
+                    request.getPosition(),
+                    request.getIsDeleted()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            if (request.getFullName() != null) {
+                response.put("fullName", login.getFullName());
+            }
+            if (request.getPosition() != null) {
+                response.put("position", login.getPosition());
+            }
+            if (request.getIsDeleted() != null) {
+                response.put("isDeleted", login.getIsDeleted());
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return handleException(e);
+        }
+    }
+
+    /**
+     * Обновление данных пользователя
+     * PATCH /tnts/{tenantCode}/logins/{loginId}
+     */
+    @PutMapping("/{loginId}")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
+    public ResponseEntity<Map<String, Object>> updateLoginFull(
             @PathVariable String tenantCode,
             @PathVariable Long loginId,
             @RequestBody UpdateLoginRequest request) {

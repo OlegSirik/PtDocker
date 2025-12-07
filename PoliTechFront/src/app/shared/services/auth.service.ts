@@ -64,6 +64,10 @@ export class AuthService {
       );
   }
 
+  changePassword(credentials: LoginData): Observable<LoginData> {
+    return this.http.post<LoginData>(`${this.baseUrl}/api/auth/set-password`, credentials);
+  }
+
   getCurrentUser(): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
       .pipe(

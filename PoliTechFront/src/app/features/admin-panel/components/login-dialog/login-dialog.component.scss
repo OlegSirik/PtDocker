@@ -1,0 +1,30 @@
+mat-dialog-content {
+  min-width: 500px;
+  max-width: 600px;
+  padding: 20px;
+}
+
+.info-card,
+.credentials-card {
+  margin-bottom: 20px;
+  padding: 16px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.password-checkbox {
+  margin-bottom: 16px;
+}
+
+mat-dialog-actions {
+  padding: 16px 20px;
+  gap: 8px;
+}
+
+mat-form-field {
+  display: block;
+}
+

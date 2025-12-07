@@ -192,20 +192,48 @@ public class AuthenticationController {
      */
     @PostMapping("/set-password")
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> setPassword(@RequestBody SetPasswordRequest request) {
+//    @PreAuthorize("hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> setPassword(
+        @RequestBody SetPasswordRequest request,
+        @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
         try {
-            loginManagementService.setPassword(
-                    request.getUserLogin(),
-                    request.getPassword(),
-                    request.getClientId()
-            );
+            boolean authorized = false;
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Password set successfully for user: " + request.getUserLogin());
+            String username =  userDetails.getUsername();
+            String tenantCode = userDetails.getTenantCode();
+            Long clientId = userDetails.getClientId();
+            String userRole = userDetails.getUserRole();
+    
+            if ("SYS_ADMIN".equals(userRole)) {
+                // SYS admin может все
+                authorized = true;
+            }
+            if (username.equals(request.getUserLogin())) {
+                // Пользователь может изменить свой пароль
+                authorized = true;
+            }
+            // ToDo прочие кейсы по изменению пароля
 
-            return ResponseEntity.ok(response);
+            if (authorized) {
+
+                loginManagementService.setPassword(
+                        request.getUserLogin(),
+                        request.getPassword(),
+                        request.getClientId()
+                );
+            
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "Password set successfully for user: " + request.getUserLogin());
+
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("error", "Not authorized to set password for user: " + request.getUserLogin());
+                return ResponseEntity.status(403).body(response);
+            }
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", e.getMessage());

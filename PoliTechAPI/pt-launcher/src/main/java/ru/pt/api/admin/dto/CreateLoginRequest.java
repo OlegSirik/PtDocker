@@ -5,11 +5,20 @@ package ru.pt.api.admin.dto;
  * POST /tnts/{tenantCode}/logins
  */
 public class CreateLoginRequest {
+    private String tenantCode;
     private String userLogin;
     private String fullName;
     private String position;
 
     // Getters and Setters
+    public String getTenantCode() {
+        return tenantCode;
+    }
+
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
+
     public String getUserLogin() {
         return userLogin;
     }

@@ -1,60 +1,98 @@
-.page-container {
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.clients-container {
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
-}
 
-mat-card-header {
-  width: 100%;
-}
+  .page-header {
+    margin-bottom: 20px;
 
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
+    .page-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+  }
 
-mat-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  .datatable-card {
+    margin-bottom: 20px;
 
-.header-actions {
-  margin-left: auto;
-}
+    .button-section {
+      @include card-base;
+      padding: $spacing-md;
+      margin-bottom: $spacing-lg;
+      background-color: $gray-50;
 
-.clients-table {
-  width: 100%;
-  margin-top: 16px;
-}
+      .add-button {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+      }
+    }
 
-.client-row {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
 
-.client-row:hover {
-  background-color: rgba(63, 81, 181, 0.05);
-}
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+      }
 
-.status-active {
-  background-color: #4caf50 !important;
-  color: white !important;
-}
+      .search-field {
+        width: 300px;
+      }
+    }
 
-.status-suspended {
-  background-color: #ff9800 !important;
-  color: white !important;
-}
+    .business-table {
+      width: 100%;
+      margin-bottom: 16px;
 
-.status-deleted {
-  background-color: #f44336 !important;
-  color: white !important;
-}
+      .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
 
-.loading {
-  padding: 20px;
-  text-align: center;
-  color: #666;
+        &:hover {
+          background-color: rgba(63, 81, 181, 0.05);
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+
+        .action-button {
+          min-width: auto;
+          padding: 0 8px;
+        }
+      }
+    }
+  }
+
+  .status-active {
+    background-color: #4caf50 !important;
+    color: white !important;
+  }
+
+  .status-suspended {
+    background-color: #ff9800 !important;
+    color: white !important;
+  }
+
+  .status-deleted {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+
+  .loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+  }
 }

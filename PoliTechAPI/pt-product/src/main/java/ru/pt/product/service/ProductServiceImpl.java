@@ -357,8 +357,10 @@ public class ProductServiceImpl implements ProductService {
 
         // for each validatorKeys get path by key from lob.mpVars
         lob.getMpVars().forEach(mpVar -> {
-            if (validatorKeys.contains(mpVar.getVarCode())) {
-                jsonPaths.add(mpVar.getVarPath());
+            if (mpVar.getVarType().equals("IN")) {
+               if (validatorKeys.contains(mpVar.getVarCode())) {
+                    jsonPaths.add(mpVar.getVarPath());
+                }
             }
         });
 

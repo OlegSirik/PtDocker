@@ -58,5 +58,36 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId ORDER BY a.name")
     List<AccountEntity> findByTenantCodeAndClientId(String tenantCode, Long clientId);
 
-    List<AccountEntity> findAllByParent_Id(Long parentId);
+    /**
+     * Find accounts by client id and type = client !!Must be 1 record
+     */
+    @Query("SELECT a FROM AccountEntity a WHERE a.clientEntity.id = :clientId AND a.nodeType = 'CLIENT'")
+    Optional<AccountEntity> findCliensAccountByClientId(Long clientId);
+
+    /**
+     * Find tenant account by tenant id
+     */
+    //@Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.id = :tenantId and a.nodeType = 'TENANT' and a.parent.id is null")
+    @Query(value = "SELECT * FROM acc_accounts WHERE tid = :tenantId and parent_id is null and node_type = 'TENANT'", nativeQuery = true)
+    Optional<AccountEntity> findByTenantId(Long tenantId);
+
+    @Query(
+        value = "WITH RECURSIVE path_cte AS ( " +
+                "SELECT a.*, 1 AS level " +
+                "FROM acc_accounts a " +
+                "WHERE a.id = :accountId " +
+                "UNION ALL " +
+                "SELECT t.*, c.level + 1 " +
+                "FROM acc_accounts t " +
+                "INNER JOIN path_cte c ON t.id = c.parent_id " +
+                "WHERE c.parent_id IS NOT NULL " +
+                ") " +
+                "SELECT * " +
+                "FROM path_cte " +
+                "ORDER BY level DESC",
+        nativeQuery = true
+    )
+    List<AccountEntity> findPathByAccountId(Long accountId);
+
+
 }

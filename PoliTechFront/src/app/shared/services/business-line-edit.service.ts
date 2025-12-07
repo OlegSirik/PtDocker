@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 
 export interface BusinessLineVar {
   varCode: string;
-  varType: 'IN' | 'VAR' | 'FORMULA' | 'CONST';
+  varType: 'IN' | 'VAR' | 'CONST' | 'MAGIC';
   varPath: string;
   varName: string;
   varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'PERIOD';
@@ -420,15 +420,6 @@ export class BusinessLineEditService {
         "varValue": "true"
       },
       {
-        "varNr": 13,
-        "varDataType": "STRING",
-        "varCode": "ph_vsk_id",
-        "varName": "Страхователь.ID ВСК",
-        "varPath": "policyHolder.person.vsk_id",
-        "varType": "IN",
-        "varValue": ""
-      },
-      {
         "varNr": 14,
         "varDataType": "STRING",
         "varCode": "ph_ext_id",
@@ -436,7 +427,36 @@ export class BusinessLineEditService {
         "varPath": "policyHolder.person.ext_id",
         "varType": "IN",
         "varValue": ""
-      }
+      },
+
+      {
+        "varNr": 1113,
+        "varDataType": "STRING",
+        "varCode": "ph_isMale",
+        "varName": "Страхователь.пол.М",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+      {
+        "varNr": 1114,
+        "varDataType": "STRING",
+        "varCode": "ph_isFemale",
+        "varName": "Страхователь.пол.Ж",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+      {
+        "varNr": 1115,
+        "varDataType": "NUMBER",
+        "varCode": "ph_age_issue",
+        "varName": "Страхователь.возраст на дату выпуска",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+
   ];
   phPhoneVars: BusinessLineVar[] = [
     {

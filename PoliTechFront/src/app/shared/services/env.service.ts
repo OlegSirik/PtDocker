@@ -14,5 +14,11 @@ export class EnvService {
     const w = (globalThis as any) as { __env?: { TENANT_HEADER?: string } };
     return w && w.__env && typeof w.__env.TENANT_HEADER === 'string' ? w.__env.TENANT_HEADER : undefined;
   }
+
+  get CLIENT_ID(): string | undefined {
+    return 'ROOT'; 
+    // Это ID клиента это приложение
+    // ToDo: get from file
+  }
 }
 
