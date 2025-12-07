@@ -1,5 +1,6 @@
 package ru.pt.api.security;
 
+import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.SetPasswordRequest;
+import ru.pt.api.service.auth.AccountService;
 import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
 import ru.pt.auth.model.TokenResponse;
@@ -24,6 +26,7 @@ import java.util.Map;
  * Контроллер для работы с текущим пользователем.
  * Демонстрирует использование UserDetailsImpl и SecurityContextHelper с JWT авторизацией.
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
@@ -32,16 +35,7 @@ public class AuthenticationController {
     private final JwtTokenUtil jwtTokenUtil;
     private final SimpleAuthService simpleAuthService;
     private final LoginManagementService loginManagementService;
-
-    public AuthenticationController(SecurityContextHelper securityContextHelper,
-                                   JwtTokenUtil jwtTokenUtil,
-                                   LoginManagementService loginManagementService,
-                                   SimpleAuthService simpleAuthService) {
-        this.securityContextHelper = securityContextHelper;
-        this.loginManagementService = loginManagementService;
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.simpleAuthService = simpleAuthService;
-    }
+    private final AccountService accountService;
 
     /**
      * Получить информацию о текущем пользователе через @AuthenticationPrincipal
@@ -55,7 +49,6 @@ public class AuthenticationController {
         response.put("id", userDetails.getId());
         response.put("username", userDetails.getUsername());
         response.put("tenantCode", userDetails.getTenantCode());
-        response.put("accountId", userDetails.getAccountId());
         response.put("accountName", userDetails.getAccountName());
         response.put("clientId", userDetails.getClientId());
         response.put("clientName", userDetails.getClientName());
@@ -63,6 +56,12 @@ public class AuthenticationController {
         response.put("productRoles", userDetails.getProductRoles());
         response.put("authorities", userDetails.getAuthorities());
         response.put("isDefault", userDetails.isDefault());
+
+//        var accountId = userDetails.getAccountId();
+//        var accounts = accountService.getAccountsByParentId(accountId);
+//
+//        response.put("accountId", accountId);
+//        response.put("accounts", accounts);
 
         return ResponseEntity.ok(response);
     }

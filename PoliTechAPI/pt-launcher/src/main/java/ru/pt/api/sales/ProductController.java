@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.product.ProductService;
@@ -50,6 +51,11 @@ public class ProductController extends SecuredController {
         requireAdmin(user);
         ProductVersionModel created = productService.create(payload);
         return ResponseEntity.ok(created);
+    }
+
+    @GetMapping("/{accountId}")
+    public List<Product> getProductsByAccountId(@PathVariable String tenantCode, @PathVariable String accountId) {
+        return productService.getProductByAccountId(accountId);
     }
 
     @GetMapping("/{productId}/versions/{versionNo}")
