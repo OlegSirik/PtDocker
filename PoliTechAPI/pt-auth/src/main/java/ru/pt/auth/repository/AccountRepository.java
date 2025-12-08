@@ -89,5 +89,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     )
     List<AccountEntity> findPathByAccountId(Long accountId);
 
+    List<AccountEntity> findAllByParentId(Long parentId);
+
 
 }
