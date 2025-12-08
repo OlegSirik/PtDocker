@@ -4,6 +4,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan("ru.pt.auth")
+@ComponentScan({"ru.pt.auth", "ru.pt.api"})
 public class AuthModuleConfiguration {
 }
