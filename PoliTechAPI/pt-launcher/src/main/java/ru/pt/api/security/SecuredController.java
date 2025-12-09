@@ -79,7 +79,7 @@ public abstract class SecuredController extends ApiExceptionHandler {
      * Проверяет, имеет ли пользователь право на создание расчётов
      */
     protected void requireProductQuote(UserDetailsImpl user, String productCode) {
-        if (user == null || !user.canPerformAction(productCode, "QUOTE")) {
+        if (user == null || !user.hasProductRole("QUOTE")) {
             throw new UnauthorizedException("No quote access to product: " + productCode);
         }
     }
@@ -88,8 +88,8 @@ public abstract class SecuredController extends ApiExceptionHandler {
      * Проверяет, имеет ли пользователь право на создание полисов
      */
     protected void requireProductPolicy(UserDetailsImpl user, String productCode) {
-        if (user == null || !user.canPerformAction(productCode, "POLICY")) {
-            throw new UnauthorizedException("No policy access to product: " + productCode);
+        if (user == null || !user.hasProductRole("POLICY")) {
+            throw new UnauthorizedException("No policy access: " + productCode);
         }
     }
 
