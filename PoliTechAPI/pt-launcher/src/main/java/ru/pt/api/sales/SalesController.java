@@ -88,8 +88,7 @@ public class SalesController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody String request) {
         requireAuthenticated(user);
-        // TODO: Извлечь productCode из request и проверить права
-        // requireProductPolicy(user, productCode);
+         requireProductQuote(user, new JsonProjection(request).getProductCode());
         return ResponseEntity.ok(processOrchestrator.calculate(request));
     }
 

@@ -159,7 +159,8 @@ public class UserDetailsImpl implements UserDetails {
      * Проверяет, есть ли у пользователя определенная роль продукта
      */
     public boolean hasProductRole(String productRole) {
-        return productRoles.contains(productRole);
+        return productRoles.stream()
+                .anyMatch(role -> role.contains(productRole));
     }
 
     /**
