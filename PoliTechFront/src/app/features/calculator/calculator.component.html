@@ -22,28 +22,9 @@
     <!-- Formulas Tab -->
     <mat-tab label="Формулы">
       <div class="tab-content">
+@if (false) {
         <mat-card class="datatable-card">
           <mat-card-content>
-            <!--
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addFormula()">
-                <mat-icon>add</mat-icon>
-                Add formula
-              </button>
-            </div>
-            -->
-            <div class="table-header">
-              <h3>Formulas</h3>
-
-              <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="formulasSearchText" (ngModelChange)="updateFormulasTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-              -->
-            </div>
-
             <table mat-table [dataSource]="paginatedFormulas" class="calculator-table">
               <ng-container matColumnDef="varCode">
                 <th mat-header-cell *matHeaderCellDef>Код переменной</th>
@@ -56,20 +37,12 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element; let i = index">
+                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
+                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
                   <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
                     <button mat-button color="primary" matBadge="{{element.lines.length}}" class="action-button1" (click)="showLines(element, i)">
                       lines
                     </button>
-                    <button mat-button color="primary" class="action-button" (click)="editFormula(element, i)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <!--
-                    <button mat-button color="warn" class="action-button" (click)="deleteFormula(element, i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                    -->
                   </div>
                 </td>
               </ng-container>
@@ -77,41 +50,15 @@
               <tr mat-header-row *matHeaderRowDef="formulasDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: formulasDisplayedColumns;"></tr>
             </table>
-
-            <!--
-            <mat-paginator
-              [length]="filteredFormulas.length"
-              [pageSize]="formulasPageSize"
-              [pageIndex]="formulasPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onFormulasPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-            -->
           </mat-card-content>
         </mat-card>
-
+}
         <!-- Lines Card -->
-        @if (selectedFormulaIndex !== -1) {
+        
           <mat-card class="datatable-card">
             <mat-card-content>
-              <!--
-              <div class="button-section">
-                <button mat-raised-button color="primary" class="add-button" (click)="addLine()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
-              </div>
-              -->
               <div class="table-header">
                 <h3>lines</h3>
-                <!--
-                <mat-form-field class="search-field" appearance="outline">
-                  <mat-label>Поиск</mat-label>
-                  <input matInput [(ngModel)]="linesSearchText" (ngModelChange)="updateLinesTable()" placeholder="Поиск">
-                  <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
-                -->
                 <button mat-raised-button color="primary" class="add-button" (click)="addLine()">
                   <mat-icon>add</mat-icon>
                   Добавить
@@ -175,8 +122,8 @@
                   <td mat-cell *matCellDef="let element">{{element.postProcessor || ''}}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let element; let i = index">
+                  <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
+                  <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
                     <div class="action-buttons">
                       <button mat-button color="primary" class="action-button" (click)="editLine(element, i)">
                         <mat-icon>edit</mat-icon>
@@ -202,7 +149,7 @@
               -->
             </mat-card-content>
           </mat-card>
-        }
+        
       </div>
     </mat-tab>
 
@@ -220,13 +167,6 @@
 
             <div class="table-header">
               <h3>coefficients</h3>
-
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="coefficientsSearchText" (ngModelChange)="updateCoefficientsTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-
             </div>
 
             <table mat-table [dataSource]="paginatedCoefficients" class="calculator-table">
@@ -241,15 +181,9 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" matBadge="{{element.columns.length}}" class="action-button1" (click)="showColumns(element, i)">
-                      columns
-                    </button>
-                    <button mat-button color="accent" class="action-button1" (click)="showCoefficientData(element)">
-                      Data
-                    </button>
+                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
+                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
+                  <div class="action-buttons" (click)="$event.stopPropagation()" style="display: flex; justify-content: flex-end; gap: 8px;">
                     <button mat-button color="primary" class="action-button" (click)="editCoefficient(element, i)">
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -261,18 +195,11 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="coefficientsDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: coefficientsDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: coefficientsDisplayedColumns;" 
+                  (click)="onCoefficientRowClick(row)" 
+                  class="clickable-row"></tr>
             </table>
-            <!--
-            <mat-paginator
-              [length]="filteredCoefficients.length"
-              [pageSize]="coefficientsPageSize"
-              [pageIndex]="coefficientsPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onCoefficientsPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-            -->
+           
           </mat-card-content>
         </mat-card>
 
@@ -288,11 +215,6 @@
               </div>
               <div class="table-header">
                 <h3>Columns: {{ selectedColumnCoefficientCode }}</h3>
-                <mat-form-field class="search-field" appearance="outline">
-                  <mat-label>Поиск</mat-label>
-                  <input matInput [(ngModel)]="columnsSearchText" (ngModelChange)="updateColumnsTable()" placeholder="Поиск">
-                  <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
               </div>
               <table mat-table [dataSource]="paginatedColumns" class="calculator-table">
                 <ng-container matColumnDef="nr">
@@ -316,9 +238,9 @@
                   <td mat-cell *matCellDef="let element">{{element.varDataType}}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let element; let i = index">
-                    <div class="action-buttons">
+                  <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
+                  <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
+                    <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
                       <button mat-button color="primary" class="action-button" (click)="editColumn(element, i)">
                         <mat-icon>edit</mat-icon>
                       </button>
@@ -331,14 +253,6 @@
                 <tr mat-header-row *matHeaderRowDef="columnsDisplayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: columnsDisplayedColumns;"></tr>
               </table>
-              <mat-paginator
-                [length]="filteredColumns.length"
-                [pageSize]="columnsPageSize"
-                [pageIndex]="columnsPageIndex"
-                [pageSizeOptions]="[5, 10, 25]"
-                (page)="onColumnsPageChange($event)"
-                showFirstLastButtons>
-              </mat-paginator>
             </mat-card-content>
           </mat-card>
         }
@@ -452,9 +366,9 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
+                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
+                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
+                  <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
                     <button mat-button color="primary" class="action-button" (click)="editVar(element, i)">
                       <mat-icon>edit</mat-icon>
                     </button>

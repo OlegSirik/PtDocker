@@ -17,9 +17,9 @@ public class PostProcessServiceImpl implements PostProcessService {
                 if (cover == null || cover.getCover() == null) {
                     continue;
                 }
-                String sumInsuredVarCode = cover.getCover().getCode() + "_SumIns";
-                String premiumVarCode = cover.getCover().getCode() + "_Prem";
-                String deductibleNrVarCode = cover.getCover().getCode() + "_DedNr";
+                String sumInsuredVarCode = "co_" + cover.getCover().getCode() + "_sumInsured";
+                String premiumVarCode = "co_" + cover.getCover().getCode() + "_premium";
+                String deductibleNrVarCode = "co_" + cover.getCover().getCode() + "_deductibleNr";
 
                 // TODO медленно, надо мапу передавать в метод
                 // Find values in lobVars

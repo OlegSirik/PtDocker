@@ -21,6 +21,7 @@ import { FormulaDialogComponent } from './formula-dialog/formula-dialog.componen
 import { LineDialogComponent } from './line-dialog/line-dialog.component';
 import { CoefficientDialogComponent } from './coefficient-dialog/coefficient-dialog.component';
 import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
+import { ProductService } from '../../shared/services/product.service';
 
 import * as XLSX from 'xlsx';
 
@@ -78,7 +79,7 @@ export class CalculatorComponent implements OnInit {
   formulasPageIndex = 0;
   filteredFormulas: CalculatorFormula[] = [];
   paginatedFormulas: CalculatorFormula[] = [];
-  selectedFormulaIndex = -1;
+  selectedFormulaIndex = 0;
 
   // Formula lines table
   linesDisplayedColumns = ['nr', 'conditionLeft', 'conditionOperator', 'conditionRight', 'expressionResult', 'expressionLeft', 'expressionOperator', 'expressionRight', 'postProcessor', 'actions'];
@@ -123,6 +124,7 @@ export class CalculatorComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private calculatorService: CalculatorService,
+    private productService: ProductService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -148,13 +150,15 @@ export class CalculatorComponent implements OnInit {
   }
 
   loadCalculator(productId: string, versionNo: string, packageNo: string): void {
+    
     this.calculatorService.getCalculator(productId, versionNo, packageNo).subscribe({
       next: (calculator) => {
+        
         this.calculator = calculator;
         this.updateTables();
       },
       error: (error) => {
-        console.error('Error loading calculator:', error);
+        
         // If GET fails, try POST to create new calculator
         this.calculatorService.createCalculator(productId, versionNo, packageNo).subscribe({
           next: (newCalculator) => {
@@ -162,7 +166,7 @@ export class CalculatorComponent implements OnInit {
             this.updateTables();
           },
           error: (createError) => {
-            console.error('Error creating calculator:', createError);
+            
             this.snackBar.open('Ошибка загрузки калькулятора', 'Закрыть', { duration: 3000 });
           }
         });
@@ -479,13 +483,14 @@ export class CalculatorComponent implements OnInit {
   }
 
   updateLinesTable(): void {
+/*
     if (this.selectedFormulaIndex === -1) {
       this.filteredLines = [];
       this.paginatedLines = [];
       return;
     }
-
-    const lines = this.calculator.formulas[this.selectedFormulaIndex].lines.slice();
+*/
+    const lines = this.calculator.formulas[0].lines.slice();
 
     // Sort by nr (as number, fallback to 0 if not a number)
     lines.sort((a, b) => {
@@ -607,6 +612,17 @@ export class CalculatorComponent implements OnInit {
     this.selectedColumnCoefficientCode = coefficient.varCode;
     this.selectedCoefficientIndex = index;
     this.updateColumnsTable();
+  }
+
+  onCoefficientRowClick(coefficient: CalculatorCoefficient): void {
+    // Find the index in the full coefficients array
+    const index = this.calculator.coefficients.findIndex(c => c.varCode === coefficient.varCode);
+    if (index !== -1) {
+      // Update columns table
+      this.showColumns(coefficient, index);
+      // Update data table
+      this.showCoefficientData(coefficient);
+    }
   }
 
   updateCoefficientsTable(): void {
@@ -894,7 +910,33 @@ this.coefficientDataRows = rows;
   }
 
   syncVars() {
-    throw new Error('Method not implemented.');
-    }
-    
+    //throw new Error('Method not implemented.');
+    /*
+export interface PolicyVar {
+  varPath: string;
+  varName: string;
+  varCode: string;
+  varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'DURATION';
+  varValue: string;
+}
+    */
+    this.productService.getProduct( +this.calculator.productId, +this.calculator.versionNo ).subscribe(product => {
+      // loop product.vars
+      // if var not in calculator.vars then add it
+      product.vars.forEach(v => {
+        if (!this.calculator.vars.some(v2 => v2.varCode === v.varCode)) {
+          this.calculator.vars.push({
+            varCode: v.varCode,
+            varName: v.varName,
+            varPath: v.varPath,
+            varType: 'VAR', //v.varType,
+            varDataType: 'STRING',  //v.varDataType,
+            varValue: v.varValue
+          });
+        }
+      });
+
+      this.updateVarsTable();
+    });
+  }
 }

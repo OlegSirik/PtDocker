@@ -247,8 +247,10 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> getAccountsByParentId(Long parentId) {
-        return accountRepository.findAllByParent_Id(parentId)
-            .stream().map(accountMapper::toDto)
-            .collect(Collectors.toList());
+        return null;
+        // TODO: implement
+        // return accountRepository.findAllByParent_Id(parentId)
+        //     .stream().map(accountMapper::toDto)
+        //     .collect(Collectors.toList());
     }
 }
