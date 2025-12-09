@@ -103,6 +103,7 @@ public class CalculatorController extends SecuredController {
         requireAdmin(user);
         CalculatorModel json = calculateService.createCalculatorIfMissing(productId, productCode, versionNo, packageNo);
         return ResponseEntity.ok(json);
+        
     }
 
     @PutMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")

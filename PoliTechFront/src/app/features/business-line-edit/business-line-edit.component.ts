@@ -56,13 +56,6 @@ export class BusinessLineEditComponent implements OnInit {
   coverSearchText = '';
   exampleJsonText = '';
 
-  // Pagination properties
-  //varPageSize = 25;
-  //varPageIndex = 0;
-  //coverPageSize = 25;
-  //coverPageIndex = 0;
-
-
 
   get filteredCovers(): BusinessLineCover[] {
     const s = this.coverSearchText.trim().toLowerCase();
@@ -208,6 +201,7 @@ export class BusinessLineEditComponent implements OnInit {
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('mpCode');
+    console.log('code', code);
     if (code) {
       this.isNewRecord = false;
       this.svc.getBusinessLineByCode(code).subscribe(doc => {
@@ -226,6 +220,7 @@ export class BusinessLineEditComponent implements OnInit {
       });
     } else {
       this.isNewRecord = true;
+      this.businessLine.mpVars = this.svc.policyVars.concat(this.svc.policyMagicVars);
       this.updateChanges();
     }
   }
@@ -235,13 +230,14 @@ export class BusinessLineEditComponent implements OnInit {
   }
 
   phTypeChanged(): void {
-
+    
     // Remove all vars whose varPath starts with 'policyHolder.' from mpVars
     if (Array.isArray(this.businessLine.mpVars)) {
       this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varPath && v.varPath.startsWith('policyHolder.'))
+        v => !(v.varCode.startsWith('ph_'))
       );
     }
+    
     let newVars: any[] =[];
     // Берём массив phPersonVars из сервиса, копируем уникальные varPath в this.businessLine.mpVars
     if (this.businessLine.mpPhType === 'person') {
@@ -250,7 +246,9 @@ export class BusinessLineEditComponent implements OnInit {
         concat(this.svc.phEmailVars).
         concat(this.svc.phPersonOrganizationVars).
         concat(this.svc.phPersonDocumentVars).
-        concat(this.svc.phAddressVars);
+        concat(this.svc.phAddressVars).
+        concat(this.svc.phPersonMagicVars);
+      
     }
     if (this.businessLine.mpPhType === 'organization') {
       newVars = newVars.concat(this.svc.phOrganizationVars).
@@ -259,9 +257,8 @@ export class BusinessLineEditComponent implements OnInit {
         concat(this.svc.phEmailVars).
         concat(this.svc.phAddressVars);
     }
-    const existingVarPaths = new Set(this.businessLine.mpVars.map(v => v.varPath));
-    const uniqueVarsToAdd = newVars.filter(v => !existingVarPaths.has(v.varPath));
-    this.businessLine.mpVars = [...this.businessLine.mpVars, ...uniqueVarsToAdd];
+
+    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
     this.updateChanges();
 
 
@@ -272,7 +269,7 @@ export class BusinessLineEditComponent implements OnInit {
     // Remove all vars whose varPath starts with 'insuredObject.' from mpVars
     if (Array.isArray(this.businessLine.mpVars)) {
       this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varPath && v.varPath.startsWith('insuredObject.'))
+        v => !(v.varPath && v.varCode.startsWith('io_'))
       );
     }
     let newVars: any[] = [];
@@ -285,7 +282,8 @@ export class BusinessLineEditComponent implements OnInit {
         ...this.svc.phEmailVars,
         ...this.svc.phPersonOrganizationVars,
         ...this.svc.phPersonDocumentVars,
-        ...this.svc.phAddressVars
+        ...this.svc.phAddressVars,
+        ...this.svc.ioPersonMagicVars
       ];
 
       // Transform varPath from policyHolder.* to insuredObject.* and update varCode prefix
@@ -428,12 +426,34 @@ export class BusinessLineEditComponent implements OnInit {
     //});
   }
 
+  addCoverVars(code: string): void {
+// add var to mpVars if not exists - co_+code+_premium, co_+code+_sumInsured, co_+code+_deductibleNr
+  const newVars: any[] = [];
+  newVars.push({ varCode: 'co_' + code + '_premium', varType: 'VAR', 
+    varPath: '$..covers[?(@.cover.code == "' + code + '")].premium', 
+    varName: 'Премия по покрытию ' + code, varDataType: 'NUMBER' });
+  newVars.push({ varCode: 'co_' + code + '_sumInsured', varType: 'VAR', 
+    varPath: '$..covers[?(@.cover.code == "' + code + '")].sumInsured', 
+    varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER' });
+  newVars.push({ varCode: 'co_' + code + '_deductibleNr', varType: 'VAR', 
+    varPath: '', 
+    varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER' });
+    newVars.push({ varCode: 'co_' + code + '_deductible', varType: 'VAR', 
+      varPath: '$..covers[?(@.cover.code == "' + code + '")].deductible', 
+      varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER' });
+    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
+  }
+
+  deleteCoverVars(code: string): void {
+    this.businessLine.mpVars = this.businessLine.mpVars.filter(v => v.varCode !== 'co_' + code);
+  }
+
   addCover(): void {
     this.openCoverDialog({ coverCode: '', coverName: '', risks: '' }, (res) => {
       if (!res) return;
-
         const model: BusinessLineCover = { coverCode: res.coverCode, coverName: res.coverName, risks: res.risks };
         this.businessLine.mpCovers = [...this.businessLine.mpCovers, model];
+        this.addCoverVars(res.coverCode);
         this.updateChanges();
 
     });
@@ -474,14 +494,17 @@ export class BusinessLineEditComponent implements OnInit {
     this.openConfirm('Удалить покрытие?', () => {
       if (this.isNewRecord) {
         this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
+        this.deleteCoverVars(c.coverCode);
         this.updateChanges();
       } else {
         this.svc.deleteCover(this.businessLine.mpCode, c.coverCode).subscribe(() => {
           this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
+          this.deleteCoverVars(c.coverCode);
           this.updateChanges();
         });
       }
     });
+
   }
 
   // JSON File operations

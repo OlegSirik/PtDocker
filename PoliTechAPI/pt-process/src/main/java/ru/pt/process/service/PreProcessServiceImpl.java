@@ -231,7 +231,9 @@ public class PreProcessServiceImpl implements PreProcessService {
                     if (!PeriodUtils.isDateInRange(issueDate, startDate, validatorValue)) {
                         throw new IllegalArgumentException("Activation delay is not in range");
                     }
-                    setter.setRawValue("waitingPeriod", validatorValue);
+                    Period prd = Period.between(issueDate.toLocalDate(), startDate.toLocalDate());
+                    setter.setRawValue("waitingPeriod", prd.toString());
+                    //setter.setRawValue("waitingPeriod", validatorValue);
                     break;
                 case "LIST":
                     // список доступных значений из модели полиса
@@ -272,6 +274,7 @@ public class PreProcessServiceImpl implements PreProcessService {
             }
         }
 
+        String tmp = setter.writeValue();
         return setter.writeValue();
     }
 
@@ -302,7 +305,9 @@ public class PreProcessServiceImpl implements PreProcessService {
                     if (!PeriodUtils.isDateInRange(startDate, endDate, validatorValue)) {
                         throw new IllegalArgumentException("Activation delay is not in range");
                     }
-                    setter.setRawValue("policyTerm", validatorValue);
+                    Period prd = Period.between(startDate.toLocalDate(), endDate.toLocalDate());
+                    //setter.setRawValue("policyTerm", validatorValue);
+                    setter.setRawValue("policyTerm", prd.toString());
                     break;
                 case "LIST":
                     // должно быть startDate и policyTerm в договоре и policyTerms в модели полиса

@@ -34,7 +34,7 @@ import { DeductibleDialogComponent } from './deductible-dialog/deductible-dialog
 import { LimitDialogComponent } from './limit-dialog/limit-dialog.component';
 import { tap } from 'rxjs';
 import { BusinessLineService } from '../../shared/services/business-line.service';
-import { BusinessLineEditService } from '../../shared/services/business-line-edit.service';
+import { BusinessLineEditService, BusinessLineVar } from '../../shared/services/business-line-edit.service';
 
 @Component({
     selector: 'app-product',
@@ -740,7 +740,26 @@ export class ProductComponent implements OnInit {
   // Policy Variables methods
   reloadPolicyVars(): void {
     // Mock data for policy variables - in real implementation, this would come from policyVersion.vars
-    this.updatePolicyTable();
+    //this.updatePolicyTable();
+    this.businessLineEditService.getBusinessLineByCode(this.product.lob).subscribe(result => {
+      if (result) {
+        let policyVars: BusinessLineVar[] = result.mpVars;
+
+        // add vars to this.product.vars if it is not exists
+        policyVars.forEach(v => {
+          if (!this.product.vars.some(v2 => v2.varCode === v.varCode)) {
+            this.product.vars.push({
+              varPath: v.varPath,
+              varName: v.varName,
+              varCode: v.varCode,
+              varDataType: v.varDataType,
+              varValue: v.varValue
+            });
+          }
+        });
+        this.updatePolicyTable();
+      }
+    });
   }
 
   updatePolicyTable(): void {

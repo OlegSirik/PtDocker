@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, delay, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { BaseApiService } from './api/base-api.service';
+import { EnvService } from './env.service';
 
 export interface Calculator {
   id?: string;
@@ -70,86 +72,37 @@ export interface CoefficientDataRow {
 @Injectable({
   providedIn: 'root'
 })
-export class CalculatorService {
+
+export class CalculatorService extends BaseApiService<Calculator> {
   constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+    http: HttpClient,
+    env: EnvService,
+    authService: AuthService,
+  ) {
+    super(http, env, 'admin/calculators', authService);
+  }
 
   private mockData: Calculator = {
-    id: 'calc-1',
-    productId: '1202',
-    productCode: 'NS-SRAVNIRU',
-    versionNo: '0',
-    packageNo: 'Basic',
-    vars: [
-      {
-        varCode: 'ph_firstname',
-        varName: 'Имя страхователя',
-        varPath: 'policyHolder.person.firstName',
-        varType: 'VAR',
-        varValue: '',
-        varDataType: 'STRING'
-      },
-      {
-        varCode: 'ins_amount',
-        varName: 'Страховая сумма',
-        varPath: 'insurance.amount',
-        varType: 'VAR',
-        varValue: '120000',
-        varDataType: 'NUMBER'
-      }
-    ],
-    formulas: [
-      {
-        varCode: 'premium',
-        varName: 'Премия',
-        lines: [
-          {
-            nr: '1',
-            conditionLeft:  'ins_amount',
-            conditionOperator: '>',
-            conditionRight: 'ph_firstname',
-            expressionResult: 'premium',
-            expressionLeft: 'ins_amount',
-            expressionOperator: '*',
-            expressionRight: 'ph_firstname',
-            postProcessor: 'ROUND'
-          }
-        ]
-      }
-    ],
-    coefficients: [
-      {
-        varCode: 'age_factor',
-        varName: 'Возрастной коэффициент',
-        columns: [
-          {
-            varCode: 'age',
-            varDataType: 'NUMBER',
-            nr: '1',
-            conditionOperator: '>=',
-            sortOrder: 'ASC'
-          }
-        ]
-      }
-    ]
+    productId: '',
+    productCode: '',
+    versionNo: '',
+    packageNo: '',
+    vars: [],
+    formulas: [],
+    coefficients: []
   };
 
   // GET calculator
   getCalculator(productId: string, versionNo: string, packageNo: string): Observable<Calculator> {
-    if (!this.http) {
-      throw new Error('HttpClient is not initialized');
-    }
 
-    return this.http.get<Calculator>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`).pipe(
+    let baseUrl = this.getUrl() + '/products/' + productId + '/versions/' + versionNo + '/packages/' + packageNo;
+    return this.http.get<Calculator>(baseUrl).pipe(
       tap(data => {
         this.mockData = data;
       }),
       catchError(error => {
         console.error('Error fetching calculator:', error);
         throw error;
-        return of(this.mockData);
       })
     );
   }
@@ -162,8 +115,8 @@ export class CalculatorService {
       packageNo: packageNo
     };
 
-    if (this.http) {
-      return this.http.post<Calculator>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${packageNo}/calculator`, body).pipe(
+    let baseUrl = this.getUrl() + '/products/' + productId + '/versions/' + versionNo + '/packages/' + packageNo;
+      return this.http.post<Calculator>(baseUrl, body).pipe(
         tap(createdCalculator => {
           this.mockData = { ...createdCalculator };
         }),
@@ -173,7 +126,7 @@ export class CalculatorService {
           return of({ ...this.mockData });
         })
       );
-    }
+    
 
     this.mockData = { ...this.mockData, ...body };
     return of({ ...this.mockData }).pipe(delay(500));
@@ -181,8 +134,9 @@ export class CalculatorService {
 
   // PUT calculator (update)
   updateCalculator(calculator: Calculator): Observable<Calculator> {
-    if (this.http) {
-      return this.http.put<Calculator>(`${this.authService.baseApiUrl}/admin/products/${calculator.productId}/versions/${calculator.versionNo}/packages/${calculator.packageNo}/calculator`, calculator).pipe(
+    
+    let baseUrl = this.getUrl() + '/products/' + calculator.productId + '/versions/' + calculator.versionNo + '/packages/' + calculator.packageNo;
+      return this.http.put<Calculator>(baseUrl, calculator).pipe(
         tap(updatedCalculator => {
           this.mockData = { ...updatedCalculator };
         }),
@@ -191,7 +145,7 @@ export class CalculatorService {
           return of({ ...this.mockData });
         })
       );
-    }
+    
 
     this.mockData = { ...calculator };
     return of({ ...this.mockData }).pipe(delay(500));
@@ -220,10 +174,9 @@ export class CalculatorService {
 
   // Coefficient data API
   getCoefficientData(calculatorId: string, coefficientCode: string): Observable<CoefficientDataRow[]> {
-    if (!this.http) {
-      throw new Error('HttpClient is not initialized');
-    }
-    return this.http.get<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`).pipe(
+    let baseUrl = this.getUrl(calculatorId) + '/coefficients/' + coefficientCode;
+
+    return this.http.get<CoefficientDataRow[]>(baseUrl).pipe(
       catchError(error => {
         console.error('Error fetching coefficient data:', error);
         // Return mock empty data
@@ -233,10 +186,9 @@ export class CalculatorService {
   }
 
   createCoefficientData(calculatorId: string, coefficientCode: string, rows: CoefficientDataRow[]): Observable<CoefficientDataRow[]> {
-    if (!this.http) {
-      throw new Error('HttpClient is not initialized');
-    }
-    return this.http.post<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
+    let baseUrl = this.getUrl(calculatorId) + '/coefficients/' + coefficientCode;
+
+    return this.http.post<CoefficientDataRow[]>(baseUrl, rows).pipe(
       catchError(error => {
         console.error('Error creating coefficient data:', error);
         return of(rows);
@@ -245,10 +197,9 @@ export class CalculatorService {
   }
 
   updateCoefficientData(calculatorId: string, coefficientCode: string, rows: CoefficientDataRow[]): Observable<CoefficientDataRow[]> {
-    if (!this.http) {
-      throw new Error('HttpClient is not initialized');
-    }
-    return this.http.put<CoefficientDataRow[]>(`${this.authService.baseApiUrl}/admin/calculator/${calculatorId}/coefficients/${coefficientCode}`, rows).pipe(
+    let baseUrl = this.getUrl(calculatorId) + '/coefficients/' + coefficientCode;
+
+    return this.http.put<CoefficientDataRow[]>(baseUrl, rows).pipe(
       catchError(error => {
         console.error('Error updating coefficient data:', error);
         return of(rows);
