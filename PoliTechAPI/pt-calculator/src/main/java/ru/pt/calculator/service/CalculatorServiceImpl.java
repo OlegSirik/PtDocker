@@ -2,6 +2,7 @@ package ru.pt.calculator.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.calculator.CalculatorModel;
@@ -19,13 +20,17 @@ import ru.pt.calculator.entity.CalculatorEntity;
 import ru.pt.calculator.repository.CalculatorRepository;
 import ru.pt.calculator.utils.ValidatorImpl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.math.RoundingMode.HALF_UP;
+
 @Component
+@RequiredArgsConstructor
 public class CalculatorServiceImpl implements CalculatorService {
 
     private final CalculatorRepository calculatorRepository;
@@ -33,14 +38,6 @@ public class CalculatorServiceImpl implements CalculatorService {
     private final ProductService productService;
     private final LobService lobService;
     private final ObjectMapper objectMapper;
-
-    public CalculatorServiceImpl(CalculatorRepository calculatorRepository, CoefficientService coefficientService, ProductService productService, LobService lobService, ObjectMapper objectMapper) {
-        this.calculatorRepository = calculatorRepository;
-        this.coefficientService = coefficientService;
-        this.productService = productService;
-        this.lobService = lobService;
-        this.objectMapper = objectMapper;
-    }
 
     @Transactional(readOnly = true)
     public CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo) {
@@ -80,7 +77,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
                     // create empty calculator JSON as per spec
                     CalculatorModel calculatorModel = new CalculatorModel();
-                    calculatorModel.setProductId(productId.intValue());
+                    calculatorModel.setProductId(productId);
                     calculatorModel.setProductCode(productCode);
                     calculatorModel.setVersionNo(versionNo);
                     calculatorModel.setPackageNo(packageNo);
@@ -266,8 +263,10 @@ public class CalculatorServiceImpl implements CalculatorService {
                     res = postProcess(res, line.getPostProcessor());
                 }
 
-                if (line.getExpressionResult() != null && line.getExpressionResult() != "") {
-                    modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionResult())).findFirst().orElse(null).setVarValue(res == null ? null : res.toString());
+                if (line.getExpressionResult() != null && !Objects.equals(line.getExpressionResult(), "")) {
+                    Objects.requireNonNull(modelVars.stream()
+                        .filter(v -> v.getVarCode().equals(line.getExpressionResult()))
+                        .findFirst().orElse(null)).setVarValue(res == null ? null : res.toString());
                 }
             }
         }
@@ -277,21 +276,19 @@ public class CalculatorServiceImpl implements CalculatorService {
 
 
     private Double compute(Double left, String operator, Double right) {
-        if (operator == null || operator.isBlank()) return left == null ? null : left;
+        if (operator == null || operator.isBlank()) return left;
 
         switch (operator.trim()) {
             case "+":
                 if (left != null && right != null) return trimZeros(left + right);
                 if (left == null && right == null) return null;
                 if (left == null) return trimZeros(right);
-                if (right == null) return trimZeros(left);
-                return null;
+                return trimZeros(left);
             case "-":
                 if (left != null && right != null) return trimZeros(left - right);
                 if (left == null && right == null) return null;
                 if (left == null) return trimZeros(0 - right);
-                if (right == null) return trimZeros(left);
-                return null;
+                return trimZeros(left);
             case "*":
                 if (left != null && right != null) return trimZeros(left * right);
                 return null;
@@ -316,12 +313,8 @@ public class CalculatorServiceImpl implements CalculatorService {
                 } catch (Exception ignored) {
                 }
             }
-            Double d = value;
-            if (d != null) {
-                java.math.BigDecimal bd = new java.math.BigDecimal(d).setScale(scale, java.math.RoundingMode.HALF_UP);
-                return trimZeros(bd.doubleValue());
-            }
-            return value;
+            BigDecimal bd = new BigDecimal(value).setScale(scale, HALF_UP);
+            return trimZeros(bd.doubleValue());
         }
         return value;
     }
@@ -340,7 +333,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         String s = Double.toString(d);
         if (s.contains("E") || s.contains("e")) {
             // Convert scientific notation to plain string and remove trailing zeros
-            s = new java.math.BigDecimal(s).stripTrailingZeros().toPlainString();
+            s = new BigDecimal(s).stripTrailingZeros().toPlainString();
         }
         if (s.indexOf('.') >= 0) {
             s = s.replaceAll("0+$", "").replaceAll("\\.$", "");
