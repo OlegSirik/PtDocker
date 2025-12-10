@@ -6,6 +6,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "acc_product_roles",
         uniqueConstraints = @UniqueConstraint(name = "acc_product_roles_uk",

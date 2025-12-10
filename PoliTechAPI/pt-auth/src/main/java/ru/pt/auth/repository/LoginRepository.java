@@ -22,13 +22,13 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     /**
      * Получить все логины для тенанта
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.id = :tenantCode ORDER BY l.createdAt DESC")
+    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode ORDER BY l.createdAt DESC")
     List<LoginEntity> findByTenantCode(@Param("tenantCode") String tenantCode);
 
     /**
      * Получить логин по ID и tenant ID
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.id = :id AND l.tenantEntity.id = :tenantCode")
+    @Query("SELECT l FROM LoginEntity l WHERE l.id = :id AND l.tenantEntity.code = :tenantCode")
     Optional<LoginEntity> findByIdAndTenantCode(@Param("id") Long id, @Param("tenantCode") String tenantCode);
 
     /**

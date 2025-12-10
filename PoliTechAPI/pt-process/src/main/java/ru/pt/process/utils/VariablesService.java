@@ -151,13 +151,19 @@ public class VariablesService {
                     } catch (Exception e) {
                         return "-1";
                     }
-                case "policyTermMonths":
+                case "pl_TermMonths":
                     LocalDate st = projection.getStartDate().toLocalDate();
                     LocalDate ed = projection.getEndDate().toLocalDate();
                     Period p = Period.between(st, ed);
                     int m = p.getYears() * 12 + p.getMonths();
                     return Integer.toString(m);
-
+                case "pl_TermDays":
+                    LocalDate st1 = projection.getStartDate().toLocalDate();
+                    LocalDate e1 = projection.getEndDate().toLocalDate();
+                    Period p1 = Period.between(st1, e1);
+                    int m1 = p1.getDays();
+                    return Integer.toString(m1);
+    
                 default:
                     return key + " Not Found";
             }

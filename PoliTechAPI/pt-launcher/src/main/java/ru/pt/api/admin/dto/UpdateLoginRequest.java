@@ -5,11 +5,20 @@ package ru.pt.api.admin.dto;
  * PATCH /tnts/{tenantCode}/logins/{id}
  */
 public class UpdateLoginRequest {
+    private String tenantCode;
     private String fullName;
     private String position;
     private Boolean isDeleted;
 
     // Getters and Setters
+    public String getTenantCode() {
+        return tenantCode;
+    }
+
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
+
     public String getFullName() {
         return fullName;
     }

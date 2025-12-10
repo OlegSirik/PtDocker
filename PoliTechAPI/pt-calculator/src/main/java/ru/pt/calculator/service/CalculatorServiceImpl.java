@@ -95,23 +95,29 @@ public class CalculatorServiceImpl implements CalculatorService {
 
                         if (pkg.getCode().equals(packageNo)) {
                             pkg.getCovers().forEach(cover -> {
-                                LobVar var = new LobVar();
-                                var.setVarCode(cover.getCode() + "_SumIns");
-                                var.setVarName(cover.getCode() + " Страховая сумма");
-                                var.setVarType("VAR");
-                                calculatorModel.getVars().add(var);
+                                LobVar varSumInsured = new LobVar();
+                                varSumInsured.setVarCode("co_" + cover.getCode() + "_sumInsured");
+                                varSumInsured.setVarName(cover.getCode() + " Страховая сумма");
+                                varSumInsured.setVarType("VAR");
+                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
+                                    calculatorModel.getVars().add(varSumInsured);
+                                }
 
-                                var = new LobVar();
-                                var.setVarCode(cover.getCode() + "_Prem");
-                                var.setVarName(cover.getCode() + " Премия");
-                                var.setVarType("VAR");
-                                calculatorModel.getVars().add(var);
+                                LobVar varPremium = new LobVar();
+                                varPremium.setVarCode("co_" + cover.getCode() + "_premium");
+                                varPremium.setVarName(cover.getCode() + " Премия");
+                                varPremium.setVarType("VAR");
+                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
+                                    calculatorModel.getVars().add(varPremium);
+                                }
 
-                                var = new LobVar();
-                                var.setVarCode(cover.getCode() + "_DedNr");
-                                var.setVarName(cover.getCode() + " Номер франшизы");
-                                var.setVarType("VAR");
-                                calculatorModel.getVars().add(var);
+                                LobVar varDeductibleNr = new LobVar();
+                                varDeductibleNr.setVarCode("co_" + cover.getCode() + "_deductibleNr");
+                                varDeductibleNr.setVarName(cover.getCode() + " Номер франшизы");
+                                varDeductibleNr.setVarType("VAR");
+                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
+                                    calculatorModel.getVars().add(varDeductibleNr);
+                                }
 
                             });
                         }
@@ -130,20 +136,29 @@ public class CalculatorServiceImpl implements CalculatorService {
                     e.setProductCode(productCode);
                     e.setVersionNo(versionNo);
                     e.setPackageNo(packageNo);
+                    e.setCalculator("{}");
+                    CalculatorEntity saved = calculatorRepository.save(e);
+
+                    calculatorModel.setId(saved.getId());
                     String calculatorJson;
                     try {
                         calculatorJson = objectMapper.writeValueAsString(calculatorModel);
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
-                    e.setCalculator(calculatorJson);
-                    CalculatorEntity saved = calculatorRepository.save(e);
-                    calculatorModel.setId(saved.getId());
+                    saved.setCalculator(calculatorJson);
+                    saved = calculatorRepository.save(saved);
+                    //calculatorModel.setId(saved.getId());
 
                     String savedCalculatorJson = saved.getCalculator();
+                    
+
                     try {
-                        return objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
+                        CalculatorModel model = objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
+                        return model;               
                     } catch (JsonProcessingException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
                 });

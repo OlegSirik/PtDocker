@@ -53,7 +53,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         AccountLoginEntity defaultAccountLogin = accountLogins.stream()
                 .filter(AccountLoginEntity::getDefault)
                 .findFirst()
-                .orElse(accountLogins.get(0));
+                .orElse(accountLogins.getFirst());
 
         // Инициализируем lazy-loaded поля внутри транзакции
         initializeLazyFields(defaultAccountLogin, loginEntity);

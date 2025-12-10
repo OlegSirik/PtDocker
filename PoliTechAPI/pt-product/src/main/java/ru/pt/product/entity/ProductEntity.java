@@ -1,7 +1,11 @@
 package ru.pt.product.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "pt_products")
 public class ProductEntity {
@@ -29,61 +33,5 @@ public class ProductEntity {
 
     @Column(name = "isDeleted", nullable = false)
     private boolean isDeleted = false;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getLob() {
-        return lob;
-    }
-
-    public void setLob(String lob) {
-        this.lob = lob;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getProdVersionNo() {
-        return prodVersionNo;
-    }
-
-    public void setProdVersionNo(Integer prodVersionNo) {
-        this.prodVersionNo = prodVersionNo;
-    }
-
-    public Integer getDevVersionNo() {
-        return devVersionNo;
-    }
-
-    public void setDevVersionNo(Integer devVersionNo) {
-        this.devVersionNo = devVersionNo;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
-    }
 
 }

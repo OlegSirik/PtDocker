@@ -1,0 +1,24 @@
+Общий подход
+
+Пользователь логинится
+Бэкенд возвращает payload с данными темы (цвета, логотип, стиль)
+Angular сохраняет тему в сервисе (ThemeService)
+
+Сервис:
+прокидывает CSS-переменные в :root
+меняет ссылку на логотип
+триггерит обновление UI
+
+Пример JSON темы от сервера
+{
+  "primaryColor": "#3498db",
+  "secondaryColor": "#2ecc71",
+  "toolbarColor": "#34495e",
+  "buttonRadius": "8px",
+  "logoUrl": "/assets/themes/blue/logo.svg"
+}
+
+
+Получили от API /api/v1/{tnt}/admin/clients/{clientId}/ui-config
+add mock data
+

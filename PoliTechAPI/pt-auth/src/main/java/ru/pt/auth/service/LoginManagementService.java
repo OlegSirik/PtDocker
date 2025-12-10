@@ -7,12 +7,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
+import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.security.SecurityContextHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,15 +32,18 @@ public class LoginManagementService {
     private final TenantService tenantService;
     private final AccountLoginRepository accountLoginRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityContextHelper securityContextHelper;
 
     public LoginManagementService(LoginRepository loginRepository,
                                  TenantService tenantService,
-                                 AccountLoginRepository accountLoginRepository
+                                 AccountLoginRepository accountLoginRepository,
+                                 SecurityContextHelper securityContextHelper
     ) {
         this.loginRepository = loginRepository;
         this.tenantService = tenantService;
         this.accountLoginRepository = accountLoginRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.securityContextHelper = securityContextHelper;
     }
 
     /**
@@ -108,6 +115,8 @@ public class LoginManagementService {
             throw new BadRequestException("Invalid clientId format");
         }
 
+     // ToDo чтото тут с логикой не так
+         
         boolean hasClientAccess = accountLoginRepository.existsByUserLoginAndClientId(userLogin, clientIdLong);
         if (!hasClientAccess) {
             throw new NotFoundException("User '" + userLogin + "' is not associated with client ID " + clientId);
@@ -126,6 +135,7 @@ public class LoginManagementService {
      * PATCH /tnts/{tenantCode}/logins/{id}
      */
     public LoginEntity updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
+        
         // Шаг 1: Проверка наличия тенанта
         TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
@@ -138,7 +148,7 @@ public class LoginManagementService {
         // Шаг 3: Проверка наличия пользователя для данного тенанта
         LoginEntity login = loginRepository.findByIdAndTenantCode(id, tenant.getCode())
                 .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tenantCode + "'"));
-
+        
         // Шаг 4: Обновление данных
         boolean updated = false;
         if (fullName != null && !fullName.isBlank()) {
@@ -169,11 +179,15 @@ public class LoginManagementService {
     @Transactional(readOnly = true)
     public List<LoginEntity> getLoginsByTenant(String tenantCode) {
         // Шаг 1: Проверка наличия тенанта
+        List<LoginEntity> logins = new ArrayList<LoginEntity>();
+        try {
         TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
 
         // Шаг 2: Получение всех логинов для тенанта
-        List<LoginEntity> logins = loginRepository.findByTenantCode(tenant.getCode());
+        
+            logins = loginRepository.findByTenantCode(tenant.getCode());
+        } catch (NotFoundException e) {}
 
         if (logins.isEmpty()) {
             logger.warn("No logins found for tenant '{}'", tenantCode);

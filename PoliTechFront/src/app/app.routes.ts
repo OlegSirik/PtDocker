@@ -12,6 +12,7 @@ import {LoginComponent} from './features/login/login.component';
 import {ForbiddenComponent} from './features/forbidden/forbidden.component';
 import {TenantsPageComponent} from './features/admin-panel/tenants-page/tenants-page.component';
 import {ClientsPageComponent} from './features/admin-panel/clients-page/clients-page.component';
+import {ClientEditComponent} from './features/admin-panel/client-edit/client-edit.component';
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 
 export const routes: Routes = [
@@ -30,5 +31,7 @@ export const routes: Routes = [
   { path: 'test', component: TestComponent, canActivate: [authGuard] },
   { path: 'admin/tenants', component: TenantsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients', component: ClientsPageComponent, canActivate: [authGuard] },
+  { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
+  { path: 'admin/clients/:client-id', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/accounts/:id', component: AccountDetailPageComponent, canActivate: [authGuard] }
 ];

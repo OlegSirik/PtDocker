@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -18,7 +18,8 @@ import { ClientsService, Client } from '../../../shared/services/api/clients.ser
     MatTableModule,
     MatIconModule,
     MatButtonModule,
-    MatChip
+    MatChip,
+    DatePipe
   ],
   templateUrl: './clients-page.component.html',
   styleUrls: ['./clients-page.component.scss']
@@ -35,17 +36,26 @@ export class ClientsPageComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-//    if (!this.ensurePrivileges()) {
-//      return;
-//    }
     this.loadClients();
   }
 
   loadClients() {
     this.loading = true;
     this.tenantService.getAll().subscribe({
-      next: (clients: Client[]) => {
-        this.clients = clients;
+      next: (apiClients: any[]) => {
+        // Map API response to component interface
+        this.clients = apiClients.map((apiClient: any) => ({
+          id: apiClient.id,
+          tid: apiClient.tid || 0,
+          clientId: apiClient.clientId || '',
+          name: apiClient.name || '',
+          description: apiClient.description || '',
+          trusted_email: apiClient.trusted_email || '',
+          status: apiClient.isDeleted ? 'DELETED' : (apiClient.status || 'ACTIVE'),
+          accountId: apiClient.accountId || apiClient.defaultAccountId,
+          createdAt: apiClient.createdAt,
+          updateAt: apiClient.updatedAt || apiClient.updateAt
+        } as Client));
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -61,24 +71,9 @@ export class ClientsPageComponent implements OnInit {
 
   editClient(client: Client) {
     if (client.id) {
-      this.router.navigate(['/admin/clients/edit', client.id]);
+      this.router.navigate(['/admin/clients', client.id.toString()]);
     }
   }
 
-  private ensurePrivileges(): boolean {
-    const profile = this.auth.profile;
-    if (!profile) {
-      this.router.navigate(['/']);
-      return false;
-    }
 
-    const hasAccess = this.auth.hasAccountType('SYS_ADMIN') || this.auth.hasAnyRole(['SYS_ADMIN']);
-    if (!hasAccess) {
-      this.router.navigate(['/']);
-      return false;
-    }
-
-    return true;
-  }
-  
 }

@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.repository.AccountLoginRepository;
 
@@ -166,9 +168,19 @@ public class JwtTokenUtil {
             }
 
             if (accountLogin.getAccount() != null) {
+                Long accountId = accountLogin.getAccount().getId();
+                String accId = accountId.toString();
+                if (accountId != null) {
+                    payload.put("accountId", accountId);
+                }
                 payload.put("accountId", accountLogin.getAccount().getId());
-                payload.put("accountName", accountLogin.getAccount().getName());
-                payload.put("accountType", accountLogin.getAccount().getNodeType());
+                String accountName = accountLogin.getAccount().getName();
+                if (accountName != null) {
+                    payload.put("accountName", accountName);
+                }
+                if (accountLogin.getAccount().getNodeType() != null) {
+                    payload.put("accountType", accountLogin.getAccount().getNodeType().name());
+                }
             }
 
             String payloadJson = objectMapper.writeValueAsString(payload);

@@ -5,10 +5,10 @@ import { AuthService } from './auth.service';
 
 export interface BusinessLineVar {
   varCode: string;
-  varType: 'IN' | 'VAR' | 'FORMULA' | 'CONST';
+  varType: 'IN' | 'VAR' | 'CONST' | 'MAGIC';
   varPath: string;
   varName: string;
-  varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'PERIOD';
+  varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'DURATION';
   varValue: string;
   varNr: number;
 }
@@ -420,15 +420,6 @@ export class BusinessLineEditService {
         "varValue": "true"
       },
       {
-        "varNr": 13,
-        "varDataType": "STRING",
-        "varCode": "ph_vsk_id",
-        "varName": "Страхователь.ID ВСК",
-        "varPath": "policyHolder.person.vsk_id",
-        "varType": "IN",
-        "varValue": ""
-      },
-      {
         "varNr": 14,
         "varDataType": "STRING",
         "varCode": "ph_ext_id",
@@ -437,6 +428,36 @@ export class BusinessLineEditService {
         "varType": "IN",
         "varValue": ""
       }
+      ];
+  phPersonMagicVars: BusinessLineVar[] = [
+      {
+        "varNr": 1113,
+        "varDataType": "STRING",
+        "varCode": "ph_isMale",
+        "varName": "Страхователь.пол.М",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+      {
+        "varNr": 1114,
+        "varDataType": "STRING",
+        "varCode": "ph_isFemale",
+        "varName": "Страхователь.пол.Ж",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+      {
+        "varNr": 1115,
+        "varDataType": "NUMBER",
+        "varCode": "ph_age_issue",
+        "varName": "Страхователь.возраст на дату выпуска",
+        "varPath": "",
+        "varType": "MAGIC",
+        "varValue": ""
+      },
+
   ];
   phPhoneVars: BusinessLineVar[] = [
     {
@@ -473,7 +494,7 @@ export class BusinessLineEditService {
       {
         "varNr": 52,
         "varDataType": "STRING",
-        "varCode": "ph_inn",
+        "varCode": "ph_org_inn",
         "varName": "Страхователь.ИНН юр.лица",
         "varPath": "policyHolder.organization.inn",
         "varType": "IN",
@@ -482,7 +503,7 @@ export class BusinessLineEditService {
       {
         "varNr": 53,
         "varDataType": "STRING",
-        "varCode": "ph_fullName",
+        "varCode": "ph_org_fullName",
         "varName": "Страхователь.полное наименование юр.лица",
         "varPath": "policyHolder.organization.fullName",
         "varType": "IN",
@@ -491,7 +512,7 @@ export class BusinessLineEditService {
       {
         "varNr": 54,
         "varDataType": "STRING",
-        "varCode": "ph_fullNameEn",
+        "varCode": "ph_org_fullNameEn",
         "varName": "Страхователь.полное наименование  юр.лица англ",
         "varPath": "policyHolder.organization.fullNameEn",
         "varType": "IN",
@@ -500,7 +521,7 @@ export class BusinessLineEditService {
       {
         "varNr": 55,
         "varDataType": "STRING",
-        "varCode": "ph_shortName",
+        "varCode": "ph_org_shortName",
         "varName": "Страхователь.краткое наименование юр.лица",
         "varPath": "policyHolder.organization.shortName",
         "varType": "IN",
@@ -509,7 +530,7 @@ export class BusinessLineEditService {
       {
         "varNr": 56,
         "varDataType": "STRING",
-        "varCode": "ph_legalForm",
+        "varCode": "ph_org_legalForm",
         "varName": "Страхователь.организационно-правовая форма",
         "varPath": "policyHolder.organization.legalForm",
         "varType": "IN",
@@ -518,7 +539,7 @@ export class BusinessLineEditService {
       {
         "varNr": 57,
         "varDataType": "STRING",
-        "varCode": "ph_kpp",
+        "varCode": "ph_org_kpp",
         "varName": "Страхователь.КПП",
         "varPath": "policyHolder.organization.kpp",
         "varType": "IN",
@@ -527,7 +548,7 @@ export class BusinessLineEditService {
       {
         "varNr": 58,
         "varDataType": "STRING",
-        "varCode": "ph_ogrn",
+        "varCode": "ph_org_ogrn",
         "varName": "Страхователь.ОГРН",
         "varPath": "policyHolder.organization.ogrn",
         "varType": "IN",
@@ -536,7 +557,7 @@ export class BusinessLineEditService {
       {
         "varNr": 59,
         "varDataType": "STRING",
-        "varCode": "org_okpo",
+        "varCode": "ph_org_okpo",
         "varName": "Страхователь.ОКПО",
         "varPath": "policyHolder.organization.okpo",
         "varType": "IN",
@@ -545,7 +566,7 @@ export class BusinessLineEditService {
       {
         "varNr": 60,
         "varDataType": "STRING",
-        "varCode": "ph_bic",
+        "varCode": "ph_org_bic",
         "varName": "Страхователь.БИК",
         "varPath": "policyHolder.organization.bic",
         "varType": "IN",
@@ -554,7 +575,7 @@ export class BusinessLineEditService {
       {
         "varNr": 61,
         "varDataType": "STRING",
-        "varCode": "ph_isResident",
+        "varCode": "ph_org_isResident",
         "varName": "Страхователь.резидент РФ юр.лица",
         "varPath": "policyHolder.organization.isResident",
         "varType": "IN",
@@ -563,25 +584,16 @@ export class BusinessLineEditService {
       {
         "varNr": 62,
         "varDataType": "STRING",
-        "varCode": "ph_group",
+        "varCode": "ph_org_group",
         "varName": "Страхователь.Gруппа страхователя ЮЛ",
         "varPath": "policyHolder.organization.group",
         "varType": "IN",
         "varValue": ""
       },
       {
-        "varNr": 63,
-        "varDataType": "STRING",
-        "varCode": "ph_vsk_id",
-        "varName": "Страхователь.ID ВСК",
-        "varPath": "policyHolder.organization.vsk_id",
-        "varType": "IN",
-        "varValue": ""
-      },
-      {
         "varNr": 64,
         "varDataType": "STRING",
-        "varCode": "ph_ext_id",
+        "varCode": "ph_org_ext_id",
         "varName": "Страхователь.внешний ID",
         "varPath": "policyHolder.organization.ext_id",
         "varType": "IN",
@@ -590,7 +602,7 @@ export class BusinessLineEditService {
       {
         "varNr": 65,
         "varDataType": "STRING",
-        "varCode": "ph_nciCode",
+        "varCode": "ph_org_nciCode",
         "varName": "Страхователь.НСИ код",
         "varPath": "policyHolder.organization.nciCode",
         "varType": "IN",
@@ -913,7 +925,7 @@ export class BusinessLineEditService {
     {
       "varNr": 149,
       "varDataType": "STRING",
-      "varCode": "org_okpo",
+      "varCode": "ph_org_okpo",
       "varName": "Страхователь.ОКПО",
       "varPath": "policyHolder.organization.okpo",
       "varType": "IN",
@@ -922,7 +934,7 @@ export class BusinessLineEditService {
     {
       "varNr": 150,
       "varDataType": "STRING",
-      "varCode": "ph_bic",
+      "varCode": "ph_org_bic",
       "varName": "Страхователь.БИК",
       "varPath": "policyHolder.organization.bic",
       "varType": "IN",
@@ -931,7 +943,7 @@ export class BusinessLineEditService {
     {
       "varNr": 151,
       "varDataType": "STRING",
-      "varCode": "ph_isResident",
+      "varCode": "ph_org_isResident",
       "varName": "Страхователь.резидент РФ юр.лица",
       "varPath": "policyHolder.organization.isResident",
       "varType": "IN",
@@ -940,25 +952,16 @@ export class BusinessLineEditService {
     {
       "varNr": 152,
       "varDataType": "STRING",
-      "varCode": "ph_group",
+      "varCode": "ph_org_group",
       "varName": "Страхователь.Gруппа страхователя ЮЛ",
       "varPath": "policyHolder.organization.group",
       "varType": "IN",
       "varValue": ""
     },
     {
-      "varNr": 153,
-      "varDataType": "STRING",
-      "varCode": "ph_vsk_id",
-      "varName": "Страхователь.ID ВСК",
-      "varPath": "policyHolder.organization.vsk_id",
-      "varType": "IN",
-      "varValue": ""
-    },
-    {
       "varNr": 154,
       "varDataType": "STRING",
-      "varCode": "ph_ext_id",
+      "varCode": "ph_org_ext_id",
       "varName": "Страхователь.внешний ID",
       "varPath": "policyHolder.organization.ext_id",
       "varType": "IN",
@@ -967,7 +970,7 @@ export class BusinessLineEditService {
     {
       "varNr": 155,
       "varDataType": "STRING",
-      "varCode": "ph_nciCode",
+      "varCode": "ph_org_nciCode",
       "varName": "Страхователь.НСИ код",
       "varPath": "policyHolder.organization.nciCode",
       "varType": "IN",
@@ -1478,5 +1481,45 @@ export class BusinessLineEditService {
         "varValue": "0"
       }
     ]
-
+  ioPersonMagicVars: BusinessLineVar[] = [
+    {
+      "varNr": 1101,
+      "varDataType": "NUMBER",
+      "varCode": "io_age_issue",
+      "varName": "Возраст застрахованного на дату выпуска полиса",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": ""
+    },
+    {
+      "varNr": 1102,
+      "varDataType": "NUMBER",
+      "varCode": "io_age_end",
+      "varName": "Возраст застрахованного на дату окончания полиса",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": ""
+    }
+  ];
+  policyVars: BusinessLineVar[] = [];
+  policyMagicVars: BusinessLineVar[] = [
+    {
+      "varNr": 1201,
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermMonths",
+      "varName": "Срок полиса в месяцах",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": ""
+    },
+    {
+      "varNr": 1202,
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermDays",
+      "varName": "Срок полиса в днях",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": ""
+    }
+  ]    
   }

@@ -9,13 +9,14 @@ import { BaseApiService } from './base-api.service';
 export interface Client {
     id?: number;
     tid: number;
-    code: string;
+    clientId: string;
     name: string;
     description: string;
     trusted_email: string;
     createdAt?: Date | string;
     updateAt?: Date | string;
     status: 'ACTIVE' | 'DELETED' | 'SUSPENDED';
+    accountId?: number;
   }
 
 @Injectable({

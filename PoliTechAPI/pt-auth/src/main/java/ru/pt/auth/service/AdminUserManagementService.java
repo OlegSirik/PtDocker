@@ -2,6 +2,9 @@ package ru.pt.auth.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.Tuple;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.pt.api.dto.exception.BadRequestException;
@@ -11,10 +14,13 @@ import ru.pt.auth.entity.*;
 import ru.pt.auth.repository.*;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.model.AdminResponse;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для управления администраторами и пользователями
@@ -30,6 +36,7 @@ public class AdminUserManagementService {
     private final AccountRepository accountRepository;
     private final LoginRepository loginRepository;
     private final AccountLoginRepository accountLoginRepository;
+    
     private final ProductRoleRepository productRoleRepository;
     private final SecurityContextHelper securityContextHelper;
 
@@ -39,6 +46,7 @@ public class AdminUserManagementService {
             AccountRepository accountRepository,
             LoginRepository loginRepository,
             AccountLoginRepository accountLoginRepository,
+            
             ProductRoleRepository productRoleRepository,
             SecurityContextHelper securityContextHelper) {
         this.tenantService = tenantService;
@@ -46,6 +54,7 @@ public class AdminUserManagementService {
         this.accountRepository = accountRepository;
         this.loginRepository = loginRepository;
         this.accountLoginRepository = accountLoginRepository;
+        
         this.productRoleRepository = productRoleRepository;
         this.securityContextHelper = securityContextHelper;
     }
@@ -76,9 +85,32 @@ public class AdminUserManagementService {
         tenant.setCode(code);
         tenant.setDeleted(false);
 
-        TenantEntity saved = tenantService.save(tenant);
+        TenantEntity savedTenant = tenantService.save(tenant);
+
+        AccountEntity account = new AccountEntity();
+        account.setId(savedTenant.getId());
+        account.setTenant(savedTenant);
+//        account.setClient(client);
+        account.setNodeType(AccountNodeType.TENANT);
+        account.setName(name);
+//        account.setParent(tenantAccount);
+        AccountEntity tenantAccount = accountRepository.save(account);
+
         logger.info("Tenant '{}' created by SYS_ADMIN", name);
-        return saved;
+
+
+        ClientEntity client = createDefaultClient(tenant);
+
+        AccountEntity clientAccount = new AccountEntity();
+        clientAccount.setId(client.getId());
+        clientAccount.setTenant(tenant);
+        clientAccount.setClient(client);
+        clientAccount.setNodeType(AccountNodeType.CLIENT);
+        clientAccount.setName(client.getName());
+        clientAccount.setParent(tenantAccount);
+        clientAccount = accountRepository.save(clientAccount);
+
+        return tenant;
     }
 
     /**
@@ -119,8 +151,23 @@ public class AdminUserManagementService {
 
     // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
 
-    public List<AccountLoginEntity> getSysAdmins() {
-        return accountLoginRepository.findByTenantAndUserRole("SYS", "SYS_ADMIN");
+    public List<AdminResponse> getSysAdmins() {
+        List<Tuple> result = accountLoginRepository.findByTenantAndUserRoleFull("SYS", "SYS_ADMIN");
+
+        List<AdminResponse> responses = result.stream()
+        .map(tuple -> new AdminResponse(
+        tuple.get("id", Long.class),
+        tuple.get("tid", Long.class),
+        "SYS", //tuple.get("tenantCode", String.class),
+        tuple.get("clientId", Long.class),
+        tuple.get("accountId", Long.class),
+        tuple.get("userLogin", String.class),
+        tuple.get("userRole", String.class),
+        tuple.get("fullName", String.class),
+        tuple.get("position", String.class)
+    ))
+    .collect(Collectors.toList());
+        return responses;
     }
 
         /**
@@ -132,6 +179,13 @@ public class AdminUserManagementService {
                 String userLogin,
                 String userName) {
 
+            /* 
+            Проверка кода tenant для создания SYS_ADMIN пользователя
+            Только для tenant с кодом SYS можно создавать SYS_ADMIN пользователя
+            */
+            if (!"SYS".equals(tenantCode)) {
+                throw new BadRequestException("Wrong tenant code: " + tenantCode + " for SYS_ADMIN creation");
+            }
             // Проверка прав
             UserDetailsImpl currentUser = getCurrentUser();
             if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
@@ -146,7 +200,8 @@ public class AdminUserManagementService {
                 .orElseGet(() -> {
                     LoginEntity newLogin = new LoginEntity();
                     newLogin.setTenant(tenant);
-                    newLogin.setFullName("SYS_ADMIN");
+                    newLogin.setFullName(userName);
+                    newLogin.setPosition("SYS_ADMIN");
                     newLogin.setUserLogin(userLogin);
                     return loginRepository.save(newLogin);
                 });
@@ -164,8 +219,23 @@ public class AdminUserManagementService {
 
     // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN only) ==========
 
-    public List<AccountLoginEntity> getTntAdmins(String tenantCode) {
-        return accountLoginRepository.findByTenantAndUserRole(tenantCode, "TNT_ADMIN");
+    public List<AdminResponse> getTntAdmins(String tenantCode) {
+        List<Tuple> result = accountLoginRepository.findByTenantAndUserRoleFull(tenantCode, "TNT_ADMIN");
+
+        List<AdminResponse> responses = result.stream()
+        .map(tuple -> new AdminResponse(
+        tuple.get("id", Long.class),
+        tuple.get("tid", Long.class),
+        tenantCode, //tuple.get("tenantCode", String.class),
+        tuple.get("clientId", Long.class),
+        tuple.get("accountId", Long.class),
+        tuple.get("userLogin", String.class),
+        tuple.get("userRole", String.class),
+        tuple.get("fullName", String.class),
+        tuple.get("position", String.class)
+    ))
+    .collect(Collectors.toList());
+        return responses;
     }
 
     /**
@@ -456,12 +526,20 @@ public class AdminUserManagementService {
     }
 
     private ClientEntity createDefaultClient(TenantEntity tenant) {
-        ClientEntity client = new ClientEntity();
-        client.setTenant(tenant);
-        client.setClientId("default-" + tenant.getId());
-        client.setName("Default Client");
-        client.setDeleted(false);
-        return clientRepository.save(client);
+        String defClientId = "SYS";
+        List<ClientEntity> clients = clientRepository.findByTenantCodeActive(tenant.getCode()).stream()
+            .filter(c -> defClientId.equals(c.getClientId()))
+            .toList();
+
+        if (clients.isEmpty()) {
+            ClientEntity client = new ClientEntity();
+            client.setTenant(tenant);
+            client.setClientId(defClientId);
+            client.setName("Default Client");
+            client.setDeleted(false);
+            return clientRepository.save(client);
+        }
+        return clients.get(0);
     }
 
     private AccountEntity createGroupAccount(TenantEntity tenant, ClientEntity client, String groupName) {
@@ -487,7 +565,7 @@ public class AdminUserManagementService {
         productAccount.setTenant(tenant);
         productAccount.setClient(client);
         productAccount.setParent(groupAccount);
-        productAccount.setNodeType(AccountNodeType.ADMIN);
+        productAccount.setNodeType(AccountNodeType.ACCOUNT);
         productAccount.setName(productName);
         return accountRepository.save(productAccount);
     }
@@ -513,7 +591,7 @@ public class AdminUserManagementService {
     @Transactional
     public Map<String, Object> createClient(String clientId, String clientName) {
         UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can create clients");
         }
 
@@ -521,7 +599,7 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
-        if (clientRepository.findByClientId(clientId).isPresent()) {
+        if (clientRepository.findByClientIdandTenantCode(clientId, currentUser.getTenantCode()).isPresent()) {
             throw new BadRequestException("Client with ID '" + clientId + "' already exists");
         }
 
@@ -532,10 +610,22 @@ public class AdminUserManagementService {
         client.setDeleted(false);
         ClientEntity saved = clientRepository.save(client);
 
+        AccountEntity tenantAccount = accountRepository.findByTenantId(tenant.getId())
+            .orElseThrow(() -> new NotFoundException("Tenant account not found for tenant id: " + tenant.getId()));
+
+        AccountEntity account = new AccountEntity();
+        account.setTenant(tenant);
+        account.setClient(client);
+        account.setNodeType(AccountNodeType.CLIENT);
+        account.setName(clientName);
+        account.setParent(tenantAccount);
+        AccountEntity savedAccount = accountRepository.save(account);
+
         Map<String, Object> result = new HashMap<>();
         result.put("id", saved.getId());
         result.put("clientId", saved.getClientId());
         result.put("name", saved.getName());
+        result.put("accountId", savedAccount.getId());
         return result;
     }
 
@@ -545,7 +635,7 @@ public class AdminUserManagementService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listClients() {
         UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole())) {
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can list clients");
         }
 
@@ -560,6 +650,35 @@ public class AdminUserManagementService {
         }).collect(java.util.stream.Collectors.toList());
     }
 
+    /**
+     * TNT_ADMIN: Получить клиента по ID
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getClientById(Long id) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN can list clients");
+        }
+
+        ClientEntity client = clientRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        if (!client.getTenant().getCode().equals(currentUser.getTenantCode())) {
+            throw new ForbiddenException("Cannot access client from different tenant");
+        }
+
+        AccountEntity account = accountRepository.findCliensAccountByClientId(id)
+            .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + id));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", client.getId());
+        result.put("clientId", client.getClientId());
+        result.put("name", client.getName());
+        result.put("isDeleted", client.getDeleted());
+        result.put("accountId", account.getId());
+        return result;
+    }
+
     // ========== ACCOUNT MANAGEMENT (GROUP_ADMIN, PRODUCT_ADMIN) ==========
 
     /**
@@ -568,7 +687,7 @@ public class AdminUserManagementService {
     @Transactional
     public Map<String, Object> createAccount(Long parentAccountId, String accountName, String nodeType) {
         UserDetailsImpl currentUser = getCurrentUser();
-        if (!"GROUP_ADMIN".equals(currentUser.getUserRole()) && !"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole()) && !"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can create accounts");
         }
 
@@ -584,8 +703,9 @@ public class AdminUserManagementService {
                     .orElseThrow(() -> new NotFoundException("Parent account not found"));
 
             // Проверка: родительский аккаунт должен быть в том же tenant и client
-            if (!parent.getTenant().getCode().equals(currentUser.getTenantCode()) ||
-                !parent.getClient().getId().equals(currentUser.getClientId())) {
+            if (!parent.getTenant().getCode().equals(currentUser.getTenantCode())
+                // || !parent.getClient().getId().equals(currentUser.getClientId())
+                ) {
                 throw new ForbiddenException("Cannot create account under parent from different tenant/client");
             }
         }
@@ -611,6 +731,55 @@ public class AdminUserManagementService {
         result.put("nodeType", saved.getNodeType().toString());
         result.put("parentId", parent != null ? parent.getId() : null);
         return result;
+    }
+
+    public Map<String, Object> getAccount(Long accountId) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole()) && !"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can get accounts");
+        }
+
+        AccountEntity account = accountRepository.findById(accountId) 
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", account.getId());
+        result.put("name", account.getName());
+        result.put("nodeType", account.getNodeType().toString());
+        result.put("parentId", account.getParent() != null ? account.getParent().getId() : null);
+        
+        
+        List<AccountEntity> path = accountRepository.findPathByAccountId(accountId);
+
+        List<Map<String, Object>> pathList = path.stream().map(a -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("name", a.getName());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+
+        result.put("path", pathList);
+
+        return result;
+    }
+
+    public List<Map<String, Object>> getAccountAccounts(Long accountId) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole()) && !"GROUP_ADMIN".equals(currentUser.getUserRole()) && !"PRODUCT_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only GROUP_ADMIN or PRODUCT_ADMIN can get accounts");
+        }
+        List<AccountEntity> accounts = accountRepository.findByParentId(accountId);
+
+        return accounts.stream().map(account -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", account.getId());
+            map.put("name", account.getName());
+            map.put("nodeType", account.getNodeType().toString());
+            map.put("parentId", account.getParent() != null ? account.getParent().getId() : null);
+            map.put("clientId", account.getClient() != null ? account.getClient().getId() : null);
+            map.put("tid", account.getTenant() != null ? account.getTenant().getId() : null);
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     /**

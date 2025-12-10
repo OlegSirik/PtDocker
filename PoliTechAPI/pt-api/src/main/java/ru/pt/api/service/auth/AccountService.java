@@ -76,4 +76,6 @@ public interface AccountService {
      * @return json с данными логина
      */
     ObjectNode getAccountLogin(String login, String client, Long accountId);
+
+    List<Account> getAccountsByParentId(Long parentId);
 }

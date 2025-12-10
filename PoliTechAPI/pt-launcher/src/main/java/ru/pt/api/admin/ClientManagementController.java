@@ -46,14 +46,14 @@ public class ClientManagementController extends SecuredController {
      * POST /api/v1/{tenantCode}/admin/clients
      */
     @PostMapping
-    @PreAuthorize("hasRole('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> createClient(
             @PathVariable String tenantCode,
             @RequestBody CreateClientRequest request) {
         try {
             Map<String, Object> result = adminUserManagementService.createClient(
                     request.getClientId(),
-                    request.getClientName()
+                    request.getName()
             );
 
             Map<String, Object> response = new HashMap<>();
@@ -80,12 +80,29 @@ public class ClientManagementController extends SecuredController {
      * TNT_ADMIN: Получить список всех клиентов
      * GET /api/v1/{tenantCode}/admin/clients
      */
+    // TODO remove SYS_ADMIN
     @GetMapping
-    @PreAuthorize("hasRole('TNT_ADMIN')")
+    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> listClients(@PathVariable String tenantCode) {
         try {
             List<Map<String, Object>> clients = adminUserManagementService.listClients();
             return ResponseEntity.ok(clients);
+        } catch (Exception e) {
+            return ResponseEntity.status(getForbiddenStatus()).build();
+        }
+    }
+
+    /**
+     * TNT_ADMIN: Получить клиента по ID
+     * GET /api/v1/{tenantCode}/admin/clients/{clientId}
+     */
+    // TODO remove SYS_ADMIN
+    @GetMapping("/{clientId}")
+    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    public ResponseEntity<Map<String, Object>> getClient(@PathVariable String tenantCode, @PathVariable Long clientId) {
+        try {
+            Map<String, Object> client = adminUserManagementService.getClientById(clientId);
+            return ResponseEntity.ok(client);
         } catch (Exception e) {
             return ResponseEntity.status(getForbiddenStatus()).build();
         }
@@ -98,7 +115,7 @@ public class ClientManagementController extends SecuredController {
     // DTO Classes
     public static class CreateClientRequest {
         private String clientId;
-        private String clientName;
+        private String name;
 
         public String getClientId() {
             return clientId;
@@ -108,12 +125,12 @@ public class ClientManagementController extends SecuredController {
             this.clientId = clientId;
         }
 
-        public String getClientName() {
-            return clientName;
+        public String getName() {
+            return name;
         }
 
-        public void setClientName(String clientName) {
-            this.clientName = clientName;
+        public void setName(String name) {
+            this.name = name;
         }
     }
 }
