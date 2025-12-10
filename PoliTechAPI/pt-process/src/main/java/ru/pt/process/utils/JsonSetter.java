@@ -1,20 +1,21 @@
 package ru.pt.process.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.common.util.StringUtils;
-import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.product.LobVar;
+import java.text.SimpleDateFormat;
 
 public class JsonSetter {
 
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
     private final ObjectNode root;
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+        .registerModule(new JavaTimeModule())
+        .setDateFormat(dateFormat);
 
     public JsonSetter(String json) {
         try {
