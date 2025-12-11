@@ -29,6 +29,8 @@ public class PolicyIndex {
 
     private PolicyStatus policyStatus;
 
+    private String paymentOrderId;
+
     public PolicyIndex() {
     }
 
@@ -43,6 +45,7 @@ public class PolicyIndex {
         this.clientAccountId = clientAccountId;
         this.versionStatus = versionStatus;
         this.policyStatus = policyStatus;
+        this.paymentOrderId = null;
     }
 
     public UUID getPolicyId() {
@@ -123,6 +126,14 @@ public class PolicyIndex {
 
     public void setPolicyStatus(PolicyStatus policyStatus) {
         this.policyStatus = policyStatus;
+    }
+
+    public String getPaymentOrderId() {
+        return paymentOrderId;
+    }
+
+    public void setPaymentOrderId(String paymentOrderId) {
+        this.paymentOrderId = paymentOrderId;
     }
 
 }

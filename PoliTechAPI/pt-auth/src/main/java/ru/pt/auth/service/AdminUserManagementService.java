@@ -7,6 +7,7 @@ import jakarta.persistence.Tuple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -15,6 +16,7 @@ import ru.pt.auth.repository.*;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.model.AdminResponse;
+import ru.pt.auth.utils.ClientMapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +41,8 @@ public class AdminUserManagementService {
     
     private final ProductRoleRepository productRoleRepository;
     private final SecurityContextHelper securityContextHelper;
+
+    private final ClientMapper clientMapper = new ClientMapper();
 
     public AdminUserManagementService(
             TenantService tenantService,
@@ -654,7 +658,7 @@ public class AdminUserManagementService {
      * TNT_ADMIN: Получить клиента по ID
      */
     @Transactional(readOnly = true)
-    public Map<String, Object> getClientById(Long id) {
+    public Client getClientById(Long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can list clients");
@@ -670,13 +674,7 @@ public class AdminUserManagementService {
         AccountEntity account = accountRepository.findCliensAccountByClientId(id)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + id));
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", client.getId());
-        result.put("clientId", client.getClientId());
-        result.put("name", client.getName());
-        result.put("isDeleted", client.getDeleted());
-        result.put("accountId", account.getId());
-        return result;
+        return clientMapper.toDto(client);
     }
 
     // ========== ACCOUNT MANAGEMENT (GROUP_ADMIN, PRODUCT_ADMIN) ==========

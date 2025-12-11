@@ -61,6 +61,9 @@ public class PolicyIndexEntity {
     @Enumerated(EnumType.STRING)
     private PolicyStatus policyStatus;
 
+    @Column(name = "payment_order_id", length = 100)
+    private String paymentOrderId;
+
     // Constructors
     public PolicyIndexEntity() {
     }
@@ -188,5 +191,13 @@ public class PolicyIndexEntity {
 
     public void setPolicyStatus(PolicyStatus policyStatus) {
         this.policyStatus = policyStatus;
+    }
+
+    public String getPaymentOrderId() {
+        return paymentOrderId;
+    }
+
+    public void setPaymentOrderId(String paymentOrderId) {
+        this.paymentOrderId = paymentOrderId;
     }
 }

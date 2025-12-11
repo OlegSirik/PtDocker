@@ -158,4 +158,36 @@ public class DbStorageService implements StorageService {
 
         return result;
     }
+
+    @Override
+    public void setPaymentOrderId(String policyNumber, String paymentOrderId) {
+        policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
+                .ifPresentOrElse(entity -> {
+                    entity.setPaymentOrderId(paymentOrderId);
+                    policyIndexRepository.save(entity);
+                }, () -> {
+                    throw new IllegalStateException("No policy with number " + policyNumber);
+                });
+    }
+
+    @Override
+    public PolicyData getPolicyByPaymentOrderId(String paymentOrderId) {
+        var policy = policyIndexRepository.findByPaymentOrderId(paymentOrderId)
+                .orElseThrow(() -> new IllegalStateException("No policy with payment order id " + paymentOrderId));
+        var dto = policyMapper.toDto(policy);
+
+        var policyData = new PolicyData();
+        policyData.setPolicyIndex(dto);
+        policyData.setPolicyId(policy.getPolicyId());
+        policyData.setPolicyStatus(policy.getPolicyStatus());
+        policyData.setPolicyNumber(policy.getPolicyNumber());
+
+        var json = policyRepository.findById(policy.getPolicyId())
+                .map(PolicyEntity::getPolicy)
+                .orElseThrow();
+
+        policyData.setPolicy(json);
+
+        return policyData;
+    }
 }

@@ -43,6 +43,9 @@ public class ClientEntity {
     @OneToMany(mappedBy = "clientEntity", cascade = CascadeType.ALL)
     private List<AccountEntity> accountEntities = new ArrayList<>();
 
+    @OneToOne(targetEntity = ClientConfigurationEntity.class, cascade = CascadeType.ALL)
+    private ClientConfigurationEntity clientConfigurationEntity;
+
     // constructors, getters, setters
     public ClientEntity() {}
 
@@ -118,4 +121,27 @@ public class ClientEntity {
         this.accountEntities = accountEntities;
     }
 
+    public TenantEntity getTenantEntity() {
+        return tenantEntity;
+    }
+
+    public void setTenantEntity(TenantEntity tenantEntity) {
+        this.tenantEntity = tenantEntity;
+    }
+
+    public List<AccountEntity> getAccountEntities() {
+        return accountEntities;
+    }
+
+    public void setAccountEntities(List<AccountEntity> accountEntities) {
+        this.accountEntities = accountEntities;
+    }
+
+    public ClientConfigurationEntity getClientConfigurationEntity() {
+        return clientConfigurationEntity;
+    }
+
+    public void setClientConfigurationEntity(ClientConfigurationEntity clientConfigurationEntity) {
+        this.clientConfigurationEntity = clientConfigurationEntity;
+    }
 }

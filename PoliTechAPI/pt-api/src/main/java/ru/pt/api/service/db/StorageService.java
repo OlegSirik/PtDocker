@@ -59,4 +59,19 @@ public interface StorageService {
      */
     List<PolicyData> getPoliciesForUser();
     // TODO методы для фильтрации списка полисов
+
+    /**
+     * Сохранить идентификатор платежа, чтобы связать уведомления от Юкассы
+     * с конкретным полисом.
+     * @param policyNumber номер полиса
+     * @param paymentOrderId идентификатор платежа в YooKassa
+     */
+    void setPaymentOrderId(String policyNumber, String paymentOrderId);
+
+    /**
+     * Найти полис по идентификатору платежа.
+     * @param paymentOrderId идентификатор платежа в YooKassa
+     * @return данные полиса
+     */
+    PolicyData getPolicyByPaymentOrderId(String paymentOrderId);
 }

@@ -4,9 +4,13 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Client;
 import ru.pt.auth.entity.ClientEntity;
 import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.service.ClientConfigurationMapper;
 
 @Component
 public class ClientMapper {
+
+    private final ClientConfigurationMapper clientConfigurationMapper =
+            new ClientConfigurationMapper();
 
     public ClientEntity toEntity(Client dto) {
         if (dto == null) {
@@ -30,6 +34,12 @@ public class ClientMapper {
         entity.setCreatedAt(dto.getCreatedAt());
         entity.setUpdatedAt(dto.getUpdatedAt());
 
+        if (dto.getClientConfiguration() != null) {
+            entity.setClientConfigurationEntity(
+                    clientConfigurationMapper.toEntity(dto.getClientConfiguration())
+            );
+        }
+
         return entity;
     }
 
@@ -47,6 +57,12 @@ public class ClientMapper {
         dto.setIsDeleted(entity.getDeleted());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
+
+        if (entity.getClientConfigurationEntity() != null) {
+            dto.setClientConfiguration(
+                    clientConfigurationMapper.toDto(entity.getClientConfigurationEntity())
+            );
+        }
 
         return dto;
     }
