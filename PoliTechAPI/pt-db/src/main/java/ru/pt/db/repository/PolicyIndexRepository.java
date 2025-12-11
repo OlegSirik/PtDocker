@@ -15,4 +15,6 @@ public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, 
 
     Optional<PolicyIndexEntity> findByPolicyNumber(String policyNumber);
 
+    Optional<PolicyIndexEntity> findByPaymentOrderId(String paymentOrderId);
+
 }

@@ -24,6 +24,7 @@ public class PreProcessServiceImpl implements PreProcessService {
     public String enrichPolicy(String policy, ProductVersionModel productVersionModel) {
         JsonProjection projection = new JsonProjection(policy);
         String newJson;
+        // TODO пофиксить даты - привести в один часовой пояс
         // Policy
         if (projection.getIssueDate() == null) {
             JsonSetter setter = new JsonSetter(policy);
@@ -222,6 +223,7 @@ public class PreProcessServiceImpl implements PreProcessService {
             throw new IllegalAccessError("Issue date is required");
         }
         if (validatorType != null) {
+            // TODO добавить даты в зависимости от указанного waitingPeriod
             switch (validatorType) {
                 case "RANGE":
                     if (startDate == null) {

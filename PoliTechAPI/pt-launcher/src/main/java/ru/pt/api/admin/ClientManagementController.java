@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.auth.Account;
+import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.security.SecuredController;
@@ -99,9 +100,9 @@ public class ClientManagementController extends SecuredController {
     // TODO remove SYS_ADMIN
     @GetMapping("/{clientId}")
     @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> getClient(@PathVariable String tenantCode, @PathVariable Long clientId) {
+    public ResponseEntity<Client> getClient(@PathVariable String tenantCode, @PathVariable Long clientId) {
         try {
-            Map<String, Object> client = adminUserManagementService.getClientById(clientId);
+            Client client = adminUserManagementService.getClientById(clientId);
             return ResponseEntity.ok(client);
         } catch (Exception e) {
             return ResponseEntity.status(getForbiddenStatus()).build();

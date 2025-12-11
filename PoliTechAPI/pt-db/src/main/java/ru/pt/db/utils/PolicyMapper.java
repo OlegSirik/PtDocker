@@ -15,6 +15,12 @@ public class PolicyMapper {
     public PolicyIndex toDto(PolicyIndexEntity entity) {
         var dto = new PolicyIndex();
         dto.setPolicyId(entity.getPolicyId());
+        if (entity.getEndDate() != null) {
+            dto.setEndDate(entity.getEndDate());
+        }
+        if (entity.getStartDate() != null) {
+            dto.setStartDate(entity.getStartDate());
+        }
         ofNullable(entity.getStartDate()).ifPresent(
             startDate -> dto.setStartDate(ofInstant(startDate.toInstant(), ZoneId.systemDefault())));
         ofNullable(entity.getEndDate()).ifPresent(
@@ -26,6 +32,7 @@ public class PolicyMapper {
         dto.setUserAccountId(entity.getUserAccountId());
         dto.setVersionStatus(entity.getVersionStatus());
         dto.setVersionNo(entity.getVersionNo());
+        dto.setPaymentOrderId(entity.getPaymentOrderId());
         return dto;
     }
 
@@ -43,6 +50,7 @@ public class PolicyMapper {
         entity.setUserAccountId(dto.getUserAccountId());
         entity.setVersionStatus(dto.getVersionStatus());
         entity.setVersionNo(dto.getVersionNo());
+        dto.setPaymentOrderId(entity.getPaymentOrderId());
         return entity;
     }
 
