@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +26,6 @@ import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
 import ru.pt.db.service.DbStorageService;
-import ru.pt.process.utils.JsonProjection;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 
@@ -35,6 +34,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
  * Only for storage operations! Assumes no additional business logic
@@ -75,37 +76,6 @@ public class SalesController extends SecuredController {
         this.fileService = fileService;
         this.preProcessService = preProcessService;
         this.dbStorageService = dbStorageService;
-    }
-
-    /**
-     * Create a new policy
-     * POST /api/v1/{tenantCode}/sales/policies
-     * Требуется право POLICY на продукт
-     */
-    @PostMapping("/quotes")
-    public ResponseEntity<String> calculatePolicy(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestBody String request) {
-        requireAuthenticated(user);
-         requireProductQuote(user, new JsonProjection(request).getProductCode());
-        return ResponseEntity.ok(processOrchestrator.calculate(request));
-    }
-
-
-    /**
-     * Create a new policy
-     * POST /api/v1/{tenantCode}/sales/policies
-     * Требуется право POLICY на продукт
-     */
-    @PostMapping("/policies")
-    public ResponseEntity<PolicyData> createPolicy(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestBody String request) {
-        requireAuthenticated(user);
-        requireProductPolicy(user, new JsonProjection(request).getProductCode());
-        return ResponseEntity.ok(processOrchestrator.createPolicy(request));
     }
 
     /**
@@ -169,20 +139,20 @@ public class SalesController extends SecuredController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/quotes/validator")
+    @PostMapping("/quotes")
     public ResponseEntity<String> quoteValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
         String result = processOrchestrator.calculate(requestBody);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
 
-    @PostMapping("/policies/validator")
+    @PostMapping(value = "/policies")
     public ResponseEntity<String> saveValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
         String result = processOrchestrator.save(requestBody);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
 
     @PostMapping("/policies/{policy-nr}/printpf/{pf-type}")
