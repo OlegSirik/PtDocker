@@ -1,6 +1,9 @@
 package ru.pt.db.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.db.PolicyData;
@@ -22,6 +25,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class DbStorageService implements StorageService {
 
     private final PolicyRepository policyRepository;
@@ -29,16 +33,6 @@ public class DbStorageService implements StorageService {
     private final PolicyIndexRepository policyIndexRepository;
     private final PolicyProjectionService policyProjectionService;
     private final PolicyMapper policyMapper;
-
-    public DbStorageService(PolicyRepository policyRepository,
-                            SecurityContextHelper securityContextHelper,
-                            PolicyIndexRepository policyIndexRepository, PolicyProjectionService policyProjectionService, PolicyMapper policyMapper) {
-        this.policyRepository = policyRepository;
-        this.securityContextHelper = securityContextHelper;
-        this.policyIndexRepository = policyIndexRepository;
-        this.policyProjectionService = policyProjectionService;
-        this.policyMapper = policyMapper;
-    }
 
     @Transactional
     @Override
@@ -88,42 +82,14 @@ public class DbStorageService implements StorageService {
     public PolicyData getPolicyById(UUID policyId) {
         var policy = policyIndexRepository.findById(policyId)
                 .orElseThrow(() -> new IllegalStateException("No policy with id " + policyId));
-        var dto = policyMapper.toDto(policy);
-
-        var policyData = new PolicyData();
-        policyData.setPolicyIndex(dto);
-        policyData.setPolicyId(policy.getPolicyId());
-        policyData.setPolicyStatus(policy.getPolicyStatus());
-        policyData.setPolicyNumber(policy.getPolicyNumber());
-
-        var json = policyRepository.findById(policy.getPolicyId())
-                .map(PolicyEntity::getPolicy)
-                .orElseThrow();
-
-        policyData.setPolicy(json);
-
-        return policyData;
+        return getPolicyData(policy);
     }
 
     @Override
     public PolicyData getPolicyByNumber(String policyNumber) {
         var policy = policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
                 .orElseThrow(() -> new IllegalStateException("No policy with number " + policyNumber));
-        var dto = policyMapper.toDto(policy);
-
-        var policyData = new PolicyData();
-        policyData.setPolicyIndex(dto);
-        policyData.setPolicyId(policy.getPolicyId());
-        policyData.setPolicyStatus(policy.getPolicyStatus());
-        policyData.setPolicyNumber(policy.getPolicyNumber());
-
-        var json = policyRepository.findById(policy.getPolicyId())
-                .map(PolicyEntity::getPolicy)
-                .orElseThrow();
-
-        policyData.setPolicy(json);
-
-        return policyData;
+        return getPolicyData(policy);
     }
 
     @Override
@@ -157,6 +123,25 @@ public class DbStorageService implements StorageService {
         });
 
         return result;
+    }
+
+    @NonNull
+    private PolicyData getPolicyData(PolicyIndexEntity policy) {
+        var dto = policyMapper.toDto(policy);
+
+        var policyData = new PolicyData();
+        policyData.setPolicyIndex(dto);
+        policyData.setPolicyId(policy.getPolicyId());
+        policyData.setPolicyStatus(policy.getPolicyStatus());
+        policyData.setPolicyNumber(policy.getPolicyNumber());
+
+        var json = policyRepository.findById(policy.getPolicyId())
+            .map(PolicyEntity::getPolicy)
+            .orElseThrow();
+
+        policyData.setPolicy(json);
+
+        return policyData;
     }
 
     @Override

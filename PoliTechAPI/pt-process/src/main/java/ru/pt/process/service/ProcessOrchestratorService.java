@@ -1,7 +1,9 @@
 package ru.pt.process.service;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
@@ -27,6 +29,7 @@ import ru.pt.api.service.product.VersionManager;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.process.utils.JsonProjection;
 import ru.pt.process.utils.JsonSetter;
+import ru.pt.process.utils.MdcWrapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 
 
 @Component
+@RequiredArgsConstructor
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
@@ -48,30 +52,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final ValidatorService validatorService;
     private final PreProcessService preProcessService;
     private final PostProcessService postProcessService;
-
-    public ProcessOrchestratorService(
-            StorageService storageService,
-            NumberGeneratorService numberGeneratorService,
-            ProductService productService,
-            VersionManager versionManager,
-            CalculatorService calculatorService,
-            LobService lobService,
-            ValidatorService validatorService,
-            PreProcessService preProcessService,
-            PostProcessService postProcessService,
-            SecurityContextHelper securityContextHelper
-    ) {
-        this.storageService = storageService;
-        this.numberGeneratorService = numberGeneratorService;
-        this.productService = productService;
-        this.versionManager = versionManager;
-        this.calculatorService = calculatorService;
-        this.securityContextHelper = securityContextHelper;
-        this.lobService = lobService;
-        this.validatorService = validatorService;
-        this.preProcessService = preProcessService;
-        this.postProcessService = postProcessService;
-    }
 
     @Override
     public String calculate(String policy) {
@@ -194,8 +174,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         var userData = securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
-//        TODO: добавить в контекст MDC данные
+
         var uuid = UUID.randomUUID();
+        MdcWrapper.putId(uuid.toString());
 
         return storageService.save(policy, userData, version, uuid);
     }
