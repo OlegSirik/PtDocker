@@ -5,6 +5,7 @@ import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.PvCover;
 import ru.pt.api.dto.product.PvDeductible;
 import ru.pt.api.dto.product.PvLimit;
+import ru.pt.api.utils.JsonProjection;
 
 import java.time.LocalDate;
 import java.time.Period;

@@ -3,7 +3,6 @@ package ru.pt.process.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
@@ -27,8 +26,8 @@ import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.VersionManager;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.process.utils.JsonProjection;
-import ru.pt.process.utils.JsonSetter;
+import ru.pt.api.utils.JsonProjection;
+import ru.pt.api.utils.JsonSetter;
 import ru.pt.process.utils.MdcWrapper;
 
 import java.util.List;

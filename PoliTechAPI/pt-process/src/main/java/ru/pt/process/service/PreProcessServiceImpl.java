@@ -7,8 +7,8 @@ import ru.pt.api.dto.process.CoverInfo;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.process.PreProcessService;
-import ru.pt.process.utils.JsonProjection;
-import ru.pt.process.utils.JsonSetter;
+import ru.pt.api.utils.JsonProjection;
+import ru.pt.api.utils.JsonSetter;
 import ru.pt.process.utils.PeriodUtils;
 import ru.pt.process.utils.VariablesService;
 

@@ -15,14 +15,14 @@ CREATE TABLE IF NOT EXISTS acc_client_configuration (
 
 -- Link configuration to client (one-to-one)
 ALTER TABLE acc_clients
-    ADD COLUMN IF NOT EXISTS client_configuration_id BIGINT;
+    ADD COLUMN IF NOT EXISTS client_configuration_entity_id BIGINT;
 
 ALTER TABLE acc_clients
     ADD CONSTRAINT fk_acc_clients_client_configuration
-        FOREIGN KEY (client_configuration_id)
+        FOREIGN KEY (client_configuration_entity_id)
         REFERENCES acc_client_configuration(id);
 
 ALTER TABLE acc_clients
     ADD CONSTRAINT uq_acc_clients_client_configuration
-        UNIQUE (client_configuration_id);
+        UNIQUE (client_configuration_entity_id);
 

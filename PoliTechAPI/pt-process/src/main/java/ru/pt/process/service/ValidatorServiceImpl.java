@@ -1,16 +1,8 @@
 package ru.pt.process.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
-import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.errors.ValidationError;
-import ru.pt.api.dto.exception.BadRequestException;
-import ru.pt.api.dto.process.Cover;
-import ru.pt.api.dto.process.CoverInfo;
-import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.calculator.CalculatorService;
@@ -20,14 +12,9 @@ import ru.pt.api.service.process.PreProcessService;
 import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
-import ru.pt.process.utils.JsonProjection;
-import ru.pt.process.utils.JsonSetter;
-import ru.pt.process.utils.PeriodUtils;
+import ru.pt.api.utils.JsonProjection;
 import ru.pt.process.utils.ValidatorImpl;
 
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
