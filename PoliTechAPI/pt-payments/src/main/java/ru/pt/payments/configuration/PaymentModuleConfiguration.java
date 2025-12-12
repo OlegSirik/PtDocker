@@ -22,8 +22,4 @@ public class PaymentModuleConfiguration {
                 .collect(Collectors.toMap(PaymentClient::getPaymentGate, Function.identity()));
     }
 
-    @Bean
-    public PolicyPurchaseCallbackApi policyPurchaseCallbackApi(PolicyPurchaseCallbackService service) {
-        return service;
-    }
 }

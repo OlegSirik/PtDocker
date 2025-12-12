@@ -1,4 +1,4 @@
-package ru.pt.process.utils;
+package ru.pt.api.utils;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -39,6 +39,55 @@ public class JsonProjection {
             return null;
         }
     }
+
+    public String getEmail() {
+        try {
+            return documentContext.read("$.policyHolder.email", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getPhone() {
+        try {
+            return documentContext.read("$.policyHolder.phone.phoneNumber", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public LocalDate getBirthDate() {
+        try {
+            return documentContext.read("$.policyHolder.person.birthDate", LocalDate.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getFirstName() {
+        try {
+            return documentContext.read("$.policyHolder.person.firstName", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getLastName() {
+        try {
+            return documentContext.read("$.policyHolder.person.lastName", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getMiddleName() {
+        try {
+            return documentContext.read("$.policyHolder.person.middleName", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
     public InsuredObject getInsuredObject() {
         try {
@@ -115,6 +164,14 @@ public class JsonProjection {
             return UUID.fromString(documentContext.read("$.draftId", String.class));
         } catch (Exception ignored) {
             return UUID.randomUUID();
+        }
+    }
+
+    public String getPolicyNumber() {
+        try {
+            return documentContext.read("$.policyNumber", String.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

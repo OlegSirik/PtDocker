@@ -5,6 +5,9 @@ import ru.pt.payments.model.vsk.PaymentKafkaResponse;
 import ru.pt.payments.model.vsk.PaymentRequest;
 import ru.pt.payments.model.vsk.UnidentifiedPayerModel;
 
+/**
+ * Поддерживает API сервиса partapi-grpc-integration
+ */
 public interface VskPaymentApi {
 
     /**
@@ -13,6 +16,8 @@ public interface VskPaymentApi {
      *
      * @param identifiedPayerModel данные для идентификации
      * @return айди плательщика
+     * TODO накладывает дополнительную валидацию на обязательные поля в запросе
+     *  - пока не будет использоваться
      */
     String identifiedPayer(IdentifiedPayerModel identifiedPayerModel);
 
