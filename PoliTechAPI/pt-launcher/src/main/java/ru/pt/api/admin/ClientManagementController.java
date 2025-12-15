@@ -7,17 +7,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.Client;
+import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AccountServiceImpl;
 import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.entity.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
+import ru.pt.auth.security.UserDetailsImpl;
 /**
  * Контроллер для управления клиентами (приложениями)
  * Доступен для TNT_ADMIN
@@ -48,23 +53,18 @@ public class ClientManagementController extends SecuredController {
      */
     @PostMapping
     @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createClient(
+    public ResponseEntity<Client> createClient(
             @PathVariable String tenantCode,
-            @RequestBody CreateClientRequest request) {
+            @RequestBody Client request) {
         try {
-            Map<String, Object> result = adminUserManagementService.createClient(
-                    request.getClientId(),
-                    request.getName()
-            );
+            if (!getCurrentUser().getTenantCode().equals(tenantCode)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            Client newClient = adminUserManagementService.createClient(request);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", result.get("id"));
-            response.put("clientId", result.get("clientId"));
-            response.put("name", result.get("name"));
-
-            return buildCreatedResponse(response, "Client created successfully");
+            return ResponseEntity.ok(newClient);
         } catch (Exception e) {
-            return handleException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -84,10 +84,40 @@ public class ClientManagementController extends SecuredController {
     // TODO remove SYS_ADMIN
     @GetMapping
     @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> listClients(@PathVariable String tenantCode) {
+    public ResponseEntity<List<Client>> listClients(@PathVariable String tenantCode) {
         try {
-            List<Map<String, Object>> clients = adminUserManagementService.listClients();
-            return ResponseEntity.ok(clients);
+            List<ClientEntity> clients = adminUserManagementService.listClients();
+            List<Client> clientsDto = clients.stream()
+                .map(client -> {
+                    //ClientConfiguration configuration = clientConfigurationService.getClientConfiguration(client.getId());
+                    Client dto = new Client();
+                    dto.setId(client.getId());
+                    dto.setTid(client.getTenant().getId());
+                    dto.setClientId(client.getClientId());
+                    dto.setName(client.getName());
+                    dto.setIsDeleted(client.getDeleted());
+                    dto.setCreatedAt(client.getCreatedAt());
+                    dto.setUpdatedAt(client.getUpdatedAt());
+                    dto.setTid(client.getTenant().getId());
+                    dto.setDefaultAccountId(client.getDefaultAccountId());
+                    ClientConfigurationEntity conf = client.getClientConfigurationEntity();
+                    if (conf != null) {
+                     
+                    ClientConfiguration configuration = new ClientConfiguration();
+                        configuration.setPaymentGate(conf.getPaymentGate());
+                        configuration.setSendEmailAfterBuy(conf.isSendEmailAfterBuy());
+                        configuration.setSendSmsAfterBuy(conf.isSendSmsAfterBuy());
+                        configuration.setPaymentGateAgentNumber(conf.getPaymentGateAgentNumber());
+                        configuration.setPaymentGateLogin(conf.getPaymentGateLogin());
+                        configuration.setPaymentGatePassword(conf.getPaymentGatePassword());
+                        configuration.setEmployeeEmail(conf.getEmployeeEmail());
+                    
+                        dto.setClientConfiguration(configuration);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(clientsDto);
         } catch (Exception e) {
             return ResponseEntity.status(getForbiddenStatus()).build();
         }
@@ -113,26 +143,23 @@ public class ClientManagementController extends SecuredController {
         return org.springframework.http.HttpStatus.FORBIDDEN;
     }
 
-    // DTO Classes
-    public static class CreateClientRequest {
-        private String clientId;
-        private String name;
-
-        public String getClientId() {
-            return clientId;
+    @PutMapping("/{clientId}")
+    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    public ResponseEntity<Client> updateClient(@PathVariable String tenantCode, @PathVariable Long clientId, @RequestBody Client request) {
+        try {
+            if (!clientId.equals(request.getId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            Client updatedClient = adminUserManagementService.updateClient(request);
+            return ResponseEntity.ok(updatedClient);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
 
-        public void setClientId(String clientId) {
-            this.clientId = clientId;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new ForbiddenException("Not authenticated"));
     }
 }
 

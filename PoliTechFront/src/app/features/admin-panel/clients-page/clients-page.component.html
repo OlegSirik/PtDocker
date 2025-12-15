@@ -1,6 +1,6 @@
 <div class="clients-container">
   <div class="page-header">
-    <h1 class="page-title">Clients</h1>
+    <h1 class="page-title">Подключения</h1>
   </div>
 
   <mat-card class="datatable-card">
@@ -13,37 +13,37 @@
       </div>
 
       <div class="table-header">
-        <h3>список clients</h3>
+        <h3>Список клиентов</h3>
       </div>
 
-      <div *ngIf="loading" class="loading">Loading clients...</div>
+      <div *ngIf="loading" class="loading">Загрузка клиентов...</div>
       <table mat-table [dataSource]="clients" class="business-table" *ngIf="!loading">
-        <ng-container matColumnDef="code">
-          <th mat-header-cell *matHeaderCellDef>Code</th>
-          <td mat-cell *matCellDef="let client">{{ client.code }}</td>
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let client">{{ client.id }}</td>
         </ng-container>
 
         <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <th mat-header-cell *matHeaderCellDef>Название</th>
           <td mat-cell *matCellDef="let client">{{ client.name }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="trusted_email">
-          <th mat-header-cell *matHeaderCellDef>Trusted Email</th>
-          <td mat-cell *matCellDef="let client">{{ client.trusted_email }}</td>
+        <ng-container matColumnDef="clientId">
+          <th mat-header-cell *matHeaderCellDef>Client ID</th>
+          <td mat-cell *matCellDef="let client">{{ client.clientId }}</td>
         </ng-container>
 
         <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <th mat-header-cell *matHeaderCellDef>Статус</th>
           <td mat-cell *matCellDef="let client">
-            <mat-chip [ngClass]="'status-' + client.status">
-              {{ client.status }}
+            <mat-chip [ngClass]="'status-' + (client.isDeleted ? 'suspended' : 'active')">
+              {{ client.isDeleted ? 'SUSPENDED' : 'ACTIVE' }}
             </mat-chip>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="createdAt">
-          <th mat-header-cell *matHeaderCellDef>Created At</th>
+          <th mat-header-cell *matHeaderCellDef>Дата создания</th>
           <td mat-cell *matCellDef="let client">
             {{ client.createdAt | date: 'short' }}
           </td>

@@ -7,6 +7,7 @@ public class Client {
     private Long tid;
     private String clientId;
     private Long defaultAccountId;
+    private Long clientAccountId;
     private String name;
     private Boolean isDeleted;
     private LocalDateTime createdAt;
@@ -50,6 +51,14 @@ public class Client {
         this.defaultAccountId = defaultAccountId;
     }
 
+    public Long getClientAccountId() {
+        return clientAccountId;
+    }
+
+    public void setClientAccountId(Long clientAccountId) {
+        this.clientAccountId = clientAccountId;
+    }
+
     public String getName() {
         return name;
     }
@@ -90,11 +99,4 @@ public class Client {
         this.clientConfiguration = clientConfiguration;
     }
 
-    public Boolean getDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
 }

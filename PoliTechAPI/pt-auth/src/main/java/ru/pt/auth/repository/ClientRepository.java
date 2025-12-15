@@ -38,8 +38,8 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти все clients для tenant (включая deleted)
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode ORDER BY c.name")
-    List<ClientEntity> findBytenantCode(@Param("tenantCode") Long tenantCode);
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode ORDER BY c.name")
+    List<ClientEntity> findBytenantCode(@Param("tenantCode") String tenantCode);
 
 
     /**

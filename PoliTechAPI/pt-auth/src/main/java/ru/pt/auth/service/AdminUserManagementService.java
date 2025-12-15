@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+
+import ru.pt.api.dto.auth.ClientConfiguration;
+import ru.pt.auth.entity.ClientConfigurationEntity;
 
 /**
  * Сервис для управления администраторами и пользователями
@@ -593,8 +597,10 @@ public class AdminUserManagementService {
      * TNT_ADMIN: Создание нового клиента
      */
     @Transactional
-    public Map<String, Object> createClient(String clientId, String clientName) {
+    public Client createClient(Client client) {
+
         UserDetailsImpl currentUser = getCurrentUser();
+
         if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can create clients");
         }
@@ -603,55 +609,111 @@ public class AdminUserManagementService {
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
-        if (clientRepository.findByClientIdandTenantCode(clientId, currentUser.getTenantCode()).isPresent()) {
-            throw new BadRequestException("Client with ID '" + clientId + "' already exists");
+        if (clientRepository.findByClientIdandTenantCode(client.getClientId(), currentUser.getTenantCode()).isPresent()) {
+            throw new BadRequestException("Client with ID '" + client.getClientId() + "' already exists");
         }
 
-        ClientEntity client = new ClientEntity();
-        client.setTenant(tenant);
-        client.setClientId(clientId);
-        client.setName(clientName);
-        client.setDeleted(false);
-        ClientEntity saved = clientRepository.save(client);
+        client.setTid(tenant.getId());
+
+        if (client.getClientConfiguration() == null) {
+            ClientConfiguration clientConfiguration = new ClientConfiguration();
+            client.setClientConfiguration(clientConfiguration);
+        }
+
+        ClientEntity clientEntity = clientMapper.toEntity(client);
+        ClientEntity saved = clientRepository.save(clientEntity);
 
         AccountEntity tenantAccount = accountRepository.findByTenantId(tenant.getId())
             .orElseThrow(() -> new NotFoundException("Tenant account not found for tenant id: " + tenant.getId()));
 
         AccountEntity account = new AccountEntity();
         account.setTenant(tenant);
-        account.setClient(client);
+        account.setClient(clientEntity);
         account.setNodeType(AccountNodeType.CLIENT);
-        account.setName(clientName);
+        account.setName(client.getName());
         account.setParent(tenantAccount);
         AccountEntity savedAccount = accountRepository.save(account);
+// default account
+        AccountEntity defAccount = new AccountEntity();
+        defAccount.setTenant(tenant);
+        defAccount.setClient(clientEntity);
+        defAccount.setNodeType(AccountNodeType.ACCOUNT);
+        defAccount.setName(client.getName() + " default SALE account");
+        defAccount.setParent(savedAccount);
+        AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", saved.getId());
-        result.put("clientId", saved.getClientId());
-        result.put("name", saved.getName());
-        result.put("accountId", savedAccount.getId());
-        return result;
+        saved.setDefaultAccountId(savedDefAccount.getId());
+        clientRepository.save(saved);
+        
+        Client clientDto = clientMapper.toDto(saved);
+        clientDto.setClientAccountId(savedAccount.getId());
+        return clientDto;
+       
     }
 
+    @Transactional
+    public Client updateClient(Client client) {
+        UserDetailsImpl currentUser = getCurrentUser();
+
+        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only TNT_ADMIN can create clients");
+        }
+
+        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
+            .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        ClientEntity clientToUpdate = clientRepository.findById(client.getId())
+            .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        if ("TNT_ADMIN".equals(currentUser.getUserRole())) {
+            // Если это sys_admin, то можно обновить любого клиента, если это tnt_admin то только из своего тенанта
+            // tenant текущей учетки
+
+            // Проверка, что текущий пользователь имеет доступ к этой записи    
+            if (!clientToUpdate.getTenant().getCode().equals(tenant.getCode())) {
+                throw new ForbiddenException("You do not have access to this tenant data");
+            }
+        }
+
+        if (clientToUpdate.getClientId() != client.getClientId()) {
+            // Проверка уникальности нового clientId
+            ClientEntity oldClient = clientRepository.findByClientIdandTenantCode(client.getClientId(), currentUser.getTenantCode()).
+                orElse(new ClientEntity());
+                        
+            if (oldClient.getId() != null && oldClient.getId() != client.getId()) {
+                throw new BadRequestException("Client with ID '" + client.getClientId() + "' already exists");
+            }
+        }
+
+        client.setUpdatedAt(LocalDateTime.now());
+        client.setTid(tenant.getId());
+
+        ClientEntity clientEntity = clientMapper.toEntity(client);
+        ClientEntity saved = clientRepository.save(clientEntity);
+
+        AccountEntity account = accountRepository.findCliensAccountByClientId(saved.getId())
+            .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + saved.getClientId()));
+
+    
+        Client clientDto = clientMapper.toDto(saved);
+        clientDto.setClientAccountId(account.getId());
+        return clientDto;
+
+        //return getClientById(client.getId());
+//        return clientMapper.toDto(saved);
+    }
     /**
      * TNT_ADMIN: Получить список всех клиентов
      */
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> listClients() {
+    public List<ClientEntity> listClients() {
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can list clients");
         }
 
-        List<ClientEntity> clients = clientRepository.findByTenantCodeActive(currentUser.getTenantCode());
-        return clients.stream().map(client -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", client.getId());
-            map.put("clientId", client.getClientId());
-            map.put("name", client.getName());
-            map.put("isDeleted", client.getDeleted());
-            return map;
-        }).collect(java.util.stream.Collectors.toList());
+        List<ClientEntity> clients = clientRepository.findBytenantCode(currentUser.getTenantCode());
+        return clients;
     }
 
     /**
@@ -674,7 +736,10 @@ public class AdminUserManagementService {
         AccountEntity account = accountRepository.findCliensAccountByClientId(id)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + id));
 
-        return clientMapper.toDto(client);
+        
+        Client clientDto = clientMapper.toDto(client);
+        clientDto.setClientAccountId(account.getId());
+        return clientDto;
     }
 
     // ========== ACCOUNT MANAGEMENT (GROUP_ADMIN, PRODUCT_ADMIN) ==========

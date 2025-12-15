@@ -11,13 +11,24 @@ export interface Client {
     tid: number;
     clientId: string;
     name: string;
-    description: string;
-    trusted_email: string;
+    defaultAccountId?: number;
     createdAt?: Date | string;
     updateAt?: Date | string;
-    status: 'ACTIVE' | 'DELETED' | 'SUSPENDED';
-    accountId?: number;
+    isDeleted: boolean;
+    clientAccountId?: number;
+    clientConfiguration?: ClientConfiguration;
   }
+
+  export interface ClientConfiguration {
+    paymentGate: string;
+    sendEmailAfterBuy: boolean;
+    sendSmsAfterBuy: boolean;
+    paymentGateAgentNumber?: string;
+    paymentGateLogin?: string;
+    paymentGatePassword?: string;
+    employeeEmail?: string;
+  }
+
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +38,5 @@ export class ClientsService extends BaseApiService<Client> {
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
     super(http, env, 'admin/clients', authService);
   }
-
 
 }
