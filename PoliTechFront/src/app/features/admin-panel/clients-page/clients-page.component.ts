@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChip } from '@angular/material/chips';
 import { TenantService } from '../../../shared/services/tenant.service';
-import { AuthService } from '../../../shared/services/auth/auth.service';
+import { AuthService } from '../../../shared/services/auth.service';
 import { ClientsService, Client } from '../../../shared/services/api/clients.service';
 @Component({
   selector: 'app-clients-page',
@@ -32,6 +32,7 @@ export class ClientsPageComponent implements OnInit {
   constructor(
     private tenantService: ClientsService,
     private router: Router,
+    private route: ActivatedRoute,
     private auth: AuthService
   ) {}
 
@@ -66,12 +67,14 @@ export class ClientsPageComponent implements OnInit {
   }
 
   addClient() {
-    this.router.navigate(['/admin/clients/edit']);
+    const tenantCode = this.route.snapshot.params['tenantId'] || this.auth.tenant || '';
+    this.router.navigate(['/', tenantCode, 'admin', 'clients', 'edit']);
   }
 
   editClient(client: Client) {
     if (client.id) {
-      this.router.navigate(['/admin/clients', client.id.toString()]);
+      const tenantCode = this.route.snapshot.params['tenantId'] || this.auth.tenant || '';
+      this.router.navigate(['/', tenantCode, 'admin', 'clients', client.id.toString()]);
     }
   }
 

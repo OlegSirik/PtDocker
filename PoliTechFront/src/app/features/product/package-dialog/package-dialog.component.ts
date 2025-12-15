@@ -65,7 +65,8 @@ export class PackageDialogComponent {
     this.package = data.package ? { ...data.package } : {
       code: '',
       name: '',
-      covers: []
+      covers: [],
+      files: []
     };
   }
 

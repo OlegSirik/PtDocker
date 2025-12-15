@@ -14,6 +14,17 @@ $ng-front4-theme: mat.define-theme((
     theme-type: light,
     primary: mat.$azure-palette,
     tertiary: mat.$blue-palette,
+    use-system-variables: true
+
+    //primary: mat.$azure-palette,
+    //secondary: mat.$blue-palette         // вторичная (бывший accent)
+    //tertiary: mat.$blue-palette,          // третичная
+    //neutral: mat.$gray-palette,           // нейтральная
+    //neutral-variant: mat.$slate-palette,  // вариант нейтральной
+    //error: mat.$red-palette, 
+  ),
+  typography: (
+    use-system-variables: true,
   ),
   density: (
     scale: 0,
@@ -25,6 +36,8 @@ $ng-front4-theme: mat.define-theme((
 // that you are using.
 :root {
   @include mat.all-component-themes($ng-front4-theme);
+  @include mat.system-level-colors($ng-front4-theme);
+  @include mat.system-level-typography($ng-front4-theme);
 }
 
 // Comment out the line below if you want to use the pre-defined typography utility classes.

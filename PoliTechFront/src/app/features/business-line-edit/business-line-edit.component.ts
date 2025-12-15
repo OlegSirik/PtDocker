@@ -13,8 +13,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLineCover } from '../../shared';
+import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLineCover, BusinessLineFile } from '../../shared';
 import {JsonPipe} from '@angular/common';
+import { VarsService } from '../../shared/services/vars.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
     selector: 'app-business-line-edit',
@@ -41,186 +43,143 @@ export class BusinessLineEditComponent implements OnInit {
   private svc = inject(BusinessLineEditService);
   private snack = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  varService = inject(VarsService);
 
-  businessLine: BusinessLineEdit = { id:-1,mpCode: '', mpName: '', mpVars: [], mpCovers: [], mpPhType: '', mpInsObjectType: '' };
+  businessLine: BusinessLineEdit = { id:-1,mpCode: '', mpName: '', mpVars: [], mpCovers: [], mpFiles: [], mpPhType: '', mpInsObjectType: '' };
   originalBusinessLine: BusinessLineEdit | null = null;
   isNewRecord = true;
   hasChanges = false;
 
   varDisplayedColumns: string[] = ['varCode', 'varType', 'varPath', 'varName', 'varDataType', 'varActions'];
   coverDisplayedColumns: string[] = ['coverCode', 'coverName', 'risks', 'coverActions'];
+  fileDisplayedColumns: string[] = ['fileCode', 'fileName', 'fileActions'];
   policyHolderDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   policyInsObjectDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
 
-  varSearchText = '';
-  coverSearchText = '';
+//  varSearchText = '';
+//  coverSearchText = '';
   exampleJsonText = '';
 
+//  get fullVarsCollection(): BusinessLineVar[] {
+//    if (!this.businessLine) { return [] ; }
+//    return this.varService.getPhDefVars (this.businessLine.mpPhType).concat(this.varService.getIoDefVars(this.businessLine.mpInsObjectType));
+//  }
 
-  get filteredCovers(): BusinessLineCover[] {
-    const s = this.coverSearchText.trim().toLowerCase();
-    if (!s) return this.businessLine.mpCovers;
-    return this.businessLine.mpCovers.filter(c => c.coverCode.toLowerCase().includes(s) || c.coverName.toLowerCase().includes(s) || c.risks.toLowerCase().includes(s));
-  }
+//  get filteredCovers(): BusinessLineCover[] {
+//    const s = this.coverSearchText.trim().toLowerCase();
+//    if (!s) return this.businessLine.mpCovers;
+//    return this.businessLine.mpCovers.filter(c => c.coverCode.toLowerCase().includes(s) || c.coverName.toLowerCase().includes(s) || c.risks.toLowerCase().includes(s));
+//  }
 
   get paginatedVars(): BusinessLineVar[] {
     return this.businessLine.mpVars.filter(v => v.varType == 'MAGIC' || v.varType == 'VAR' || v.varType == 'CONST');
   }
 
   get paginatedCovers(): BusinessLineCover[] {
-    //const startIndex = this.coverPageIndex * this.coverPageSize;
-    //return this.filteredCovers.slice(startIndex, startIndex + this.coverPageSize);
-    return this.filteredCovers;
+    return this.businessLine.mpCovers;
   }
 
   get policyHolderVars(): any[] {
-    // Filter vars that start with 'policyHolder.'
-    const phVars = this.businessLine.mpVars.filter(v => v.varPath.startsWith('policyHolder.'));
+    // Получаем категории страхователя в зависимости от типа
+    
+    //this.businessLine.mpVars = this.businessLine.mpVars.map(v => this.varService.enrichVar(v));
 
-    // Sort by varNr; varNr exists on BusinessLineVar interface, which is the type of phVars elements
-    // If varNr is null or does not exist, call findVarNrByVarPath and set varNr with value
-    phVars.forEach(v => {
-      if (v.varNr == null) {
-        const foundNr = this.svc.findVarNrByVarPath(v.varPath);
-        if (foundNr != null) {
-          v.varNr = foundNr;
-        }
-      }
-    });
-    const sorted = phVars.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
+    const categories = this.varService.getPhCategories(this.businessLine.mpPhType) || [];
+    let result: any[] = [];
     let prevCategory = '';
-
-    // Transform data to extract category and field
-    return sorted.map(v => {
-      const pathAfterPh = v.varPath.substring('policyHolder.'.length);
-      let category = 'Policy Holder';
-      let field = pathAfterPh;
-
-      if (v.varPath.startsWith('policyHolder.person.')) {
-        category = 'person';
-        field = v.varPath.substring('policyHolder.person.'.length);
-      } else if (v.varPath.startsWith('policyHolder.phone.')) {
-        category = 'phone';
-        field = v.varPath.substring('policyHolder.phone.'.length);
-      } else if (v.varPath.startsWith('policyHolder.passport.')) {
-        category = 'passport';
-        field = v.varPath.substring('policyHolder.passport.'.length);
-      } else if (v.varPath.startsWith('policyHolder.address.')) {
-        category = 'address';
-        field = v.varPath.substring('policyHolder.address.'.length);
-      } else if (v.varPath.startsWith('policyHolder.organization.')) {
-        category = 'organization';
-        field = v.varPath.substring('policyHolder.organization.'.length);
-      } else if (v.varPath.startsWith('policyHolder.document.')) {
-        category = 'document';
-        field = v.varPath.substring('policyHolder.document.'.length);
-      } else if (v.varPath.startsWith('policyHolder.additionalProperties.')) {
-        category = 'additionalProperties';
-        field = v.varPath.substring('policyHolder.additionalProperties.'.length);
-      }
-
-      if (category === prevCategory) {
-        category = '';
-      } else {
-        prevCategory = category;
-      }
-
-      return {
-        category,
-        field,
-        varName: v.varName,
-        varCode: v.varCode,
-        original: v
-      };
-    });
+    
+    for (const category of categories) {
+      // Only keep variables whose varCdm fits category
+      const matchedVars = this.businessLine.mpVars
+        .filter(v => v.varCdm && v.varCdm.startsWith(`policyHolder.${category}.`))
+        .sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0))
+        .map(v => {
+          let cat = '';
+          if (category !== prevCategory) {
+            cat = category;
+            prevCategory = category;
+          }
+          return {
+            category: cat,
+            field: v.varPath.split('.').slice(2).join('.'),
+            varName: v.varName,
+            varCode: v.varCode,
+            original: v
+          };
+        });
+      result = result.concat(matchedVars);
+    }
+    return result;
   }
 
   get policyInsObjectVars(): any[] {
-    // Filter vars that start with 'insuredObject.'
-    const phVars = this.businessLine.mpVars.filter(v => v.varPath.startsWith('insuredObject.'));
+    //this.businessLine.mpVars = this.businessLine.mpVars.map(v => this.varService.enrichVar(v));
 
-    // Sort by varNr; varNr exists on BusinessLineVar interface, which is the type of phVars elements
-    // If varNr is null or does not exist, call findVarNrByVarPath and set varNr with value
-    phVars.forEach(v => {
-      if (v.varNr == null) {
-        const foundNr = this.svc.findVarNrByVarPath(v.varPath);
-        if (foundNr != null) {
-          v.varNr = foundNr;
-        }
-      }
-    });
-    const sorted = phVars.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
+    const categories = this.varService.getIoCategories(this.businessLine.mpInsObjectType) || [];
+    
+    let result: any[] = [];
     let prevCategory = '';
+    
+    console.log('this.businessLine.mpVars', this.businessLine.mpVars);
 
-    // Transform data to extract category and field
-    return sorted.map(v => {
-      const pathAfterPh = v.varPath.substring('insuredObject.'.length);
-      let category = 'insuredObject';
-      let field = pathAfterPh;
-
-      if (v.varPath.startsWith('insuredObject.person.')) {
-        category = 'person';
-        field = v.varPath.substring('insuredObject.person.'.length);
-      } else if (v.varPath.startsWith('insuredObject.phone.')) {
-        category = 'phone';
-        field = v.varPath.substring('insuredObject.device.'.length);
-      } else if (v.varPath.startsWith('insuredObject.device.')) {
-        category = 'device';
-        field = v.varPath.substring('insuredObject.device.'.length);
-      } else if (v.varPath.startsWith('insuredObject.address.')) {
-        category = 'address';
-        field = v.varPath.substring('insuredObject.address.'.length);
-      } else if (v.varPath.startsWith('policyHolder.organization.')) {
-        category = 'organization';
-        field = v.varPath.substring('policyHolder.organization.'.length);
-      } else if (v.varPath.startsWith('insuredObject.document.')) {
-        category = 'document';
-        field = v.varPath.substring('insuredObject.document.'.length);
-      } else if (v.varPath.startsWith('insuredObject.additionalProperties.')) {
-        category = 'additionalProperties';
-        field = v.varPath.substring('insuredObject.additionalProperties.'.length);
-      }
-
-      if (category === prevCategory) {
-        category = '';
-      } else {
-        prevCategory = category;
-      }
-
-      return {
-        category,
-        field,
-        varName: v.varName,
-        varCode: v.varCode,
-        original: v
-      };
-    });
+    for (const category of categories) {
+      console.log('categories', category);
+      // Only keep variables whose varCdm fits category
+      const matchedVars = this.businessLine.mpVars
+        .filter(v => v.varCdm && v.varCdm.startsWith(`insuredObject.${category}.`))
+        .sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0))
+        .map(v => {
+          let cat = '';
+          if (category !== prevCategory) {
+            cat = category;
+            prevCategory = category;
+          }
+          console.log('v', v);
+          return {
+            category: cat,
+            field: v.varPath.split('.').slice(2).join('.'),
+            varName: v.varName,
+            varCode: v.varCode,
+            original: v
+          };
+        });
+      result = result.concat(matchedVars);
+    }
+    return result;
   }
-
-
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('mpCode');
-    console.log('code', code);
+    
     if (code) {
       this.isNewRecord = false;
       this.svc.getBusinessLineByCode(code).subscribe(doc => {
-        if (!doc) { this.router.navigate(['/business-line']); return; }
+        if (!doc) { this.router.navigate(['/', this.authService.tenant, 'business-line']); return; }
+        
+        // Normalize mpFiles property names (filename -> fileName)
+        const normalizedFiles = (doc.mpFiles || []).map((file: any) => ({
+          fileCode: file.fileCode,
+          fileName: file.fileName || file.filename || ''
+        }));
+
         this.businessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
-          mpInsObjectType: doc.mpInsObjectType || ''
+          mpInsObjectType: doc.mpInsObjectType || '',
+          mpFiles: normalizedFiles
         };
         this.originalBusinessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
-          mpInsObjectType: doc.mpInsObjectType || ''
+          mpInsObjectType: doc.mpInsObjectType || '',
+          mpFiles: normalizedFiles
         };
         this.updateChanges();
       });
     } else {
       this.isNewRecord = true;
-      this.businessLine.mpVars = this.svc.policyVars.concat(this.svc.policyMagicVars);
+      this.businessLine.mpVars = this.varService.policyVars.concat(this.varService.policyMagicVars);
       this.updateChanges();
     }
   }
@@ -234,29 +193,11 @@ export class BusinessLineEditComponent implements OnInit {
     // Remove all vars whose varPath starts with 'policyHolder.' from mpVars
     if (Array.isArray(this.businessLine.mpVars)) {
       this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varCode.startsWith('ph_'))
+        v => !(v.varCdm.startsWith('policyHolder'))
       );
-    }
-    
+    }    
     let newVars: any[] =[];
-    // Берём массив phPersonVars из сервиса, копируем уникальные varPath в this.businessLine.mpVars
-    if (this.businessLine.mpPhType === 'person') {
-      newVars = newVars.concat(this.svc.phPersonVars).
-        concat(this.svc.phPhoneVars).
-        concat(this.svc.phEmailVars).
-        concat(this.svc.phPersonOrganizationVars).
-        concat(this.svc.phPersonDocumentVars).
-        concat(this.svc.phAddressVars).
-        concat(this.svc.phPersonMagicVars);
-      
-    }
-    if (this.businessLine.mpPhType === 'organization') {
-      newVars = newVars.concat(this.svc.phOrganizationVars).
-        concat(this.svc.phOrganizationDocumentVars).
-        concat(this.svc.phPhoneVars).
-        concat(this.svc.phEmailVars).
-        concat(this.svc.phAddressVars);
-    }
+    newVars = this.varService.getPhDefVars(this.businessLine.mpPhType);
 
     this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
     this.updateChanges();
@@ -269,43 +210,13 @@ export class BusinessLineEditComponent implements OnInit {
     // Remove all vars whose varPath starts with 'insuredObject.' from mpVars
     if (Array.isArray(this.businessLine.mpVars)) {
       this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varPath && v.varCode.startsWith('io_'))
+        v => !(v.varCdm.startsWith('insuredObject'))
       );
     }
     let newVars: any[] = [];
+    newVars = this.varService.getIoDefVars(this.businessLine.mpInsObjectType);
 
-    // For 'person' type, transform policyHolder vars to insuredObject vars
-    if (this.businessLine.mpInsObjectType === 'person') {
-      const phVars = [
-        ...this.svc.phPersonVars,
-        ...this.svc.phPhoneVars,
-        ...this.svc.phEmailVars,
-        ...this.svc.phPersonOrganizationVars,
-        ...this.svc.phPersonDocumentVars,
-        ...this.svc.phAddressVars,
-        ...this.svc.ioPersonMagicVars
-      ];
-
-      // Transform varPath from policyHolder.* to insuredObject.* and update varCode prefix
-      newVars = phVars.map(v => ({
-        ...v,
-        varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
-        varCode: v.varCode.replace('ph_', 'io_'),
-        varNr: v.varNr ? v.varNr + 500 : 0 // Offset varNr to avoid conflicts
-      }));
-    }
-
-    if (this.businessLine.mpInsObjectType === 'device') {
-      newVars = newVars.concat(this.svc.ioDeviceVars);
-    }
-
-    if (this.businessLine.mpInsObjectType === 'property') {
-      newVars = newVars.concat(this.svc.ioPropertyVars);
-    }
-
-    const existingVarPaths = new Set(this.businessLine.mpVars.map(v => v.varPath));
-    const uniqueVarsToAdd = newVars.filter(v => !existingVarPaths.has(v.varPath));
-    this.businessLine.mpVars = [...this.businessLine.mpVars, ...uniqueVarsToAdd];
+    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
     this.updateChanges();
   }
 
@@ -324,15 +235,23 @@ export class BusinessLineEditComponent implements OnInit {
       mpInsObjectType: this.businessLine.mpInsObjectType || ''
     };
     this.svc.saveBusinessLine(dataToSave).subscribe(saved => {
+      // Normalize mpFiles property names (filename -> fileName)
+      const normalizedFiles = (saved.mpFiles || []).map((file: any) => ({
+        fileCode: file.fileCode,
+        fileName: file.fileName || ''
+      }));
+
       this.businessLine = {
         ...saved,
         mpPhType: saved.mpPhType || '',
-        mpInsObjectType: saved.mpInsObjectType || ''
+        mpInsObjectType: saved.mpInsObjectType || '',
+        mpFiles: normalizedFiles
       };
       this.originalBusinessLine = {
         ...saved,
         mpPhType: saved.mpPhType || '',
-        mpInsObjectType: saved.mpInsObjectType || ''
+        mpInsObjectType: saved.mpInsObjectType || '',
+        mpFiles: normalizedFiles
       };
       this.isNewRecord = false;
       this.updateChanges();
@@ -343,19 +262,21 @@ export class BusinessLineEditComponent implements OnInit {
   addVar(): void {
     this.openVarDialog({ varCode: '', varType: 'IN', varPath: '', varName: '', varDataType: 'STRING' }, (res) => {
       if (!res) return;
-//      if (this.isNewRecord) {
-        const model: BusinessLineVar = { varCode: res.varCode  , varType: res.varType, varPath: res.varPath, varName: res.varName, varDataType: res.varDataType, varValue: '', varNr: 0 };
+        const model: BusinessLineVar = { 
+          varCode: res.varCode  , 
+          varType: res.varType, 
+          varPath: res.varPath, 
+          varName: res.varName, 
+          varDataType: res.varDataType, 
+          varValue: '', 
+          varNr: 0, 
+          varCdm: res.varPath };
         this.businessLine.mpVars = [...this.businessLine.mpVars, model];
         this.updateChanges();
-//      } else {
-//        this.svc.addVar(this.businessLine.mpCode, { varType: res.varType, varPath: res.varPath, varName: res.varName, varDataType: res.varDataType }).subscribe(created => {
-//          this.businessLine.mpVars = [...this.businessLine.mpVars, created];
-//          this.updateChanges();
-//        });
-//      }
+
     });
   }
-
+/*
   addAllVars(): void {
     let newVars: any[] =[];
   // Берём массив phPersonVars из сервиса, копируем уникальные varPath в this.businessLine.mpVars
@@ -380,7 +301,7 @@ export class BusinessLineEditComponent implements OnInit {
   this.updateChanges();
 
   }
-
+*/
   editVar(v: BusinessLineVar): void {
     this.openVarDialog({ ...v }, (res) => {
       if (!res) return;
@@ -426,34 +347,11 @@ export class BusinessLineEditComponent implements OnInit {
     //});
   }
 
-  addCoverVars(code: string): void {
-// add var to mpVars if not exists - co_+code+_premium, co_+code+_sumInsured, co_+code+_deductibleNr
-  const newVars: any[] = [];
-  newVars.push({ varCode: 'co_' + code + '_premium', varType: 'VAR', 
-    varPath: '$..covers[?(@.cover.code == "' + code + '")].premium', 
-    varName: 'Премия по покрытию ' + code, varDataType: 'NUMBER' });
-  newVars.push({ varCode: 'co_' + code + '_sumInsured', varType: 'VAR', 
-    varPath: '$..covers[?(@.cover.code == "' + code + '")].sumInsured', 
-    varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER' });
-  newVars.push({ varCode: 'co_' + code + '_deductibleNr', varType: 'VAR', 
-    varPath: '', 
-    varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER' });
-    newVars.push({ varCode: 'co_' + code + '_deductible', varType: 'VAR', 
-      varPath: '$..covers[?(@.cover.code == "' + code + '")].deductible', 
-      varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER' });
-    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
-  }
-
-  deleteCoverVars(code: string): void {
-    this.businessLine.mpVars = this.businessLine.mpVars.filter(v => v.varCode !== 'co_' + code);
-  }
-
   addCover(): void {
     this.openCoverDialog({ coverCode: '', coverName: '', risks: '' }, (res) => {
       if (!res) return;
         const model: BusinessLineCover = { coverCode: res.coverCode, coverName: res.coverName, risks: res.risks };
         this.businessLine.mpCovers = [...this.businessLine.mpCovers, model];
-        this.addCoverVars(res.coverCode);
         this.updateChanges();
 
     });
@@ -494,12 +392,10 @@ export class BusinessLineEditComponent implements OnInit {
     this.openConfirm('Удалить покрытие?', () => {
       if (this.isNewRecord) {
         this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
-        this.deleteCoverVars(c.coverCode);
         this.updateChanges();
       } else {
         this.svc.deleteCover(this.businessLine.mpCode, c.coverCode).subscribe(() => {
           this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
-          this.deleteCoverVars(c.coverCode);
           this.updateChanges();
         });
       }
@@ -602,7 +498,8 @@ export class BusinessLineEditComponent implements OnInit {
           varType: 'IN',
           varDataType: 'STRING',
           varValue: '',
-          varNr: maxVarNr + 1
+          varNr: maxVarNr + 1,
+          varCdm: 'policyHolder.additionalProperties.' + result.varCode
         };
 
         this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
@@ -632,7 +529,8 @@ export class BusinessLineEditComponent implements OnInit {
           varType: 'IN',
           varDataType: 'STRING',
           varValue: '',
-          varNr: maxVarNr + 1
+          varNr: maxVarNr + 1,
+          varCdm: ''
         };
 
         this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
@@ -659,7 +557,69 @@ export class BusinessLineEditComponent implements OnInit {
     });
   }
 
+  get files(): BusinessLineFile[] {
+    return this.businessLine.mpFiles || [];
+  }
 
+  addFile(): void {
+    this.openFileDialog({ fileCode: '', fileName: '' }, (res) => {
+      if (!res) return;
+      
+      // Ensure fileCode is lowercase
+      res.fileCode = res.fileCode.toLowerCase();
+      
+      // Validate fileCode uniqueness
+      const existingFileCodes = this.files.map(f => f.fileCode);
+      if (existingFileCodes.includes(res.fileCode)) {
+        this.snack.open('fileCode должен быть уникальным', 'OK', { duration: 2500 });
+        return;
+      }
+      
+      const model: BusinessLineFile = { fileCode: res.fileCode, fileName: res.fileName };
+      this.businessLine.mpFiles = [...(this.businessLine.mpFiles || []), model];
+      this.updateChanges();
+    });
+  }
+
+  editFile(f: BusinessLineFile): void {
+    this.openFileDialog({ ...f, isEdit: true }, (res) => {
+      if (!res) return;
+      
+      // Ensure fileCode is lowercase (though it shouldn't change in edit mode)
+      res.fileCode = res.fileCode.toLowerCase();
+      
+      // Validate fileCode uniqueness (excluding current file)
+      const existingFileCodes = this.files
+        .filter(file => file.fileCode !== f.fileCode)
+        .map(file => file.fileCode);
+      if (existingFileCodes.includes(res.fileCode)) {
+        this.snack.open('fileCode должен быть уникальным', 'OK', { duration: 2500 });
+        return;
+      }
+      
+      const index = this.files.findIndex(x => x.fileCode === f.fileCode);
+      if (index !== -1) {
+        this.businessLine.mpFiles = [
+          ...this.files.slice(0, index),
+          { ...f, fileName: res.fileName },
+          ...this.files.slice(index + 1)
+        ];
+        this.updateChanges();
+      }
+    });
+  }
+
+  deleteFile(f: BusinessLineFile): void {
+    this.openConfirm('Удалить файл?', () => {
+      this.businessLine.mpFiles = this.files.filter(x => x.fileCode !== f.fileCode);
+      this.updateChanges();
+    });
+  }
+
+  openFileDialog(data: any, cb: (res?: any)=>void) {
+    const ref = this.dialog.open(FileEditDialog, { data });
+    ref.afterClosed().subscribe(cb);
+  }
 
 }
 
@@ -865,4 +825,65 @@ export class AddPolicyHolderVarDialog {
 export class AddInsObjectVarDialog {
   varCode = '';
   varName = '';
+}
+
+@Component({
+    selector: 'app-file-edit-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+    template: `
+  <h2 mat-dialog-title>{{ isEdit ? 'Редактировать файл' : 'Добавить файл' }}</h2>
+  <div mat-dialog-content>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>fileCode</mat-label>
+      <input matInput [(ngModel)]="model.fileCode" [readonly]="isEdit" (ngModelChange)="onFileCodeChange($event)">
+      @if (hasUpperCase) {
+        <mat-hint style="color: #f44336;">fileCode должен содержать только строчные буквы</mat-hint>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>fileName</mat-label>
+      <input matInput [(ngModel)]="model.fileName">
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Отмена</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
+  </div>
+  `
+})
+export class FileEditDialog {
+  model: any;
+  isEdit: boolean = false;
+  hasUpperCase: boolean = false;
+
+  constructor(@Inject(MAT_DIALOG_DATA) data: any) { 
+    this.isEdit = data.isEdit || false;
+    this.model = { ...data };
+    delete this.model.isEdit;
+    // Convert existing fileCode to lowercase if present
+    if (this.model.fileCode) {
+      this.model.fileCode = this.model.fileCode.toLowerCase();
+    }
+  }
+
+  onFileCodeChange(value: string): void {
+    if (value) {
+      // Convert to lowercase
+      const lowerValue = value.toLowerCase();
+      this.model.fileCode = lowerValue;
+      // Check if original had uppercase
+      this.hasUpperCase = value !== lowerValue;
+    } else {
+      this.hasUpperCase = false;
+    }
+  }
+
+  isValid(): boolean {
+    if (!this.model.fileCode || !this.model.fileName) {
+      return false;
+    }
+    // Check if fileCode contains only lowercase letters, numbers, and underscores
+    const lowerCasePattern = /^[a-z0-9_]+$/;
+    return lowerCasePattern.test(this.model.fileCode);
+  }
 }

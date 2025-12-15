@@ -1,240 +1,207 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, tap } from 'rxjs';
-import { AuthService } from './auth.service';
-import { VarsService } from './vars.service';
 
-export interface BusinessLineVar {
-  varCode: string;
-  varType: string;
-  varPath: string;
-  varName: string;
-  varDataType: string;
-  varValue: string;
-  varNr: number;
-  varCdm: string;
-}
-
-export interface BusinessLineCover {
-  coverCode: string;
-  coverName: string;
-  risks: string;
-}
-
-export interface BusinessLineFile {
-  fileCode: string;
-  fileName: string;
-}
-
-export interface BusinessLineEdit {
-  id: number;
-  mpCode: string;
-  mpName: string;
-  mpPhType: string;
-  mpInsObjectType: string;
-  mpVars: BusinessLineVar[];
-  mpCovers: BusinessLineCover[];
-  mpFiles?: BusinessLineFile[];
-}
+export interface LobVar {
+    varCode: string;
+    varType: string;
+    varPath: string;
+    varName: string;
+    varDataType: string;
+    varValue: string;
+    varCdm: string
+    varNr: number;
+  }
 
 @Injectable({
-  providedIn: 'root'
-})
-export class BusinessLineEditService {
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private varsService: VarsService,
-  ) {};
+    providedIn: 'root'
+  })
 
-  private mockData: BusinessLineEdit =
-    {
-      id: -1,
-      mpCode: 'MORTGAGE-MOCK',
-      mpName: 'Ипотека',
-      mpPhType: 'person',
-      mpInsObjectType: 'Person',
-      mpVars: [],
-      mpCovers: [ ]
-    };
+export class VarsService {
+  private allVars: LobVar[] = [];
 
-  getBusinessLineByCode(code: String): Observable<BusinessLineEdit> {
-    return this.http.get<BusinessLineEdit>(`${this.authService.baseApiUrl}/admin/lobs/${code}`);
+  constructor() {
+    this.allVars = [
+      ...this.phPersonVars,
+      ...this.phPersonMagicVars,
+      ...this.phContactsVars,
+      ...this.phPersonOrganizationVars,
+      ...this.phPersonIdentifiersVars,
+      ...this.phAddressVars,
+      ...this.phOrganizationVars,
+      ...this.phOrganizationIdentifiersVars,
+      ...this.ioDeviceVars,
+      ...this.ioPropertyVars,
+      ...this.ioPersonMagicVars,
+      ...this.policyVars,
+      ...this.policyMagicVars,
+      ...this.getIoPersonVars(),
+      ...this.getIoOrganizationVars(),
+      ...this.getIoContactsVars(),
+      ...this.getIoPersonIdentifiersVars(),
+      ...this.getIoAddressVars()
+    ]; 
   }
 
-  saveBusinessLine(businessLine: BusinessLineEdit): Observable<BusinessLineEdit> {
+//  getVarByCode(code: string): LobVar | undefined {
+//    return this.allVars.find(v => v.varCode === code);
+//  }
 
-    if (this.mockData.id != -1) {
-      // Update existing
-      this.mockData = {
-        ...businessLine,
-        mpPhType: businessLine.mpPhType || '',
-        mpInsObjectType: businessLine.mpInsObjectType || ''
-      };
-    if (this.http) {
-      // Also update backend with the full mockData
-      const code = businessLine.mpCode;
-      const url = `${this.authService.baseApiUrl}/admin/lobs/${code}`;
-      // INSERT_YOUR_CODE
-      this.http.put<BusinessLineEdit>(url, businessLine).subscribe({
-        next: (data) => {
-          // Replace local copy with the response data
-          this.mockData = {
-            ...data,
-            mpPhType: data.mpPhType || '',
-            mpInsObjectType: data.mpInsObjectType || ''
-          };
-        },
-          error: (err) => {
-          console.error('Error updating business line to backend:', err);
-        }
-      });
+  getPhCategories(type: string): string[] | any[] {
+    if (type === 'person') {
+      return [
+        "person",
+        "contacts",
+        "identifiers",
+        "addresses",
+        "additionalProperties"
+      ];
     }
-    } else {
-      // Add new
-      this.mockData = {
-        ...businessLine,
-        mpPhType: businessLine.mpPhType || '',
-        mpInsObjectType: businessLine.mpInsObjectType || ''
-      };
-    if (this.http) {
-      // Also save to backend if http is available
-
-      this.http.post(`${this.authService.baseApiUrl}/admin/lobs`, businessLine).subscribe({
-        next: () => {},
-        error: (err) => {
-          console.error('Error saving business line to backend:', err);
-        }
-      });
+    if (type === 'organization') {
+      return [
+        "organization",
+        "identifiers",
+        "addresses",
+        "additionalProperties"
+      ];
     }
+    return [];
+  }
+
+  getPhDefVars(type: string): LobVar[] | any[]{
+    if (type === 'person') {
+      return   this.phPersonVars.
+        concat(this.phContactsVars).
+        concat(this.phOrganizationVars).
+        concat(this.phPersonIdentifiersVars).
+        concat(this.phAddressVars).
+        concat(this.phPersonMagicVars);
     }
-    return of(businessLine);
-  }
-
-  addVar(mpCode: string, newVar: BusinessLineVar): Observable<BusinessLineVar> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      businessLine.mpVars.push(newVar);
-      return of(newVar);
+    if (type === 'organization') {
+      return this.phOrganizationVars.
+      concat(this.phOrganizationIdentifiersVars).
+      concat(this.phContactsVars).
+      concat(this.phAddressVars);
+      //concat(this.phOrganizationMagicVars).
     }
-    throw new Error('Business line not found');
+    return [];
   }
 
-  updateVar(mpCode: string, varCode: string, updatedVar: Partial<BusinessLineVar>): Observable<BusinessLineVar | null> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      const varIndex = businessLine.mpVars.findIndex(v => v.varCode === varCode);
-      if (varIndex !== -1) {
-        businessLine.mpVars[varIndex] = { ...businessLine.mpVars[varIndex], ...updatedVar };
-        return of(businessLine.mpVars[varIndex]);
-      }
+  getIoDefVars(type: string): LobVar[] | any[]{
+    if (type === 'person') {
+
+        return [
+        ...this.getIoPersonVars(),
+        ...this.getIoOrganizationVars(),
+        ...this.getIoContactsVars(),
+        ...this.getIoPersonIdentifiersVars(),
+        ...this.getIoAddressVars()
+      ];
+
     }
-    return of(null);
-  }
-
-  deleteVar(mpCode: string, varCode: string): Observable<boolean> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      const varIndex = businessLine.mpVars.findIndex(v => v.varCode === varCode);
-      if (varIndex !== -1) {
-        businessLine.mpVars.splice(varIndex, 1);
-        return of(true);
-      }
+    if (type === 'device') {
+        return this.ioDeviceVars;
     }
-    return of(false);
-  }
-
-  addCover(mpCode: string, newCover: BusinessLineCover): Observable<BusinessLineCover> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      businessLine.mpCovers.push(newCover);
-      return of(newCover);
+  
+    if (type === 'property') {
+        return this.ioPropertyVars;
     }
-    throw new Error('Business line not found');
+    return [];
   }
 
-  updateCover(mpCode: string, coverCode: string, updatedCover: Partial<BusinessLineCover>): Observable<BusinessLineCover | null> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      const coverIndex = businessLine.mpCovers.findIndex(c => c.coverCode === coverCode);
-      if (coverIndex !== -1) {
-        businessLine.mpCovers[coverIndex] = { ...businessLine.mpCovers[coverIndex], ...updatedCover };
-        return of(businessLine.mpCovers[coverIndex]);
-      }
+  getIoCategories(type: string): string[] | any[] {
+    if (type === 'person') {
+      return [
+        "person",
+        "contacts",
+        "identifiers",
+        "addresses",
+        "additionalProperties"
+      ];
     }
-    return of(null);
-  }
-
-  deleteCover(mpCode: string, coverCode: string): Observable<boolean> {
-    const businessLine = this.mockData;
-    if (businessLine && businessLine.mpCode === mpCode) {
-      const coverIndex = businessLine.mpCovers.findIndex(c => c.coverCode === coverCode);
-      if (coverIndex !== -1) {
-        businessLine.mpCovers.splice(coverIndex, 1);
-        return of(true);
-      }
+    if (type === 'device') {
+      return [
+        "device",
+        "additionalProperties"
+      ];
     }
-    return of(false);
+    if (type === 'property') {
+      return [
+        "property",
+        "additionalProperties"
+      ];
+    }
+    return [];
   }
-
-  getLobVars(lob: string): Observable<string[]> {
-    return this.getBusinessLineByCode(lob).pipe(
-      // getBusinessLineByCode should return Observable<BusinessLine | null>
-      // If not found or error, return []
-      // Otherwise, map to array of var.varCode
-      // Assuming businessLine.mpVars is the array of vars
-      map((businessLine: BusinessLineEdit | null) => {
-        if (businessLine && Array.isArray(businessLine.mpVars)) {
-          return businessLine.mpVars.map((v: any) => v.varCode);
-        }
-        return [];
-      }),
-      catchError(() => of([]))
-    );
-    //return of(['insAmount', 'policyTerm', 'activationDelay', 'coverageCode', 'deductible']).pipe(delay(200));
-  }
-
-  getLobCovers(lob: string): Observable<string[]> {
-    return this.getBusinessLineByCode(lob).pipe(
-      // getBusinessLineByCode should return Observable<BusinessLine | null>
-      // If not found or error, return []
-      // Otherwise, map to array of var.varCode
-      // Assuming businessLine.mpVars is the array of vars
-      map((businessLine: BusinessLineEdit | null) => {
-        if (businessLine && Array.isArray(businessLine.mpCovers)) {
-          return businessLine.mpCovers.map((c: any) => c.coverCode);
-        }
-        return [];
-      }),
-      catchError(() => of([]))
-    );
-    //return of(['insAmount', 'policyTerm', 'activationDelay', 'coverageCode', 'deductible']).pipe(delay(200));
-  }
-
-  getExampleJson(lobCode: string): Observable<any> {
-   
-    return this.http.get<any>(`${this.authService.baseApiUrl}/admin/lobs/${lobCode}/example`).pipe(
-      catchError((error) => {
-        console.error('Error fetching example JSON:', error);
-        return of({
-          policyHolder: {
-            person: {
-              firstName: 'John',
-              lastName: 'Doe'
-            }
-          }
-        });
-      })
-    );
-  }
-
-  /**
-   * Searches all arrays with BusinessLineVars defined on this service and returns the varNr if varPath is found.
-   * Returns the first varNr found, or null if not found.
-   */
-
 /*
-  phPersonVars: BusinessLineVar[] = [
+  enrichVar(v: LobVar): LobVar {
+    //console.log('enrichVar', v);
+    let newVar: LobVar = v as LobVar;
+    //console.log('newVar 1', newVar);
+    const existingVar = this.allVars.find(a => a.varCode === v.varCode);
+    //console.log('existingVar', existingVar);
+    if (existingVar) {
+        newVar.varCdm = existingVar.varCdm;
+        newVar.varNr = existingVar.varNr;
+    } else {
+        if (v.varPath) {
+            newVar.varCdm = v.varPath.substring(0, v.varPath.indexOf('.')) + "additionalProperties";
+        } else {
+            newVar.varCdm = "";
+        }
+        newVar.varNr = 1;
+    }
+    //console.log('newVar 2', newVar);
+    return newVar;
+  }
+*/
+  getIoPersonVars(): LobVar[] {
+    return this.phPersonVars.map(v => ({
+      ...v,
+      varCode: v.varCode.replace('ph_', 'io_'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
+      varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
+    }));
+  }
+  getIoOrganizationVars(): LobVar[] {
+    return this.phOrganizationVars.map(v => ({
+      ...v,
+      varCode: v.varCode.replace('ph_', 'io_'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
+      varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
+    }));
+  }
+  
+  getIoContactsVars(): LobVar[] {
+    return this.phContactsVars.map(v => ({
+      ...v,
+      varCode: v.varCode.replace('ph_', 'io_'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
+      varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
+    }));
+  }
+  getIoPersonIdentifiersVars(): LobVar[] {
+    return this.phPersonIdentifiersVars.map(v => ({
+      ...v,
+      varCode: v.varCode.replace('ph_', 'io_'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
+      varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
+    }));
+  }
+  getIoAddressVars(): LobVar[] {
+    
+    return this.phAddressVars.map(v => ({
+      ...v,
+      varCode: v.varCode.replace('ph_', 'io_person_'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
+      varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
+    }));
+  }
+
+  phPersonVars: LobVar[] = [
     {
       "varNr": 1,
       "varDataType": "STRING",
@@ -365,8 +332,9 @@ export class BusinessLineEditService {
       "varValue": "",
       "varCdm": "policyHolder.person.ext_id"
     }
-    ];
-    phPersonMagicVars: BusinessLineVar[] = [
+  ];
+
+  phPersonMagicVars: LobVar[] = [
     {
       "varNr": 1113,
       "varDataType": "STRING",
@@ -398,8 +366,9 @@ export class BusinessLineEditService {
       "varCdm": "policyHolder.person.age_issue"
     },
 
-];
-phPhoneVars: BusinessLineVar[] = [
+  ];
+
+  phContactsVars: LobVar[] = [
   {
     "varNr": 81,
     "varDataType": "STRING",
@@ -408,10 +377,8 @@ phPhoneVars: BusinessLineVar[] = [
     "varPath": "policyHolder.phone.phoneNumber",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.phone.phoneNumber"
-  }
-];
-phEmailVars: BusinessLineVar[] = [
+    "varCdm": "policyHolder.contacts.phone"
+  },
   {
     "varNr": 91,
     "varDataType": "STRING",
@@ -420,10 +387,11 @@ phEmailVars: BusinessLineVar[] = [
     "varPath": "policyHolder.email",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.email"
+    "varCdm": "policyHolder.contacts..email"
   }
-];
-    phPersonOrganizationVars: BusinessLineVar[] = [
+  ];
+
+  phPersonOrganizationVars: LobVar[] = [
     {
       "varNr": 51,
       "varDataType": "STRING",
@@ -566,7 +534,7 @@ phEmailVars: BusinessLineVar[] = [
     }
   ];
 
-phPersonDocumentVars: BusinessLineVar[] = [
+  phPersonIdentifiersVars: LobVar[] = [
     {
       "varNr": 101,
       "varDataType": "STRING",
@@ -575,7 +543,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.typeCode",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.typeCode"
+      "varCdm": "policyHolder.identifiers.typeCode"
     },
     {
       "varNr": 102,
@@ -585,7 +553,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.serial",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.serial"
+      "varCdm": "policyHolder.identifiers.serial"
     },
     {
       "varNr": 103,
@@ -595,7 +563,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.number",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.number"
+      "varCdm": "policyHolder.identifiers.number"
     },
     {
       "varNr": 104,
@@ -605,7 +573,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.dateIssue",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.dateIssue"
+      "varCdm": "policyHolder.identifiers.dateIssue"
     },
     {
       "varNr": 105,
@@ -615,7 +583,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.validUntil",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.validUntil"
+      "varCdm": "policyHolder.identifiers.validUntil"
     },
     {
       "varNr": 106,
@@ -625,7 +593,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.whom",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.whom"
+      "varCdm": "policyHolder.identifiers.whom"
     },
     {
       "varNr": 107,
@@ -635,7 +603,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.divisionCode",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.divisionCode"
+      "varCdm": "policyHolder.identifiers.divisionCode"
     },
     {
       "varNr": 108,
@@ -645,7 +613,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.vsk_id",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.vsk_id"
+      "varCdm": "policyHolder.identifiers.vsk_id"
     },
     {
       "varNr": 109,
@@ -655,7 +623,7 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.ext_id",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.passport.ext_id"
+      "varCdm": "policyHolder.identifiers.ext_id"
     },
     {
       "varNr": 110,
@@ -665,10 +633,11 @@ phPersonDocumentVars: BusinessLineVar[] = [
       "varPath": "policyHolder.passport.countryCode",
       "varType": "IN",
       "varValue": "RU",
-      "varCdm": "policyHolder.passport.countryCode"
+      "varCdm": "policyHolder.identifiers.countryCode"
     }
-];
-phAddressVars: BusinessLineVar[] = [
+  ];
+
+  phAddressVars: LobVar[] = [
     {
       "varNr": 121,
       "varDataType": "STRING",
@@ -677,7 +646,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.typeCode",
       "varType": "IN",
       "varValue": "REGISTRATION",
-      "varCdm": "policyHolder.address.typeCode"
+      "varCdm": "policyHolder.addresses.typeCode"
     },
     {
       "varNr": 122,
@@ -687,7 +656,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.countryCode",
       "varType": "IN",
       "varValue": "RU",
-      "varCdm": "policyHolder.address.countryCode"
+      "varCdm": "policyHolder.addresses.countryCode"
     },
     {
       "varNr": 123,
@@ -697,7 +666,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.region",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.region"
+      "varCdm": "policyHolder.addresses.region"
     },
     {
       "varNr": 124,
@@ -707,7 +676,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.city",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.city"
+      "varCdm": "policyHolder.addresses.city"
     },
     {
       "varNr": 125,
@@ -717,7 +686,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.street",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.street"
+      "varCdm": "policyHolder.addresses.street"
     },
     {
       "varNr": 126,
@@ -727,7 +696,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.house",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.house"
+      "varCdm": "policyHolder.addresses.house"
     },
     {
       "varNr": 127,
@@ -737,7 +706,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.building",
       "varType": "IN",
         "varValue": "",
-      "varCdm": "policyHolder.address.building"
+      "varCdm": "policyHolder.addresses.building"
     },
     {
       "varNr": 128,
@@ -747,7 +716,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.flat",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.flat"
+      "varCdm": "policyHolder.addresses.flat"
     },
     {
       "varNr": 129,
@@ -757,7 +726,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.room",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.room"
+      "varCdm": "policyHolder.addresses.room"
     },
     {
       "varNr": 130,
@@ -767,7 +736,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.zipCode",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.zipCode"
+      "varCdm": "policyHolder.addresses.zipCode"
     },
     {
       "varNr": 131,
@@ -777,7 +746,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.kladrId",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.kladrId"
+      "varCdm": "policyHolder.addresses.kladrId"
     },
     {
       "varNr": 132,
@@ -787,7 +756,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.fiasId",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.fiasId"
+      "varCdm": "policyHolder.addresses.fiasId"
     },
     {
       "varNr": 133,
@@ -797,7 +766,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.addressStr",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.addressStr"
+      "varCdm": "policyHolder.addresses.addressStr"
     },
     {
       "varNr": 134,
@@ -807,17 +776,7 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.addressStrEn",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.addressStrEn"
-    },
-    {
-      "varNr": 135,
-      "varDataType": "STRING",
-      "varCode": "ph_addr_vsk_id",
-      "varName": "Адрес.ID ВСК",
-      "varPath": "policyHolder.address.vsk_id",
-      "varType": "IN",
-      "varValue": "",
-      "varCdm": "policyHolder.address.vsk_id"
+      "varCdm": "policyHolder.addresses.addressStrEn"
     },
     {
       "varNr": 136,
@@ -827,11 +786,11 @@ phAddressVars: BusinessLineVar[] = [
       "varPath": "policyHolder.address.ext_id",
       "varType": "IN",
       "varValue": "",
-      "varCdm": "policyHolder.address.ext_id"
+      "varCdm": "policyHolder.addresses.ext_id"
     }
-];
+  ];
 
-phOrganizationVars: BusinessLineVar[] = [
+  phOrganizationVars: LobVar[] = [
   {
     "varNr": 141,
     "varDataType": "STRING",
@@ -972,9 +931,9 @@ phOrganizationVars: BusinessLineVar[] = [
     "varValue": "",
     "varCdm": "policyHolder.organization.nciCode"
   }
-];
+  ];
 
-phOrganizationDocumentVars: BusinessLineVar[] = [
+  phOrganizationIdentifiersVars: LobVar[] = [
   {
     "varNr": 161,
     "varDataType": "STRING",
@@ -983,7 +942,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.typeCode",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.typeCode"
+    "varCdm": "policyHolder.identifiers.typeCode"
   },
   {
     "varNr": 162,
@@ -993,7 +952,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.serial",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.serial"
+    "varCdm": "policyHolder.identifiers.serial"
   },
   {
     "varNr": 163,
@@ -1003,7 +962,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.number",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.number"
+    "varCdm": "policyHolder.identifiers.number"
   },
   {
     "varNr": 164,
@@ -1013,7 +972,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.dateIssue",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.dateIssue"
+    "varCdm": "policyHolder.identifiers.dateIssue"
   },
   {
     "varNr": 165,
@@ -1023,7 +982,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.validUntil",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.validUntil"
+    "varCdm": "policyHolder.identifiers.validUntil"
   },
   {
     "varNr": 166,
@@ -1033,7 +992,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.whom",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.whom"
+    "varCdm": "policyHolder.identifiers.whom"
   },
   {
     "varNr": 167,
@@ -1043,7 +1002,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.divisionCode",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.divisionCode"
+    "varCdm": "policyHolder.identifiers.divisionCode"
   },
   {
     "varNr": 168,
@@ -1053,7 +1012,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.vsk_id",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.vsk_id"
+    "varCdm": "policyHolder.identifiers.vsk_id"
   },
   {
     "varNr": 169,
@@ -1063,7 +1022,7 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.ext_id",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.document.ext_id"
+    "varCdm": "policyHolder.identifiers.ext_id"
   },
   {
     "varNr": 170,
@@ -1073,124 +1032,124 @@ phOrganizationDocumentVars: BusinessLineVar[] = [
     "varPath": "policyHolder.document.countryCode",
     "varType": "IN",
     "varValue": "RU",
-    "varCdm": "policyHolder.document.countryCode"
+    "varCdm": "policyHolder.identifiers.countryCode"
   }
-];
+  ];
 
-ioDeviceVars: BusinessLineVar[] = [
-{
-  "varNr": 1001,
-  "varDataType": "STRING",
-  "varCode": "io_device_name",
-  "varName": "Застрахованное ус-во. название",
-  "varPath": "insuredObject.device.deviceName",
-  "varType": "IN",
-  "varValue": "Телефон",
-  "varCdm": "insuredObject.device.deviceName"
-},
-{
-  "varNr": 1002,
-  "varDataType": "STRING",
-  "varCode": "io_device_typeCode",
-  "varName": "Застрахованное ус-во. код типа",
-  "varPath": "insuredObject.device.deviceTypeCode",
-  "varType": "IN",
-  "varValue": "PHONE",
-  "varCdm": "insuredObject.device.deviceTypeCode"
-},
-{
-  "varNr": 1003,
-  "varDataType": "STRING",
-  "varCode": "io_device_tradeMark",
-  "varName": "Застрахованное ус-во. торговая марка",
-  "varPath": "insuredObject.device.tradeMark",
-  "varType": "IN",
-  "varValue": "Samsung",
-  "varCdm": "insuredObject.device.tradeMark"
-},
-{
-  "varNr": 1004,
-  "varDataType": "STRING",
-  "varCode": "io_device_model",
-  "varName": "Застрахованное ус-во. модель",
-  "varPath": "insuredObject.device.model",
-  "varType": "IN",
-  "varValue": "Galaxy S21",
-  "varCdm": "insuredObject.device.model"
-},
-{
-  "varNr": 1005,
-  "varDataType": "STRING",
-  "varCode": "io_device_serialNr",
-  "varName": "Застрахованное ус-во. серийный номер",
-  "varPath": "insuredObject.device.serialNr",
-  "varType": "IN",
-  "varValue": "1234567890",
-  "varCdm": "insuredObject.device.serialNr"
-},
-{
-  "varNr": 1006,
-  "varDataType": "STRING",
-  "varCode": "io_device_licenseKey",
-  "varName": "Застрахованное ус-во. ключ лицензии",
-  "varPath": "insuredObject.device.licenseKey",
-  "varType": "IN",
-  "varValue": "1234567890",
-  "varCdm": "insuredObject.device.licenseKey"
-},
-{
-  "varNr": 1007,
-  "varDataType": "STRING",
-  "varCode": "io_device_imei",
-  "varName": "Застрахованное ус-во. IMEI",
-  "varPath": "insuredObject.device.imei",
-  "varType": "IN",
-  "varValue": "1234567890",
-  "varCdm": "insuredObject.device.imei"
-},
-{
-  "varNr": 1008,
-  "varDataType": "STRING",
-  "varCode": "io_device_osName",
-  "varName": "Застрахованное ус-во. название ОС",
-  "varPath": "insuredObject.device.osName",
-  "varType": "IN",
-  "varValue": "Android",
-  "varCdm": "insuredObject.device.osName"
-},
-{
-  "varNr": 1008,
-  "varDataType": "STRING",
-  "varCode": "io_device_osVersion",
-  "varName": "Застрахованное ус-во. версия ОС",
-  "varPath": "insuredObject.device.osVersion",
-  "varType": "IN",
-  "varValue": "10",
-  "varCdm": "insuredObject.device.osVersion"
-},
-{
-  "varNr": 1009,
-  "varDataType": "STRING",
-  "varCode": "io_device_countryCode",
-  "varName": "Застрахованное ус-во. код страны",
-  "varPath": "insuredObject.device.countryCode",
-  "varType": "IN",
-  "varValue": "RU",
-  "varCdm": "insuredObject.device.countryCode"
-},
-{
-  "varNr": 1010,
-  "varDataType": "STRING",
-  "varCode": "io_device_devicePrice",
-  "varName": "Застрахованное ус-во. цена",
-  "varPath": "insuredObject.device.devicePrice",
-  "varType": "IN",
-  "varValue": "10000",
-  "varCdm": "insuredObject.device.devicePrice"
-}
-];
+  ioDeviceVars: LobVar[] = [
+        {
+        "varNr": 1001,
+        "varDataType": "STRING",
+        "varCode": "io_device_name",
+        "varName": "Застрахованное ус-во. название",
+        "varPath": "insuredObject.device.deviceName",
+        "varType": "IN",
+        "varValue": "Телефон",
+        "varCdm": "insuredObject.device.deviceName"
+        },
+        {
+        "varNr": 1002,
+        "varDataType": "STRING",
+        "varCode": "io_device_typeCode",
+        "varName": "Застрахованное ус-во. код типа",
+        "varPath": "insuredObject.device.deviceTypeCode",
+        "varType": "IN",
+        "varValue": "PHONE",
+        "varCdm": "insuredObject.device.deviceTypeCode"
+        },
+        {
+        "varNr": 1003,
+        "varDataType": "STRING",
+        "varCode": "io_device_tradeMark",
+        "varName": "Застрахованное ус-во. торговая марка",
+        "varPath": "insuredObject.device.tradeMark",
+        "varType": "IN",
+        "varValue": "Samsung",
+        "varCdm": "insuredObject.device.tradeMark"
+        },
+        {
+        "varNr": 1004,
+        "varDataType": "STRING",
+        "varCode": "io_device_model",
+        "varName": "Застрахованное ус-во. модель",
+        "varPath": "insuredObject.device.model",
+        "varType": "IN",
+        "varValue": "Galaxy S21",
+        "varCdm": "insuredObject.device.model"
+        },
+        {
+        "varNr": 1005,
+        "varDataType": "STRING",
+        "varCode": "io_device_serialNr",
+        "varName": "Застрахованное ус-во. серийный номер",
+        "varPath": "insuredObject.device.serialNr",
+        "varType": "IN",
+        "varValue": "1234567890",
+        "varCdm": "insuredObject.device.serialNr"
+        },
+        {
+        "varNr": 1006,
+        "varDataType": "STRING",
+        "varCode": "io_device_licenseKey",
+        "varName": "Застрахованное ус-во. ключ лицензии",
+        "varPath": "insuredObject.device.licenseKey",
+        "varType": "IN",
+        "varValue": "1234567890",
+        "varCdm": "insuredObject.device.licenseKey"
+        },
+        {
+        "varNr": 1007,
+        "varDataType": "STRING",
+        "varCode": "io_device_imei",
+        "varName": "Застрахованное ус-во. IMEI",
+        "varPath": "insuredObject.device.imei",
+        "varType": "IN",
+        "varValue": "1234567890",
+        "varCdm": "insuredObject.device.imei"
+        },
+        {
+        "varNr": 1008,
+        "varDataType": "STRING",
+        "varCode": "io_device_osName",
+        "varName": "Застрахованное ус-во. название ОС",
+        "varPath": "insuredObject.device.osName",
+        "varType": "IN",
+        "varValue": "Android",
+        "varCdm": "insuredObject.device.osName"
+        },
+        {
+        "varNr": 1008,
+        "varDataType": "STRING",
+        "varCode": "io_device_osVersion",
+        "varName": "Застрахованное ус-во. версия ОС",
+        "varPath": "insuredObject.device.osVersion",
+        "varType": "IN",
+        "varValue": "10",
+        "varCdm": "insuredObject.device.osVersion"
+        },
+        {
+        "varNr": 1009,
+        "varDataType": "STRING",
+        "varCode": "io_device_countryCode",
+        "varName": "Застрахованное ус-во. код страны",
+        "varPath": "insuredObject.device.countryCode",
+        "varType": "IN",
+        "varValue": "RU",
+        "varCdm": "insuredObject.device.countryCode"
+        },
+        {
+        "varNr": 1010,
+        "varDataType": "STRING",
+        "varCode": "io_device_devicePrice",
+        "varName": "Застрахованное ус-во. цена",
+        "varPath": "insuredObject.device.devicePrice",
+        "varType": "IN",
+        "varValue": "10000",
+        "varCdm": "insuredObject.device.devicePrice"
+        }
+  ];
 
-ioPropertyVars: BusinessLineVar[] = [
+  ioPropertyVars: LobVar[] = [
     {
       "varNr": 1001,
       "varDataType": "STRING",
@@ -1531,8 +1490,9 @@ ioPropertyVars: BusinessLineVar[] = [
       "varValue": "0",
       "varCdm": "insuredObject.property.floor"
     }
-  ]
-ioPersonMagicVars: BusinessLineVar[] = [
+  ];
+
+  ioPersonMagicVars: LobVar[] = [
   {
     "varNr": 1101,
     "varDataType": "NUMBER",
@@ -1553,9 +1513,10 @@ ioPersonMagicVars: BusinessLineVar[] = [
     "varValue": "",
     "varCdm": "insuredObject.person.age_end"
   }
-];
-policyVars: BusinessLineVar[] = [];
-policyMagicVars: BusinessLineVar[] = [
+  ];
+
+  policyVars: LobVar[] = [];
+  policyMagicVars: LobVar[] = [
   {
     "varNr": 1201,
     "varDataType": "NUMBER",
@@ -1564,7 +1525,7 @@ policyMagicVars: BusinessLineVar[] = [
     "varPath": "",
     "varType": "MAGIC",
     "varValue": "",
-    "varCdm": "policy.termMonths"
+    "varCdm": "policy.magic.termMonths"
   },
   {
     "varNr": 1202,
@@ -1574,9 +1535,8 @@ policyMagicVars: BusinessLineVar[] = [
     "varPath": "",
     "varType": "MAGIC",
     "varValue": "",
-    "varCdm": "policy.termDays"
+    "varCdm": "policy.magic.termDays"
   }
-]  
+  ];     
 
-*/
 }

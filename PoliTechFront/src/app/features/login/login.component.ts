@@ -69,7 +69,14 @@ export class LoginComponent implements OnInit {
             duration: 3000,
             panelClass: ['success-snackbar']
           });
-          this.router.navigate([this.returnUrl]);
+          // Ensure returnUrl includes tenantCode if it doesn't already
+          const returnUrl = this.returnUrl || `/${this.authService.tenant}`;
+          const urlParts = returnUrl.startsWith('/') ? returnUrl.split('/').filter(p => p) : [];
+          if (urlParts.length === 0 || urlParts[0] !== this.authService.tenant) {
+            this.router.navigate(['/', this.authService.tenant, ...urlParts]);
+          } else {
+            this.router.navigate([returnUrl]);
+          }
         },
         error: (error) => {
           this.isLoading = false;

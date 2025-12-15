@@ -17,6 +17,9 @@ public class PvPackage {
     @JsonProperty("covers")
     private List<PvCover> covers;
 
+    @JsonProperty("files")
+    private List<PvFile> files;
+
     public Integer getCode() {
         return code;
     }
@@ -39,5 +42,13 @@ public class PvPackage {
 
     public void setCovers(List<PvCover> covers) {
         this.covers = covers;
+    }
+
+    public List<PvFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<PvFile> files) {
+        this.files = files;
     }
 }

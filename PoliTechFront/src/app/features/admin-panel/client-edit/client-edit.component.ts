@@ -12,6 +12,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ClientsService, Client } from '../../../shared/services/api/clients.service';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
+import { AuthService } from '../../../shared/services/auth.service';
 
 @Component({
   selector: 'app-client-edit',
@@ -37,6 +38,7 @@ export class ClientEditComponent implements OnInit {
   private clientsService = inject(ClientsService);
   private tenantsService = inject(TenantsService);
   private snack = inject(MatSnackBar);
+  private authService = inject(AuthService);
 
   client: Client = {
     tid: 0,
@@ -78,7 +80,7 @@ export class ClientEditComponent implements OnInit {
           console.error('Error loading client:', error);
           this.snack.open('Ошибка при загрузке client', 'OK', { duration: 2000 });
           this.loading = false;
-          this.router.navigate(['/admin/clients']);
+          this.router.navigate(['/', this.authService.tenant, 'admin', 'clients']);
         }
       });
     } else {
@@ -120,7 +122,7 @@ export class ClientEditComponent implements OnInit {
           this.snack.open('Сохранено', 'OK', { duration: 2000 });
           // Navigate to the edit page with the new ID
           if (saved.id) {
-            this.router.navigate(['/admin/clients', saved.id.toString()]);
+            this.router.navigate(['/', this.authService.tenant, 'admin', 'clients', saved.id.toString()]);
           }
         },
         error: (error) => {
@@ -154,7 +156,7 @@ export class ClientEditComponent implements OnInit {
 
   gotoAccount(client: Client) {
     if (client.accountId) {
-      this.router.navigate(['/admin/accounts', client.accountId.toString()]);
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', client.accountId.toString()]);
     }
   }
 
@@ -162,13 +164,13 @@ export class ClientEditComponent implements OnInit {
   private ensurePrivileges(): boolean {
     const profile = this.auth.profile;
     if (!profile) {
-      this.router.navigate(['/']);
+      this.router.navigate(['/', this.authService.tenant]);
       return false;
     }
 
     const hasAccess = this.auth.hasAccountType('SYS_ADMIN') || this.auth.hasAnyRole(['SYS_ADMIN']);
     if (!hasAccess) {
-      this.router.navigate(['/']);
+      this.router.navigate(['/', this.authService.tenant]);
       return false;
     }
 

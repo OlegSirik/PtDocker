@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-forbidden',
@@ -9,10 +10,14 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./forbidden.component.scss']
 })
 export class ForbiddenComponent {
-  constructor(private router: Router) {}
+  private router = inject(Router);
+  authService = inject(AuthService);
 
   goHome(): void {
-    this.router.navigate(['/']);
+    // Navigate to tenant home if tenant exists, otherwise stay on forbidden
+    if (this.authService.tenant) {
+      this.router.navigate(['/', this.authService.tenant]);
+    }
   }
 
   goBack(): void {

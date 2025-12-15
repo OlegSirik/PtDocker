@@ -247,10 +247,10 @@
                 <th mat-header-cell *matHeaderCellDef>...</th>
                 <td mat-cell *matCellDef="let element; let i = index">
                   <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="editQuoteValidator(element, i)">
+                    <button mat-button color="primary" class="action-button" (click)="editQuoteValidator(element, i); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteQuoteValidator(element, i)">
+                    <button mat-button color="warn" class="action-button" (click)="deleteQuoteValidator(element, i); $event.stopPropagation()">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -258,7 +258,7 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="quoteValidatorDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: quoteValidatorDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: quoteValidatorDisplayedColumns;" (click)="editQuoteValidator(row, getQuoteValidatorIndex(row))" class="clickable-row"></tr>
             </table>
             <!--
             <mat-paginator
@@ -366,7 +366,7 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="saveValidatorDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: saveValidatorDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: saveValidatorDisplayedColumns;" (click)="editSaveValidator(row, getSaveValidatorIndex(row))" class="clickable-row"></tr>
             </table>
 
             <mat-paginator
@@ -407,13 +407,13 @@
 
             <table mat-table [dataSource]="paginatedPolicyVars" class="product-table">
               <ng-container matColumnDef="category">
-                <th mat-header-cell *matHeaderCellDef>Category</th>
+                <th mat-header-cell *matHeaderCellDef>Объект</th>
                 <td mat-cell *matCellDef="let element">{{element.category}}</td>
               </ng-container>
 
-              <ng-container matColumnDef="field">
-                <th mat-header-cell *matHeaderCellDef>Field</th>
-                <td mat-cell *matCellDef="let element">{{element.field}}</td>
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef>Код атрибута</th>
+                <td mat-cell *matCellDef="let element">{{element.code}}</td>
               </ng-container>
 
               <ng-container matColumnDef="name">
@@ -421,19 +421,19 @@
                 <td mat-cell *matCellDef="let element">{{element.name}}</td>
               </ng-container>
 
-              <ng-container matColumnDef="code">
-                <th mat-header-cell *matHeaderCellDef>Код</th>
-                <td mat-cell *matCellDef="let element">{{element.code}}</td>
+              <ng-container matColumnDef="field">
+                <th mat-header-cell *matHeaderCellDef>Field</th>
+                <td mat-cell *matCellDef="let element">{{element.field}}</td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>...</th>
                 <td mat-cell *matCellDef="let element; let i = index">
                   <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="showPolicyVarDetails(element)">
+                    <button mat-button color="primary" class="action-button" (click)="showPolicyVarDetails(element); $event.stopPropagation()">
                       <mat-icon>visibility</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" (click)="deletePolicyVar(element, i)">
+                    <button mat-button color="warn" class="action-button" (click)="deletePolicyVar(element, i); $event.stopPropagation()">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -441,7 +441,7 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="policyVarsDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;" (click)="showPolicyVarDetails(row)" class="clickable-row"></tr>
             </table>
 
             <mat-paginator
@@ -501,17 +501,17 @@
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let element; let i = index">
                   <div class="action-buttons">
-                    <button mat-button color="primary" matBadge="{{element.covers.length}}"  class="action-button1" (click)="showCovers(element, i)">
+                    <button mat-button color="primary" matBadge="{{element.covers.length}}"  class="action-button1" (click)="showCovers(element, i); $event.stopPropagation()">
                       covers
 
                     </button>
-                    <button mat-button color="accent" class="action-button1" (click)="openCalculator(element)">
+                    <button mat-button color="accent" class="action-button1" (click)="openCalculator(element); $event.stopPropagation()">
                       Calculator
                     </button>
-                    <button mat-button color="primary" class="action-button" (click)="editPackage(element, i)">
+                    <button mat-button color="primary" class="action-button" (click)="editPackage(element, i); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" (click)="deletePackage(element, i)">
+                    <button mat-button color="warn" class="action-button" (click)="deletePackage(element, i); $event.stopPropagation()">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -519,18 +519,8 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="packagesDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;" (click)="showCovers(row, getPackageIndex(row))" class="clickable-row"></tr>
             </table>
-            <!--
-            <mat-paginator
-              [length]="filteredPackages.length"
-              [pageSize]="packagesPageSize"
-              [pageIndex]="packagesPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onPackagesPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-            -->
           </mat-card-content>
         </mat-card>
 
@@ -538,27 +528,12 @@
         @if (selectedPackageIndex !== -1) {
           <mat-card class="datatable-card">
             <mat-card-content>
-              <!--
-              <div class="button-section">
-                <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
-                  <mat-icon>add</mat-icon>
-                  add Cover
-                </button>
-              </div>
-              -->
               <div class="table-header">
                 <h3>Покрытия</h3>
                 <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
-                <!--
-                <mat-form-field class="search-field" appearance="outline">
-                  <mat-label>Поиск</mat-label>
-                  <input matInput [(ngModel)]="coversSearchText" (ngModelChange)="updateCoversTable()" placeholder="Поиск">
-                  <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
-                -->
               </div>
               <table mat-table [dataSource]="paginatedCovers" class="product-table">
                 <ng-container matColumnDef="code">
@@ -589,23 +564,23 @@
                   <th mat-header-cell *matHeaderCellDef>...</th>
                   <td mat-cell *matCellDef="let element; let i = index">
                     <div class="action-buttons">
-                      <button mat-button color="primary" class="action-button1" matBadge="{{element.deductibles.length}}" (click)="showDeductibles(element, i)">
+                      <button mat-button color="primary" class="action-button1" matBadge="{{element.deductibles.length}}" (click)="showDeductibles(element, getCoverIndex(element)); $event.stopPropagation()">
                         deductibles
                       </button>
-                      <button mat-button color="accent" class="action-button1" matBadge="{{element.limits.length}}" (click)="showLimits(element, i)">
+                      <button mat-button color="accent" class="action-button1" matBadge="{{element.limits.length}}" (click)="showLimits(element, getCoverIndex(element)); $event.stopPropagation()">
                         limits
                       </button>
-                      <button mat-button color="primary" class="action-button" (click)="editCover(element, i)">
+                      <button mat-button color="primary" class="action-button" (click)="editCover(element, getCoverIndex(element)); $event.stopPropagation()">
                         <mat-icon>edit</mat-icon>
                       </button>
-                      <button mat-button color="warn" class="action-button" (click)="deleteCover(element, i)">
+                      <button mat-button color="warn" class="action-button" (click)="deleteCover(element, getCoverIndex(element)); $event.stopPropagation()">
                         <mat-icon>delete</mat-icon>
                       </button>
                     </div>
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="coversDisplayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: coversDisplayedColumns;"></tr>
+                <tr mat-row *matRowDef="let row; columns: coversDisplayedColumns;" (click)="editCover(row, getCoverIndex(row))" class="clickable-row"></tr>
               </table>
               <!--
               <mat-paginator
@@ -682,7 +657,7 @@
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="deductiblesDisplayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: deductiblesDisplayedColumns;"></tr>
+                <tr mat-row *matRowDef="let row; columns: deductiblesDisplayedColumns;" (click)="editDeductible(row, getDeductibleIndex(row))" class="clickable-row"></tr>
               </table>
               <!--
               <mat-paginator
@@ -741,17 +716,17 @@
                   <th mat-header-cell *matHeaderCellDef>...</th>
                   <td mat-cell *matCellDef="let element; let i = index">
                     <div class="action-buttons">
-                      <button mat-button color="primary" class="action-button" (click)="editLimit(element, i)">
+                      <button mat-button color="primary" class="action-button" (click)="editLimit(element, i); $event.stopPropagation()">
                         <mat-icon>edit</mat-icon>
                       </button>
-                      <button mat-button color="warn" class="action-button" (click)="deleteLimit(element, i)">
+                      <button mat-button color="warn" class="action-button" (click)="deleteLimit(element, i); $event.stopPropagation()">
                         <mat-icon>delete</mat-icon>
                       </button>
                     </div>
                   </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="limitsDisplayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: limitsDisplayedColumns;"></tr>
+                <tr mat-row *matRowDef="let row; columns: limitsDisplayedColumns;" (click)="editLimit(row, getLimitIndex(row))" class="clickable-row"></tr>
               </table>
               <!--
               <mat-paginator
@@ -763,6 +738,45 @@
                 showFirstLastButtons>
               </mat-paginator>
               -->
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <!-- Files Card -->
+        @if (selectedPackageIndex !== -1) {
+          <mat-card class="datatable-card">
+            <mat-card-content>
+              <div class="table-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h3>Файлы</h3>
+                <button mat-icon-button color="primary" (click)="refreshFiles()" title="Обновить файлы">
+                  <mat-icon>refresh</mat-icon>
+                </button>
+              </div>
+              <table mat-table [dataSource]="paginatedFiles" class="product-table">
+                <ng-container matColumnDef="fileCode">
+                  <th mat-header-cell *matHeaderCellDef>fileCode</th>
+                  <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
+                </ng-container>
+                <ng-container matColumnDef="fileName">
+                  <th mat-header-cell *matHeaderCellDef>fileName</th>
+                  <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>...</th>
+                  <td mat-cell *matCellDef="let element; let i = index">
+                    <div class="action-buttons">
+                      <button mat-button color="primary" class="action-button" (click)="uploadFile(element); $event.stopPropagation()" title="Загрузить файл">
+                        <mat-icon>upload</mat-icon>
+                      </button>
+                      <button mat-button color="accent" class="action-button" (click)="downloadFile(element); $event.stopPropagation()" title="Скачать файл">
+                        <mat-icon>download</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="filesDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: filesDisplayedColumns;"></tr>
+              </table>
             </mat-card-content>
           </mat-card>
         }

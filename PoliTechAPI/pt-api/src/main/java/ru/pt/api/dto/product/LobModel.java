@@ -35,4 +35,7 @@ public class LobModel {
     @JsonProperty("mpInsObjectType")
     private String mpInsObjectType;
 
+    @JsonProperty("mpFiles")
+    private List<LobFile> mpFiles;
+
 }

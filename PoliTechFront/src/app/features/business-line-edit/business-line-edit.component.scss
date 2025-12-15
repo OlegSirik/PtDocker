@@ -104,6 +104,19 @@
           padding: 0 8px;
         }
       }
+
+      tr.clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #e3f2fd !important;
+        }
+
+        &:active {
+          background-color: #bbdefb !important;
+        }
+      }
     }
 
     mat-paginator {

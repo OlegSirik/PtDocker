@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ProductService, Product, BusinessLineService } from '../../shared';
 import { Observable } from 'rxjs';
 import {AsyncPipe} from '@angular/common';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
     selector: 'app-products',
@@ -39,6 +40,8 @@ export class ProductsComponent implements OnInit {
   private svc = inject(ProductsService);
   private snack = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+
 
   products: ProductList[] = [];
   displayedColumns: string[] = ['id', 'lob', 'name', 'code', 'prodVersionNo', 'devVersionNo', 'actions'];
@@ -79,7 +82,7 @@ export class ProductsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((createdProduct: import('../../shared/services/product.service').Product | undefined) => {
       if (createdProduct && createdProduct.id !== undefined) {
         const versionNo = createdProduct.versionNo ?? 0;
-        this.router.navigate(['/product', createdProduct.id, 'version', versionNo]);
+        this.router.navigate(['/', this.authService.tenant, 'product', createdProduct.id, 'version', versionNo]);
       }
     });
   }
@@ -91,7 +94,7 @@ export class ProductsComponent implements OnInit {
     const versionNo = product.devVersionNo !== undefined ? product.devVersionNo :
                      product.prodVersionNo !== undefined ? product.prodVersionNo : 0;
 
-    this.router.navigate(['/product', product.id, 'version', versionNo]);
+    this.router.navigate(['/', this.authService.tenant, 'product', product.id, 'version', versionNo]);
   }
 
   deleteProduct(product: ProductList): void {

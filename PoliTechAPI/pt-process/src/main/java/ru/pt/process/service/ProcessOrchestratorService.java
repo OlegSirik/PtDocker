@@ -95,6 +95,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         setter.setRawValue("premium", premium.toString());
 
+        logger.info("Result after calculation {}", setter.writeValue());
+
+        for (LobVar var : calculated) {
+            logger.info("Var {} {}", var.getVarCode(), var.getVarValue());
+        }
+
         return setter.writeValue();
     }
 

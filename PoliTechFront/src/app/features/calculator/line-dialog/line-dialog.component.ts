@@ -30,7 +30,7 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
       </div>
     
       <!-- Row 2: conditionLeft, conditionOperator, conditionRight -->
-      <div class="row row-2">
+      <div class="row row-1">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Условие слева</mat-label>
           <mat-select [(ngModel)]="line.conditionLeft" >
@@ -41,6 +41,8 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
             }
           </mat-select>
         </mat-form-field>
+          </div>
+<div class="row row-2">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Оператор условия</mat-label>
           <mat-select [(ngModel)]="line.conditionOperator" >
@@ -77,9 +79,9 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
         </mat-form-field>
       </div>
     
-      <!-- Row 4: expressionLeft, expressionOperator, expressionRight -->
-      <div class="row row-4">
-        <mat-form-field class="field" appearance="outline">
+      <!-- Row 3: expressionResult -->
+      <div class="row row-3">
+      <mat-form-field class="field" appearance="outline">
           <mat-label>Выражение слева</mat-label>
           <mat-select [(ngModel)]="line.expressionLeft" required>
             @for (varItem of data.vars; track varItem) {
@@ -89,6 +91,10 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
             }
           </mat-select>
         </mat-form-field>
+      </div>
+
+      <!-- Row 4: expressionLeft, expressionOperator, expressionRight -->
+      <div class="row row-4">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Оператор выражения</mat-label>
           <mat-select [(ngModel)]="line.expressionOperator" >
@@ -140,9 +146,9 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
       align-items: center;
     }
     .row-1 { grid-template-columns: 1fr; }
-    .row-2 { grid-template-columns: 1fr 300px 1fr; }
+    .row-2 { grid-template-columns: 200px 1fr; }
     .row-3 { grid-template-columns: 1fr; }
-    .row-4 { grid-template-columns: 1fr 300px 1fr; }
+    .row-4 { grid-template-columns: 200px 1fr; }
     .row-5 { grid-template-columns: 1fr; }
     .field { width: 100%; }
     mat-dialog-content { min-width: 900px; }

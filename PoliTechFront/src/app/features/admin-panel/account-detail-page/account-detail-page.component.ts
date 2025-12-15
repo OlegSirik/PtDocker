@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantService, Account, Product, LoginAccount } from '../../../shared/services/tenant.service';
+import { AuthService } from '../../../shared/services/auth.service';
 import { MatChipListbox, MatChipOption } from "@angular/material/chips";
 import { MatTabsModule } from '@angular/material/tabs';
 import { EMPTY, Subject } from 'rxjs';
@@ -60,7 +61,8 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     private router: Router,
     private tenantService: TenantService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -98,7 +100,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
   }
 
   goToAccount(id: string) {
-    this.router.navigate(['/admin/accounts/', id]);
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', id]);
   }
     
   loadChildAccounts() {
@@ -118,7 +120,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   goUp() {
     if (this.account?.parentId) {
-      this.router.navigate(['/admin/accounts', this.account.parentId]);
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', this.account.parentId]);
     }
   }
 
@@ -153,7 +155,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   editGroup(group: Account) {
     if (group.id) {
-      this.router.navigate(['/admin/accounts', group.id]);
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', group.id]);
     }
   }
 
@@ -188,7 +190,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   editAccount(account: Account) {
     if (account.id) {
-      this.router.navigate(['/admin/accounts', account.id]);
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', account.id]);
     }
   }
 
@@ -222,7 +224,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   viewAccount(account: Account) {
     if (account.id) {
-      this.router.navigate(['/admin/accounts', account.id]);
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', account.id]);
     }
   }
 

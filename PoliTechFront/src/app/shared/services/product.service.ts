@@ -35,8 +35,11 @@ export interface PolicyVar {
   varPath: string;
   varName: string;
   varCode: string;
-  varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'DURATION';
+  varDataType: string;
   varValue: string;
+  varType: string;
+  varCdm: string;
+  varNr: number;
 }
 
 export interface QuoteValidator {
@@ -49,10 +52,17 @@ export interface QuoteValidator {
   errorText: string;
 }
 
+export interface PackageFile {
+  fileCode: string;
+  fileName: string;
+  fileId?: number;
+}
+
 export interface Package {
   code: string;
   name: string;
   covers: Cover[];
+  files: PackageFile[];
 }
 
 export interface Limit {
@@ -79,6 +89,7 @@ export interface Deductible {
   deductibleSpecific: 'EVERY' | 'FROM_SECOND';
 }
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -88,96 +99,31 @@ export class ProductService {
     private authService: AuthService,
   ) {};
 
-  private mockData: Product =
-    {
-      id: 1202,
-      lob: 'NS',
-      code: 'NS-SRAVNIRU',
-      name: 'НС Сравниру',
-      versionNo: 1,
-      versionStatus: 'DRAFT',
-      waitingPeriod: {
-        validatorType: 'RANGE',
-        validatorValue: 'P1D-P30D'
-      },
-      policyTerm: {
-        validatorType: 'LIST',
-        validatorValue: 'P1M,P3M,P6M,P1Y'
-      },
-      numberGenerator: {
-        mask: 'POL-{YYYY}-{MM}-{NNNN}',
-        maxValue: 9999,
-        resetPolicy: 'MONTHLY',
-        xorMask: '0xABCD'
-      },
-      quoteValidator: [
-        {
-          lineNr: 1,
-          keyLeft: 'insAmount',
-          ruleType: 'RANGE',
-          valueRight: '10000-200000',
-          dataType: 'NUMBER',
-          errorText: 'Ошибка в страховой сумме'
-        }
-      ],
-      saveValidator: [
-        {
-          lineNr: 1,
-          keyLeft: 'insAmount',
-          ruleType: 'RANGE',
-          valueRight: '10000-200000',
-          dataType: 'NUMBER',
-          errorText: 'Ошибка в страховой сумме'
-        }
-      ],
-      packages: [
-        {
-          code: 'Basic',
-          name: 'Простой',
-          covers: [
-            {
-              code: 'PD',
-              isMandatory: true,
-              waitingPeriod: 'P0D',
-              coverageTerm: 'P1Y',
-              isDeductibleMandatory: false,
-              deductibles: [
-                {
-                  nr: 1,
-                  deductibleType: 'MANDATORY',
-                  deductible: 100,
-                  deductibleUnit: 'RUB',
-                  deductibleSpecific: 'EVERY'
-                }
-              ],
-              limits: [
-                {
-                  nr: 1,
-                  sumInsured: 100000,
-                  premium: 5000
-                },
-                {
-                  nr: 2,
-                  sumInsured: 200000,
-                  premium: 9000
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      vars: [
-        {
-          varPath: 'policyHolder.person.lastName',
-          varName: 'Страхователь.фамилия',
-          varCode: 'ph_lastName',
-          varDataType: 'STRING',
-          varValue: ''
-        }
-      ]
-    };
-
-  private nextId = 1203;
+  private mockData: Product = {
+    id: -1,
+    lob: 'NS',
+    code: 'NS_SPORT',
+    name: 'НС спорт',
+    versionNo: 1,
+    waitingPeriod: {
+      validatorType: undefined,
+      validatorValue: undefined
+    },
+    policyTerm: {
+      validatorType: undefined,
+      validatorValue: undefined
+    },
+    numberGenerator: {
+      mask: '',
+      maxValue: 0,
+      resetPolicy: 'MONTHLY',
+      xorMask: ''
+    },
+    quoteValidator: [],
+    saveValidator: [],
+    packages: [],
+    vars: []
+  };
 
   // GET - Get product by ID
   fixProduct() {
@@ -205,27 +151,14 @@ export class ProductService {
 
 
   getProduct(id: number, versionNo: number): Observable<Product> {
-    if (!this.http) {
-      throw new Error('HttpClient is not initialized');
-    }
+    let baseUrl = this.authService.baseApiUrl + '/admin/products/' + id + '/versions/' + versionNo;
 
-    return this.http.get<Product>(`${this.authService.baseApiUrl}/admin/products/${id}/versions/${versionNo}`).pipe(
+    return this.http.get<Product>(baseUrl).pipe(
       tap(data => {
-          this.mockData = data;
           this.fixProduct();
-      }),
-      catchError(error => {
-        console.error('Error fetching business lines:', error);
-        return of(this.mockData);
       })
     );
-
-  //    return of( this.products ) // Mock API delay
-
   }
-
-
-
 
   // POST - Create new product
   createProduct(product: Product): Observable<Product> {

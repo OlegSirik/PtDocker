@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BusinessLineService, BusinessLine } from '../../shared/services/business-line.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
     selector: 'app-business-line',
@@ -28,6 +29,7 @@ import { BusinessLineService, BusinessLine } from '../../shared/services/busines
     styleUrls: ['./business-line.component.scss']
 })
 export class BusinessLineComponent implements OnInit {
+  private authService = inject(AuthService);
   businessLines: BusinessLine[] = [];
   filteredBusinessLines: BusinessLine[] = [];
   displayedColumns: string[] = ['id', 'mpCode', 'mpName', 'actions'];
@@ -64,11 +66,11 @@ export class BusinessLineComponent implements OnInit {
   }
 
   addBusinessLine(): void {
-    this.router.navigate(['/lob-edit']);
+    this.router.navigate(['/', this.authService.tenant, 'lob-edit']);
   }
 
   editBusinessLine(row: BusinessLine): void {
-    this.router.navigate(['/lob-edit', row.mpCode]);
+    this.router.navigate(['/', this.authService.tenant, 'lob-edit', row.mpCode]);
   }
 
   deleteBusinessLine(businessLine: BusinessLine): void {

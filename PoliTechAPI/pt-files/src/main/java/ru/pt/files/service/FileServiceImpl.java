@@ -23,11 +23,14 @@ import java.util.Map;
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
+    
 
     public FileServiceImpl(FileRepository fileRepository) {
         this.fileRepository = fileRepository;
     }
 
+    // pt_files will contain only id and fileDate. Other columns should be removed
+    // ToDo remove this method
     @Transactional
     @Override
     public FileModel createMeta(String fileType, String fileDesc, String productCode, Integer packageCode) {
@@ -55,6 +58,17 @@ public class FileServiceImpl implements FileService {
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         entity.setFileBody(file);
         fileRepository.save(entity);
+    }
+
+    @Transactional
+    @Override
+    public Long uploadFile(Long tid, byte[] file) {
+        FileEntity entity = new FileEntity();
+        entity.setTid(tid);
+        entity.setFileBody(file);
+        entity.setDeleted(false);
+        var saved = fileRepository.save(entity);
+        return saved.getId();
     }
 
     @Override

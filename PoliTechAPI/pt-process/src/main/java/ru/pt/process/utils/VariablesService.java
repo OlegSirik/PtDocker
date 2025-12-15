@@ -9,6 +9,7 @@ import ru.pt.api.utils.JsonProjection;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -159,11 +160,15 @@ public class VariablesService {
                     int m = p.getYears() * 12 + p.getMonths();
                     return Integer.toString(m);
                 case "pl_TermDays":
-                    LocalDate st1 = projection.getStartDate().toLocalDate();
-                    LocalDate e1 = projection.getEndDate().toLocalDate();
-                    Period p1 = Period.between(st1, e1);
-                    int m1 = p1.getDays();
-                    return Integer.toString(m1);
+                    LocalDate startDate = projection.getStartDate().toLocalDate();
+                    String st11 = startDate.toString();
+                    LocalDate endDate = projection.getEndDate().toLocalDate();
+                    st11 = endDate.toString();
+                    long days = ChronoUnit.DAYS.between(startDate, endDate);
+                    
+                    st11 = Long.toString(days);
+                    
+                    return Long.toString(days);
     
                 default:
                     return key + " Not Found";

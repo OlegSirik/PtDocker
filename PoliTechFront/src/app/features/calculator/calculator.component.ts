@@ -407,7 +407,7 @@ export class CalculatorComponent implements OnInit {
       maxWidth: '1000px',
       data: {
         isNew: true,
-        vars: this.calculator.vars,
+        vars: this.calculator.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         conditionOperatorOptions: this.conditionOperatorOptions,
         expressionOperatorOptions: this.expressionOperatorOptions,
         postProcessorOptions: this.postProcessorOptions
@@ -924,6 +924,7 @@ export interface PolicyVar {
       // loop product.vars
       // if var not in calculator.vars then add it
       product.vars.forEach(v => {
+        console.log(v);
         if (!this.calculator.vars.some(v2 => v2.varCode === v.varCode)) {
           this.calculator.vars.push({
             varCode: v.varCode,

@@ -6,9 +6,11 @@
       У вас недостаточно прав для просмотра этой страницы.
     </p>
     <div class="actions">
-      <button class="btn btn-primary" (click)="goHome()">
-        На главную
-      </button>
+      @if (authService.tenant) {
+        <button class="btn btn-primary" (click)="goHome()">
+          На главную
+        </button>
+      }
       <button class="btn btn-secondary" (click)="goBack()">
         Назад
       </button>
