@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: pt-db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: djBfR2ag
     ports:
       - "5432:5432"
     volumes:
@@ -30,7 +30,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pt-db
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: djBfR2ag
       SERVER_PORT: 8080
       DEBUG: true
     ports:
