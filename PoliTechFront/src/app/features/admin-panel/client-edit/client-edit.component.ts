@@ -10,7 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ClientsService, Client } from '../../../shared/services/api/clients.service';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { ClientsService, Client, ClientConfiguration } from '../../../shared/services/api/clients.service';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { AuthService } from '../../../shared/services/auth.service';
 
@@ -27,7 +28,8 @@ import { AuthService } from '../../../shared/services/auth.service';
     MatIconModule,
     MatSelectModule,
     MatOptionModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatCheckboxModule
   ],
   templateUrl: './client-edit.component.html',
   styleUrls: ['./client-edit.component.scss']
@@ -44,26 +46,20 @@ export class ClientEditComponent implements OnInit {
     tid: 0,
     clientId: '',
     name: '',
-    description: '',
-    trusted_email: '',
-    status: 'ACTIVE'
+    isDeleted: false,
+    clientConfiguration: {
+      paymentGate: '',
+      sendEmailAfterBuy: false,
+      sendSmsAfterBuy: false
+    }
   };
+
   originalClient: Client | null = null;
   isNewRecord = true;
   hasChanges = false;
-  tenants: Tenant[] = [];
   loading = false;
 
   ngOnInit(): void {
-    // Load tenants for dropdown
-    this.tenantsService.getAll().subscribe({
-      next: (tenants) => {
-        this.tenants = tenants;
-      },
-      error: (error) => {
-        console.error('Error loading tenants:', error);
-      }
-    });
 
     const clientId = this.route.snapshot.paramMap.get('client-id') || this.route.snapshot.paramMap.get('id');
     if (clientId) {
@@ -71,8 +67,15 @@ export class ClientEditComponent implements OnInit {
       this.loading = true;
       this.clientsService.getById(clientId).subscribe({
         next: (client) => {
-          this.client = { ...client };
-          this.originalClient = { ...client };
+          this.client = { 
+            ...client,
+            clientConfiguration: client.clientConfiguration || {
+              paymentGate: '',
+              sendEmailAfterBuy: false,
+              sendSmsAfterBuy: false
+            }
+          };
+          this.originalClient = { ...this.client };
           this.loading = false;
           this.updateChanges();
         },
@@ -85,6 +88,13 @@ export class ClientEditComponent implements OnInit {
       });
     } else {
       this.isNewRecord = true;
+      if (!this.client.clientConfiguration) {
+        this.client.clientConfiguration = {
+          paymentGate: '',
+          sendEmailAfterBuy: false,
+          sendSmsAfterBuy: false
+        };
+      }
       this.updateChanges();
     }
   }
@@ -105,13 +115,16 @@ export class ClientEditComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.client.clientId || !this.client.name || !this.client.tid) {
-      this.snack.open('Заполните обязательные поля (Code, Name, Tenant)', 'OK', { duration: 2500 });
+    this.client.tid = this.authService.tenantId;
+    if (!this.client.clientId || !this.client.name || this.client.tid < 0 ) {
+      this.snack.open('Заполните обязательные поля (Code, Name)', 'OK', { duration: 2500 });
       return;
     }
 
     this.loading = true;
     if (this.isNewRecord) {
+      
+
       this.clientsService.create(this.client).subscribe({
         next: (saved) => {
           this.client = { ...saved };
@@ -155,27 +168,9 @@ export class ClientEditComponent implements OnInit {
   }
 
   gotoAccount(client: Client) {
-    if (client.accountId) {
-      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', client.accountId.toString()]);
+    if (client.clientAccountId) {
+      this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', client.clientAccountId.toString()]);
     }
   }
-
-  /*
-  private ensurePrivileges(): boolean {
-    const profile = this.auth.profile;
-    if (!profile) {
-      this.router.navigate(['/', this.authService.tenant]);
-      return false;
-    }
-
-    const hasAccess = this.auth.hasAccountType('SYS_ADMIN') || this.auth.hasAnyRole(['SYS_ADMIN']);
-    if (!hasAccess) {
-      this.router.navigate(['/', this.authService.tenant]);
-      return false;
-    }
-
-    return true;
-  }
-  */
 }
 

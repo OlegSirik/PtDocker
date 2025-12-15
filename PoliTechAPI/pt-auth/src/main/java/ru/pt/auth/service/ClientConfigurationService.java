@@ -48,4 +48,12 @@ public class ClientConfigurationService {
 
         return clientConfigurationMapper.toDto(savedClient.getClientConfigurationEntity());
     }
+
+    public ClientConfiguration getClientConfiguration(Long clientId) {
+        Client client = userService.getClientById(clientId);
+        ClientEntity clientEntity = clientRepository.findById(client.getId())
+                .orElseThrow(() -> new NotFoundException("Client not found: " + client.getId()));
+
+        return clientConfigurationMapper.toDto(clientEntity.getClientConfigurationEntity());
+    }
 }

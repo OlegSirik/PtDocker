@@ -51,6 +51,7 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
   public tenant = '';
+  public tenantId = -1;
 
   login(credentials: LoginData): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, credentials)
@@ -74,7 +75,7 @@ export class AuthService {
         tap(user=> {
           this.currentUserSubject.next(user);
           this.tenant = user.tenantCode;
-          console.log('this.tenant', this.tenant);
+          this.tenantId = user.tenantId;
           this.isAuthenticated.next(true);
         })
       );

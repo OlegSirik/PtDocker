@@ -6,7 +6,6 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChip } from '@angular/material/chips';
-import { TenantService } from '../../../shared/services/tenant.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ClientsService, Client } from '../../../shared/services/api/clients.service';
 @Component({
@@ -25,12 +24,12 @@ import { ClientsService, Client } from '../../../shared/services/api/clients.ser
   styleUrls: ['./clients-page.component.scss']
 })
 export class ClientsPageComponent implements OnInit {
-  displayedColumns: string[] = ['code', 'name', 'trusted_email', 'status', 'createdAt'];
+  displayedColumns: string[] = ['id', 'name', 'clientId', 'status', 'createdAt'];
   clients: Client[] = [];
   loading = false;
 
   constructor(
-    private tenantService: ClientsService,
+    private clientsService: ClientsService,
     private router: Router,
     private route: ActivatedRoute,
     private auth: AuthService
@@ -42,21 +41,9 @@ export class ClientsPageComponent implements OnInit {
 
   loadClients() {
     this.loading = true;
-    this.tenantService.getAll().subscribe({
-      next: (apiClients: any[]) => {
-        // Map API response to component interface
-        this.clients = apiClients.map((apiClient: any) => ({
-          id: apiClient.id,
-          tid: apiClient.tid || 0,
-          clientId: apiClient.clientId || '',
-          name: apiClient.name || '',
-          description: apiClient.description || '',
-          trusted_email: apiClient.trusted_email || '',
-          status: apiClient.isDeleted ? 'DELETED' : (apiClient.status || 'ACTIVE'),
-          accountId: apiClient.accountId || apiClient.defaultAccountId,
-          createdAt: apiClient.createdAt,
-          updateAt: apiClient.updatedAt || apiClient.updateAt
-        } as Client));
+    this.clientsService.getAll().subscribe({
+      next: (apiClients: Client[]) => {
+        this.clients = apiClients;
         this.loading = false;
       },
       error: (error: unknown) => {
