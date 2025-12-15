@@ -16,7 +16,7 @@ import { MatDialogModule, MatDialog, MAT_DIALOG_DATA } from '@angular/material/d
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 
-import { ProductService, Product, QuoteValidator, Package, Cover, Deductible, Limit } from '../../shared/services/product.service';
+import { ProductService, Product, QuoteValidator, Package, PackageFile, Cover, Deductible, Limit } from '../../shared/services/product.service';
 
 export interface PolicyVar {
   varPath: string;
@@ -26,15 +26,20 @@ export interface PolicyVar {
   field: string;
   name: string;
   code: string;
+  varNr:  number;
+  varCdm: string;
 }
 import { ValidatorDialogComponent } from './validator-dialog/validator-dialog.component';
 import { PackageDialogComponent } from './package-dialog/package-dialog.component';
 import { CoverDialogComponent } from './cover-dialog/cover-dialog.component';
 import { DeductibleDialogComponent } from './deductible-dialog/deductible-dialog.component';
 import { LimitDialogComponent } from './limit-dialog/limit-dialog.component';
-import { tap } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap, map, filter, catchError, switchMap } from 'rxjs/operators';
 import { BusinessLineService } from '../../shared/services/business-line.service';
-import { BusinessLineEditService, BusinessLineVar } from '../../shared/services/business-line-edit.service';
+import { BusinessLineEditService, BusinessLineFile, BusinessLineVar, BusinessLineEdit } from '../../shared/services/business-line-edit.service';
+import { FilesService, FileTemplate } from '../../shared/services/api/files.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
     selector: 'app-product',
@@ -58,6 +63,8 @@ import { BusinessLineEditService, BusinessLineVar } from '../../shared/services/
     styleUrls: ['./product.component.scss']
 })
 export class ProductComponent implements OnInit {
+  lob: BusinessLineEdit | undefined;
+  
   product: Product = {
     lob: '',
     code: '',
@@ -146,6 +153,18 @@ export class ProductComponent implements OnInit {
   paginatedPolicyVars: PolicyVar[] = [];
   policyVars: PolicyVar[] = [];
 
+  // Files table
+  filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
+  businessLineFiles: PackageFile[] = [];
+  
+  // Files service
+  filesService: FilesService = inject(FilesService);
+  
+  // Files data
+  paginatedFiles: PackageFile[] = [];
+
+  // Auth service
+  private authService = inject(AuthService);
 
   constructor(
     private route: ActivatedRoute,
@@ -158,19 +177,34 @@ export class ProductComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
-
     const id = this.route.snapshot.paramMap.get('id');
     const versionNo = this.route.snapshot.paramMap.get('versionNo');
 
-    if (id === 'new') {
-      this.isNewRecord = true;
-      this.loadProduct();
-    } else if (id) {
-      this.loadProduct(parseInt(id), versionNo ? parseInt(versionNo) : undefined);
-    }
-    this.loadDropdownOptions();
-    this.reloadPolicyVars(); // Initialize policy variables
+    this.loadProduct(id ? parseInt(id) : undefined, versionNo ? parseInt(versionNo) : undefined).pipe(
+      switchMap((product) => {
+        if (product && product.lob) {
+          return this.loadLob(product.lob);
+        }
+        return of(null as BusinessLineEdit | null);
+      }),
+      tap(() => {
+        this.updateTables();
+        this.loadDropdownOptions();
+        this.reloadPolicyVars();
+      })
+    ).subscribe();
+  }
+
+  loadLob(lob: string): Observable<BusinessLineEdit> {
+    console.log('load lob  ' + this.product.lob);
+    
+    return this.businessLineEditService.getBusinessLineByCode(lob).pipe(
+      
+      tap(result => {
+        this.lob = result;
+        console.log('load lob 3' + this.lob?.mpName);
+      })
+    );
   }
 
   loadDropdownOptions(): void {
@@ -190,20 +224,27 @@ export class ProductComponent implements OnInit {
     this.productService.getResetPolicyOptions().subscribe(options => this.resetPolicyOptions = options);
   }
 
-  loadProduct(id?: number, versionNo?: number): void {
+  loadProduct(id?: number, versionNo?: number): Observable<Product | null> {
     if (id) {
-      this.productService.getProduct(id, versionNo || 0).subscribe({
-        next: (product) => {
+      return this.productService.getProduct(id, versionNo || 0).pipe(
+        tap((product) => {
           this.product = product;
-          this.updateTables();
-        },
-        error: (error) => {
-          console.error('Error loading product:', error);
+          // Ensure files arrays are initialized for all packages
+          if (this.product.packages) {
+            this.product.packages.forEach(pkg => {
+              if (!pkg.files) {
+                pkg.files = [];
+              }
+            });
+          }
+        }),
+        catchError((error) => {
           this.snackBar.open('Ошибка загрузки продукта', 'Закрыть', { duration: 3000 });
-        }
-      });
+          return of(null);
+        })
+      );
     } else {
-      this.updateTables();
+      return of(null);
     }
   }
 
@@ -260,7 +301,7 @@ export class ProductComponent implements OnInit {
 
   openForm(): void {
     if (this.product.id && this.product.versionNo !== undefined) {
-      this.router.navigate(['/product', this.product.id, 'version', this.product.versionNo, 'form']);
+      this.router.navigate(['/', this.authService.tenant, 'product', this.product.id, 'version', this.product.versionNo, 'form']);
     } else {
       this.snackBar.open('Продукт должен быть сохранен перед открытием формы', 'Закрыть', { duration: 3000 });
     }
@@ -421,6 +462,10 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Ensure files array is initialized
+        if (!result.files) {
+          result.files = [];
+        }
         this.product.packages.push(result);
         this.updatePackagesTable();
         this.updateChanges();
@@ -449,30 +494,45 @@ export class ProductComponent implements OnInit {
   deletePackage(pkg: Package, index: number): void {
     if (confirm('Удалить пакет?')) {
       this.product.packages.splice(index, 1);
+      
+      // Reset selection if deleted package was selected
+      if (this.selectedPackageIndex === index) {
+        this.selectedPackageIndex = -1;
+        this.selectedCoverIndex = -1;
+      } else if (this.selectedPackageIndex > index) {
+        // Adjust index if a package before the selected one was deleted
+        this.selectedPackageIndex--;
+      }
+      
       this.updatePackagesTable();
+      this.updateCoversTable();
+      this.updateDeductiblesTable();
+      this.updateLimitsTable();
+      this.updateFilesTable();
       this.updateChanges();
     }
+  }
+  updateFilesTable() {
+    this.paginatedFiles = this.product.packages[this.selectedPackageIndex].files;
   }
 
   showCovers(pkg: Package, index: number): void {
     this.selectedPackageIndex = index;
     this.updateCoversTable();
+    this.updateFilesTable();
   }
 
   openCalculator(pkg: Package): void {
     if (this.product.id && this.product.versionNo) {
-      this.router.navigate(['/products', this.product.id, 'versions', this.product.versionNo, 'packages', pkg.code, 'calculator']);
+      this.router.navigate(['/', this.authService.tenant, 'products', this.product.id, 'versions', this.product.versionNo, 'packages', pkg.code, 'calculator']);
     } else {
       this.snackBar.open('Продукт должен быть сохранен перед открытием калькулятора', 'Закрыть', { duration: 3000 });
     }
   }
 
   updatePackagesTable(): void {
-    this.filteredPackages = this.product.packages.filter(item =>
-     // (item.code && item.code.toLowerCase().includes(this.packagesSearchText.toLowerCase())) ||
-      (item.name && item.name.toLowerCase().includes(this.packagesSearchText.toLowerCase()))
-    );
-    this.updatePackagesPagination();
+    this.filteredPackages = this.product.packages;
+    this.paginatedPackages = this.product.packages;
   }
 
   onPackagesPageChange(event: PageEvent): void {
@@ -481,11 +541,9 @@ export class ProductComponent implements OnInit {
     this.updatePackagesPagination();
   }
 
-  updatePackagesPagination(): void {
-    const startIndex = this.packagesPageIndex * this.packagesPageSize;
-    this.paginatedPackages = this.filteredPackages.slice(startIndex, startIndex + this.packagesPageSize);
+  updatePackagesPagination() {
+    console.log('updatePackagesPagination');
   }
-
   // Cover methods
   addCover(): void {
     if (this.selectedPackageIndex === -1) return;
@@ -523,17 +581,43 @@ export class ProductComponent implements OnInit {
       if (result) {
         this.product.packages[this.selectedPackageIndex].covers[index] = result;
         this.updateCoversTable();
+        this.addCoverVars(result.code);
         this.updateChanges();
       }
     });
   }
 
+  addCoverVars(code: string): void {
+    // add var to mpVars if not exists - co_+code+_premium, co_+code+_sumInsured, co_+code+_deductibleNr
+      const newVars: any[] = [];
+      newVars.push({ varCode: 'co_' + code + '_premium', varType: 'VAR', 
+        varPath: '$..covers[?(@.cover.code == "' + code + '")].premium', 
+        varName: 'Премия по покрытию ' + code, varDataType: 'NUMBER' });
+      newVars.push({ varCode: 'co_' + code + '_sumInsured', varType: 'VAR', 
+        varPath: '$..covers[?(@.cover.code == "' + code + '")].sumInsured', 
+        varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER' });
+      newVars.push({ varCode: 'co_' + code + '_deductibleNr', varType: 'VAR', 
+        varPath: '', 
+        varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER' });
+        newVars.push({ varCode: 'co_' + code + '_deductible', varType: 'VAR', 
+          varPath: '$..covers[?(@.cover.code == "' + code + '")].deductible', 
+          varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER' });
+
+        this.product.vars = [...this.product.vars, ...newVars];
+      }
+    
+
   deleteCover(cover: Cover, index: number): void {
     if (confirm('Удалить покрытие?')) {
       this.product.packages[this.selectedPackageIndex].covers.splice(index, 1);
       this.updateCoversTable();
+      this.deleteCoverVars(cover.code);
       this.updateChanges();
     }
+  }
+
+  deleteCoverVars(code: string): void {
+    this.product.vars = this.product.vars.filter(v => v.varCode !== 'co_' + code);
   }
 
   showDeductibles(cover: Cover, index: number): void {
@@ -547,16 +631,32 @@ export class ProductComponent implements OnInit {
   }
 
   updateCoversTable(): void {
-    if (this.selectedPackageIndex === -1) {
+    if (this.selectedPackageIndex === -1 || 
+        this.selectedPackageIndex >= this.product.packages.length ||
+        !this.product.packages[this.selectedPackageIndex]) {
       this.filteredCovers = [];
       this.paginatedCovers = [];
+      this.selectedPackageIndex = -1;
+      this.selectedCoverIndex = -1;
       return;
     }
 
-    this.filteredCovers = this.product.packages[this.selectedPackageIndex].covers.filter(item =>
+    // Only show covers for the currently selected package
+    const selectedPackage = this.product.packages[this.selectedPackageIndex];
+    if (!selectedPackage || !selectedPackage.covers) {
+      this.filteredCovers = [];
+      this.paginatedCovers = [];
+      this.paginatedFiles = [];
+      return;
+    }
+
+    this.filteredCovers = selectedPackage.covers.filter(item =>
       (item.code && item.code.toLowerCase().includes(this.coversSearchText.toLowerCase()))
     );
     this.updateCoversPagination();
+
+    this.paginatedFiles = selectedPackage.files;
+    
   }
 
   onCoversPageChange(event: PageEvent): void {
@@ -566,8 +666,7 @@ export class ProductComponent implements OnInit {
   }
 
   updateCoversPagination(): void {
-    const startIndex = this.coversPageIndex * this.coversPageSize;
-    this.paginatedCovers = this.filteredCovers.slice(startIndex, startIndex + this.coversPageSize);
+    this.paginatedCovers = this.filteredCovers
   }
 
   // Deductible methods
@@ -731,7 +830,20 @@ export class ProductComponent implements OnInit {
     this.updateQuoteValidatorTable();
     this.updateSaveValidatorTable();
     this.updatePackagesTable();
-    this.updateCoversTable();
+    
+    // Validate selectedPackageIndex before updating covers
+    if (this.selectedPackageIndex >= 0 && 
+        this.selectedPackageIndex < this.product.packages.length) {
+      this.updateCoversTable();
+      this.updateFilesTable();
+    } else {
+      this.selectedPackageIndex = -1;
+      this.selectedCoverIndex = -1;
+      this.filteredCovers = [];
+      this.paginatedCovers = [];
+      this.updateFilesTable();
+    }
+    
     this.updateDeductiblesTable();
     this.updateLimitsTable();
     this.updatePolicyTable();
@@ -753,11 +865,16 @@ export class ProductComponent implements OnInit {
               varName: v.varName,
               varCode: v.varCode,
               varDataType: v.varDataType,
-              varValue: v.varValue
+              varValue: v.varValue,
+              varType: v.varType,
+              varCdm: "",
+              varNr: v.varNr
             });
           }
         });
         this.updatePolicyTable();
+        // Also reload files when LOB changes
+        
       }
     });
   }
@@ -770,7 +887,9 @@ export class ProductComponent implements OnInit {
       category: '',
       field: '',
       name: v.varName,
-      code: v.varCode
+      code: v.varCode,
+      varNr: v.varNr,
+      varCdm: v.varCdm
     }));
 
     let filtered = this.policyVars;
@@ -784,8 +903,8 @@ export class ProductComponent implements OnInit {
       filtered = this.policyVars.filter(v => !v.varPath.startsWith('policyHolder.') && !v.varPath.startsWith('insuredObject.'));
     }
 
-    // Sort by varPath
-    filtered = filtered.sort((a, b) => a.varPath.localeCompare(b.varPath));
+    // Sort by varNr
+    filtered = filtered.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
 
     // Process category and field columns based on varPath
     filtered = filtered.map((v, index) => {
@@ -972,6 +1091,160 @@ export class ProductComponent implements OnInit {
         maxHeight: '80vh'
       });
     });
+  }
+
+  // File methods - now using Business Line files
+  uploadFile(file: PackageFile): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '*/*';
+    input.onchange = (event: any) => {
+      const selectedFile = event.target.files[0];
+      if (selectedFile) {
+        const fileName = selectedFile.name; // File name includes extension (e.g., "document.pdf")
+        console.log(fileName);
+        this.filesService.uploadFileWithResponse(selectedFile, fileName).subscribe({
+          next: (response) => {
+            file.fileId = response.id;
+            file.fileName = fileName;
+            this.updateFilesTable();
+            this.updateChanges();
+            this.snackBar.open('Файл загружен успешно', 'Закрыть', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error uploading file:', error);
+            this.snackBar.open('Ошибка загрузки файла', 'Закрыть', { duration: 3000 });
+          }
+        });
+      }
+    };
+    input.click();
+  }
+
+  downloadFile(file: BusinessLineFile): void {
+  
+  }
+
+  
+
+  refreshFiles(): void {
+    console.log('refresh' + this.lob?.mpName );
+    if (!this.lob?.mpFiles) {
+      // Handle the undefined case: set to empty array or handle error as needed
+      var lobFiles: PackageFile[] = [];
+    } else {
+      var lobFiles: PackageFile[] = this.lob.mpFiles.map(f => ({
+        fileCode: f.fileCode,
+        fileName: f.fileName || ''
+      }));
+    }
+console.log(lobFiles);
+
+    this.product.packages.forEach(pkg => {
+console.log(pkg)
+
+      // Add to pkg.files file from lobFiles.
+      // if file exist, check by fileCode, the do nothing
+      // otherwise add fileCode, fileName, null
+      // Объединяем с приоритетом для updates
+      pkg.files = Array.from(
+        new Map([...pkg.files, ...lobFiles].map(item => [item.fileCode, item])).values());
+    });
+    
+    this.updateFilesTable();
+  }
+
+  getFileIndex(file: BusinessLineFile): number {
+    const index = this.businessLineFiles.findIndex(f => f.fileCode === file.fileCode);
+    return index !== -1 ? index : 0;
+  }
+
+  // Helper methods to get indices from paginated arrays
+  getQuoteValidatorIndex(validator: QuoteValidator): number {
+    // Try to find by reference first (most reliable)
+    const refIndex = this.product.quoteValidator.indexOf(validator);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by properties
+    const index = this.product.quoteValidator.findIndex(v => 
+      v.lineNr === validator.lineNr && 
+      v.keyLeft === validator.keyLeft && 
+      v.ruleType === validator.ruleType &&
+      v.keyRight === validator.keyRight
+    );
+    return index !== -1 ? index : 0;
+  }
+
+  getSaveValidatorIndex(validator: QuoteValidator): number {
+    // Try to find by reference first (most reliable)
+    const refIndex = this.product.saveValidator.indexOf(validator);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by properties
+    const index = this.product.saveValidator.findIndex(v => 
+      v.lineNr === validator.lineNr && 
+      v.keyLeft === validator.keyLeft && 
+      v.ruleType === validator.ruleType &&
+      v.keyRight === validator.keyRight
+    );
+    return index !== -1 ? index : 0;
+  }
+
+  getPackageIndex(pkg: Package): number {
+    // Try to find by reference first (most reliable)
+    const refIndex = this.product.packages.indexOf(pkg);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by code
+    const index = this.product.packages.findIndex(p => p.code === pkg.code);
+    return index !== -1 ? index : 0;
+  }
+
+  getCoverIndex(cover: Cover): number {
+    if (this.selectedPackageIndex === -1) return 0;
+    
+    // Try to find by reference first (most reliable)
+    const covers = this.product.packages[this.selectedPackageIndex].covers;
+    const refIndex = covers.indexOf(cover);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by code
+    const index = covers.findIndex(c => c.code === cover.code);
+    return index !== -1 ? index : 0;
+  }
+
+  getDeductibleIndex(deductible: Deductible): number {
+    if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return 0;
+    
+    // Try to find by reference first (most reliable)
+    const deductibles = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles;
+    const refIndex = deductibles.indexOf(deductible);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by properties
+    const index = deductibles.findIndex(d => 
+      d.nr === deductible.nr && 
+      d.deductibleType === deductible.deductibleType &&
+      d.deductible === deductible.deductible
+    );
+    return index !== -1 ? index : 0;
+  }
+
+  getLimitIndex(limit: Limit): number {
+    if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return 0;
+    
+    // Try to find by reference first (most reliable)
+    const limits = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits;
+    const refIndex = limits.indexOf(limit);
+    if (refIndex !== -1) return refIndex;
+    
+    // Fallback to matching by properties
+    const index = limits.findIndex(l => 
+      l.nr === limit.nr && 
+      l.sumInsured === limit.sumInsured &&
+      l.premium === limit.premium
+    );
+    return index !== -1 ? index : 0;
   }
 }
 

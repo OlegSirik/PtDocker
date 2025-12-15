@@ -1,0 +1,25 @@
+const countries = [
+    {code: 'US', name: 'United States'},
+    {code: 'RU', name: 'Russia'},
+    {code: 'CN', name: 'China'}
+];
+
+const updates = [
+    {code: 'RU', name: 'Россия'}, // Обновляем
+    {code: 'DE', name: 'Germany'} // Добавляем
+];
+
+// Объединяем с приоритетом для updates
+const updatedCountries = Array.from(
+    new Map([...countries, ...updates].map(item => [item.code, item])).values()
+);
+
+console.log(updatedCountries);
+/*
+[
+    {code: 'US', name: 'United States'},
+    {code: 'RU', name: 'Россия'}, // ← Обновлено!
+    {code: 'CN', name: 'China'},
+    {code: 'DE', name: 'Germany'} // ← Добавлено!
+]
+*/

@@ -25,6 +25,13 @@ public interface FileService {
     void uploadBody(Long id, byte[] file);
 
     /**
+     * Загрузить содержимое файла
+     * @param tid идентификатор тенанта
+     * @param file массив байт с содержимым
+     */
+    Long uploadFile(Long tid, byte[] file);
+
+    /**
      * Получить список файлов по продукту
      * @param productCode код продукта
      * @return список описаний файлов

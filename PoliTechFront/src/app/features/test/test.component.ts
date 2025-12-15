@@ -1,177 +1,71 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { FormsModule } from '@angular/forms';
-import { TestService, TestContext, TestError, PfType } from '../../shared';
+import { ThemeService, TenantTheme } from '../../shared/theme/theme.service';
 
 @Component({
     selector: 'app-test',
     imports: [
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatTabsModule,
-    MatSnackBarModule,
-    FormsModule
-],
+        MatCardModule,
+        MatButtonModule
+    ],
     templateUrl: './test.component.html',
     styleUrls: ['./test.component.scss']
 })
-export class TestComponent implements OnInit {
-  @ViewChild('contextPaginator') contextPaginator!: MatPaginator;
-  @ViewChild('errorPaginator') errorPaginator!: MatPaginator;
+export class TestComponent {
+  constructor(private themeService: ThemeService) {}
 
-  // Toggle state
-  toggleMode: 'quote' | 'policy' = 'quote';
-
-  // Form data
-  requestJson: string = '';
-  selectedPfType: string = '';
-
-  // Data for tables
-  contextData: TestContext[] = [];
-  errorData: TestError[] = [];
-  calculationResult: string = '';
-
-  // Table configurations
-  contextDisplayedColumns: string[] = ['varCode', 'varValue'];
-  errorDisplayedColumns: string[] = ['errorText', 'validator'];
-
-  // Dropdown data
-  pfTypes: PfType[] = [];
-
-  constructor(
-    private testService: TestService,
-    private snackBar: MatSnackBar
-  ) {}
-
-  ngOnInit(): void {
-    this.loadPfTypes();
-  }
-
-  loadPfTypes(): void {
-    this.testService.getPfTypes().subscribe(types => {
-      this.pfTypes = types;
-    });
-  }
-
-  onValidatorClick(): void {
-    if (!this.requestJson.trim()) {
-      this.snackBar.open('Введите данные в поле "Запрос"', 'Закрыть', { duration: 3000 });
-      return;
-    }
-
-    const requestData = this.requestJson.trim();
-
-      this.testService.validateQuote(requestData).subscribe({
-        next: (response) => {
-          this.contextData = response.context;
-          this.errorData = response.errorText;
-          this.calculationResult = JSON.stringify(response.policy, null, 2);
-          this.snackBar.open('Валидация завершена', 'Закрыть', { duration: 3000 });
-        },
-        error: (error) => {
-          console.error('Validation error:', error);
-          this.snackBar.open('Ошибка валидации', 'Закрыть', { duration: 3000 });
-        }
-      });
-  }
-
-  onCalculatorClick(): void {
-    if (!this.requestJson.trim()) {
-      this.snackBar.open('Введите данные в поле "Запрос"', 'Закрыть', { duration: 3000 });
-      return
-    }
-
-    const requestData = this.requestJson.trim();
-
-      this.testService.validatePolicy(requestData).subscribe({
-        next: (response) => {
-          this.contextData = response.context;
-          this.errorData = response.errorText;
-          this.calculationResult = JSON.stringify(response.policy, null, 2);
-          this.snackBar.open('Валидация завершена', 'Закрыть', { duration: 3000 });
-        },
-        error: (error) => {
-          console.error('Validation error:', error);
-          this.snackBar.open('Ошибка валидации', 'Закрыть', { duration: 3000 });
-        }
-      });
-
-    }
-/*
-    const requestData = this.requestJson.trim();
-
-    // Clear tables
-    this.contextData = [];
-    this.errorData = [];
-
-    if (this.toggleMode === 'quote') {
-      this.testService.calculateQuote(requestData).subscribe({
-        next: (result) => {
-          this.calculationResult = result;
-          this.snackBar.open('Расчет завершен', 'Закрыть', { duration: 3000 });
-        },
-        error: (error) => {
-          console.error('Calculation error:', error);
-          this.snackBar.open('Ошибка расчета', 'Закрыть', { duration: 3000 });
-        }
-      });
-    } else {
-      this.testService.calculatePolicy(requestData).subscribe({
-        next: (result) => {
-          this.calculationResult = result;
-          this.snackBar.open('Расчет завершен', 'Закрыть', { duration: 3000 });
-        },
-        error: (error) => {
-          console.error('Calculation error:', error);
-          this.snackBar.open('Ошибка расчета', 'Закрыть', { duration: 3000 });
-        }
-      });
-    }
-    */
-
-
-  onPrintPfClick(): void {
-    if (!this.selectedPfType) {
-      this.snackBar.open('Print form must be selected', 'Закрыть', { duration: 3000 });
-      return;
-    }
-
-    if (!this.requestJson.trim()) {
-      this.snackBar.open('Введите данные в поле "Запрос"', 'Закрыть', { duration: 3000 });
-      return;
-    }
-
-    const requestData = this.requestJson.trim();
-
-    this.testService.printPf(requestData, this.selectedPfType).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `print_form_${this.selectedPfType}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.snackBar.open('Форма скачана', 'Закрыть', { duration: 3000 });
+  applyTheme1(): void {
+    const theme1: TenantTheme = {
+      id: 'theme-blue',
+      name: 'Blue Theme',
+      palette: {
+        primary: '#2196F3',
+        accent: '#03A9F4',
+        warn: '#F44336',
+        background: '#E3F2FD',
+        surface: '#FFFFFF',
+        card: '#BBDEFB',
+        text: '#1565C0'
       },
-      error: (error) => {
-        console.error('Print error:', error);
-        this.snackBar.open('Ошибка печати формы', 'Закрыть', { duration: 3000 });
-      }
-    });
+      fontFamily: 'Roboto, sans-serif'
+    };
+    this.themeService.applyCustomTheme(theme1);
+  }
+
+  applyTheme2(): void {
+    const theme2: TenantTheme = {
+      id: 'theme-green',
+      name: 'Green Theme',
+      palette: {
+        primary: '#4CAF50',
+        accent: '#8BC34A',
+        warn: '#FF5722',
+        background: '#E8F5E9',
+        surface: '#FFFFFF',
+        card: '#C8E6C9',
+        text: '#2E7D32'
+      },
+      fontFamily: 'Arial, sans-serif'
+    };
+    this.themeService.applyCustomTheme(theme2);
+  }
+
+  applyTheme3(): void {
+    const theme3: TenantTheme = {
+      id: 'theme-purple',
+      name: 'Purple Theme',
+      palette: {
+        primary: '#9C27B0',
+        accent: '#E91E63',
+        warn: '#FF9800',
+        background: '#F3E5F5',
+        surface: '#FFFFFF',
+        card: '#CE93D8',
+        text: '#6A1B9A'
+      },
+      fontFamily: 'Georgia, serif'
+    };
+    this.themeService.applyCustomTheme(theme3);
   }
 }

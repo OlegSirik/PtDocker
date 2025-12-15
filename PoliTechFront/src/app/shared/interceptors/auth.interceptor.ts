@@ -28,7 +28,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       console.log('error', error);
       if ([HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized].includes(error.status)) {
-        router.navigate(['/login']);
+        const tenantCode = authService.tenant || '';
+        router.navigate(['/', tenantCode, 'login']);
       }
       return throwError(() => error);
     })

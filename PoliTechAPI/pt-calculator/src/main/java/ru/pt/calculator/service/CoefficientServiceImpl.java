@@ -116,7 +116,12 @@ public class CoefficientServiceImpl implements CoefficientService {
             if (ord != null) {
                 if (orderBy.length() == 0) orderBy.append(" order by ");
                 else orderBy.append(", ");
-                orderBy.append("col").append(nr).append(" ").append(ord);
+                if (varDataType.equals("NUMBER")) {
+                    orderBy.append("to_number(col").append(nr).append(",'9999999999.99') ");
+                } else {
+                    orderBy.append("col").append(nr).append(" ");
+                }
+                //orderBy.append("col").append(nr).append(" ").append(ord);
             }
         }
 

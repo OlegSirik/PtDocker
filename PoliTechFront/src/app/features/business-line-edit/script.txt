@@ -1,0 +1,57 @@
+{
+  "id": 9,
+  "mpCode": "12",
+  "mpName": "12",
+  "mpVars": [
+    {
+      "varCode": "pl_TermMonths",
+      "varName": "Срок полиса в месяцах",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varDataType": "NUMBER"
+    },
+    {
+      "varCode": "pl_TermDays",
+      "varName": "Срок полиса в днях",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varDataType": "NUMBER"
+    }
+  ],
+  "mpCovers": [
+    {
+      "risks": "sdg",
+      "coverCode": "dsg",
+      "coverName": "sdg"
+    }
+  ],
+  "mpPhType": "person",
+  "mpInsObjectType": "device",
+
+  "mpFiles: [
+    {
+        "fileCode": "policy",
+        "fileName": "Полис страхования"
+    }
+  ]
+}
+
+add 
+  "mpFiles: [
+    {
+        "fileCode": "policy",
+        "fileName": "Полис страхования"
+    }
+to page data document
+
+add tab Файлы
+card
+show text h3 - Файлы, button aligned right +Добавить. onClick show dialog with 2 textfield. each textfield on separate line, buttons Save Cancel
+if Save, validate fileCode unique values in document
+next line
+table without search and without pagination
+columns fileCode, fileName, action ( delete , align end )
+on record click show dialog . fileCode is readOnly.
+fileCode mus be in lower case only

@@ -13,6 +13,8 @@ import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.file.FileService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.service.TenantService;
+import ru.pt.auth.entity.TenantEntity;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,14 +33,18 @@ import java.util.Map;
 public class FileController extends SecuredController {
 
     private final FileService fileService;
+    private final TenantService tenantService;
 
     public FileController(FileService fileService,
-                          SecurityContextHelper securityContextHelper) {
+                          SecurityContextHelper securityContextHelper,
+                          TenantService tenantService) {
         super(securityContextHelper);
         this.fileService = fileService;
+        this.tenantService = tenantService;
     }
 
     // POST /api/v1/{tenantCode}/admin/files body json
+/*     
     @PostMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, String>> createMeta(
@@ -55,9 +61,26 @@ public class FileController extends SecuredController {
         body.put("id", String.valueOf(e.getId()));
         return ResponseEntity.ok(body);
     }
+*/
+    @PostMapping
+    //@PreAuthorize("hasRole('SYS_ADMIN')")  ProductAdmin it shoud be
+    public ResponseEntity<Map<String, String>> uploadFile(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestPart("file") MultipartFile file) {
+        requireAdmin(user);
+        TenantEntity tenant = tenantService.findByCode(tenantCode)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found"));
+        try {
+            Long fileId = fileService.uploadFile(tenant.getId(), file.getBytes());
+            return ResponseEntity.ok(Map.of("id", String.valueOf(fileId)));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    // POST /api/v1/{tenantCode}/admin/files/{fileId} multipart file upload
-    @PostMapping(path = "/{fileId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+// POST /api/v1/{tenantCode}/admin/files/{fileId} multipart file upload
+    //@PostMapping(path = "/{fileId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> upload(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -84,7 +107,7 @@ public class FileController extends SecuredController {
     }
 
     // GET /api/v1/{tenantCode}/admin/files?product_code=***
-    @GetMapping
+    //@GetMapping
     public ResponseEntity<List<Map<String, Object>>> list(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -108,7 +131,7 @@ public class FileController extends SecuredController {
     }
 
     // POST /api/v1/{tenantCode}/admin/files/{fileId}/cmd/process
-    @PostMapping("/{fileId}/cmd/process")
+    //@PostMapping("/{fileId}/cmd/process")
     public ResponseEntity<byte[]> process(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,

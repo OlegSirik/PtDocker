@@ -41,7 +41,12 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   return authService.isAuthenticated.pipe(
     filter(Boolean),
     map(isAuthenticated => {
-      return isAuthenticated ? true : router.createUrlTree(['/login']);
+      if (isAuthenticated) {
+        return true;
+      }
+      // Get tenantCode from route or AuthService
+      const tenantCode = route.params['tenantId'] || authService.tenant || '';
+      return router.createUrlTree(['/', tenantCode, 'login']);
     })
   );
   /*
@@ -52,7 +57,8 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
 
       if (!authService.hasAnyRole(roles)) {
-        router.navigate(['/forbidden']);
+        const tenantCode = route.params['tenantId'] || authService.tenant || '';
+        router.navigate(['/', tenantCode, 'forbidden']);
         return false;
       }
     }
@@ -60,6 +66,7 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     return true;
   }
 
-  router.navigate(['/login']);
+  const tenantCode = route.params['tenantId'] || authService.tenant || '';
+  router.navigate(['/', tenantCode, 'login']);
   return false;*/
 };

@@ -30,6 +30,9 @@ public class FileEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 
+    @Column(name = "tid", nullable = false)
+    private Long tid;
+
     public Long getId() {
         return id;
     }
@@ -84,5 +87,13 @@ public class FileEntity {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public Long getTid() {
+        return tid;
+    }
+
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 }
