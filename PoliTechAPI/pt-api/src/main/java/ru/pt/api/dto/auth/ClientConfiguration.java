@@ -18,12 +18,27 @@ public class ClientConfiguration {
     private String paymentGatePassword;
     // email сотрудника, которому отправлять email вместо владельца полиса
     private String employeeEmail;
+    // тип e-mail шлюза
+    private String emailGate;
+    // логин e-mail шлюза
+    private String emailLogin;
+    // пароль e-mail шлюза
+    private String emailPassword;
 
 
     public ClientConfiguration() {
     }
 
-    public ClientConfiguration(String paymentGate, boolean sendEmailAfterBuy, boolean sendSmsAfterBuy, String paymentGateAgentNumber, String paymentGateLogin, String paymentGatePassword, String employeeEmail) {
+    public ClientConfiguration(String paymentGate,
+                               boolean sendEmailAfterBuy,
+                               boolean sendSmsAfterBuy,
+                               String paymentGateAgentNumber,
+                               String paymentGateLogin,
+                               String paymentGatePassword,
+                               String employeeEmail,
+                               String emailGate,
+                               String emailLogin,
+                               String emailPassword) {
         this.paymentGate = paymentGate;
         this.sendEmailAfterBuy = sendEmailAfterBuy;
         this.sendSmsAfterBuy = sendSmsAfterBuy;
@@ -31,6 +46,9 @@ public class ClientConfiguration {
         this.paymentGateLogin = paymentGateLogin;
         this.paymentGatePassword = paymentGatePassword;
         this.employeeEmail = employeeEmail;
+        this.emailGate = emailGate;
+        this.emailLogin = emailLogin;
+        this.emailPassword = emailPassword;
     }
 
     public String getPaymentGate() {
@@ -87,5 +105,29 @@ public class ClientConfiguration {
 
     public void setEmployeeEmail(String employeeEmail) {
         this.employeeEmail = employeeEmail;
+    }
+
+    public String getEmailGate() {
+        return emailGate;
+    }
+
+    public void setEmailGate(String emailGate) {
+        this.emailGate = emailGate;
+    }
+
+    public String getEmailLogin() {
+        return emailLogin;
+    }
+
+    public void setEmailLogin(String emailLogin) {
+        this.emailLogin = emailLogin;
+    }
+
+    public String getEmailPassword() {
+        return emailPassword;
+    }
+
+    public void setEmailPassword(String emailPassword) {
+        this.emailPassword = emailPassword;
     }
 }

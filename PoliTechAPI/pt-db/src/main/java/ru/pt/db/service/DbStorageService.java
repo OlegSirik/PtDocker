@@ -11,6 +11,7 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.db.entity.PolicyEntity;
 import ru.pt.db.entity.PolicyIndexEntity;
 import ru.pt.db.repository.PolicyIndexRepository;
@@ -44,6 +45,8 @@ public class DbStorageService implements StorageService {
 
         var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
         index.setVersionNo(1);
+        index.setClientAccountId(((UserDetailsImpl) userData.getAuthorities()).getClientId());
+        index.setUserAccountId(((UserDetailsImpl) userData.getAuthorities()).getAccountId());
         policyIndexRepository.save(index);
 
         var policyData = new PolicyData();

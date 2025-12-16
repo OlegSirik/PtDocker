@@ -160,13 +160,10 @@ public class VskPaymentClient implements PaymentClient {
         }
     }
 
-    @Override
-    public void paymentCallback(String policyId) {
-
-    }
 
     @Override
     public List<ValidationError> validate(String policyNumber, BigDecimal amount) {
+        // TODO написать валидацию!!
         return List.of();
     }
 }

@@ -22,8 +22,11 @@ dependencies {
 //    compileOnly("org.springframework.security:spring-security-core")
     runtimeOnly("org.postgresql:postgresql")
     implementation(project(":pt-api"))
+    implementation(project(":pt-auth"))
     implementation("org.springframework:spring-web")
+    implementation("org.springframework.security:spring-security-core:6.5.6")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     // TODO version remove/const
     implementation("com.jayway.jsonpath:json-path:2.9.0")
     // PDF Processing

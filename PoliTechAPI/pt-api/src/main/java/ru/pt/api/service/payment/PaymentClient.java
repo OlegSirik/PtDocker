@@ -23,12 +23,6 @@ public interface PaymentClient {
     PaymentData createPayment(PaymentData paymentData);
 
     /**
-     * Обработать подтверждение оплаты
-     * @param policyId идентификатор полиса
-     */
-    void paymentCallback(String policyId);
-
-    /**
      * Проверить возможность оплаты полиса
      * @param policyNumber номер полиса
      * @param amount сумма к оплате

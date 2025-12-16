@@ -5,12 +5,17 @@ import ru.pt.api.dto.file.FileModel;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Работа с моделями файлов приложения
+ * Задействовано файловое хранилище
+ */
 public interface FileService {
 
     /**
      * Создать метаданные файла
-     * @param fileType тип файла
-     * @param fileDesc описание файла
+     *
+     * @param fileType    тип файла
+     * @param fileDesc    описание файла
      * @param productCode код продукта
      * @param packageCode код пакета
      * @return модель файла
@@ -19,7 +24,8 @@ public interface FileService {
 
     /**
      * Загрузить содержимое файла
-     * @param id идентификатор файла
+     *
+     * @param id   идентификатор файла
      * @param file массив байт с содержимым
      */
     void uploadBody(Long id, byte[] file);
@@ -33,6 +39,7 @@ public interface FileService {
 
     /**
      * Получить список файлов по продукту
+     *
      * @param productCode код продукта
      * @return список описаний файлов
      */
@@ -40,6 +47,7 @@ public interface FileService {
 
     /**
      * Скачать файл
+     *
      * @param id идентификатор файла
      * @return файл в виде массива байт
      */
@@ -47,13 +55,15 @@ public interface FileService {
 
     /**
      * Мягко удалить файл
+     *
      * @param id идентификатор файла
      */
     void softDelete(Long id);
 
     /**
      * Обработать файл с параметрами
-     * @param id идентификатор файла
+     *
+     * @param id        идентификатор файла
      * @param keyValues параметры обработки
      * @return результат обработки
      */
@@ -61,7 +71,8 @@ public interface FileService {
 
     /**
      * Получить файл по типу и параметрам
-     * @param fileType тип файла
+     *
+     * @param fileType  тип файла
      * @param keyValues параметры поиска
      * @return файл в виде массива байт
      */
