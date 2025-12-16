@@ -98,7 +98,9 @@ public class YoukassaPaymentClient implements PaymentClient {
         }
 
         if (PaymentType.CASH.equals(paymentData.getPaymentType())) {
-            return handleCashPayment(paymentData);
+            paymentData.setPaymentDate(ZonedDateTime.now());
+            paymentData.setOrderId(UUID.randomUUID().toString());
+            return paymentData;
         }
 
         Map<String, Object> requestBody = buildRequestBody(paymentData, configuration);
@@ -122,33 +124,6 @@ public class YoukassaPaymentClient implements PaymentClient {
         } catch (RestClientException | JsonProcessingException ex) {
             log.error("Failed to create YooKassa payment: {}", ex.getMessage(), ex);
             throw new IllegalStateException("Failed to create YooKassa payment", ex);
-        }
-    }
-
-    @Override
-    public void paymentCallback(String paymentId) {
-        if (!StringUtils.hasText(paymentId)) {
-            log.warn("Payment callback invoked without payment id");
-            return;
-        }
-
-        ClientConfiguration configuration = resolveClientConfiguration();
-        HttpHeaders headers = buildHeaders(configuration, false);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            String response = restTemplate.exchange(
-                    paymentsEndpoint + "/" + paymentId,
-                    HttpMethod.GET,
-                    entity,
-                    String.class).getBody();
-            if (StringUtils.hasText(response)) {
-                handlePaymentStatus(paymentId, response);
-            }
-        } catch (RestClientException ex) {
-            log.warn("Failed to query YooKassa payment {}: {}", paymentId, ex.getMessage());
-        } catch (JsonProcessingException ex) {
-            log.error("Failed to parse YooKassa payment response", ex);
         }
     }
 
@@ -314,28 +289,6 @@ public class YoukassaPaymentClient implements PaymentClient {
 
     private boolean requiresRedirect(PaymentType paymentType) {
         return paymentType == null || PaymentType.CARD.equals(paymentType);
-    }
-
-    private PaymentData handleCashPayment(PaymentData paymentData) {
-        ZonedDateTime paymentDate = paymentData.getPaymentDate() != null
-                ? paymentData.getPaymentDate()
-                : ZonedDateTime.now();
-        paymentData.setPaymentDate(paymentDate);
-
-        if (!StringUtils.hasText(paymentData.getOrderId())) {
-            paymentData.setOrderId("cash-" + paymentData.getPolicyNumber() + "-" + UUID.randomUUID());
-        }
-        storageService.setPaymentOrderId(paymentData.getPolicyNumber(), paymentData.getOrderId());
-
-        PolicyPurchaseCallbackRequest request = new PolicyPurchaseCallbackRequest();
-        request.setPaymentId(paymentData.getOrderId());
-        request.setPolicyNumber(paymentData.getPolicyNumber());
-        request.setPaidAmount(paymentData.getAmount());
-        request.setPaymentDate(paymentDate);
-
-        purchaseCallbackApi.handlePolicyPurchase(request);
-        log.info("Processed CASH payment for policy {}", paymentData.getPolicyNumber());
-        return paymentData;
     }
 
     private String normalizeEndpoint(String apiBaseUrl) {

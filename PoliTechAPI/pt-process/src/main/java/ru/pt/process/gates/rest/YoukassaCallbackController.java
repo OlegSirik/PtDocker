@@ -1,4 +1,4 @@
-package ru.pt.payments.controller;
+package ru.pt.process.gates.rest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.service.db.StorageService;
+import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.payments.service.youkassa.YoukassaPaymentClient;
 
 import java.util.Map;
@@ -18,10 +21,12 @@ public class YoukassaCallbackController {
 
     private static final Logger log = LoggerFactory.getLogger(YoukassaCallbackController.class);
 
-    private final YoukassaPaymentClient paymentClient;
+    private final ProcessOrchestrator processOrchestrator;
+    private final StorageService storageService;
 
-    public YoukassaCallbackController(YoukassaPaymentClient paymentClient) {
-        this.paymentClient = paymentClient;
+    public YoukassaCallbackController(ProcessOrchestrator processOrchestrator, StorageService storageService) {
+        this.processOrchestrator = processOrchestrator;
+        this.storageService = storageService;
     }
 
     /**
@@ -38,7 +43,9 @@ public class YoukassaCallbackController {
                     : payload.get("id");
 
             if (idValue instanceof String paymentId) {
-                paymentClient.paymentCallback(paymentId);
+                PolicyData policy = storageService.getPolicyByPaymentOrderId(paymentId);
+                // TODO проверить, скорее всего это айди заявки на оплату
+                processOrchestrator.paymentCallback(policy.getPolicyId().toString());
                 log.info("Processed YooKassa notification for payment {}", paymentId);
             } else {
                 log.warn("YooKassa webhook received without payment id: {}", payload);
@@ -49,5 +56,6 @@ public class YoukassaCallbackController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 }
 

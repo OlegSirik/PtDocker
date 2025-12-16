@@ -32,11 +32,30 @@ public class ClientConfigurationEntity {
     // email сотрудника, которому отправлять email вместо владельца полиса
     @Column(name = "client_employee_email")
     private String employeeEmail;
+    // тип e-mail шлюза
+    @Column(name = "email_gate")
+    private String emailGate;
+    // логин e-mail шлюза
+    @Column(name = "email_login")
+    private String emailLogin;
+    // пароль e-mail шлюза
+    @Column(name = "email_password")
+    private String emailPassword;
 
     public ClientConfigurationEntity() {
     }
 
-    public ClientConfigurationEntity(Long id, String paymentGate, boolean sendEmailAfterBuy, boolean sendSmsAfterBuy, String paymentGateAgentNumber, String paymentGateLogin, String paymentGatePassword, String employeeEmail) {
+    public ClientConfigurationEntity(Long id,
+                                     String paymentGate,
+                                     boolean sendEmailAfterBuy,
+                                     boolean sendSmsAfterBuy,
+                                     String paymentGateAgentNumber,
+                                     String paymentGateLogin,
+                                     String paymentGatePassword,
+                                     String employeeEmail,
+                                     String emailGate,
+                                     String emailLogin,
+                                     String emailPassword) {
         this.id = id;
         this.paymentGate = paymentGate;
         this.sendEmailAfterBuy = sendEmailAfterBuy;
@@ -45,6 +64,9 @@ public class ClientConfigurationEntity {
         this.paymentGateLogin = paymentGateLogin;
         this.paymentGatePassword = paymentGatePassword;
         this.employeeEmail = employeeEmail;
+        this.emailGate = emailGate;
+        this.emailLogin = emailLogin;
+        this.emailPassword = emailPassword;
     }
 
     public Long getId() {
@@ -109,5 +131,29 @@ public class ClientConfigurationEntity {
 
     public void setEmployeeEmail(String employeeEmail) {
         this.employeeEmail = employeeEmail;
+    }
+
+    public String getEmailGate() {
+        return emailGate;
+    }
+
+    public void setEmailGate(String emailGate) {
+        this.emailGate = emailGate;
+    }
+
+    public String getEmailLogin() {
+        return emailLogin;
+    }
+
+    public void setEmailLogin(String emailLogin) {
+        this.emailLogin = emailLogin;
+    }
+
+    public String getEmailPassword() {
+        return emailPassword;
+    }
+
+    public void setEmailPassword(String emailPassword) {
+        this.emailPassword = emailPassword;
     }
 }

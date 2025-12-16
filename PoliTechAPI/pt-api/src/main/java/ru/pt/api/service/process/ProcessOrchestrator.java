@@ -45,6 +45,13 @@ public interface ProcessOrchestrator {
     PaymentData payment(PaymentData paymentData);
 
     /**
+     * Действия после подтверждения оплаты
+     * Разные платежные клиенты могут по разному триггерить вызов этого метода
+     * @param policyId номер полиса
+     */
+    void paymentCallback(String policyId);
+
+    /**
      * Сохранить договор в хранилище
      * @param policy договор
      * @return данные после сохранения

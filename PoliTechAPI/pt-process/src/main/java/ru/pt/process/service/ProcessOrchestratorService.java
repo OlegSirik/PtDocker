@@ -1,14 +1,19 @@
 package ru.pt.process.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import ru.pt.api.dto.auth.Client;
+import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.payment.PaymentData;
+import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
@@ -25,13 +30,18 @@ import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.VersionManager;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.utils.JsonSetter;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.files.service.email.EmailGateService;
+import ru.pt.payments.service.PaymentClientSwitch;
 import ru.pt.process.utils.MdcWrapper;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
@@ -40,6 +50,9 @@ import java.util.stream.Collectors;
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
+
+    private final ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private final StorageService storageService;
     private final SecurityContextHelper securityContextHelper;
@@ -51,6 +64,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final ValidatorService validatorService;
     private final PreProcessService preProcessService;
     private final PostProcessService postProcessService;
+    private final PaymentClientSwitch paymentClient;
+    private final AdminUserManagementService userService;
+    private final EmailGateService emailGateService;
 
     @Override
     public String calculate(String policy) {
@@ -106,7 +122,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         logger.info("Result after calculation {}", calculated);
 
-        var projection  = new JsonProjection(policy);
+        var projection = new JsonProjection(policy);
 
         var productCode = projection.getProductCode();
 
@@ -160,7 +176,42 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public PaymentData payment(PaymentData paymentData) {
-        return null;
+        try {
+            logger.info("Received payment request {}", objectWriter.writeValueAsString(paymentData));
+        } catch (Exception e) {
+            logger.error("Can't write json message - {}", e.getMessage(), e);
+        }
+        PaymentData response = paymentClient.getCurrentPaymentClient().createPayment(paymentData);
+        if (paymentData.getPaymentType().equals(PaymentType.CASH)) {
+            logger.info("Received CASH request, no need to wait for payment confirmation");
+            executorService.submit(() -> paymentCallback(paymentData.getPolicyNumber()));
+        }
+        return response;
+    }
+
+    @Override
+    public void paymentCallback(String policyId) {
+        // set policy status
+        PolicyData policyData = storageService.getPolicyById(UUID.fromString(policyId));
+        JsonSetter jsonSetter = new JsonSetter(policyData.getPolicy());
+        jsonSetter.setRawValue("status", "PAID");
+        policyData.setPolicy(jsonSetter.writeValue());
+        policyData.setPolicyStatus(PolicyStatus.PAID);
+        storageService.update(policyData);
+
+        Client clientById = userService.getClientById(policyData.getPolicyIndex().getClientAccountId());
+        ClientConfiguration clientConfiguration = clientById.getClientConfiguration();
+        if (clientConfiguration.isSendEmailAfterBuy()) {
+            emailGateService.resolveForCurrentUser(clientById.getId())
+                    .sendEmail(emailGateService.buildEmailMessage(policyData), clientConfiguration);
+        } else {
+            logger.info("For client sending email is disabled, skipping");
+        }
+        if (clientConfiguration.isSendSmsAfterBuy()) {
+            // TODO send sms
+        } else {
+            logger.info("For client sending sms is disable, skipping");
+        }
     }
 
     @Override

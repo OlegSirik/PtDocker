@@ -1,13 +1,12 @@
 package ru.pt.process.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.process.ValidatorType;
-import ru.pt.api.dto.product.*;
-import ru.pt.api.service.calculator.CalculatorService;
-import ru.pt.api.service.numbers.NumberGeneratorService;
-import ru.pt.api.service.process.PostProcessService;
+import ru.pt.api.dto.product.LobModel;
+import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.service.process.PreProcessService;
 import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
@@ -23,27 +22,17 @@ import java.util.stream.Collectors;
 @Component
 public class ValidatorServiceImpl implements ValidatorService {
 
-    private final ObjectMapper objectMapper;
     private final ProductService productService;
     private final LobService lobService;
-    private final CalculatorService calculatorService;
-    private final NumberGeneratorService numberGeneratorService;
-    private final PostProcessService postProcessService;
     private final PreProcessService preProcessService;
 
     public ValidatorServiceImpl(
-            ObjectMapper objectMapper,
             ProductService productService,
             LobService lobService,
-            CalculatorService calculatorService,
-            NumberGeneratorService numberGeneratorService, PostProcessService postProcessService, PreProcessService preProcessService
+            PreProcessService preProcessService
     ) {
-        this.objectMapper = objectMapper;
         this.productService = productService;
         this.lobService = lobService;
-        this.calculatorService = calculatorService;
-        this.numberGeneratorService = numberGeneratorService;
-        this.postProcessService = postProcessService;
         this.preProcessService = preProcessService;
     }
 
@@ -113,7 +102,6 @@ public class ValidatorServiceImpl implements ValidatorService {
 
         return result;
     }
-
 
 
     public Map<String, Object> getMapVars(List<LobVar> lobVars) {

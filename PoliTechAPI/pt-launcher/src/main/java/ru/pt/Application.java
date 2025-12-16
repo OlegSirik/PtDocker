@@ -3,6 +3,7 @@ package ru.pt;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
+// import org.springframework.jms.annotation.EnableJms;
 import ru.pt.auth.configuration.AuthModuleConfiguration;
 import ru.pt.calculator.configuration.CalculatorModuleConfiguration;
 import ru.pt.db.configuration.DbModuleConfiguration;
@@ -11,6 +12,7 @@ import ru.pt.numbers.configuration.NumbersModuleConfiguration;
 import ru.pt.payments.configuration.PaymentModuleConfiguration;
 import ru.pt.process.configuration.ProcessModuleConfiguration;
 
+// @EnableJms
 @SpringBootApplication()
 // spring по идее подтянет, но, лучше явно указать
 @Import({NumbersModuleConfiguration.class,

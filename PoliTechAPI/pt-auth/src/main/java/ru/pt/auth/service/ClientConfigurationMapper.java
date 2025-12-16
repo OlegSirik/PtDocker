@@ -20,6 +20,9 @@ public class ClientConfigurationMapper {
         entity.setPaymentGateLogin(dto.getPaymentGateLogin());
         entity.setPaymentGatePassword(dto.getPaymentGatePassword());
         entity.setEmployeeEmail(dto.getEmployeeEmail());
+        entity.setEmailGate(dto.getEmailGate());
+        entity.setEmailLogin(dto.getEmailLogin());
+        entity.setEmailPassword(dto.getEmailPassword());
         return entity;
     }
 
@@ -36,6 +39,9 @@ public class ClientConfigurationMapper {
         dto.setPaymentGateLogin(entity.getPaymentGateLogin());
         dto.setPaymentGatePassword(entity.getPaymentGatePassword());
         dto.setEmployeeEmail(entity.getEmployeeEmail());
+        dto.setEmailGate(entity.getEmailGate());
+        dto.setEmailLogin(entity.getEmailLogin());
+        dto.setEmailPassword(entity.getEmailPassword());
         return dto;
     }
 }

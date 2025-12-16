@@ -17,6 +17,10 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Контроллер, на который возвращается пользователь после успешной оплаты
+ * TODO проверить работает или нет
+ */
 @RestController
 @RequestMapping("/api/v1/payments/youkassa")
 public class YoukassaRedirectController {

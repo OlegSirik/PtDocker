@@ -1,4 +1,8 @@
 spring:
+  # TODO изменить для прода
+  activemq:
+    # in-memory: false
+    # broker-url: failover:(tcp://localhost:61616)?maxReconnectAttempts=-1&initialReconnectDelay=1000&maxReconnectDelay=300000&useExponentialBackOff=true
   application:
     name: pt-app
   datasource:
