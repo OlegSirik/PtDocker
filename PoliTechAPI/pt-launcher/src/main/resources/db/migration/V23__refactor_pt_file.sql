@@ -1,0 +1,5 @@
+ALTER TABLE pt_files ALTER COLUMN file_type DROP NOT NULL;
+ALTER TABLE pt_files ALTER COLUMN file_desc DROP NOT NULL;
+ALTER TABLE pt_files ALTER COLUMN product_code DROP NOT NULL;
+ALTER TABLE pt_files ALTER COLUMN package_code DROP NOT NULL;
+ALTER TABLE pt_files ADD COLUMN tid bigint;
