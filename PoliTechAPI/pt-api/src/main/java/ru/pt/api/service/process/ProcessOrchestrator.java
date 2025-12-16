@@ -47,7 +47,7 @@ public interface ProcessOrchestrator {
     /**
      * Действия после подтверждения оплаты
      * Разные платежные клиенты могут по разному триггерить вызов этого метода
-     * @param policyId номер полиса
+     * @param policyId ИДЕНТИФИКАТОР ПОЛИСА(draftId)
      */
     void paymentCallback(String policyId);
 
