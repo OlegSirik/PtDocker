@@ -52,13 +52,13 @@ public class JwtTokenUtil {
      * @return JWT токен или null если пользователь не найден
      */
     @Transactional(readOnly = true)
-    public String createToken(String userLogin, Long clientId) {
+    public String createToken(String tenantCode, String clientId, String userLogin) {
         try {
-            // Найти пользователя в БД
-            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByUserLogin(userLogin);
+            // Найти пользователя в БД для клиента
+            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndClientIdAndUserLogin(tenantCode, clientId, userLogin);
 
             if (accountLogins.isEmpty()) {
-                logger.error("User not found: {}", userLogin);
+                logger.error("User not found: {} for CLIENT_ID ", userLogin);
                 return null;
             }
 
@@ -66,7 +66,7 @@ public class JwtTokenUtil {
             AccountLoginEntity accountLogin;
             if (clientId != null) {
                 accountLogin = accountLogins.stream()
-                        .filter(al -> al.getClient() != null && al.getClient().getId().equals(clientId))
+                        .filter(al -> al.getClient() != null && al.getClient().getClientId().equals(clientId))
                         .findFirst()
                         .orElse(null);
 
@@ -98,13 +98,13 @@ public class JwtTokenUtil {
      * @return JWT refresh токен или null если пользователь не найден
      */
     @Transactional(readOnly = true)
-    public String refreshToken(String userLogin, Long clientId) {
+    public String refreshToken(String tenantCode, String clientId, String userLogin) {
         try {
             // Найти пользователя в БД
-            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByUserLogin(userLogin);
+            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndClientIdAndUserLogin(tenantCode, clientId, userLogin);
 
             if (accountLogins.isEmpty()) {
-                logger.error("User not found: {}", userLogin);
+                logger.error("User not found: {} for Client_ID {}", userLogin, clientId);
                 return null;
             }
 

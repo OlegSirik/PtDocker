@@ -17,7 +17,7 @@ export class ToolbarComponent {
   router = inject(Router);
 
   login(): void {
-    this.router.navigate(['/', this.tenantCode, 'login']);
+    this.router.navigate(['/', this.tenantCode, 'auth', 'login']);
   }
 
   logout(): void {

@@ -13,11 +13,14 @@ import java.util.Optional;
 
 public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity, Long> {
 
-    @Query("SELECT al FROM AccountLoginEntity al WHERE al.clientEntity.name = :client AND al.loginEntity.userLogin = :login ORDER BY al.id")
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.clientEntity.clientId = :client AND al.loginEntity.userLogin = :login ORDER BY al.id")
     List<AccountLoginEntity> findByClientAndLogin(@Param("client") String client, @Param("login") String login);
 
     @Query("SELECT al FROM AccountLoginEntity al WHERE al.userLogin = :userLogin ORDER BY al.id")
     List<AccountLoginEntity> findByUserLogin(@Param("userLogin") String userLogin);
+
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.clientEntity.clientId = :clientId AND al.userLogin = :userLogin ORDER BY al.id")
+    List<AccountLoginEntity> findByTenantCodeAndClientIdAndUserLogin(@Param("tenantCode") String tenantCode, @Param("clientId") String clientId, @Param("userLogin") String userLogin);
 
     @Query("SELECT al FROM AccountLoginEntity al WHERE al.userLogin = :userLogin AND al.accountEntity.id = :accountId")
     Optional<AccountLoginEntity> findByUserLoginAndAccountId(@Param("userLogin") String userLogin,

@@ -35,16 +35,17 @@ public class SimpleAuthService {
     /**
      * Аутентификация пользователя по логину и паролю
      *
+     * @param tenantCode код тенанта
      * @param userLogin логин пользователя
      * @param password пароль
-     * @param clientId ID клиента (опционально)
+     * @param clientId ID клиента это CLIENT_ID для аутентификации от IdP
      * @return JWT токен или null если аутентификация не удалась
      */
     @Transactional(readOnly = true)
-    public String authenticate(String userLogin, String password, Long clientId) {
+    public String authenticate(String tenantCode, String userLogin, String password, String clientId) {
         try {
             // Найти пользователя
-            Optional<LoginEntity> loginEntityOpt = loginRepository.findByUserLogin(userLogin);
+            Optional<LoginEntity> loginEntityOpt = loginRepository.findByTenantCodeAndUserLogin(tenantCode,userLogin);
 
             if (loginEntityOpt.isEmpty()) {
                 logger.warn("User not found: {}", userLogin);
@@ -65,7 +66,7 @@ public class SimpleAuthService {
             }
 
             // Пароль верный, создать токен
-            String token = jwtTokenUtil.createToken(userLogin, clientId);
+            String token = jwtTokenUtil.createToken(tenantCode, clientId, userLogin);
 
             if (token == null) {
                 logger.error("Failed to create token for user: {}", userLogin);

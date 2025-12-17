@@ -5,7 +5,7 @@ package ru.pt.auth.model;
  */
 public class TokenRequest {
     private String userLogin;
-    private Long clientId; // может быть null
+    private String clientId; // может быть null
 
     public String getUserLogin() {
         return userLogin;
@@ -15,11 +15,11 @@ public class TokenRequest {
         this.userLogin = userLogin;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 }

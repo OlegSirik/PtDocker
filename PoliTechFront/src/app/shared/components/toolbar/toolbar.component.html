@@ -1,12 +1,9 @@
 <mat-toolbar color="primary">
   <div class="toolbar-content">
-    <div class="app-icon">
-      <mat-icon>business</mat-icon>
-    </div>
+    <div class="tenant-code">{{ tenantCode }}</div>
     <div class="nav-sections">
       <button mat-button [routerLink]="['/', tenantCode, 'business-line']" class="nav-button">Линия бизнеса</button>
       <button mat-button [routerLink]="['/', tenantCode, 'products']" class="nav-button">Продукты</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'files']" class="nav-button">Файлы</button>
       <button mat-button [routerLink]="['/', tenantCode, 'test']" class="nav-button">Тестирование</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
@@ -14,7 +11,7 @@
       @if ((currentUser$ | async); as user) {
         <button mat-button (click)="logout()" class="nav-button">Выйти из {{user.username}}</button>
       } @else {
-        <button mat-button [routerLink]="['/', 'auth', 'login']" class="nav-button">Войти</button>
+        <button mat-button [routerLink]="['/', tenantCode,  'login']" class="nav-button">Войти</button>
       }
     </div>
   </div>

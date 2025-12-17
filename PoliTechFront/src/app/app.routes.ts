@@ -28,7 +28,7 @@ export const routes: Routes = [
     children: [
   { path: 'login', component: LoginComponent },
   { path: 'forbidden', component: ForbiddenComponent  },
-  { path: '', redirectTo: '/business-line', pathMatch: 'full' },
+//  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'business-line', component: BusinessLineComponent, canActivate: [authGuard] },
   { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'lob-edit/:mpCode', component: BusinessLineEditComponent, canActivate: [authGuard] },
@@ -47,7 +47,7 @@ export const routes: Routes = [
 ]},
 {
   path: '',
-  redirectTo: ':tenantId',  // можно указать дефолтный tenant
+  redirectTo: 'forbidden',  // можно указать дефолтный tenant
   pathMatch: 'full'
 },
 {

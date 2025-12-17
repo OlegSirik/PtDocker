@@ -11,8 +11,8 @@ export class TenantGuard implements CanActivate {
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     //if route = login return true
 
-    console.log(route.url);
-
+    console.log('GUARD ' +route.url);
+return true;
     if (route.url[0].path === 'auth') {
       return true;
     }
