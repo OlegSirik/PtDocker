@@ -91,7 +91,7 @@ public class LoginManagementService {
      * POST /api/auth/set-password
      * Требуется роль SYS_ADMIN
      */
-    public void setPassword(String userLogin, String password, String clientId) {
+    public void setPassword(String tenantCode, String userLogin, String password) {
         // Шаг 1: Проверка обязательных параметров
         if (userLogin == null || userLogin.isBlank()) {
             throw new BadRequestException("userLogin is required");
@@ -99,28 +99,28 @@ public class LoginManagementService {
         if (password == null || password.isBlank()) {
             throw new BadRequestException("password is required");
         }
-        if (clientId == null || clientId.isBlank()) {
-            throw new BadRequestException("clientId is required");
-        }
+//        if (clientId == null || clientId.isBlank()) {
+//            throw new BadRequestException("clientId is required");
+//        }
 
         // Шаг 2: Проверка наличия пользователя в таблице acc_logins
-        LoginEntity login = loginRepository.findByUserLogin(userLogin)
+        LoginEntity login = loginRepository.findByTenantCodeAndUserLogin(tenantCode, userLogin)
                 .orElseThrow(() -> new NotFoundException("User with login '" + userLogin + "' not found"));
 
         // Шаг 3: Проверка наличия пользователя для данного клиента
-        Long clientIdLong;
-        try {
-            clientIdLong = Long.parseLong(clientId);
-        } catch (NumberFormatException e) {
-            throw new BadRequestException("Invalid clientId format");
-        }
+        //Long clientIdLong;
+        //try {
+        //    clientIdLong = Long.parseLong(clientId);
+        //} catch (NumberFormatException e) {
+        //    throw new BadRequestException("Invalid clientId format");
+        //}
 
-     // ToDo чтото тут с логикой не так
+     // ToDo чтото тут с логикой не так - нужно проверять тип клиента. если это SYSTEM то можно менять все, если нет, то только своим пользакам
          
-        boolean hasClientAccess = accountLoginRepository.existsByUserLoginAndClientId(userLogin, clientIdLong);
-        if (!hasClientAccess) {
-            throw new NotFoundException("User '" + userLogin + "' is not associated with client ID " + clientId);
-        }
+        //boolean hasClientAccess = accountLoginRepository.existsByUserLoginAndClientId(userLogin, clientIdLong);
+        //if (!hasClientAccess) {
+        //    throw new NotFoundException("User '" + userLogin + "' is not associated with client ID " + clientId);
+        //}
 
         // Шаг 4: Хэшировать и установить пароль
         String hashedPassword = passwordEncoder.encode(password);

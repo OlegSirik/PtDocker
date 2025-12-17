@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import ru.pt.api.admin.dto.TenantDto;
+
 /**
  * Контроллер для управления тенантами
  * Доступен только для SYS_ADMIN
@@ -43,17 +45,20 @@ public class TenantManagementController extends SecuredController {
 
     @GetMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getTenants() {
+    public ResponseEntity<List<TenantDto>> getTenants() {
         try {
         List<TenantEntity> tenants = adminUserManagementService.getTenants();
         return ResponseEntity.ok(tenants.stream().map(tenant -> {
-            Map<String, Object> tenantMap = new HashMap<>();
-            tenantMap.put("id", tenant.getId());
-            tenantMap.put("name", tenant.getName());
-            tenantMap.put("code", tenant.getCode());
-            tenantMap.put("createdAt", tenant.getCreatedAt());
-                return tenantMap;
-            }).collect(Collectors.toList()));
+            TenantDto tenantDto = new TenantDto();
+            tenantDto.setId(tenant.getId());
+            tenantDto.setName(tenant.getName());
+            tenantDto.setCode(tenant.getCode());
+            tenantDto.setIsDeleted(tenant.getDeleted());
+            tenantDto.setCreatedAt(tenant.getCreatedAt());
+            tenantDto.setUpdatedAt(tenant.getUpdatedAt());
+            return tenantDto;
+        }).collect(Collectors.toList()));
+            
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -65,22 +70,31 @@ public class TenantManagementController extends SecuredController {
      */
     @PostMapping
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createTenant(
+    public ResponseEntity<TenantDto> createTenant(
             @PathVariable String tenantCode,
-            @RequestBody CreateTenantRequest request) {
+            @RequestBody TenantDto tenantDto) {
         try {
-            TenantEntity tenant = adminUserManagementService.createTenant(request.getName(),
-                    request.getCode());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", tenant.getId());
-            response.put("name", tenant.getName());
-            response.put("createdAt", tenant.getCreatedAt());
-            response.put("code", tenant.getCode());
+            TenantEntity tenantEntity = new TenantEntity();
+              
+            tenantEntity.setName(tenantDto.getName());
+            tenantEntity.setCode(tenantDto.getCode());
+            tenantEntity.setDeleted(tenantDto.getIsDeleted());
+            tenantEntity.setCreatedAt(tenantDto.getCreatedAt());
+            tenantEntity.setUpdatedAt(tenantDto.getUpdatedAt());
 
-            return buildCreatedResponse(response, "Tenant created successfully");
+            TenantEntity tenant = adminUserManagementService.createTenant(tenantEntity);
+
+            TenantDto response = new TenantDto();
+            response.setId(tenant.getId());
+            response.setName(tenant.getName());
+            response.setCode(tenant.getCode());
+            response.setIsDeleted(tenant.getDeleted());
+            response.setCreatedAt(tenant.getCreatedAt());
+            response.setUpdatedAt(tenant.getUpdatedAt());
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return handleException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -88,23 +102,32 @@ public class TenantManagementController extends SecuredController {
      * SYS_ADMIN: Создание нового tenant
      * POST /api/v1/{tenantCode}/admin/tenants
      */
-    @PutMapping
+    @PutMapping("/{tid}")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> updateTenant(
+    public ResponseEntity<TenantDto> updateTenant(
             @PathVariable String tenantCode,
-            @RequestBody CreateTenantRequest request) {
+            @RequestBody TenantDto tenantDto) {
         try {
-            TenantEntity tenant = adminUserManagementService.updateTenant(request.getName(), request.getCode());
+            
+            TenantEntity tenantEntity = new TenantEntity();
+              
+            tenantEntity.setName(tenantDto.getName());
+            tenantEntity.setCode(tenantDto.getCode());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", tenant.getId());
-            response.put("name", tenant.getName());
-            response.put("createdAt", tenant.getCreatedAt());
-            response.put("code", tenant.getCode());
+            TenantEntity tenant = adminUserManagementService.updateTenant(tenantEntity);
 
-            return buildCreatedResponse(response, "Tenant created successfully");
+            TenantDto response = new TenantDto();
+            response.setId(tenant.getId());
+            response.setName(tenant.getName());
+            response.setCode(tenant.getCode());
+            response.setIsDeleted(tenant.getDeleted());
+            response.setCreatedAt(tenant.getCreatedAt());
+            response.setUpdatedAt(tenant.getUpdatedAt());
+            return ResponseEntity.ok(response);
+            
+            
         } catch (Exception e) {
-            return handleException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -112,42 +135,19 @@ public class TenantManagementController extends SecuredController {
      * SYS_ADMIN: Удаление tenant (soft delete)
      * DELETE /api/v1/{tenantCode}/admin/tenants/{tenantResourceId}
      */
-    @DeleteMapping
+    @DeleteMapping("/{tid}")
     @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteTenant(
+    public ResponseEntity<Void> deleteTenant(
             @PathVariable String tenantCode) {
         try {
             adminUserManagementService.deleteTenant(tenantCode);
 
-            Map<String, Object> response = buildSimpleResponse("Tenant deleted successfully");
-            response.put("tenantCode", tenantCode);
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return handleException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    // DTO Classes
-    public static class CreateTenantRequest {
-        private String name;
-        private String code;
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public void setCode(String code) {
-            this.code = code;
-        }
-    }
 }
 

@@ -16,7 +16,7 @@ public class TenantService {
     }
 
     public Optional<TenantEntity> findByCode(String code) {
-        return tenantRepository.findByCode(code.toUpperCase());
+        return tenantRepository.findByCode(code.toLowerCase());
     }
 
     public Optional<TenantEntity> findByName(String name) {
@@ -24,7 +24,7 @@ public class TenantService {
     }
 
     public TenantEntity save(TenantEntity tenantEntity) {
-        tenantEntity.setCode(tenantEntity.getCode().toUpperCase());
+        tenantEntity.setCode(tenantEntity.getCode().toLowerCase());
         tenantEntity.setName(tenantEntity.getName().toUpperCase());
         return tenantRepository.save(tenantEntity);
     }

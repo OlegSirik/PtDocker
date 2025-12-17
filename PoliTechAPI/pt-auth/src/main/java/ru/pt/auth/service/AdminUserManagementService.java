@@ -28,6 +28,8 @@ import java.time.LocalDateTime;
 import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.auth.entity.ClientConfigurationEntity;
 
+
+
 /**
  * Сервис для управления администраторами и пользователями
  * с проверкой прав доступа на основе ролей
@@ -77,21 +79,25 @@ public class AdminUserManagementService {
      * SYS_ADMIN: Создание нового tenant
      */
     @Transactional
-    public TenantEntity createTenant(String name, String code) {
+    public TenantEntity createTenant(TenantEntity tenantDto) {
+
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only SYS_ADMIN can create tenants");
         }
 
-        // Проверка уникальности имени
-        if (tenantService.findByName(name).isPresent()) {
-            throw new BadRequestException("Tenant with name '" + name + "' already exists");
-        }
-
         TenantEntity tenant = new TenantEntity();
-        tenant.setName(name);
-        tenant.setCode(code);
+
+        tenant.setName(tenantDto.getName());
+        tenant.setCode(tenantDto.getCode());
         tenant.setDeleted(false);
+        tenant.setCreatedAt(LocalDateTime.now());
+        tenant.setUpdatedAt(LocalDateTime.now());
+
+        // Проверка уникальности кода
+        if (tenantService.findByName(tenant.getCode()).isPresent()) {
+            throw new BadRequestException("Tenant with name '" + tenant.getCode() + "' already exists");
+        }
 
         TenantEntity savedTenant = tenantService.save(tenant);
 
@@ -100,14 +106,21 @@ public class AdminUserManagementService {
         account.setTenant(savedTenant);
 //        account.setClient(client);
         account.setNodeType(AccountNodeType.TENANT);
-        account.setName(name);
+        account.setName(tenant.getName());
 //        account.setParent(tenantAccount);
         AccountEntity tenantAccount = accountRepository.save(account);
 
-        logger.info("Tenant '{}' created by SYS_ADMIN", name);
-
+        logger.info("Tenant '{}' created by SYS_ADMIN", tenant.getName());
 
         ClientEntity client = createDefaultClient(tenant);
+
+/*         
+        Client client = new Client();
+        client.setTid(tenant.getId());
+        client.setClientId("SYS");
+        client.setName("Default Admin App Client");
+        client.setIsDeleted(false);
+        Client savedClient = createClient(client);
 
         AccountEntity clientAccount = new AccountEntity();
         clientAccount.setId(client.getId());
@@ -117,6 +130,7 @@ public class AdminUserManagementService {
         clientAccount.setName(client.getName());
         clientAccount.setParent(tenantAccount);
         clientAccount = accountRepository.save(clientAccount);
+*/
 
         return tenant;
     }
@@ -125,16 +139,17 @@ public class AdminUserManagementService {
      * SYS_ADMIN: Обновление tenant
      */
     @Transactional
-    public TenantEntity updateTenant(String name, String code) {
+    public TenantEntity updateTenant(TenantEntity tenantIn) {
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only SYS_ADMIN can update tenants");
         }
 
-        TenantEntity tenant = tenantService.findByCode(code)
+        TenantEntity tenant = tenantService.findByCode(tenantIn.getCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
-        tenant.setName(name);
+        // Пока только название можно поменять 
+        tenant.setName(tenantIn.getName());
         return tenantService.save(tenant);
     }
 
@@ -264,17 +279,19 @@ public class AdminUserManagementService {
         TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
-        // Проверка уникальности логина в tenant
-        if (loginRepository.findByUserLogin(userLogin).isPresent()) {
-            throw new BadRequestException("Login '" + userLogin + "' already exists");
-        }
 
-        // Создать Login
-        LoginEntity login = new LoginEntity();
-        login.setTenant(tenant);
-        login.setFullName(fullName);
-        login.setUserLogin(userLogin);
-        LoginEntity savedLogin = loginRepository.save(login);
+                // Проверка уникальности логина в tenant
+        LoginEntity savedLogin = loginRepository.findByTenantCodeAndUserLogin(tenantCode, userLogin)
+                .orElseGet(() -> {
+                    LoginEntity newLogin = new LoginEntity();
+                    newLogin.setTenant(tenant);
+                    newLogin.setFullName(userName);
+                    newLogin.setPosition("TNT_ADMIN");
+                    newLogin.setUserLogin(userLogin);
+                    return loginRepository.save(newLogin);
+                });
+
+
 
         // Создать или получить TENANT account
         AccountEntity tenantAccount = getOrCreateTenantAccount(tenant);
@@ -282,6 +299,7 @@ public class AdminUserManagementService {
         // Создать Client для этого tenant
         ClientEntity client = createDefaultClient(tenant);
 
+        
         // Создать AccountLogin с ролью TNT_ADMIN
         return createAccountLogin(savedLogin, client, tenantAccount, "TNT_ADMIN");
     }
@@ -535,19 +553,33 @@ public class AdminUserManagementService {
 
     private ClientEntity createDefaultClient(TenantEntity tenant) {
         String defClientId = "SYS";
+
         List<ClientEntity> clients = clientRepository.findByTenantCodeActive(tenant.getCode()).stream()
             .filter(c -> defClientId.equals(c.getClientId()))
             .toList();
 
-        if (clients.isEmpty()) {
-            ClientEntity client = new ClientEntity();
-            client.setTenant(tenant);
-            client.setClientId(defClientId);
-            client.setName("Default Client");
-            client.setDeleted(false);
-            return clientRepository.save(client);
-        }
-        return clients.get(0);
+        if (!clients.isEmpty()) { return clients.get(0); }
+
+        AccountEntity tenantAccount = accountRepository.findByTenantId(tenant.getId())
+            .orElseThrow(() -> new NotFoundException("Tenant account not found for tenant id: " + tenant.getId()));
+
+        ClientEntity client = new ClientEntity();
+        client.setTenant(tenant);
+        client.setClientId(defClientId);
+        client.setName("Default Admin App Client");
+        client.setDeleted(false);
+        ClientEntity saved = clientRepository.save(client);
+
+        AccountEntity clientAccount = new AccountEntity();
+        clientAccount.setId(client.getId());
+        clientAccount.setTenant(tenant);
+        clientAccount.setClient(client);
+        clientAccount.setNodeType(AccountNodeType.CLIENT);
+        clientAccount.setName(client.getName());
+        clientAccount.setParent(tenantAccount);
+        clientAccount = accountRepository.save(clientAccount);
+    
+        return saved;
     }
 
     private AccountEntity createGroupAccount(TenantEntity tenant, ClientEntity client, String groupName) {
