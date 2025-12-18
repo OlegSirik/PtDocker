@@ -20,40 +20,33 @@ import ru.pt.auth.security.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SecurityConfigurationProperties securityConfigurationProperties;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                         SecurityConfigurationProperties securityConfigurationProperties) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.securityConfigurationProperties = securityConfigurationProperties;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
+        var auth = http
             .csrf(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/public/**", "/actuator/health").permitAll()
-//                .requestMatchers("/api/auth/token").permitAll()
-//                .requestMatchers("/api/auth/login").permitAll()
-                .requestMatchers("/api/v1/*/auth/token").permitAll()
-                .requestMatchers("/api/v1/*/auth/login").permitAll()
-//                .requestMatchers("/api/*/auth/token").permitAll()
-//                .requestMatchers("/api/*/auth/login").permitAll()
-                // Swagger UI и OpenAPI docs доступны без авторизации
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/v3/api-docs.yaml",
-                    "/api-docs/**",
-                    "/webjars/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(authz -> {
+                // Добавляем все публичные URL-ы из конфигурации
+                if (!securityConfigurationProperties.getPublicUrls().isEmpty()) {
+                    authz.requestMatchers(
+                        securityConfigurationProperties.getPublicUrls().toArray(new String[0])
+                    ).permitAll();
+                }
+                authz.anyRequest().authenticated();
+            })
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
+        return auth.build();
     }
 }
 

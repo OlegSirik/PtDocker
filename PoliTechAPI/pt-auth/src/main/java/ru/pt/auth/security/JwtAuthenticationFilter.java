@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.auth.configuration.SecurityConfigurationProperties;
 import ru.pt.auth.entity.ClientEntity;
 import ru.pt.auth.entity.TenantEntity;
 import ru.pt.auth.service.AccountLoginService;
@@ -36,17 +37,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ClientService clientService;
     private final AccountLoginService accountLoginService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final SecurityConfigurationProperties securityConfigurationProperties;
 
     public JwtAuthenticationFilter(JwtTokenUtil jwtTokenUtil,
                                   TenantService tenantService,
                                   ClientService clientService,
                                   AccountLoginService accountLoginService,
-                                  UserDetailsServiceImpl userDetailsService) {
+                                  UserDetailsServiceImpl userDetailsService,
+                                  SecurityConfigurationProperties securityConfigurationProperties) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.clientService = clientService;
         this.tenantService = tenantService;
         this.accountLoginService = accountLoginService;
         this.userDetailsService = userDetailsService;
+        this.securityConfigurationProperties = securityConfigurationProperties;
     }
 
 
@@ -56,6 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                    FilterChain filterChain) throws ServletException, IOException {
 
         try {
+            // Проверяем, является ли запрос публичным URL-ом
+            if (isPublicUrl(request)) {
+                logger.debug("Public URL accessed: {}", request.getRequestURI());
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String tenantCode = extractTenantCodeFromRequest(request).orElseThrow(
                     () -> new BadRequestException("Tenant code is missing in the URL")
             );
@@ -211,6 +222,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Извлекает JWT токен из заголовка Authorization
+     * Поддерживает формат: "Bearer <token>"
+     */
+    private boolean isPublicUrl(HttpServletRequest request) {
+        String requestPath = request.getRequestURI();
+        for (String publicPattern : securityConfigurationProperties.getPublicUrls()) {
+            if (matchPattern(requestPath, publicPattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Проверяет соответствие пути шаблону (поддерживает /** в конце)
+     */
+    private boolean matchPattern(String path, String pattern) {
+        if (pattern.endsWith("/**")) {
+            String prefix = pattern.substring(0, pattern.length() - 3);
+            return path.startsWith(prefix);
+        } else if (pattern.contains("*")) {
+            // Преобразуем шаблон в regex для более сложных паттернов
+            String regex = pattern.replace(".", "\\.").replace("*", "[^/]*").replace("/?", "/?");
+            return path.matches("^" + regex + "$");
+        } else {
+            return path.equals(pattern);
+        }
     }
 
     /**
