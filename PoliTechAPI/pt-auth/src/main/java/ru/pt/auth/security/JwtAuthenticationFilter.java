@@ -104,9 +104,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (clientId == null && userLogin == null) {
                     logger.error("No authentication provided. Either JWT token or Partner headers are required");
                     throw new BadRequestException("Authentication required. Please provide JWT token or Partner headers");
-                }
-                // Если заполнен хотя бы один из заголовков — проверяем и валидируем
-                else {
+                } else {
                     if (clientId != null && userLogin != null) {
                         final String finalClientId = clientId;
                         final String finalUserLogin = userLogin;
@@ -209,6 +207,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication", e);
+            throw e;
         }
 
         filterChain.doFilter(request, response);
