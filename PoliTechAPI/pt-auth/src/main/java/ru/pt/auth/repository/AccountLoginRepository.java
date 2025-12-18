@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.Tuple;
 import ru.pt.auth.entity.AccountLoginEntity;
-import ru.pt.auth.model.AdminResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,5 +50,33 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
            nativeQuery = true)
     List<Tuple> findByTenantAndUserRoleFull(@Param("tenantCode") String tenantCode, @Param("userRole") String userRole);
 
+    /**
+     * Проверка существования связи между user_login и client_id через таблицы acc_logins и acc_account_logins
+     */
+    @Query("SELECT al FROM AccountLoginEntity al " +
+           "WHERE al.userLogin = :userLogin " +
+           "AND al.clientEntity.clientId = :clientId " +
+           "AND al.tenantEntity.code = :tenantCode " +
+           "AND al.loginEntity.isDeleted = false")
+    Optional<AccountLoginEntity> findByUserLoginAndClientIdWithValidation(@Param("userLogin") String userLogin,
+                                                                           @Param("clientId") String clientId,
+                                                                          @Param("tenantCode") String tenantCode);
+
+    /**
+     * Поиск записи по account_id для получения базового логина
+     */
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.accountEntity.id = :accountId")
+    Optional<AccountLoginEntity> findByAccountId(@Param("accountId") Long accountId);
+
+    /**
+     * Проверка существования user_login в БД acc_logins для указанного тенанта
+     * с проверкой что запись не удалена
+     */
+    @Query("SELECT al FROM AccountLoginEntity al " +
+           "WHERE al.userLogin = :userLogin " +
+           "AND al.tenantEntity.code = :tenantCode " +
+           "AND al.loginEntity.isDeleted = false")
+    Optional<AccountLoginEntity> findByUserLoginAndTenantCode(@Param("userLogin") String userLogin,
+                                                               @Param("tenantCode") String tenantCode);
 
 }

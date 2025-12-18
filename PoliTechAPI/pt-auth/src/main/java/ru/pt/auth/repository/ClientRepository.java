@@ -48,6 +48,13 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId AND c.tenantEntity.code = :tenantCode")
     Optional<ClientEntity> findByClientIdandTenantCode(@Param("clientId") String clientId, @Param("tenantCode") String tenantCode);
 
+    /***
+     * Найти client по clientId
+     */
+    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId")
+    Optional<ClientEntity> findByClientId(String clientId);
+
+
     
 }
 
