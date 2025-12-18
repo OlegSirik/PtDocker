@@ -22,8 +22,16 @@ public class AccountLoginService {
      * Проверка существования и получение связи между user_login и client_id
      * с проверкой что запись в acc_logins не удалена
      */
-    public Optional<AccountLoginEntity> validateUserLoginAndClientId(String userLogin, String clientId) {
-        return accountLoginRepository.findByUserLoginAndClientIdWithValidation(userLogin, clientId);
+    public Optional<AccountLoginEntity> validateUserLoginAndClientId(String userLogin, String clientId, String tenantCode) {
+        return accountLoginRepository.findByUserLoginAndClientIdWithValidation(userLogin, clientId, tenantCode);
+    }
+
+    /**
+     * Проверка существования user_login в БД acc_logins с привязкой к тенанту
+     * и проверкой что запись не удалена
+     */
+    public boolean validateUserLoginInTenant(String userLogin, String tenantCode) {
+        return accountLoginRepository.findByUserLoginAndTenantCode(userLogin, tenantCode).isPresent();
     }
 }
 

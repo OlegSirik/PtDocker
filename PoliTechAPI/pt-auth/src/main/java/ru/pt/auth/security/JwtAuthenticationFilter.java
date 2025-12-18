@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.auth.entity.ClientEntity;
 import ru.pt.auth.entity.TenantEntity;
 import ru.pt.auth.service.AccountLoginService;
 import ru.pt.auth.service.ClientService;
@@ -87,32 +88,123 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
             } else {
+                // Получаем заголовки Partner-Client-Id и Partner-User-Id (могут отсутствовать)
                 String clientId = request.getHeader("Partner-Client-Id");
                 String userLogin = request.getHeader("Partner-User-Id");
-                if (clientId != null && userLogin != null) {
-                    if (accountLoginService.validateUserLoginAndClientId(userLogin, clientId).isEmpty()) {
-                        logger.error("User {} is not associated with client_id {}", userLogin, clientId);
-                        throw new BadRequestException(
-                            "User " + userLogin + " is not authorized for client " + clientId
+
+                // Нормализуем пустые строки к null
+                if (clientId != null && clientId.isBlank()) {
+                    clientId = null;
+                }
+                if (userLogin != null && userLogin.isBlank()) {
+                    userLogin = null;
+                }
+
+                // Если оба заголовка отсутствуют — выдаем ошибку авторизации
+                if (clientId == null && userLogin == null) {
+                    logger.error("No authentication provided. Either JWT token or Partner headers are required");
+                    throw new BadRequestException("Authentication required. Please provide JWT token or Partner headers");
+                }
+                // Если заполнен хотя бы один из заголовков — проверяем и валидируем
+                else {
+                    if (clientId != null && userLogin != null) {
+                        final String finalClientId = clientId;
+                        final String finalUserLogin = userLogin;
+
+                        ClientEntity clientEntity = clientService.findByClientId(finalClientId).orElseThrow(
+                            () -> new BadRequestException("Client with id " + finalClientId + " not found")
                         );
+
+                        // Проверяем соответствие user_login в БД acc_logins и связь с client_id в acc_account_logins
+                        if (accountLoginService.validateUserLoginAndClientId(finalUserLogin, finalClientId, tenantCode).isEmpty()) {
+                            logger.error("User {} is not associated with client_id {} or tenantCode {}", finalUserLogin, finalClientId, tenantCode);
+                            throw new BadRequestException(
+                                    "User " + finalUserLogin + " is not authorized for client " + finalClientId + " in tenant " + tenantCode
+                            );
+                        }
+                        try {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(finalUserLogin);
+
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            userDetails,
+                                            null,
+                                            userDetails.getAuthorities()
+                                    );
+
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                            logger.debug("User {} authenticated successfully via Partner headers for client {}", finalUserLogin, finalClientId);
+                        } catch (Exception e) {
+                            logger.error("Failed to load user details for user {}", finalUserLogin, e);
+                            throw new BadRequestException("User " + finalUserLogin + " not found or authentication failed");
+                        }
                     }
+                    else if (clientId != null) {
+                        final String finalClientId = clientId;
 
-                    clientService.findByClientId(clientId).ifPresent(clientEntity -> {
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(userLogin);
+                        ClientEntity clientEntity = clientService.findByClientId(finalClientId).orElseThrow(
+                            () -> new BadRequestException("Client with id " + finalClientId + " not found")
+                        );
 
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
-                                );
+                        if (clientEntity.getDefaultAccountId() == null) {
+                            logger.error("Client {} does not have default account configured", finalClientId);
+                            throw new BadRequestException("Client " + finalClientId + " does not have default account configured");
+                        }
 
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        String defaultUserLogin = clientService.getDefaultAccountLogin(clientEntity.getDefaultAccountId()).orElseThrow(
+                            () -> new BadRequestException("Default account login not found for client " + finalClientId)
+                        );
 
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        try {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(defaultUserLogin);
 
-                        logger.debug("User {} authenticated successfully via Partner headers", userLogin);
-                    });
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            userDetails,
+                                            null,
+                                            userDetails.getAuthorities()
+                                    );
+
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                            logger.debug("Default user {} authenticated successfully for client {}", defaultUserLogin, finalClientId);
+                        } catch (Exception e) {
+                            logger.error("Failed to load default user details for client {}", finalClientId, e);
+                            throw new BadRequestException("Failed to authenticate with default account for client " + finalClientId);
+                        }
+                    }
+                    else {
+                        final String finalUserLogin = userLogin;
+
+                        // Проверяем существование user_login в БД acc_logins для текущего тенанта
+                        if (!accountLoginService.validateUserLoginInTenant(finalUserLogin, tenantCode)) {
+                            logger.error("User {} not found in tenant {} or is deleted", finalUserLogin, tenantCode);
+                            throw new BadRequestException("User " + finalUserLogin + " is not registered in tenant " + tenantCode);
+                        }
+
+                        // Если все проверки прошли успешно, устанавливаем аутентификацию
+                        try {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(finalUserLogin);
+
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            userDetails,
+                                            null,
+                                            userDetails.getAuthorities()
+                                    );
+
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                            logger.debug("User {} authenticated successfully via Partner-User-Id for tenant {}", finalUserLogin, tenantCode);
+                        } catch (Exception e) {
+                            logger.error("Failed to load user details for user {}", finalUserLogin, e);
+                            throw new BadRequestException("User " + finalUserLogin + " authentication failed");
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -160,4 +252,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 }
-

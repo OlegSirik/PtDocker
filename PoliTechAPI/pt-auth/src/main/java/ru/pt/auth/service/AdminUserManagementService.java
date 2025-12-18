@@ -578,7 +578,15 @@ public class AdminUserManagementService {
         clientAccount.setName(client.getName());
         clientAccount.setParent(tenantAccount);
         clientAccount = accountRepository.save(clientAccount);
-    
+
+        // Создаем базовый аккаунт для клиента
+        String defaultUserLogin = "default_" + defClientId.toLowerCase() + "_" + tenant.getCode();
+        AccountLoginEntity defaultAccountLogin = createDefaultAccountLogin(tenant, saved, clientAccount, defaultUserLogin);
+
+        // Устанавливаем ID базового аккаунта в клиенте
+        saved.setDefaultAccountId(defaultAccountLogin.getAccount().getId());
+        clientRepository.save(saved);
+
         return saved;
     }
 
@@ -620,6 +628,36 @@ public class AdminUserManagementService {
         accountLogin.setUserLogin(login.getUserLogin());
         accountLogin.setUserRole(role);
         accountLogin.setDefault(true);
+        return accountLoginRepository.save(accountLogin);
+    }
+
+    /**
+     * Создание базового логина для аккаунта клиента
+     */
+    private AccountLoginEntity createDefaultAccountLogin(TenantEntity tenant, ClientEntity client,
+                                                        AccountEntity account, String defaultUserLogin) {
+        // Создаем запись в acc_logins если её нет
+        LoginEntity defaultLogin = loginRepository.findByTenantCodeAndUserLogin(tenant.getCode(), defaultUserLogin)
+                .orElseGet(() -> {
+                    LoginEntity newLogin = new LoginEntity();
+                    newLogin.setTenant(tenant);
+                    newLogin.setUserLogin(defaultUserLogin);
+                    newLogin.setFullName("Default user for client " + client.getClientId());
+                    newLogin.setPosition("DEFAULT_USER");
+                    newLogin.setIsDeleted(false);
+                    return loginRepository.save(newLogin);
+                });
+
+        // Создаем AccountLoginEntity
+        AccountLoginEntity accountLogin = new AccountLoginEntity();
+        accountLogin.setTenant(tenant);
+        accountLogin.setClient(client);
+        accountLogin.setAccount(account);
+        accountLogin.setUserLogin(defaultUserLogin);
+        accountLogin.setLogin(defaultLogin);
+        accountLogin.setUserRole("DEFAULT_USER");
+        accountLogin.setDefault(true);
+
         return accountLoginRepository.save(accountLogin);
     }
 
@@ -676,7 +714,11 @@ public class AdminUserManagementService {
 
         saved.setDefaultAccountId(savedDefAccount.getId());
         clientRepository.save(saved);
-        
+
+        // Создаем базовый логин для клиента
+        String defaultUserLogin = "default_" + client.getClientId().toLowerCase() + "_" + tenant.getCode();
+        createDefaultAccountLogin(tenant, saved, savedDefAccount, defaultUserLogin);
+
         Client clientDto = clientMapper.toDto(saved);
         clientDto.setClientAccountId(savedAccount.getId());
         return clientDto;

@@ -1,7 +1,9 @@
 package ru.pt.auth.service;
 
 import org.springframework.stereotype.Service;
+import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.entity.ClientEntity;
+import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.ClientRepository;
 
 import java.util.Optional;
@@ -10,14 +12,34 @@ import java.util.Optional;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final AccountLoginRepository accountLoginRepository;
 
-    public ClientService(ClientRepository clientRepository) {
+    public ClientService(ClientRepository clientRepository, AccountLoginRepository accountLoginRepository) {
         this.clientRepository = clientRepository;
+        this.accountLoginRepository = accountLoginRepository;
     }
 
     public Optional<ClientEntity> findByClientId(String clientId) {
         return clientRepository.findByClientId(clientId);
     }
 
+    /**
+     * Получает логин для базового аккаунта клиента
+     */
+    public Optional<String> getDefaultAccountLogin(Long defaultAccountId) {
+        // Ищем запись в acc_account_logins для базового аккаунта
+        return accountLoginRepository.findByAccountId(defaultAccountId)
+                .map(AccountLoginEntity::getUserLogin);
+    }
 
+    /**
+     * Создает базовый аккаунт для клиента
+     */
+    public void createDefaultAccountForClient(ClientEntity client, String defaultUserLogin) {
+        // Здесь должна быть логика создания базового аккаунта
+        // Этот метод будет вызываться при создании нового клиента
+
+        // TODO: Реализовать создание AccountLoginEntity для базового пользователя
+        // и установить client.setDefaultAccountId() после создания
+    }
 }
