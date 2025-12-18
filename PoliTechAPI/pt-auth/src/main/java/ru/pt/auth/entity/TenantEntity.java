@@ -31,6 +31,9 @@ public class TenantEntity {
     @Column(name = "code", length = 100, unique = true, nullable = false)
     private String code;
 
+    @Column(name = "token_auth")
+    private Boolean tokenAuth = false;
+
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -81,5 +84,9 @@ public class TenantEntity {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public Boolean getTokenAuth() {return tokenAuth;}
+
+    public void setTokenAuth(Boolean tokenAuth) {this.tokenAuth = tokenAuth;}
 
 }

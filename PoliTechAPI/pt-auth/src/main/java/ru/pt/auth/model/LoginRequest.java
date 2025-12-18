@@ -6,7 +6,8 @@ package ru.pt.auth.model;
 public class LoginRequest {
     private String userLogin;
     private String password;
-    private Long clientId; // опционально, для выбора конкретного аккаунта
+    private String clientId; 
+    // опционально, для выбора конкретного аккаунта
 
     public LoginRequest() {
     }
@@ -32,11 +33,11 @@ public class LoginRequest {
         this.password = password;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 }

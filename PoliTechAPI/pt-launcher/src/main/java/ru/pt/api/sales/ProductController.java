@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/products")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('SYS_ADMIN')")
+@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN') or hasRole('PRODUCT_ADMIN')")
 public class ProductController extends SecuredController {
 
     private final ProductService productService;
@@ -39,7 +39,7 @@ public class ProductController extends SecuredController {
     public List<Map<String, Object>> list(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        requireAdmin(user);
+        //requireAdmin(user);
         return productService.listSummaries();
     }
 
@@ -48,7 +48,7 @@ public class ProductController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody ProductVersionModel payload) {
-        requireAdmin(user);
+        //requireAdmin(user);
         ProductVersionModel created = productService.create(payload);
         return ResponseEntity.ok(created);
     }
@@ -64,7 +64,7 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
-        requireAdmin(user);
+        //requireAdmin(user);
         return ResponseEntity.ok(productService.getVersion(productId, versionNo));
     }
 
@@ -74,7 +74,7 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
-        requireRole(user, "SYS_ADMIN");
+        //requireRole(user, "SYS_ADMIN");
         return ResponseEntity.ok(productService.createVersionFrom(productId, versionNo));
     }
 

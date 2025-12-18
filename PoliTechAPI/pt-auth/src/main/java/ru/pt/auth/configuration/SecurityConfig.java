@@ -31,8 +31,12 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/public/**", "/actuator/health").permitAll()
-                .requestMatchers("/api/auth/token").permitAll()
-                .requestMatchers("/api/auth/login").permitAll()
+//                .requestMatchers("/api/auth/token").permitAll()
+//                .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/v1/*/auth/token").permitAll()
+                .requestMatchers("/api/v1/*/auth/login").permitAll()
+//                .requestMatchers("/api/*/auth/token").permitAll()
+//                .requestMatchers("/api/*/auth/login").permitAll()
                 // Swagger UI и OpenAPI docs доступны без авторизации
                 .requestMatchers(
                     "/swagger-ui/**",

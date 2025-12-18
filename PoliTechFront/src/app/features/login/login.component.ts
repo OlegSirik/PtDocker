@@ -42,8 +42,10 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   hidePassword = true;
   returnUrl = '';
+  urlTenant: string = '';
 
   ngOnInit() {
+    this.urlTenant = this.route.snapshot.paramMap.get('tenantId') || '';
     this.initializeForm();
 
     // Получаем returnUrl из query параметров или используем корневой путь
@@ -54,7 +56,8 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       userLogin: ['', [Validators.required]],
       password: ['', [Validators.required]],
-      clientId: [1, [Validators.required, Validators.min(1)]]
+      clientId: ['SYS', [Validators.required]],
+      tenantCode: [this.urlTenant]
     });
   }
 
@@ -103,7 +106,7 @@ export class LoginComponent implements OnInit {
     this.loginForm.patchValue({
       userLogin: 'sys_admin',
       password: '5222',
-      clientId: 1
+      clientId: 'SYS'
     });
   }
 

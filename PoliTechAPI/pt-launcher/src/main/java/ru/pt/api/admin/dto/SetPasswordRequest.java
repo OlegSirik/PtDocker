@@ -8,6 +8,7 @@ public class SetPasswordRequest {
     private String userLogin;
     private String password;
     private String clientId;
+    private String tenantCode;
 
     // Getters and Setters
     public String getUserLogin() {
@@ -32,5 +33,13 @@ public class SetPasswordRequest {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getTenantCode() {
+        return tenantCode;
+    }
+
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
     }
 }
