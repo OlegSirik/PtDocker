@@ -7,14 +7,14 @@ import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
 
 export interface TntAdmin {
-    id: number;
-    tid: number;
-    clientId: number;
-    accountId: number;
-    tenantCode: string |'?';
+    id?: number;
+    tid?: number;
+    clientId?: number;
+    accountId?: number;
+    tenantCode: string;
     userLogin: string;
-    fullName: string;
-    position: string;
+    fullName?: string;
+    position?: string;
   }
 
 @Injectable({

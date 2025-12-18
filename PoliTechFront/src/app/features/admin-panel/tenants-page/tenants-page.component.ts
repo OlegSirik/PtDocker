@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatChip } from '@angular/material/chips';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { LoginService, Login } from '../../../shared/services/api/logins.service';
@@ -40,6 +41,7 @@ import { take } from 'rxjs/operators';
     MatSelectModule,
     MatOptionModule,
     MatPaginatorModule,
+    MatChip,
     DatePipe
   ],
   templateUrl: './tenants-page.component.html',
@@ -67,7 +69,7 @@ export class TenantsPageComponent implements OnInit {
 
   // Tenants tab
   tenants: Tenant[] = [];
-  tenantsDisplayedColumns: string[] = ['id', 'name', 'code', 'createdAt', 'actions'];
+  tenantsDisplayedColumns: string[] = ['id', 'name', 'code', 'status', 'createdAt', 'actions'];
 
   // Tenant list for dropdown
   tenantListItems: Tenant[] = [];
@@ -95,7 +97,7 @@ export class TenantsPageComponent implements OnInit {
     this.restAuth.currentUser$.pipe(take(1)).subscribe((user: User | null) => {
       if (user) {
         this.currentTenantCode = user.tenantCode;
-        this.isSysAdmin = user.tenantCode === 'SYS';
+        this.isSysAdmin = user.tenantCode === 'sys';
         // If SYS admin, load all tenants for dropdown
         if (this.isSysAdmin) {
           this.loadTenantListItems().then(() => {
@@ -131,11 +133,11 @@ export class TenantsPageComponent implements OnInit {
   private loadAllData() {
     this.loadTenants();
     this.loadLogins();
-    if (this.selectedTenantCode === 'SYS') {
+    if (this.selectedTenantCode === 'sys') {
       this.loadSysAdmins();
     } else {
       const tenantCode = this.selectedTenantCode || this.currentTenantCode;
-      if (tenantCode && tenantCode !== 'SYS') {
+      if (tenantCode && tenantCode !== 'sys') {
         this.loadTntAdmins();
       }
     }
@@ -241,7 +243,6 @@ export class TenantsPageComponent implements OnInit {
         this.loading = false;
       },
       error: (error: unknown) => {
-        console.error('Error loading tenants:', error);
         this.loading = false;
         this.snack.open('Ошибка при загрузке tenants', 'OK', { duration: 2000 });
       }
@@ -269,6 +270,21 @@ export class TenantsPageComponent implements OnInit {
     });
   }
 
+  selectTenant(tenant: Tenant) {
+    // Set the selected tenant
+    this.selectedTenantCode = tenant.code;
+    // Update auth service tenant for API calls
+    //if (tenant.code) {
+    //  this.restAuth.tenant = tenant.code;
+    //}
+    // Update current tenant name
+    this.currentTenantName = tenant.name;
+    // Load current tenant data for editing
+    this.loadCurrentTenantData();
+    // Reload all data for the selected tenant
+    this.loadAllData();
+  }
+
   editTenant(tenant: Tenant) {
     const dialogRef = this.dialog.open(TenantDialogComponent, {
       width: '500px',
@@ -281,6 +297,11 @@ export class TenantsPageComponent implements OnInit {
           next: () => {
             this.loadTenants();
             this.snack.open('Tenant обновлен', 'OK', { duration: 2000 });
+            // If the edited tenant is the current one, reload its data
+            if (this.selectedTenantCode === tenant.code || this.currentTenantCode === tenant.code) {
+              this.loadCurrentTenantData();
+              this.loadAllData();
+            }
           },
           error: () => {
             this.snack.open('Ошибка при обновлении tenant', 'OK', { duration: 2000 });
@@ -356,7 +377,7 @@ export class TenantsPageComponent implements OnInit {
             const login = logins.find(l => l.userLogin === result);
             if (login) {
               const sysAdminData: SysAdmin = {
-                tenantCode: 'SYS',
+                tenantCode: 'sys',
                 userLogin: login.userLogin,
                 fullName: login.fullName || '',
                 position: login.position || ''
@@ -436,50 +457,30 @@ export class TenantsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: string | undefined) => {
       if (result) {
-        // Find login by userLogin to get full details
-        this.loginService.getAll().subscribe({
-          next: (logins: Login[]) => {
-            const login = logins.find(l => l.userLogin === result);
-            if (login) {
-              const tenantCode = this.selectedTenantCode || this.currentTenantCode;
-              if (!tenantCode || tenantCode === 'SYS') {
-                this.snack.open('Не выбран tenant', 'OK', { duration: 2000 });
-                return;
-              }
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        // Find login by userLogin from the list of logins
+        const login = this.logins.find(l => l.userLogin === result);
 
-              const tntAdminData: TntAdmin = {
-                id: 0,
-                tid: 0,
-                clientId: 0,
-                accountId: 0,
-                tenantCode: tenantCode,
-                userLogin: login.userLogin,
-                fullName: login.fullName || '',
-                position: login.position || ''
-              };
+        if (login) {
+          const tntAdminData: TntAdmin = {
+            tenantCode: tenantCode || '',
+            userLogin: result,
+          };
 
-              this.tntAdminService.create(tntAdminData).subscribe({
-                next: () => {
-                  this.loadTntAdmins();
-                  this.snack.open('Tenant Admin создан', 'OK', { duration: 2000 });
-                },
-                error: (error: unknown) => {
-                  console.error('Error creating tnt admin:', error);
-                  this.snack.open('Ошибка при создании tenant admin', 'OK', { duration: 2000 });
-                }
-              });
-            } else {
-              this.snack.open('Пользователь с таким логином не найден', 'OK', { duration: 2000 });
+          this.tntAdminService.create(tntAdminData).subscribe({
+            next: () => {
+              this.loadTntAdmins();
+              this.snack.open('Tenant Admin создан', 'OK', { duration: 2000 });
+            },
+            error: (error: unknown) => {
+              console.error('Error creating tnt admin:', error);
+              this.snack.open('Ошибка при создании tenant admin', 'OK', { duration: 2000 });
             }
-          },
-          error: (error: unknown) => {
-            console.error('Error loading logins:', error);
-            this.snack.open('Ошибка при загрузке пользователей', 'OK', { duration: 2000 });
-          }
-        });
+          });
       }
-    });
-  }
+    }
+  });
+}
 
   deleteTntAdmin(admin: TntAdmin) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -522,7 +523,7 @@ export class TenantsPageComponent implements OnInit {
 
   loadLogins() {
     this.loading = true;
-    this.loginService.getAll().subscribe({
+    this.loginService.getAll2(this.selectedTenantCode || this.currentTenantCode || 'NULL' ).subscribe({
       next: (logins: Login[]) => {
         this.logins = logins;
         this.loading = false;
@@ -536,10 +537,13 @@ export class TenantsPageComponent implements OnInit {
   }
 
   createNewLogin() {
+
+    console.log('this.currentTenantCode-', this.selectedTenantCode);
+
     const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '600px',
-      data: { login: null }
-    });
+      data: { login: null, tenantCode: this.selectedTenantCode }}
+    );
 
     dialogRef.afterClosed().subscribe((result: { success: boolean; action: string; login?: Login } | undefined) => {
       if (result && result.success) {

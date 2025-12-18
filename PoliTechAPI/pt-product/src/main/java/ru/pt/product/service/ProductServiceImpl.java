@@ -14,6 +14,8 @@ import ru.pt.api.dto.product.*;
 import ru.pt.api.service.numbers.NumberGeneratorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 import ru.pt.product.repository.ProductRepository;
@@ -41,9 +43,22 @@ public class ProductServiceImpl implements ProductService {
     private final ObjectMapper objectMapper;
     private final ProductVersionRepository productVersionRepository;
     private final NumberGeneratorService numberGeneratorService;
+    private final SecurityContextHelper securityContextHelper;
+
+    /**
+     * Get current authenticated user from security context
+     * @return UserDetailsImpl representing the current user
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
 
     @Override
     public List<Map<String, Object>> listSummaries() {
+        String tCode = getCurrentUser().getTenantCode();
+        
         return productRepository.listActiveSummaries().stream()
                 .map(r -> {
                     java.util.LinkedHashMap<String, Object> m = new java.util.LinkedHashMap<>();

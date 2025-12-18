@@ -8,6 +8,7 @@ export interface LoginData {
   userLogin: string;
   password: string;
   clientId: number;
+  tenantCode: string;
 }
 
 export interface AuthResponse {
@@ -47,6 +48,9 @@ export class AuthService {
   public get baseApiUrl() {
     return `${this.baseUrl}/api/v1/${this.tenant}`;
   }
+  get currentClientId() {
+    return 'SYS';
+  };
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
@@ -54,11 +58,15 @@ export class AuthService {
   public tenantId = -1;
 
   login(credentials: LoginData): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, credentials)
+    console.log(credentials);
+    
+    let url = `${this.baseUrl}/api/v1/${credentials.tenantCode ?? 'demo'}/auth/login`;
+    return this.http.post<AuthResponse>( url, credentials)
       .pipe(
         tap(response => {
           if (response.accessToken) {
             localStorage.setItem('accessToken', response.accessToken);
+            this.tenant = credentials.tenantCode;
             this.getCurrentUser().subscribe();
           }
         })
@@ -66,11 +74,13 @@ export class AuthService {
   }
 
   changePassword(credentials: LoginData): Observable<LoginData> {
-    return this.http.post<LoginData>(`${this.baseUrl}/api/auth/set-password`, credentials);
+    return this.http.post<LoginData>( `${this.baseApiUrl}/auth/set-password`, credentials);
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
+
+    
+    return this.http.get<User>(`${this.baseApiUrl}/auth/me`)
       .pipe(
         tap(user=> {
           this.currentUserSubject.next(user);

@@ -32,16 +32,19 @@ export class LoginDialogComponent {
   loginForm: FormGroup;
   changePassword: boolean = false;
   isEditMode: boolean = false;
+  tenantCode: string = '';
 
   constructor(
     public dialogRef: MatDialogRef<LoginDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { login: Login | null },
+    @Inject(MAT_DIALOG_DATA) public data: { login: Login | null, tenantCode: string },
     private fb: FormBuilder,
     private loginService: LoginService,
     private authService: AuthService
   ) {
+
     this.isEditMode = !!data.login;
-    
+    this.tenantCode = data.tenantCode;
+
     this.loginForm = this.fb.group({
       fullName: [data.login?.fullName || '', Validators.required],
       position: [data.login?.position || '', Validators.required],
@@ -84,9 +87,9 @@ export class LoginDialogComponent {
         return;
       }
 
-      const tenantCode = user.tenantCode;
+      //const tenantCode = user.tenantCode;
       const loginData: Login = {
-        tenantCode: tenantCode,
+        tenantCode: this.tenantCode,
         userLogin: formValue.userLogin,
         password: formValue.password || '',
         fullName: formValue.fullName,
@@ -100,7 +103,7 @@ export class LoginDialogComponent {
           next: () => {
             // If password was changed, update password separately
             if (this.changePassword && formValue.password) {
-              this.loginService.updatePassword(formValue.userLogin, tenantCode, formValue.password).subscribe({
+              this.loginService.updatePassword(formValue.userLogin, this.tenantCode, formValue.password).subscribe({
                 next: () => {
                   this.dialogRef.close({ success: true, action: 'update' });
                 },
@@ -124,7 +127,7 @@ export class LoginDialogComponent {
           next: () => {
             // Update password after creating login
             if (formValue.password) {
-              this.loginService.updatePassword(formValue.userLogin, tenantCode, formValue.password).subscribe({
+              this.loginService.updatePassword(formValue.userLogin, this.tenantCode, formValue.password).subscribe({
                 next: () => {
                   this.dialogRef.close({ success: true, action: 'create', login: loginData });
                 },

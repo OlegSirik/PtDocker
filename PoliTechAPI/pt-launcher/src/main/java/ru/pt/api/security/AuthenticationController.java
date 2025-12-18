@@ -28,7 +28,8 @@ import java.util.Map;
  */
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/auth")
+//@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/{tenantCode}/auth")
 public class AuthenticationController {
 
     private final SecurityContextHelper securityContextHelper;
@@ -92,6 +93,7 @@ public class AuthenticationController {
      */
     @GetMapping("/check-product-access")
     public ResponseEntity<Map<String, Object>> checkProductAccess(
+            @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         Map<String, Object> response = new HashMap<>();
@@ -106,10 +108,15 @@ public class AuthenticationController {
 
     /**
      * Простая аутентификация с логином и паролем (без Keycloak)
-     * POST /api/auth/login
+     * POST /api/v1/{tenantCode}/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(
+        @PathVariable String tenantCode,
+        @RequestBody LoginRequest request) {
+
+        String tCode = tenantCode.toLowerCase();
+
         if (request.getUserLogin() == null || request.getUserLogin().isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new TokenResponse(null, "User login is required"));
@@ -121,9 +128,10 @@ public class AuthenticationController {
         }
 
         String token = simpleAuthService.authenticate(
+                tCode,
                 request.getUserLogin(),
                 request.getPassword(),
-                request.getClientId()
+                request.getClientId() 
         );
 
         if (token == null) {
@@ -144,8 +152,10 @@ public class AuthenticationController {
      * POST /api/auth/token
      */
     @PostMapping("/token")
-    public ResponseEntity<TokenResponse> generateToken(@RequestBody TokenRequest request) {
-        String token = jwtTokenUtil.createToken(request.getUserLogin(), request.getClientId());
+    public ResponseEntity<TokenResponse> generateToken(
+        @PathVariable String tenantCode,
+        @RequestBody TokenRequest request) {
+        String token = jwtTokenUtil.createToken(tenantCode, request.getClientId(), request.getUserLogin());
 
         if (token == null) {
             Map<String, String> error = new HashMap<>();
@@ -167,8 +177,10 @@ public class AuthenticationController {
      * POST /api/auth/refresh-token
      */
     @PostMapping("/refresh-token")
-    public ResponseEntity<TokenResponse> generateRefreshToken(@RequestBody TokenRequest request) {
-        String refreshToken = jwtTokenUtil.refreshToken(request.getUserLogin(), request.getClientId());
+    public ResponseEntity<TokenResponse> generateRefreshToken(
+        @PathVariable String tenantCode,
+        @RequestBody TokenRequest request) {
+        String refreshToken = jwtTokenUtil.refreshToken(tenantCode, request.getClientId(), request.getUserLogin());
 
         if (refreshToken == null) {
             Map<String, String> error = new HashMap<>();
@@ -194,20 +206,29 @@ public class AuthenticationController {
     @SecurityRequirement(name = "bearerAuth")
 //    @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, Object>> setPassword(
+        @PathVariable String tenantCode,
         @RequestBody SetPasswordRequest request,
         @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
+        String tCode = tenantCode.toLowerCase();
+
+        if (!tCode.equalsIgnoreCase(userDetails.getTenantCode())) {
+            return ResponseEntity.status(403).body(new HashMap<String, Object>() {{
+                put("error", "Tenant code mismatch");
+            }});
+        }
         try {
             boolean authorized = false;
 
             String username =  userDetails.getUsername();
-            String tenantCode = userDetails.getTenantCode();
+            //String tenantCode = userDetails.getTenantCode();
             Long clientId = userDetails.getClientId();
             String userRole = userDetails.getUserRole();
     
-            if ("SYS_ADMIN".equals(userRole)) {
+            if (("SYS_ADMIN".equals(userRole)) || ("TNT_ADMIN".equals(userRole))) {
                 // SYS admin может все
                 authorized = true;
+                tCode = request.getTenantCode();
             }
             if (username.equals(request.getUserLogin())) {
                 // Пользователь может изменить свой пароль
@@ -218,9 +239,9 @@ public class AuthenticationController {
             if (authorized) {
 
                 loginManagementService.setPassword(
+                        tCode,
                         request.getUserLogin(),
-                        request.getPassword(),
-                        request.getClientId()
+                        request.getPassword()
                 );
             
 
