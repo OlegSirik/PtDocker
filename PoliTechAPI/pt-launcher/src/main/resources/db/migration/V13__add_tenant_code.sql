@@ -7,7 +7,7 @@ ADD COLUMN code VARCHAR(50);
 
 -- Generate codes for existing tenants based on their name (can be updated later)
 UPDATE acc_tenants
-SET code = UPPER(REGEXP_REPLACE(name, '[^a-zA-Z0-9]', '', 'g'))
+SET code = lower(REGEXP_REPLACE(name, '[^a-zA-Z0-9]', '', 'g'))
 WHERE code IS NULL;
 
 -- Make code NOT NULL and UNIQUE after setting default values
