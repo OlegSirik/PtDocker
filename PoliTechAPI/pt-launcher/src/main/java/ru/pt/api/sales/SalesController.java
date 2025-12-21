@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.PaymentRequest;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.ProcessOrchestrator;
@@ -118,6 +119,14 @@ public class SalesController extends SecuredController {
         return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
 
+
+    @GetMapping("/quotes")
+    public ResponseEntity<List<QuoteDto>> getAccountQuotes(
+            @PathVariable("tenantCode") String tenantCode) {
+        List<QuoteDto> quotes = dbStorageService.getAccountQuotes();
+        return ResponseEntity.ok().body(quotes);
+    }
+
     @PostMapping(value = "/policies")
     public ResponseEntity<String> saveValidator(
             @PathVariable("tenantCode") String tenantCode,
@@ -126,7 +135,7 @@ public class SalesController extends SecuredController {
         return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
 
-    @PostMapping("/policies/{policy-nr}/printpf/{pf-type}")
+    @GetMapping("/policies/{policy-nr}/printpf/{pf-type}")
     public byte[] printPolicy(
             @PathVariable("policy-nr") String policyNr,
             @PathVariable("pf-type") String pfType,

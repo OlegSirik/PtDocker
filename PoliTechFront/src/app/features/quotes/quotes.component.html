@@ -1,0 +1,104 @@
+<div class="quotes-container">
+  <h1 class="page-title">Quotes and Policies</h1>
+  
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <!-- Product dropdown aligned to end -->
+      <div class="button-section">
+        <div class="product-section">
+          <mat-form-field class="product-field" appearance="outline">
+            <mat-label>Создать</mat-label>
+            <mat-select [(ngModel)]="selectedProductId" (ngModelChange)="onProductSelected()">
+              <mat-option [value]="null">Выберите продукт</mat-option>
+              @for (product of products; track product.id) {
+                <mat-option [value]="product.id">{{ product.name }} ({{ product.code }})</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Search and status section -->
+      <div class="table-header">
+        <h3 class="table-title">Список котировок и полисов</h3>
+        <div class="search-section">
+          <mat-form-field class="search-field" appearance="outline">
+            <mat-label>Поиск</mat-label>
+            <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" placeholder="Поиск">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field class="status-field" appearance="outline">
+            <mat-label>Статус</mat-label>
+            <mat-select [(ngModel)]="selectedStatus" (ngModelChange)="onStatusChange()">
+              <mat-option value="">Все статусы</mat-option>
+              @for (status of statusOptions; track status) {
+                <mat-option [value]="status">{{ status }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Expansion panels list -->
+      <div class="quotes-list">
+        @for (quote of displayedQuotes; track quote.id) {
+          <mat-expansion-panel class="quote-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div class="quote-row">
+                  <div class="quote-col-1">
+                    <div class="quote-line-bold">{{ quote.phDigest || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.policyNr || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.agentDigest || 'N/A' }}</div>
+                  </div>
+                  <div class="quote-col-2">
+                    <div class="quote-line-bold">{{ quote.productCode || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.ioDigest || quote.ioDigest || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.premium || 0 }}</div>
+                  </div>
+                  <div class="quote-col-3">
+                    <div class="quote-line-bold">{{ quote.policyStatus || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.insCompany || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.agentKvAmount || 0 }} ({{ quote.agentKvPrecent || 0 }}%)</div>
+                  </div>
+                </div>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            
+            <!-- Command buttons - each on new line -->
+            <div class="commands-list">
+              @if (quote.comand1) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 1)">Печать договора</button>
+              }
+              @if (quote.comand2) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 2)">comand 2</button>
+              }
+              @if (quote.comand3) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 3)">comand 3</button>
+              }
+              @if (quote.comand4) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 4)">comand 4</button>
+              }
+              @if (quote.comand5) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 5)">comand 5</button>
+              }
+              @if (quote.comand6) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 6)">comand 6</button>
+              }
+              @if (quote.comand7) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 7)">comand 7</button>
+              }
+              @if (quote.comand8) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 8)">comand 8</button>
+              }
+              @if (quote.comand9) {
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 9)">comand 9</button>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

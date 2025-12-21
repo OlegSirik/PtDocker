@@ -80,20 +80,35 @@ public class PreProcessServiceImpl implements PreProcessService {
                     Double sumInsured = cover.getSumInsured();
                     Double premium = cover.getPremium();
 
-                    String sumInsuredVarCode = cover.getCover().getCode() + "_SumIns";
-                    String premiumVarCode = cover.getCover().getCode() + "_Prem";
+                    String sumInsuredVarCode = "co_" + cover.getCover().getCode() + "_sumInsured";
+                    String premiumVarCode = "co_" + cover.getCover().getCode() + "_premium";
 
-                    LobVar lobVar = new LobVar();
-                    lobVar.setVarCode(sumInsuredVarCode);
-                    lobVar.setVarValue(sumInsured != null ? sumInsured.toString() : null);
-                    lobVar.setVarType("VAR");
-                    lobVars.add(lobVar);
-
-                    lobVar = new LobVar();
-                    lobVar.setVarCode(premiumVarCode);
-                    lobVar.setVarValue(premium != null ? premium.toString() : null);
-                    lobVar.setVarType("VAR");
-                    lobVars.add(lobVar);
+                    LobVar var = lobVars.stream()
+                        .filter(v -> sumInsuredVarCode.equals(v.getVarCode()))
+                        .findFirst()
+                        .orElse(null);
+                    if (var == null) {
+                        var = new LobVar();
+                        var.setVarCode(sumInsuredVarCode);
+                        var.setVarValue(sumInsured != null ? sumInsured.toString() : null);
+                        var.setVarType("VAR");
+                        lobVars.add(var);
+                    } else {
+                        var.setVarValue(sumInsured != null ? sumInsured.toString() : null);
+                    }
+                    var = lobVars.stream()
+                        .filter(v -> premiumVarCode.equals(v.getVarCode()))
+                        .findFirst()
+                        .orElse(null);
+                    if (var == null) {
+                        var = new LobVar();
+                        var.setVarCode(premiumVarCode);
+                        var.setVarValue(premium != null ? premium.toString() : null);
+                        var.setVarType("VAR");
+                        lobVars.add(var);
+                    } else {
+                        var.setVarValue(premium != null ? premium.toString() : null);
+                    }
                 }
             }
         }

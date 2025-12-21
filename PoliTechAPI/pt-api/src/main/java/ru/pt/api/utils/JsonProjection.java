@@ -28,15 +28,36 @@ public class JsonProjection {
     /**
      * Получить код продукта
      */
+    public String getProductCodeNew() {
+        try {
+        return documentContext.read("$.productCode", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
     public String getProductCode() {
+        String rv = getProductCodeNew();
+        if (rv != null) {return rv;}
         return documentContext.read("$.product.code", String.class);
     }
 
+    public Integer getPackageCodeNew() {
+        try {
+            return documentContext.read("$.packageCode", Integer.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Integer getPackageCode() {
+        Integer rv = getPackageCodeNew();
+        if (rv != null) {return rv;}
         try {
             return documentContext.read("$.insuredObject.packageCode", Integer.class);
         } catch (Exception e) {
-            return null;
+            return 0;
         }
     }
 

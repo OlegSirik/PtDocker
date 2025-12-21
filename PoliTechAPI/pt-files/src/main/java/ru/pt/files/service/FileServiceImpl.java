@@ -23,10 +23,10 @@ import java.util.Map;
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
-    
 
     public FileServiceImpl(FileRepository fileRepository) {
         this.fileRepository = fileRepository;
+        
     }
 
     // pt_files will contain only id and fileDate. Other columns should be removed
@@ -143,10 +143,17 @@ public class FileServiceImpl implements FileService {
 
         String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
         String packageCode = keyValues.get("packageCode");
+        
+        String fileId = keyValues.get("fileId");
+        // TODO проверить что версия продукта сохраняется в keyValues !!!!!!!!
+        if (fileId == null) {
+            throw new IllegalArgumentException("File ID is not found");
+        }
 
-        FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
-        return process(entity.getId(), keyValues);
+//        FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))
+//                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+//        return process(entity.getId(), keyValues);
+        return process(Long.parseLong(fileId), keyValues);
     }
 
 }

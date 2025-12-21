@@ -276,50 +276,15 @@ handleHttpError(error: any): string {
   }
 }
 
-  getTestRequestQuote(productId: number, versionNo: number): Observable<any> {
-    if (!this.http) {
-      // Return mock example if no http client
-      return of({
-        productId: productId,
-        versionNo: versionNo,
-        exampleData: "Mock test request data"
-      });
-    }
-
+  getTestRequestQuote(productId: number, versionNo: number): Observable<string> {
     const url = `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/example_quote`;
-    return this.http.get<any>(url).pipe(
-      catchError((error) => {
-        console.error('Error fetching test request:', error);
-        return of({
-          error: 'Failed to fetch test request',
-          productId: productId,
-          versionNo: versionNo
-        });
-      })
-    );
+    return this.http.get(url, { responseType: 'text' });
   }
 
-  getTestRequestSave(productId: number, versionNo: number): Observable<any> {
-    if (!this.http) {
-      // Return mock example if no http client
-      return of({
-        productId: productId,
-        versionNo: versionNo,
-        exampleData: "Mock test request data"
-      });
-    }
+  getTestRequestSave(productId: number, versionNo: number): Observable<string> {
+    
 
     const url = `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/example_save`;
-    return this.http.get<any>(url).pipe(
-      catchError((error) => {
-        console.error('Error fetching test request:', error);
-        return of({
-          error: 'Failed to fetch test request',
-          productId: productId,
-          versionNo: versionNo
-        });
-      })
-    );
+    return this.http.get(url, { responseType: 'text' })
   }
-
 }

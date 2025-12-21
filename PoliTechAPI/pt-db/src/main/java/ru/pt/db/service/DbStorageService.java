@@ -2,11 +2,12 @@ package ru.pt.db.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.db.StorageService;
@@ -19,6 +20,9 @@ import ru.pt.db.repository.PolicyRepository;
 import ru.pt.db.utils.PolicyMapper;
 import ru.pt.db.utils.PolicyProjectionService;
 
+import java.sql.Timestamp;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,8 +49,11 @@ public class DbStorageService implements StorageService {
 
         var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
         index.setVersionNo(1);
-        index.setClientAccountId(((UserDetailsImpl) userData.getAuthorities()).getClientId());
-        index.setUserAccountId(((UserDetailsImpl) userData.getAuthorities()).getAccountId());
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+        index.setClientAccountId(userDetails.getClientId());
+        index.setUserAccountId(userDetails.getAccountId());
+        
         policyIndexRepository.save(index);
 
         var policyData = new PolicyData();
@@ -178,4 +185,110 @@ public class DbStorageService implements StorageService {
 
         return policyData;
     }
+
+    /**
+     * Get all quotes from policy index for current account
+     * @return List<QuoteDto>
+     */
+    public List<QuoteDto> getAccountQuotes() {
+        var userData = securityContextHelper.getCurrentUser()
+            .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+        Long accountId = userData.getAccountId();
+/*
+
+    String id, // uuid
+    String draftId, // uuid
+    String policyNr,
+    String productCode,
+    String insCompany,
+    ZonedDateTime createDate, // Date | string
+    ZonedDateTime issueDate, // Date | string
+    String issueTimezone,
+    ZonedDateTime paymentDate, // Date | string
+    ZonedDateTime startDate, // Date | string
+    ZonedDateTime endDate, // Date | string
+    String policyStatus,
+    String phDigest,
+    String ioDigest,
+    Double premium,
+    String agentDigest,
+    Double agentKvPrecent,
+    Double agentKvAmount,
+    Boolean comand1,
+    Boolean comand2,
+    Boolean comand3,
+    Boolean comand4,
+    Boolean comand5,
+    Boolean comand6,
+    Boolean comand7,
+    Boolean comand8,
+    Boolean comand9
+
+    SELECT 
+            p.id,
+            p.draft_id,
+            p.policy_nr,
+            p.product_code,
+            p.create_date,
+            p.issue_date,
+            p.issue_timezone,
+            p.payment_date,
+            p.start_date,
+            p.end_date,
+            p.policy_status,  10
+            p.user_account_id,
+            p.client_account_id,
+            p.version_status,
+            p.payment_order_id
+        FROM policy_index p
+*/        
+        List<QuoteDto> quotes = policyIndexRepository.findPoliciesByAccountIdRecursive(accountId).stream().map(quote -> {
+            // Helper method to convert Object to ZonedDateTime
+            Function<Object, ZonedDateTime> toZonedDateTime = obj -> {
+                if (obj == null) return null;
+                if (obj instanceof Timestamp) {
+                    return ((Timestamp) obj).toInstant().atZone(ZoneId.systemDefault());
+                }
+                if (obj instanceof ZonedDateTime) {
+                    return (ZonedDateTime) obj;
+                }
+                if (obj instanceof java.time.OffsetDateTime) {
+                    return ((java.time.OffsetDateTime) obj).toZonedDateTime();
+                }
+                return null;
+            };
+            
+            return new QuoteDto(
+                quote[0] != null ? quote[0].toString() : null,        // id (UUID converted to String)
+                quote[1] != null ? (String) quote[1] : null,          // draftId
+                quote[2] != null ? (String) quote[2] : null,          // policyNr
+                quote[3] != null ? (String) quote[3] : null,          // productCode
+                null,                                                  // insCompany (not in query)
+                toZonedDateTime.apply(quote[4]),                      // createDate
+                toZonedDateTime.apply(quote[5]),                      // issueDate
+                quote[6] != null ? (String) quote[6] : null,          // issueTimezone
+                toZonedDateTime.apply(quote[7]),                      // paymentDate
+                toZonedDateTime.apply(quote[8]),                      // startDate
+                toZonedDateTime.apply(quote[9]),                      // endDate
+                quote[10] != null ? quote[10].toString() : null,     // policyStatus
+                "PH Digest",                                                  // phDigest (not in query)
+                "io Digest",                                                  // ioDigest (not in query)
+                1000.0,                                                  // premium (not in query)
+                "account_id:",                                                  // agentDigest (not in query)
+                10.0,                                                  // agentKvPrecent (not in query)
+                123.0,                                                  // agentKvAmount (not in query)
+                true,                                                  // comand1 (not in query)
+                false,                                                  // comand2 (not in query)
+                false,                                                  // comand3 (not in query)
+                false,                                                  // comand4 (not in query)
+                false,                                                  // comand5 (not in query)
+                false,                                                  // comand6 (not in query)
+                false,                                                  // comand7 (not in query)
+                false,                                                  // comand8 (not in query)
+                false                                                   // comand9 (not in query)
+            );
+        }).collect(Collectors.toList());
+        return quotes;
+    }
+
 }

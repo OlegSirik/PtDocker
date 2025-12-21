@@ -41,6 +41,8 @@ import { BusinessLineEditService, BusinessLineFile, BusinessLineVar, BusinessLin
 import { FilesService, FileTemplate } from '../../shared/services/api/files.service';
 import { AuthService } from '../../shared/services/auth.service';
 
+import { VarsService } from '../../shared/services/vars.service';
+
 @Component({
     selector: 'app-product',
     imports: [
@@ -146,12 +148,8 @@ export class ProductComponent implements OnInit {
 
   // Policy Variables table
   policyVarsDisplayedColumns = ['category', 'field', 'name', 'code', 'actions'];
+  policyVarsFiltered = []
   policyFilter = 'Policy Holder';
-  policyVarsPageSize = 10;
-  policyVarsPageIndex = 0;
-  filteredPolicyVars: PolicyVar[] = [];
-  paginatedPolicyVars: PolicyVar[] = [];
-  policyVars: PolicyVar[] = [];
 
   // Files table
   filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
@@ -173,7 +171,8 @@ export class ProductComponent implements OnInit {
     private businessLineService: BusinessLineService,
     private businessLineEditService: BusinessLineEditService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private varsService: VarsService,
   ) {}
 
   ngOnInit(): void {
@@ -188,21 +187,17 @@ export class ProductComponent implements OnInit {
         return of(null as BusinessLineEdit | null);
       }),
       tap(() => {
-        this.updateTables();
+        
         this.loadDropdownOptions();
-        this.reloadPolicyVars();
+        this.updateTables();
       })
     ).subscribe();
   }
 
   loadLob(lob: string): Observable<BusinessLineEdit> {
-    console.log('load lob  ' + this.product.lob);
-    
     return this.businessLineEditService.getBusinessLineByCode(lob).pipe(
-      
       tap(result => {
         this.lob = result;
-        console.log('load lob 3' + this.lob?.mpName);
       })
     );
   }
@@ -401,6 +396,8 @@ export class ProductComponent implements OnInit {
     });
   }
 
+  reloadPolicyVars(): void {}
+
   editSaveValidator(validator: QuoteValidator, index: number): void {
     this.loadDropdownOptions()
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
@@ -513,7 +510,15 @@ export class ProductComponent implements OnInit {
     }
   }
   updateFilesTable() {
-    this.paginatedFiles = this.product.packages[this.selectedPackageIndex].files;
+    if (this.product.packages && 
+        this.selectedPackageIndex >= 0 && 
+        this.selectedPackageIndex < this.product.packages.length &&
+        this.product.packages[this.selectedPackageIndex]) {
+      const selectedPackage = this.product.packages[this.selectedPackageIndex];
+      this.paginatedFiles = selectedPackage.files || [];
+    } else {
+      this.paginatedFiles = [];
+    }
   }
 
   showCovers(pkg: Package, index: number): void {
@@ -561,6 +566,7 @@ export class ProductComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.product.packages[this.selectedPackageIndex].covers.push(result);
+        this.addCoverVars(result.code);
         this.updateCoversTable();
         this.updateChanges();
       }
@@ -581,7 +587,7 @@ export class ProductComponent implements OnInit {
       if (result) {
         this.product.packages[this.selectedPackageIndex].covers[index] = result;
         this.updateCoversTable();
-        this.addCoverVars(result.code);
+        
         this.updateChanges();
       }
     });
@@ -590,18 +596,35 @@ export class ProductComponent implements OnInit {
   addCoverVars(code: string): void {
     // add var to mpVars if not exists - co_+code+_premium, co_+code+_sumInsured, co_+code+_deductibleNr
       const newVars: any[] = [];
-      newVars.push({ varCode: 'co_' + code + '_premium', varType: 'VAR', 
+      newVars.push({ 
+        varCode: 'co_' + code + '_premium', 
+        varType: 'VAR', 
         varPath: '$..covers[?(@.cover.code == "' + code + '")].premium', 
-        varName: 'Премия по покрытию ' + code, varDataType: 'NUMBER' });
-      newVars.push({ varCode: 'co_' + code + '_sumInsured', varType: 'VAR', 
+        varName: 'Премия по покрытию ' + code, 
+        varDataType: 'NUMBER',
+        varCdm: 'coverage.co_' + code + '_premium',
+        varNr: 1
+      });
+      newVars.push({ 
+        varCode: 'co_' + code + '_sumInsured', 
+        varType: 'VAR', 
         varPath: '$..covers[?(@.cover.code == "' + code + '")].sumInsured', 
-        varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER' });
+        varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER',
+        varCdm: 'coverage.co_' + code + '_sumInsured',
+        varNr: 2
+      });
       newVars.push({ varCode: 'co_' + code + '_deductibleNr', varType: 'VAR', 
         varPath: '', 
-        varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER' });
+        varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER',
+        varCdm: 'coverage.co_' + code + '_deductibleNr',
+        varNr: 3
+      });
         newVars.push({ varCode: 'co_' + code + '_deductible', varType: 'VAR', 
           varPath: '$..covers[?(@.cover.code == "' + code + '")].deductible', 
-          varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER' });
+          varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER',
+          varCdm: 'coverage.co_' + code + '_deductible',
+          varNr: 4
+        });
 
         this.product.vars = [...this.product.vars, ...newVars];
       }
@@ -849,142 +872,83 @@ export class ProductComponent implements OnInit {
     this.updatePolicyTable();
   }
 
-  // Policy Variables methods
-  reloadPolicyVars(): void {
-    // Mock data for policy variables - in real implementation, this would come from policyVersion.vars
-    //this.updatePolicyTable();
-    this.businessLineEditService.getBusinessLineByCode(this.product.lob).subscribe(result => {
-      if (result) {
-        let policyVars: BusinessLineVar[] = result.mpVars;
+ 
+  updatePolicyTable() {}
 
-        // add vars to this.product.vars if it is not exists
-        policyVars.forEach(v => {
-          if (!this.product.vars.some(v2 => v2.varCode === v.varCode)) {
-            this.product.vars.push({
-              varPath: v.varPath,
-              varName: v.varName,
-              varCode: v.varCode,
-              varDataType: v.varDataType,
-              varValue: v.varValue,
-              varType: v.varType,
-              varCdm: "",
-              varNr: v.varNr
-            });
-          }
-        });
-        this.updatePolicyTable();
-        // Also reload files when LOB changes
-        
-      }
-    });
-  }
+  get paginatedPolicyVars(): any[] {
 
-  updatePolicyTable(): void {
-    this.policyVars = this.product.vars.map(v => ({
-      varPath: v.varPath,
-      varName: v.varName,
-      varCode: v.varCode,
-      category: '',
-      field: '',
-      name: v.varName,
-      code: v.varCode,
-      varNr: v.varNr,
-      varCdm: v.varCdm
-    }));
-
-    let filtered = this.policyVars;
+    let filtered = this.product.vars;
+    let categories: string[] = [];
+    let prefix = '';
+    let result: any[] = [];
 
     // Apply filter based on selected option
     if (this.policyFilter === 'Policy Holder') {
-      filtered = this.policyVars.filter(v => v.varPath.startsWith('policyHolder.'));
+      prefix = 'policyHolder.';
+      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      categories = this.varsService.getPhCategories(this.lob?.mpPhType || '');
     } else if (this.policyFilter === 'Insured Object') {
-      filtered = this.policyVars.filter(v => v.varPath.startsWith('insuredObject.'));
-    } else if (this.policyFilter === 'Others') {
-      filtered = this.policyVars.filter(v => !v.varPath.startsWith('policyHolder.') && !v.varPath.startsWith('insuredObject.'));
+      prefix = 'insuredObject.';
+      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      categories = this.varsService.getIoCategories(this.lob?.mpInsObjectType || 'person');
+    } else if (this.policyFilter === 'Policy') {
+      prefix = 'policy.';
+      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      categories = [''];
+    } else if (this.policyFilter === 'Coverage') {
+      prefix = 'coverage.';
+      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      categories = [''];
     }
 
-    // Sort by varNr
-    filtered = filtered.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
+    for (const category of categories) {
+      let category_filtered = filtered.filter(v => v.varCdm.startsWith(prefix + category));
+    
+      // Sort by varNr
+      category_filtered = category_filtered.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
 
-    // Process category and field columns based on varPath
-    filtered = filtered.map((v, index) => {
-      let category = '';
-      let field = '';
+      let prevCategory = '';
+      // Process category and field columns based on varPath
+      category_filtered.map((v, index) => {
+        let category = '';
+        let field = '';
+        const parts = v.varCdm.split('.');
 
-      if (v.varPath.startsWith('policyHolder.')) {
-        const afterPolicyHolder = v.varPath.substring('policyHolder.'.length);
-        if (afterPolicyHolder.includes('.')) {
-          const parts = afterPolicyHolder.split('.');
-          category = parts[0];
-          field = parts.slice(1).join('.');
+        if (v.varCdm.startsWith('policyHolder.')) {
+          category = parts[1];
+          field = parts[2];
+        } else if (v.varCdm.startsWith('insuredObject.')) {
+          category = parts[1];
+          field = parts[2];
+        } else if (v.varCdm.startsWith('policy.')) {
+          category = '';
+          field = parts[1];
+        } else if (v.varCdm.startsWith('coverage.')) {
+          category = '';
+          field = parts[1];
         } else {
-          category = 'policyHolder';
-          field = afterPolicyHolder;
-        }
-      } else if (v.varPath.startsWith('insuredObject.')) {
-        const afterInsuredObject = v.varPath.substring('insuredObject.'.length);
-        if (afterInsuredObject.includes('.')) {
-          const parts = afterInsuredObject.split('.');
-          category = parts[0];
-          field = parts.slice(1).join('.');
-        } else {
-          category = 'insuredObject';
-          field = afterInsuredObject;
-        }
-      } else {
-        category = 'others';
-        field = v.varPath;
-      }
-
-      // Hide category value if it equals the previous record's category
-      if (index > 0 && filtered[index - 1]) {
-        const prevVar = filtered[index - 1];
-        let prevCategory = '';
-        if (prevVar.varPath.startsWith('policyHolder.')) {
-          const afterPolicyHolder = prevVar.varPath.substring('policyHolder.'.length);
-          if (afterPolicyHolder.includes('.')) {
-            prevCategory = afterPolicyHolder.split('.')[0];
-          } else {
-            prevCategory = 'policyHolder';
-          }
-        } else if (prevVar.varPath.startsWith('insuredObject.')) {
-          const afterInsuredObject = prevVar.varPath.substring('insuredObject.'.length);
-          if (afterInsuredObject.includes('.')) {
-            prevCategory = afterInsuredObject.split('.')[0];
-          } else {
-            prevCategory = 'insuredObject';
-          }
-        } else {
-          prevCategory = 'others';
-        }
+          category = parts.join('.');
+          field = '';
+        } 
 
         if (category === prevCategory) {
           category = ''; // Hide duplicate category
+        } else {
+          prevCategory = category;
         }
-      }
 
-      return {
-        ...v,
-        category,
-        field,
-        name: v.varName,
-        code: v.varCode
-      };
-    });
+        result.push({
+          ...v,
+          category,
+          field,
+          name: v.varName,
+          code: v.varCode
+        });
+      });
+    }
 
-    this.filteredPolicyVars = filtered;
-    this.updatePolicyVarsPagination();
-  }
-
-  onPolicyVarsPageChange(event: PageEvent): void {
-    this.policyVarsPageSize = event.pageSize;
-    this.policyVarsPageIndex = event.pageIndex;
-    this.updatePolicyVarsPagination();
-  }
-
-  updatePolicyVarsPagination(): void {
-    const startIndex = this.policyVarsPageIndex * this.policyVarsPageSize;
-    this.paginatedPolicyVars = this.filteredPolicyVars.slice(startIndex, startIndex + this.policyVarsPageSize);
+    return result;
+    
   }
 
   showPolicyVarDetails(variable: PolicyVar): void {
