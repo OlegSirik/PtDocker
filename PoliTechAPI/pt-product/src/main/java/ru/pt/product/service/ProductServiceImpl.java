@@ -140,6 +140,8 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setVarType(var.getVarType());
                 pvVar.setVarValue(var.getVarValue());
                 pvVar.setVarDataType(var.getVarDataType());
+                pvVar.setVarCdm(var.getVarCdm());
+                pvVar.setVarNr(var.getVarNr());
                 productVersionModel.getVars().add(pvVar);
             }
         } else {
@@ -275,6 +277,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
+
     @Override
     public String getJsonExampleQuote(Integer id, Integer versionNo) {
         ProductVersionModel productVersionModel = getVersion(id, versionNo);
@@ -286,26 +289,40 @@ public class ProductServiceImpl implements ProductService {
         jsonPaths.add("product.code");
         jsonValues.put("product.code", productVersionModel.getCode());
 
+        jsonPaths.add("productCode");
+        jsonValues.put("productCode", productVersionModel.getCode());
+
+        jsonPaths.add("package");
+        jsonValues.put("package", "0");
+
         jsonPaths.add("issueDate");
         jsonValues.put("issueDate", formattedNow());
 
+        try {
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-            String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
-            jsonPaths.add("waitingPeriod");
-            jsonValues.put("waitingPeriod", value);
+            String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
+            if (values.length > 1) {
+                jsonPaths.add("waitingPeriod");
+                jsonValues.put("waitingPeriod", values[0].trim());
+            }
         } else {
             jsonPaths.add("startDate");
             jsonValues.put("startDate", formattedNow());
         }
+    } catch (Exception e) {}
 
+    try {
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-            String value = productVersionModel.getPolicyTerm().getValidatorValue().split(",")[0].trim();
-            jsonPaths.add("policyTerm");
-            jsonValues.put("policyTerm", value);
+            String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
+            if (values.length > 1) {
+                jsonPaths.add("policyTerm");
+                jsonValues.put("policyTerm", values[0].trim());
+            }
         } else {
             jsonPaths.add("endDate");
             jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
         }
+    } catch (Exception e) {}
 
         Set<String> validatorKeys = new HashSet<>();
 

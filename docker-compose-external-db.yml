@@ -6,7 +6,7 @@ services:
     build:
       context: ./PoliTechAPI
       dockerfile: DockerfileMacLocal
-      no_cache: true
+      # Removed no_cache: true to enable Docker layer caching for faster rebuilds
     # image: fant560/papi:2.0
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/pt-db
@@ -33,7 +33,7 @@ services:
     build:
       context: ./PoliTechFront
       dockerfile: DockerfileMacLocal
-    # image: fant560/papi-front:latest
+    
     environment:
       BASE_URL: http://localhost:8080
     ports:

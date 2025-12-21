@@ -15,6 +15,7 @@ import {ClientsPageComponent} from './features/admin-panel/clients-page/clients-
 import {ClientEditComponent} from './features/admin-panel/client-edit/client-edit.component';
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 import { TenantGuard } from './shared/guards/tenant.guard';
+import { QuotesComponent } from './features/quotes/quotes.component';
 
 
 export const routes: Routes = [
@@ -37,6 +38,7 @@ export const routes: Routes = [
   { path: 'product/new', component: ProductComponent, canActivate: [authGuard] },
   { path: 'product/:product-id/version/:version-no/form', component: FormlyFormsComponent, canActivate: [authGuard] },
   { path: 'products/:productId/versions/:versionNo/packages/:packageNo/calculator', component: CalculatorComponent, canActivate: [authGuard] },
+  { path: 'lk/quotes', component: QuotesComponent, canActivate: [authGuard] },
   
   { path: 'test', component: TestComponent, canActivate: [authGuard] },
   { path: 'admin/tenants', component: TenantsPageComponent, canActivate: [authGuard] },

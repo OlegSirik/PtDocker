@@ -393,9 +393,10 @@
                 <mat-form-field appearance="outline" style="width: 200px;">
                   <mat-label>Filter</mat-label>
                   <mat-select [(ngModel)]="policyFilter" (ngModelChange)="updatePolicyTable()">
+                    <mat-option value="Policy">Policy</mat-option>
                     <mat-option value="Policy Holder">Policy Holder</mat-option>
                     <mat-option value="Insured Object">Insured Object</mat-option>
-                    <mat-option value="Others">Others</mat-option>
+                    <mat-option value="Coverage">Coverage</mat-option>
                   </mat-select>
                 </mat-form-field>
                 <button mat-raised-button color="accent" class="action-button" (click)="reloadPolicyVars()">
@@ -443,15 +444,6 @@
               <tr mat-header-row *matHeaderRowDef="policyVarsDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;" (click)="showPolicyVarDetails(row)" class="clickable-row"></tr>
             </table>
-
-            <mat-paginator
-              [length]="filteredPolicyVars.length"
-              [pageSize]="policyVarsPageSize"
-              [pageIndex]="policyVarsPageIndex"
-              [pageSizeOptions]="[25, 50, 100]"
-              (page)="onPolicyVarsPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
           </mat-card-content>
         </mat-card>
       </div>

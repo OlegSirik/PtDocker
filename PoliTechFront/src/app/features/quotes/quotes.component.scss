@@ -1,0 +1,178 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.quotes-container {
+  padding: $spacing-lg;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.page-title {
+  @include heading-1;
+  text-align: left;
+  margin-bottom: $spacing-lg;
+}
+
+.datatable-card {
+  @include card-elevated;
+}
+
+.button-section {
+  @include card-base;
+  padding: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  background-color: $gray-50;
+}
+
+.product-section {
+  @include flex-end;
+
+  .product-field {
+    width: 300px;
+  }
+}
+
+.table-header {
+  @include flex-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  
+  .table-title {
+    @include heading-2;
+    margin: 0;
+    font-size: $font-size-xl;
+  }
+  
+  .search-field {
+    min-width: 400px;
+    appearance: outline;
+  }
+}
+
+.search-section {
+  @include flex-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  gap: $spacing-md;
+
+  .search-field {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .status-field {
+    width: 200px;
+  }
+}
+
+.quotes-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  .quote-panel {
+    @include card-base;
+    margin-bottom: $spacing-xs;
+
+    ::ng-deep .mat-expansion-panel-header {
+      height: 100px;
+      padding: 0 $spacing-md;
+      display: flex !important;
+      align-items: center !important;
+    }
+
+    ::ng-deep .mat-expansion-panel-header-content {
+      width: 100% !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      display: flex !important;
+      flex: 1 1 auto !important;
+    }
+
+    ::ng-deep .mat-expansion-panel-header-title {
+      width: 100% !important;
+      margin: 0 !important;
+      flex: 1 1 100% !important;
+      max-width: 100% !important;
+      display: block !important;
+    }
+
+    .quote-row {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr 1fr !important;
+      gap: $spacing-lg;
+      width: 100%;
+      padding: $spacing-xs 0;
+      box-sizing: border-box;
+      min-width: 0;
+
+      .quote-col-1,
+      .quote-col-2,
+      .quote-col-3 {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+        min-width: 0;
+        overflow: hidden;
+
+        .quote-line-bold {
+          font-weight: bold;
+          font-size: $font-size-base;
+          color: $gray-900;
+        }
+
+        .quote-line-small {
+          font-size: $font-size-sm;
+          color: $gray-600;
+        }
+      }
+    }
+
+    .commands-list {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-sm;
+      padding: $spacing-md 0;
+
+      .command-text-button {
+        width: 100%;
+        text-align: left;
+        justify-content: flex-start;
+        padding: $spacing-xs $spacing-sm;
+        min-height: auto;
+        line-height: 1.5;
+        
+        ::ng-deep .mat-button-wrapper {
+          text-align: left;
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@include responsive(sm) {
+  .quotes-container {
+    padding: $spacing-xl;
+  }
+  
+  .page-title {
+    font-size: $font-size-4xl;
+  }
+}
+
+@include responsive(md) {
+  .quotes-container {
+    padding: $spacing-2xl;
+  }
+
+  .quotes-list {
+    .quote-panel {
+      .quote-row {
+        grid-template-columns: 1fr;
+        gap: $spacing-sm;
+      }
+    }
+  }
+}

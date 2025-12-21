@@ -50,6 +50,7 @@ export class VarsService {
       return [
         "person",
         "contacts",
+        "organization",
         "identifiers",
         "addresses",
         "additionalProperties"
@@ -112,6 +113,7 @@ export class VarsService {
       return [
         "person",
         "contacts",
+        "organization",
         "identifiers",
         "addresses",
         "additionalProperties"
@@ -1036,7 +1038,18 @@ export class VarsService {
   }
   ];
 
+  /* io с varNr < 100 системные и не удаляются */ 
   ioDeviceVars: LobVar[] = [
+        {
+          "varNr": 10,
+          "varDataType": "NUMBER",
+          "varCode": "io_insAmount",
+          "varName": "Страховая сумма объекта страхования",
+          "varPath": "insuredObject.insAmount",
+          "varType": "IN",
+          "varValue": "100000",
+          "varCdm": "insuredObject.insAmount"
+        },
         {
         "varNr": 1001,
         "varDataType": "STRING",

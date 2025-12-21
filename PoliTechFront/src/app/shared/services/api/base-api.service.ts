@@ -1,8 +1,10 @@
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { EnvService } from '../env.service';
 import { AuthService } from '../auth.service';
 
+@Injectable()
 export abstract class BaseApiService<T> {
   protected constructor(
     protected http: HttpClient,

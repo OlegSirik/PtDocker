@@ -23,6 +23,12 @@ public class PvVar {
     @JsonProperty("varValue")
     private String varValue = "";
 
+    @JsonProperty("varCdm")
+    private String varCdm;
+
+    @JsonProperty("varNr")
+    private String varNr;
+
     // Constructors
     public PvVar() {}
 
@@ -91,4 +97,21 @@ public class PvVar {
     public void setVarDataType(VarDataType varDataType) {
         this.varDataType = varDataType;
     }
+
+    public String getVarCdm() {
+        return varCdm;
+    }
+
+    public void setVarCdm(String varCdm) {
+        this.varCdm = varCdm;
+    }
+
+    public String getVarNr() {
+        return varNr;
+    }
+
+    public void setVarNr(String varNr) {
+        this.varNr = varNr;
+    }
+    
 }

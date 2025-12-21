@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnInit, Renderer2, inject } from '@angular/core';
-
+import { AfterViewInit, Component, ElementRef, OnInit, Renderer2, inject, Inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { JsonPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,14 +9,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatOption } from "@angular/material/core";
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import type { Field } from './formly-forms.service';
 import { FormlyFormsService, FormData } from './formly-forms.service';
 import { Product, ProductService } from '../../shared/services/product.service';
-import { Policy } from '../../shared/models/policy.models';
+import { BoxPolicy, BoxPolicyHolder, InsuredObject, Identifier, Address, Organization, Device, BoxIdentifier, BoxAddress, BoxOrganization, BoxDevice, Policy } from '../../shared/models/policy.models';
 import { PolicyService } from '../../shared/services/policy.service';
-import { MatOption } from "@angular/material/core";
-import { MatDialog } from '@angular/material/dialog';
-import { MatDialogModule } from '@angular/material/dialog';
 
 
 interface Food {
@@ -41,6 +41,7 @@ interface LoV {
     MatInputModule,
     MatIconModule,
     MatSelectModule,
+    MatTableModule,
   ]
 })
 export class FormlyFormsComponent implements OnInit {
@@ -105,38 +106,10 @@ throw new Error('Method not implemented.');
     item5: ''
   };
 
-  policy: Policy = {
-    policyNumber: '32523453245',
-    previousPolicyNumber: '',
-    product: { code: '', description: '' },
-    status: { code: 'NEW', description: '' },
-    startDate: '',
-    endDate: '',
-    issueDate: '',
-    createDate: '',
-    paymentDate: '',
-    cancellationDate: '',
-    premium: 0,
-    premiumCur: 0,
-    currencyCode: '',
-    currencyRate: 0,
-    placeOfIssue: '',
-    draftId: '',
-    policyHolder: { person: {firstName: ''}, phone: {phoneNumber: '', contactPerson: ''}, email: '', passport: {typeCode: '', serial: '', number: '', dateIssue: '', validUntil: '', whom: ''
-      , divisionCode: '', vsk_id: '', ext_id: '', countryCode: ''},
-      address: {typeCode: 'REGISTRATION', countryCode: '', region: '', city: '', street: '', house: '', building: '', flat: '', room: '', zipCode: '', kladrId: '',
-        fiasId: '', addressStr: '', addressStrEn: '', vsk_id: '', ext_id: ''}, placeOfWork: {organization: '', occupationType: '', occupation: '',
-          address: '', phone: ''}, inn: '', snils: '', otherAddresses: [], otherDocuments: [], organization: {country: '', inn: '', fullName: '',
-            fullNameEn: '', shortName: '', legalForm: 'OOO', kpp: '', ogrn: '', okpo: '', bic: '', isResident: false, group: '', vsk_id: '', ext_id: '', nciCode: ''},
-            isGovernmentService: false, customFields: {} },
-    insuredObject: {
-      packageCode: '',
-      covers: [],
-      objectId: '',
-      insureds: [],
-      device: {countryCode: 'DE', devicePrice: 0, imei: '23453245325235', licenseKey: 'XXX', model: 'Nova 5', deviceName: '', osName: '', osVersion: '', serialNr: '2412341241241243', tradeMark: 'Xiaomi', deviceTypeCode: 'SMARTPHONE'}
-    }
-  };
+  policy: BoxPolicy = new BoxPolicy();
+  
+  coverageDataSource = new MatTableDataSource<any>([]);
+  coverageDisplayedColumns: string[] = ['code', 'risk', 'startDate', 'endDate', 'sumInsured', 'premium', 'deductibleType', 'deductibleText'];
 
   constructor(
     private fb: FormBuilder,
@@ -149,7 +122,7 @@ throw new Error('Method not implemented.');
     private policyService: PolicyService,
     private dialog: MatDialog,
   ) {
-    this.policy = this.policyService.getMockPolicy();
+    //this.policy = this.policyService.getMockPolicy();
   }
 
 
@@ -159,10 +132,35 @@ throw new Error('Method not implemented.');
     const productId = this.route.snapshot.paramMap.get('product-id');
     const versionNo = this.route.snapshot.paramMap.get('version-no');
 
-    this.loadProduct(parseInt(productId || '0'), parseInt(versionNo || '0'));
+    this.loadProduct(parseInt(productId || '0'), parseInt(versionNo || '1'));
 
-    this.policy = this.policyService.getMockPolicy();
-
+    //this.policy = this.policyService. .getMockPolicy();
+    this.productService.getTestRequestQuote(parseInt(productId || '0'), parseInt(versionNo || '1')).subscribe({
+      next: (json: string) => {
+        // Convert to string primitive if needed (handle both string and String wrapper)
+        const jsonString: string = typeof json === 'string' ? json : String(json);
+        
+        // Print JSON to console
+        console.log('Received JSON:', jsonString);
+        console.log('JSON length:', jsonString.length);
+        
+        try {
+          // Parse JSON
+          const parsedData = JSON.parse(jsonString);
+          console.log('Parsed JSON object:', parsedData);
+          
+          // Use BoxPolicy constructor to properly instantiate nested objects
+          this.policy = new BoxPolicy(parsedData);
+          console.log('Converted to BoxPolicy:', this.policy);
+        } catch (parseError) {
+          console.error('Error parsing JSON:', parseError);
+          console.error('Invalid JSON string:', jsonString);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading test request:', error);
+      }
+    });
   }
 
   get addFieldKeys(): string[] {
@@ -171,7 +169,7 @@ throw new Error('Method not implemented.');
 
   loadProduct(id?: number, versionNo?: number): void {
     if (id) {
-      this.productService.getProduct(id, versionNo || 0).subscribe({
+      this.productService.getProduct(id, versionNo || 1).subscribe({
         next: (product) => {
           this.product = product;
           this.getAdressTypes();
@@ -211,8 +209,60 @@ throw new Error('Method not implemented.');
   onSubmit() {
     console.log("onSubmit-----------------------------------------------------------------------------");
     console.log(this.policy);
+    
+    const plc = this.policyService.conversBox2Policy(this.policy);
 
-      };
+    console.log(plc);
+
+    this.dialog.open(JsonViewDialog, {
+      width: '800px',
+      maxHeight: '80vh',
+      data: {
+        title: 'Policy JSON',
+        object: plc
+      }
+    });
+  }
+
+  onFastCalc() {
+    console.log("onFastCalc-----------------------------------------------------------------------------");
+    const policy = this.policyService.conversBox2Policy(this.policy);
+    console.log('Policy to send:', policy);
+
+    this.policyService.fastCalc(policy).subscribe({
+      next: (response: Policy) => {
+        console.log('Fast Calc response:', response);
+        // Convert Policy back to BoxPolicy
+        this.policy = this.policyService.conversPolicy2Box(response);
+        this.updateCoverageTable();
+        this.snackBar.open('Расчет выполнен успешно', 'Закрыть', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Fast Calc error:', error);
+        this.snackBar.open('Ошибка при расчете: ' + (error.error?.message || error.message), 'Закрыть', { duration: 5000 });
+      }
+    });
+  }
+
+  onSave() {
+    console.log("onSave-----------------------------------------------------------------------------");
+    const policy = this.policyService.conversBox2Policy(this.policy);
+    console.log('Policy to save:', policy);
+
+    this.policyService.savePolicy(policy).subscribe({
+      next: (response: Policy) => {
+        console.log('Save response:', response);
+        // Convert Policy back to BoxPolicy
+        this.policy = this.policyService.conversPolicy2Box(response);
+        this.updateCoverageTable();
+        this.snackBar.open('Политика сохранена успешно', 'Закрыть', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Save error:', error);
+        this.snackBar.open('Ошибка при сохранении: ' + (error.error?.message || error.message), 'Закрыть', { duration: 5000 });
+      }
+    });
+  }
 
 
   getFieldVisible(fieldName: string): boolean {
@@ -244,7 +294,6 @@ throw new Error('Method not implemented.');
   }
 
   getAdressTypes(): LoV[] {
-
     const validator = this.product?.saveValidator?.find(
       (v: any) => v.keyLeft === "ph_addr_typeCode" && v.ruleType === "IN_LIST"
     );
@@ -254,19 +303,93 @@ throw new Error('Method not implemented.');
       this.ph_addr_typeCode = values.map(value => ({value: value, viewValue: value}));
     }
 
-    /*
-"saveValidator": [
-        {
-            "lineNr": 12,
-            "keyLeft": "io_device_typeCode",
-            "dataType": "STRING",
-            "ruleType": "IN_LIST",
-            "errorText": "sfsda",
-            "valueRight": "DIGITAL,HOME"
-    */
     return this.ph_addr_typeCode;
   }
 
+  // Helper methods to ensure identifiers and addresses exist
+  ensureIdentifier(): BoxIdentifier {
+    if (!this.policy.policyHolder.identifiers) {
+      this.policy.policyHolder.identifiers = new BoxIdentifier();
+    }
+    return this.policy.policyHolder.identifiers;
+  }
 
+  ensureAddress(): BoxAddress {
+    if (!this.policy.policyHolder.addresses) {
+      this.policy.policyHolder.addresses = new BoxAddress();
+    }
+    return this.policy.policyHolder.addresses;
+  }
+
+  ensureOrganization(): BoxOrganization {
+    if (!this.policy.policyHolder.organization) {
+      this.policy.policyHolder.organization = new BoxOrganization();
+    }
+    return this.policy.policyHolder.organization;
+  }
+
+  ensureDevice(): BoxDevice {
+    if (!this.policy.insuredObject.device) {
+      this.policy.insuredObject.device = new BoxDevice();
+    }
+    return this.policy.insuredObject.device;
+  }
+
+  updateCoverageTable(): void {
+    if (this.policy.coverage && Array.isArray(this.policy.coverage)) {
+      this.coverageDataSource.data = this.policy.coverage;
+    } else {
+      this.coverageDataSource.data = [];
+    }
+  }
+
+  getRiskAsString(risk: string[] | undefined): string {
+    if (!risk || !Array.isArray(risk)) {
+      return '';
+    }
+    return risk.join(', ');
+  }
+
+}
+
+@Component({
+  selector: 'app-json-view-dialog',
+  imports: [MatDialogModule, MatButtonModule, MatIconModule, JsonPipe],
+  template: `
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <div mat-dialog-content style="max-height: 60vh; overflow: auto;">
+      <pre style="background-color: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto;">{{ data.object | json }}</pre>
+    </div>
+    <div mat-dialog-actions align="end">
+      <button mat-button (click)="copyToClipboard()">
+        <mat-icon>content_copy</mat-icon>
+        Copy
+      </button>
+      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+    </div>
+  `,
+  styles: [`
+    pre {
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  `]
+})
+export class JsonViewDialog {
+  constructor(
+    public dialogRef: MatDialogRef<JsonViewDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: { title: string; object: any }
+  ) {}
+
+  copyToClipboard(): void {
+    const jsonString = JSON.stringify(this.data.object, null, 2);
+    navigator.clipboard.writeText(jsonString).then(() => {
+      // Could show a snackbar notification here if needed
+    });
+  }
 }
 

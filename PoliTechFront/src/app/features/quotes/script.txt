@@ -1,0 +1,74 @@
+create service lk_quote.servide.ts inherit from base-api.service.ts
+data model Quote is
+    id uuid
+    draftId string
+    policyNr character 
+    policyVersion integer,
+    
+    productCode character 
+    productVersion number,
+    
+    insCompany string,
+
+    createDate timestamp
+    issueDate timestamp
+    issueTimezone character
+    paymentDate timestamp
+    startDate timestamp
+    endDate timestamp
+    
+    userAccountId b
+    clientAccountId 
+    
+    versionStatus character 
+    policyStatus character 
+    
+    paymentOrderId 
+
+    phDigest string
+    ioDigest string
+    
+    isnAmount number,
+    premium number,
+
+    agentDigest string,
+    agentKvPrecent number,
+    agentKvAmount number
+
+
+create new page with route lk/quotes
+
+
+
+page component contains
+cart with name 'Quotes and Policies' 
+drop down list, align end, text 'Создать'. List containt id and name of products. 
+if line selected then navigate to route. route depends on product id. 
+
+next line - search text field, align left and drop down search list with statuses
+
+next table of expansion panels.
+each panel contains 3 columns
+first column, line 1, style bold       - Quote.phDigest
+first column, line 2, style small text - Quote.policyNr
+first column, line 3, style small text - Quote.agentDigest
+
+column 2, line 1, style bold       - Quote.productCode
+column 2, line 2, style small text - Quote.insObjectDigest
+column 2, line 3, style small text - Quote.premium
+
+column 3, line 1, style bold       - Quote.policyStatus
+column 3, line 2, style small text - Quote.insCompany
+column 3, line 3, style small text - Quote.agentKvAmount ( Quote.agentKvPrecent )
+
+if comand1 is true show text button  "comand 1" if button pressed show alert "comand 1"
+the same for comand2..comand9
+each button on new line
+
+show max 20 rows
+
+add line to menu - Quotes for the page
+
+
+
+
