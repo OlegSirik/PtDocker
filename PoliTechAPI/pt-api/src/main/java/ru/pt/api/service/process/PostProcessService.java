@@ -1,7 +1,7 @@
 package ru.pt.api.service.process;
 
 import ru.pt.api.dto.process.InsuredObject;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 
 import java.util.List;
 
@@ -17,6 +17,6 @@ public interface PostProcessService {
      * @param calculatedValues переменные после расчета
      * @return заполненный объект
      */
-    InsuredObject setCovers(InsuredObject insuredObject, List<LobVar> calculatedValues);
+    InsuredObject setCovers(InsuredObject insuredObject, List<PvVar> calculatedValues);
 
 }

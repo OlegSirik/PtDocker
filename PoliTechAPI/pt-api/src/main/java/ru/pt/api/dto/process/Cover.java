@@ -1,12 +1,15 @@
 package ru.pt.api.dto.process;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.time.ZonedDateTime;
 import java.util.List;
+import ru.pt.api.dto.process.Deductible;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Cover {
 
     @JsonProperty("cover")
@@ -26,57 +29,31 @@ public class Cover {
 
     @JsonProperty("premium")
     private Double premium;
+//    private String deductibleType;
+//    private Double deductible;
+//    private Double sumInsuredCur;
+//    private Double premiumCur;
+//    private Double deductibleCur;
+//    private Double deductiblePercent;
+//    private Double deductibleMin;
+//    private String deductibleUnit;
+//    private String deductibleSpecific;
 
-    @JsonProperty("deductibleType")
-    private String deductibleType;
-
-    @JsonProperty("deductible")
-    private Double deductible;
-
-    @JsonProperty("sumInsuredCur")
-    private Double sumInsuredCur;
-
-    @JsonProperty("premiumCur")
-    private Double premiumCur;
-
-    @JsonProperty("deductibleCur")
-    private Double deductibleCur;
-
-    @JsonProperty("deductiblePercent")
-    private Double deductiblePercent;
-
-    @JsonProperty("deductibleMin")
-    private Double deductibleMin;
-
-    @JsonProperty("deductibleUnit")
-    private String deductibleUnit;
-
-    @JsonProperty("deductibleSpecific")
-    private String deductibleSpecific;
+    private Deductible deductible;
 
     // Constructors
     public Cover() {}
 
     public Cover(CoverInfo cover, List<String> risk, ZonedDateTime startDate, ZonedDateTime endDate,
-                 Double sumInsured, Double premium, String deductibleType, Double deductible,
-                 Double sumInsuredCur, Double premiumCur, Double deductibleCur,
-                 Double deductiblePercent, Double deductibleMin, String deductibleUnit,
-                 String deductibleSpecific) {
+                 Double sumInsured, Double premium, Deductible deductible) {
         this.cover = cover;
         this.risk = risk;
         this.startDate = startDate;
         this.endDate = endDate;
         this.sumInsured = sumInsured;
         this.premium = premium;
-        this.deductibleType = deductibleType;
+//        this.deductibleType = deductibleType;
         this.deductible = deductible;
-        this.sumInsuredCur = sumInsuredCur;
-        this.premiumCur = premiumCur;
-        this.deductibleCur = deductibleCur;
-        this.deductiblePercent = deductiblePercent;
-        this.deductibleMin = deductibleMin;
-        this.deductibleUnit = deductibleUnit;
-        this.deductibleSpecific = deductibleSpecific;
     }
 
     // Getters and Setters
@@ -128,75 +105,33 @@ public class Cover {
         this.premium = premium;
     }
 
-    public String getDeductibleType() {
-        return deductibleType;
-    }
-
-    public void setDeductibleType(String deductibleType) {
-        this.deductibleType = deductibleType;
-    }
-
-    public Double getDeductible() {
+    public Deductible getDeductible() {
         return deductible;
     }
 
-    public void setDeductible(Double deductible) {
+    public void setDeductible(Deductible deductible) {
         this.deductible = deductible;
     }
 
-    public Double getSumInsuredCur() {
-        return sumInsuredCur;
+    public void setDeductibleId(Integer deductibleId) {
+        if (this.deductible == null) {
+            this.deductible = new Deductible();
+        }
+        this.deductible.setId(deductibleId);
     }
 
-    public void setSumInsuredCur(Double sumInsuredCur) {
-        this.sumInsuredCur = sumInsuredCur;
-    }
+    public void setDeductibleText(String deductibleText) {
+        if (this.deductible == null) {
+            this.deductible = new Deductible();
+        }
+        this.deductible.setText(deductibleText);
+    }   
 
-    public Double getPremiumCur() {
-        return premiumCur;
-    }
-
-    public void setPremiumCur(Double premiumCur) {
-        this.premiumCur = premiumCur;
-    }
-
-    public Double getDeductibleCur() {
-        return deductibleCur;
-    }
-
-    public void setDeductibleCur(Double deductibleCur) {
-        this.deductibleCur = deductibleCur;
-    }
-
-    public Double getDeductiblePercent() {
-        return deductiblePercent;
-    }
-
-    public void setDeductiblePercent(Double deductiblePercent) {
-        this.deductiblePercent = deductiblePercent;
-    }
-
-    public Double getDeductibleMin() {
-        return deductibleMin;
-    }
-
-    public void setDeductibleMin(Double deductibleMin) {
-        this.deductibleMin = deductibleMin;
-    }
-
-    public String getDeductibleUnit() {
-        return deductibleUnit;
-    }
-
-    public void setDeductibleUnit(String deductibleUnit) {
-        this.deductibleUnit = deductibleUnit;
-    }
-
-    public String getDeductibleSpecific() {
-        return deductibleSpecific;
-    }
-
-    public void setDeductibleSpecific(String deductibleSpecific) {
-        this.deductibleSpecific = deductibleSpecific;
+    public void setDeductible(Integer deductibleId, String deductibleText) {
+        if (this.deductible == null) {
+            this.deductible = new Deductible();
+        }
+        this.deductible.setId(deductibleId);
+        this.deductible.setText(deductibleText);
     }
 }

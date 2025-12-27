@@ -1,6 +1,6 @@
 package ru.pt.calculator.utils;
 
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.VarDataType;
 
 import java.util.List;
@@ -51,17 +51,17 @@ public class ValidatorImpl {
         }
     }
 
-    public static boolean validate(List<LobVar> dataMap, String leftKey, String rightKey, String rightValue, String ruleType) {
+    public static boolean validate(List<PvVar> dataMap, String leftKey, String rightKey, String rightValue, String ruleType) {
         try {
-            LobVar leftVarDef = dataMap.stream().filter(v -> v.getVarCode().equals(leftKey)).findFirst().orElse(null);
-            LobVar rightVarDef = dataMap.stream().filter(v -> v.getVarCode().equals(rightKey)).findFirst().orElse(null);
+            PvVar leftVarDef = dataMap.stream().filter(v -> v.getVarCode().equals(leftKey)).findFirst().orElse(null);
+            PvVar rightVarDef = dataMap.stream().filter(v -> v.getVarCode().equals(rightKey)).findFirst().orElse(null);
             if (rightVarDef != null) {
                 if (! leftVarDef.getVarType().equalsIgnoreCase(rightVarDef.getVarType())) {
                     return false;
                 }
             }
             if ( rightVarDef == null) {
-                rightVarDef = new LobVar(rightKey, "","",leftVarDef.getVarType(), rightValue, leftVarDef.getVarDataType());
+                rightVarDef = new PvVar(rightKey, "","",leftVarDef.getVarType(), rightValue, leftVarDef.getVarDataType());
             }
 
             if (leftVarDef == null || rightVarDef == null) return false;

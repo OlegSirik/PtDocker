@@ -3,7 +3,7 @@ package ru.pt.process.service;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.InsuredObject;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.service.process.PostProcessService;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class PostProcessServiceImpl implements PostProcessService {
     @Override
-    public InsuredObject setCovers(InsuredObject insuredObject, List<LobVar> calculatedValues) {
+    public InsuredObject setCovers(InsuredObject insuredObject, List<PvVar> calculatedValues) {
         if (insuredObject != null && insuredObject.getCovers() != null) {
             for (Cover cover : insuredObject.getCovers()) {
                 if (cover == null || cover.getCover() == null) {
@@ -25,19 +25,19 @@ public class PostProcessServiceImpl implements PostProcessService {
                 // Find values in lobVars
                 String sumInsured = calculatedValues.stream()
                         .filter(v -> sumInsuredVarCode.equals(v.getVarCode()))
-                        .map(LobVar::getVarValue)
+                        .map(PvVar::getVarValue)
                         .findFirst()
                         .orElse(null);
 
                 String premium = calculatedValues.stream()
                         .filter(v -> premiumVarCode.equals(v.getVarCode()))
-                        .map(LobVar::getVarValue)
+                        .map(PvVar::getVarValue)
                         .findFirst()
                         .orElse("0.0");
 
                 String deductibleNr = calculatedValues.stream()
                         .filter(v -> deductibleNrVarCode.equals(v.getVarCode()))
-                        .map(LobVar::getVarValue)
+                        .map(PvVar::getVarValue)
                         .findFirst()
                         .orElse(null);
 
@@ -54,7 +54,8 @@ public class PostProcessServiceImpl implements PostProcessService {
                 }
                 if (deductibleNr != null) {
                     try {
-                        cover.setDeductible(Double.parseDouble(deductibleNr));
+                        cover.setDeductibleId(Integer.parseInt(deductibleNr));
+                        
                     } catch (Exception ignored) {
                     }
                 }

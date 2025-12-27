@@ -28,6 +28,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     // TODO version remove/const
     implementation("com.jayway.jsonpath:json-path:2.9.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // Lombok for annotations like @Data, @Getter, @Setter
     compileOnly("org.projectlombok:lombok")

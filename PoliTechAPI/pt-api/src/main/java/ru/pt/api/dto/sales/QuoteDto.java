@@ -1,6 +1,8 @@
 package ru.pt.api.dto.sales;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 /**
@@ -22,10 +24,10 @@ public record QuoteDto(
     String policyStatus,
     String phDigest,
     String ioDigest,
-    Double premium,
+    String premium,
     String agentDigest,
-    Double agentKvPrecent,
-    Double agentKvAmount,
+    String agentKvPrecent,
+    String agentKvAmount,
     Boolean comand1,
     Boolean comand2,
     Boolean comand3,

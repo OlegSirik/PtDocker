@@ -11,6 +11,9 @@ import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvPackage;
+import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.product.PvFile;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.PreProcessService;
@@ -18,11 +21,12 @@ import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
-
+import ru.pt.api.service.product.ProductService;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import ru.pt.process.utils.VariablesService;
 
 @Component
 public class FileProcessServiceImpl implements FileProcessService {
@@ -36,13 +40,16 @@ public class FileProcessServiceImpl implements FileProcessService {
     private final FileService fileService;
     private final PreProcessService preProcessService;
 
+    private final ProductService productService;
+
     public FileProcessServiceImpl(
             PolicyIndexRepository policyIndexRepository,
             ProductRepository productRepository,
             PolicyRepository policyRepository,
             ProductVersionRepository productVersionRepository,
             FileService fileService,
-            PreProcessService preProcessService
+            PreProcessService preProcessService,
+            ProductService productService
     ) {
         this.policyIndexRepository = policyIndexRepository;
         this.productRepository = productRepository;
@@ -50,10 +57,12 @@ public class FileProcessServiceImpl implements FileProcessService {
         this.productVersionRepository = productVersionRepository;
         this.fileService = fileService;
         this.preProcessService = preProcessService;
+        this.productService = productService;
     }
 
-    @Override
-    public byte[] generatePrintForm(String policyNumber, String printFormType) {
+    //@Override
+    public byte[] generatePrintForm1(String policyNumber, String printFormType) {
+        /* 
         var policyIndex = policyIndexRepository
                 .findByPolicyNumber(policyNumber)
                 .orElseThrow(() ->
@@ -121,5 +130,67 @@ public class FileProcessServiceImpl implements FileProcessService {
             keyValues.put(key, value);
         }
         return fileService.getFile(printFormType, keyValues);
+        */
+       return new byte[0];
     }
+
+    @Override
+    public byte[] generatePrintForm(String policyNumber, String printFormType) {
+        var policyIndex = policyIndexRepository
+                .findByPolicyNumber(policyNumber)
+                .orElseThrow(() ->
+                        new NotFoundException("Не удалось найти полис по номеру - %s".formatted(policyNumber))
+                );
+        var policy = policyRepository.findById(policyIndex.getPolicyId())
+                .orElseThrow(() ->
+                        new NotFoundException("Не удалось найти полис по id - %s".formatted(policyIndex.getPolicyId()))
+                );
+
+        var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getVersionNo());
+
+        List<PvVar> vars = new LinkedList<>();
+
+        for (PvVar it : productVersion.getVars()) { vars.add(it); }
+        vars.forEach(it -> it.setVarValue(null));
+
+        // добавить запрос на получение номера пакета из договора 
+        //vars = VariablesService.addPackageNo(vars);
+        vars = preProcessService.evaluateAndEnrichVariables(policy.getPolicy(), vars, policyIndex.getProductCode());
+        String packageNo = VariablesService.getPackageNo(vars);
+
+        if (packageNo == null || packageNo.isEmpty() || packageNo.equals("")) {
+                // todo remove this. only for test
+                packageNo = "0";
+                // throw new IllegalArgumentException("Package no not found");
+        }
+
+        Integer fileId = null;
+
+        for (PvPackage pvPackage : productVersion.getPackages()) {
+            if (pvPackage.getName().equals(packageNo)) {
+                for (PvFile pvFile : pvPackage.getFiles()) {
+                    if (pvFile.getFileCode().equals(printFormType)) {
+                        fileId = pvFile.getFileId();
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        if (fileId == null) {
+            throw new IllegalArgumentException("File id not found");
+        }
+
+        Map<String, String> keyValues = new HashMap<>();
+
+        for (PvVar node : vars) {
+            String key = node.getVarCode();
+            String value = node.getVarValue();
+            System.out.println(key + " " + value);
+            keyValues.put(key, value);
+        }
+        return fileService.getFile(fileId, keyValues);
+    }
+
+    
 }

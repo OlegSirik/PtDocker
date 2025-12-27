@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ru.pt.api.admin.dto.PaymentRequest;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.sales.QuoteDto;
@@ -18,6 +21,7 @@ import ru.pt.db.service.DbStorageService;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -34,6 +38,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/sales")
 public class SalesController extends SecuredController {
+
+    private static final Logger logger = LoggerFactory.getLogger(SalesController.class);
 
     private final ProcessOrchestrator processOrchestrator;
     private final DbStorageService dbStorageService;
@@ -122,8 +128,10 @@ public class SalesController extends SecuredController {
 
     @GetMapping("/quotes")
     public ResponseEntity<List<QuoteDto>> getAccountQuotes(
+            @RequestParam(value = "qstr", required = false) String qstr,
             @PathVariable("tenantCode") String tenantCode) {
-        List<QuoteDto> quotes = dbStorageService.getAccountQuotes();
+        String searchQuery = (qstr != null && !qstr.trim().isEmpty()) ? qstr.trim() : "";
+        List<QuoteDto> quotes = dbStorageService.getAccountQuotes(searchQuery);
         return ResponseEntity.ok().body(quotes);
     }
 
@@ -142,6 +150,5 @@ public class SalesController extends SecuredController {
             @PathVariable("tenantCode") String tenantCode) {
         return fileProcessService.generatePrintForm(policyNr, pfType);
     }
-
 
 }

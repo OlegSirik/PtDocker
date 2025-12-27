@@ -34,18 +34,23 @@ public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, 
             p.product_code,
             p.create_date,
             p.issue_date,
-            p.issue_timezone,
             p.payment_date,
             p.start_date,
             p.end_date,
-            p.policy_status,
+            p.policy_status, 
             p.user_account_id,
             p.client_account_id,
             p.version_status,
-            p.payment_order_id
+            p.payment_order_id,
+            p.ph_digest,
+            p.io_digest,
+            p.premium::text,
+            p.agent_kv_percent::text,
+            p.agent_kv_amount::text
         FROM policy_index p
         JOIN account_tree at ON p.user_account_id = at.id
+        where ( p.policy_nr like '%'||:qstr||'%' or p.ph_digest like '%'||:qstr||'%'  )
         ORDER BY p.policy_nr
         """, nativeQuery = true)
-    List<Object[]> findPoliciesByAccountIdRecursive(@Param("accountId") Long accountId);
+    List<Object[]> findPoliciesByAccountIdRecursive(@Param("accountId") Long accountId, @Param("qstr") String qstr);
 }

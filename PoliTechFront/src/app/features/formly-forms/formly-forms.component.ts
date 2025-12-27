@@ -13,16 +13,12 @@ import { MatOption } from "@angular/material/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import type { Field } from './formly-forms.service';
-import { FormlyFormsService, FormData } from './formly-forms.service';
+import { FormlyFormsService} from './formly-forms.service';
 import { Product, ProductService } from '../../shared/services/product.service';
 import { BoxPolicy, BoxPolicyHolder, InsuredObject, Identifier, Address, Organization, Device, BoxIdentifier, BoxAddress, BoxOrganization, BoxDevice, Policy } from '../../shared/models/policy.models';
 import { PolicyService } from '../../shared/services/policy.service';
 
 
-interface Food {
-  value: string;
-  viewValue: string;
-}
 
 interface LoV {
   value: string;
@@ -46,11 +42,6 @@ interface LoV {
 })
 export class FormlyFormsComponent implements OnInit {
 
-  foods: Food[] = [
-    {value: 'steak-0', viewValue: 'Steak'},
-    {value: 'pizza-1', viewValue: 'Pizza'},
-    {value: 'tacos-2', viewValue: 'Tacos'},
-  ];
 
   // todo получать полный список с сервера через АПИ
   io_device_typeCode : LoV[] = [
@@ -80,9 +71,9 @@ export class FormlyFormsComponent implements OnInit {
   }
 
 
-onCancel() {
-throw new Error('Method not implemented.');
-}
+  onCancel() {
+    throw new Error('Method not implemented.');
+  }
 
   product: Product = {
     lob: '',
@@ -98,13 +89,6 @@ throw new Error('Method not implemented.');
     vars: []
   };
 
-  formData1: FormData = {
-    item1: '',
-    item2: 'item2',
-    item3: 'item3',
-    item4: '',
-    item5: ''
-  };
 
   policy: BoxPolicy = new BoxPolicy();
   
@@ -253,7 +237,9 @@ throw new Error('Method not implemented.');
       next: (response: Policy) => {
         console.log('Save response:', response);
         // Convert Policy back to BoxPolicy
-        this.policy = this.policyService.conversPolicy2Box(response);
+        let boxPolicy = this.policyService.conversPolicy2Box(response);
+        console.log('BoxPolicy:', boxPolicy);
+        this.policy = boxPolicy;
         this.updateCoverageTable();
         this.snackBar.open('Политика сохранена успешно', 'Закрыть', { duration: 3000 });
       },

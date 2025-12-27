@@ -21,50 +21,14 @@ import { Deductible } from '../../../shared/services/product.service';
     template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Добавить франшизу' : 'Редактировать франшизу' }}</h2>
     <mat-dialog-content>
-      <div class="form-row">
-        <mat-form-field class="form-field" appearance="outline">
-          <mat-label>Номер</mat-label>
-          <input matInput type="number" [(ngModel)]="deductible.nr" placeholder="1">
-        </mat-form-field>
-        <mat-form-field class="form-field" appearance="outline">
-          <mat-label>Тип франшизы</mat-label>
-          <mat-select [(ngModel)]="deductible.deductibleType" required>
-            @for (option of data.deductibleTypeOptions; track option) {
-              <mat-option [value]="option">
-                {{ option }}
-              </mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field class="form-field" appearance="outline">
-          <mat-label>Франшиза</mat-label>
-          <input matInput type="number" [(ngModel)]="deductible.deductible" required placeholder="100">
-        </mat-form-field>
-        <mat-form-field class="form-field" appearance="outline">
-          <mat-label>Единица</mat-label>
-          <mat-select [(ngModel)]="deductible.deductibleUnit" required>
-            @for (option of data.deductibleUnitOptions; track option) {
-              <mat-option [value]="option">
-                {{ option }}
-              </mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field class="form-field" appearance="outline">
-          <mat-label>Специфика</mat-label>
-          <mat-select [(ngModel)]="deductible.deductibleSpecific" required>
-            @for (option of data.deductibleSpecificOptions; track option) {
-              <mat-option [value]="option">
-                {{ option }}
-              </mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <mat-form-field appearance="outline" style="width: 100%; display: block; margin-bottom: 16px;">
+        <mat-label>ID</mat-label>
+        <input matInput type="number" [(ngModel)]="deductible.id" required placeholder="1">
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%; display: block;">
+        <mat-label>Текст</mat-label>
+        <input matInput type="text" [(ngModel)]="deductible.text" required placeholder="X рублей">
+      </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Отмена</button>
@@ -74,15 +38,6 @@ import { Deductible } from '../../../shared/services/product.service';
     </mat-dialog-actions>
     `,
     styles: [`
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    .form-field {
-      width: 100%;
-    }
     mat-dialog-content {
       min-width: 500px;
     }
@@ -96,20 +51,15 @@ export class DeductibleDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: {
       deductible?: Deductible;
       isNew: boolean;
-      deductibleTypeOptions: string[];
-      deductibleUnitOptions: string[];
-      deductibleSpecificOptions: string[];
     }
   ) {
     this.deductible = data.deductible ? { ...data.deductible } : {
-      deductibleType: 'MANDATORY',
-      deductible: 0,
-      deductibleUnit: 'RUB',
-      deductibleSpecific: 'EVERY'
+      id: undefined as any,
+      text: ''
     };
   }
 
   isValid(): boolean {
-    return !!(this.deductible.deductibleType && this.deductible.deductibleUnit && this.deductible.deductibleSpecific);
+    return !!(this.deductible.id !== undefined && this.deductible.id !== null && this.deductible.text && this.deductible.text.trim() !== '');
   }
 }

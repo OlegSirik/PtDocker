@@ -10,7 +10,7 @@ import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
 import ru.pt.api.dto.product.LobModel;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
@@ -69,11 +69,11 @@ public class CalculatorServiceImpl implements CalculatorService {
                     // Example:
                     ru.pt.api.dto.product.ProductVersionModel productVersionModel = productService.getProduct(productId, true);
 
-                    LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
+                    //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
 
-                    if (lobModel == null) {
-                        throw new IllegalArgumentException("LOB not found: " + productVersionModel.getLob());
-                    }
+                    //if (lobModel == null) {
+                    //    throw new IllegalArgumentException("LOB not found: " + productVersionModel.getLob());
+                    //}
 
                     // create empty calculator JSON as per spec
                     CalculatorModel calculatorModel = new CalculatorModel();
@@ -86,16 +86,17 @@ public class CalculatorServiceImpl implements CalculatorService {
                     calculatorModel.setCoefficients(new ArrayList<>());
 
 
-                    lobModel.getMpVars()
-                            .forEach(var -> calculatorModel.getVars().add(var));
+//                    lobModel.getMpVars()
+//                            .forEach(var -> calculatorModel.getVars().add(var));
 
+                    productVersionModel.getVars().forEach(var -> calculatorModel.getVars().add(var));
                     // INSERT_YOUR_CODE
                     // Find the package in productVersion.packages with code == packageNo
                     productVersionModel.getPackages().forEach(pkg -> {
 
                         if (pkg.getCode().equals(packageNo)) {
                             pkg.getCovers().forEach(cover -> {
-                                LobVar varSumInsured = new LobVar();
+                                PvVar varSumInsured = new PvVar();
                                 varSumInsured.setVarCode("co_" + cover.getCode() + "_sumInsured");
                                 varSumInsured.setVarName(cover.getCode() + " Страховая сумма");
                                 varSumInsured.setVarType("VAR");
@@ -103,7 +104,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                                     calculatorModel.getVars().add(varSumInsured);
                                 }
 
-                                LobVar varPremium = new LobVar();
+                                PvVar varPremium = new PvVar();
                                 varPremium.setVarCode("co_" + cover.getCode() + "_premium");
                                 varPremium.setVarName(cover.getCode() + " Премия");
                                 varPremium.setVarType("VAR");
@@ -111,7 +112,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                                     calculatorModel.getVars().add(varPremium);
                                 }
 
-                                LobVar varDeductibleNr = new LobVar();
+                                PvVar varDeductibleNr = new PvVar();
                                 varDeductibleNr.setVarCode("co_" + cover.getCode() + "_deductibleNr");
                                 varDeductibleNr.setVarName(cover.getCode() + " Номер франшизы");
                                 varDeductibleNr.setVarType("VAR");
@@ -188,7 +189,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     }
 
     //@Transactional(readOnly = true)
-    public List<LobVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<LobVar> inputValues) {
+    public List<PvVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<PvVar> inputValues) {
         CalculatorModel model = getCalculatorModel(productId, versionNo, packageNo);
         if (model == null) return inputValues;
 
@@ -196,10 +197,10 @@ public class CalculatorServiceImpl implements CalculatorService {
         if (model.getVars() == null) {
             model.setVars(new ArrayList<>());
         }
-        List<LobVar> modelVars = model.getVars();
-        for (LobVar inputVar : inputValues) {
+        List<PvVar> modelVars = model.getVars();
+        for (PvVar inputVar : inputValues) {
             boolean found = false;
-            for (LobVar modelVar : modelVars) {
+            for (PvVar modelVar : modelVars) {
                 if (modelVar.getVarCode() != null && modelVar.getVarCode().equals(inputVar.getVarCode())) {
                     modelVar.setVarValue(inputVar.getVarValue());
                     found = true;
@@ -208,7 +209,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
             if (!found) {
                 // Add a copy of inputVar to modelVars
-                LobVar newVar = new LobVar();
+                PvVar newVar = new PvVar();
                 newVar.setVarCode(inputVar.getVarCode());
                 newVar.setVarValue(inputVar.getVarValue());
                 newVar.setVarType(inputVar.getVarType());
@@ -241,14 +242,14 @@ public class CalculatorServiceImpl implements CalculatorService {
                     }
                 }
 
-                LobVar lv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionLeft())).findFirst().orElse(null);
-                LobVar rv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionRight())).findFirst().orElse(null);
+                PvVar lv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionLeft())).findFirst().orElse(null);
+                PvVar rv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionRight())).findFirst().orElse(null);
 
 
                 if (lv != null && lv.getVarType().equals("COEFFICIENT")) {
                     CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(lv.getVarCode())).findFirst().orElse(null);
                     if (cd != null) {
-                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(LobVar::getVarCode, LobVar::getVarValue));
+                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(PvVar::getVarCode, PvVar::getVarValue));
                         String s = coefficientService.getCoefficientValue(model.getId(), lv.getVarCode(), modelVarsMap, cd.getColumns());
                         lv.setVarValue(s);
                     }
@@ -256,7 +257,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                 if (rv != null && rv.getVarType().equals("COEFFICIENT")) {
                     CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(rv.getVarCode())).findFirst().orElse(null);
                     if (cd != null) {
-                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(LobVar::getVarCode, LobVar::getVarValue));
+                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(PvVar::getVarCode, PvVar::getVarValue));
                         String s = coefficientService.getCoefficientValue(model.getId(), rv.getVarCode(), modelVarsMap, cd.getColumns());
                         rv.setVarValue(s);
                     }
@@ -334,7 +335,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         return value;
     }
 
-    private Double tryParseDouble(LobVar s) {
+    private Double tryParseDouble(PvVar s) {
         if (s == null) return null;
 
         try {
@@ -417,16 +418,16 @@ public class CalculatorServiceImpl implements CalculatorService {
 
 
         // get lob from repository
-        LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
-        if (lobModel == null) {
-            throw new IllegalArgumentException("LOB not found for code=" + productVersionModel.getLob());
-        }
+        //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
+        //if (lobModel == null) {
+        //    throw new IllegalArgumentException("LOB not found for code=" + productVersionModel.getLob());
+        //}
 
 
         // get vars from lob
-        List<LobVar> vars = lobModel.getMpVars();
+        List<PvVar> vars = productVersion.getVars();
         // add vars to calculator if it not found by code
-        for (LobVar var : vars) {
+        for (PvVar var : vars) {
             if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(var.getVarCode()))) {
                 calculatorModel.getVars().add(var);
             }

@@ -2,7 +2,7 @@ package ru.pt.api.service.process;
 
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.process.ValidatorType;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
 
 import java.util.List;
@@ -29,6 +29,6 @@ public interface ValidatorService {
      * @param lobVars             переменные для валидации
      * @return список ошибок
      */
-    List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<LobVar> lobVars);
+    List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<PvVar> pvVars);
 
 }

@@ -63,14 +63,14 @@ export class PackageDialogComponent {
     }
   ) {
     this.package = data.package ? { ...data.package } : {
-      code: '',
       name: '',
+      code: '',
       covers: [],
       files: []
     };
   }
 
   isValid(): boolean {
-    return !!(this.package.code && this.package.name);
+    return !!(this.package.name);
   }
 }

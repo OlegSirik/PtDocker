@@ -88,7 +88,6 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException("name must not be empty");
         }
 
-
         ProductEntity product = new ProductEntity();
         var versionStatus = productVersionModel.getVersionStatus();
         if (versionStatus!= null && versionStatus.equals("PROD")) {
@@ -148,6 +147,9 @@ public class ProductServiceImpl implements ProductService {
             log.warn("No variables copied from lob!!");
         }
 
+        productVersionModel.setPhType( lob.getMpPhType() );
+        productVersionModel.setIoType( lob.getMpInsObjectType() );
+
         String productJson;
         try {
             productJson = objectMapper.writeValueAsString(productVersionModel);
@@ -169,6 +171,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
+        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        if (product.getDevVersionNo() == null) {
+            throw new IllegalArgumentException("No dev version to publish");
+        }
+        product.setProdVersionNo(product.getDevVersionNo());
+        product.setDevVersionNo(null);
+        productRepository.save(product);
+
+        return getVersion(productId, product.getDevVersionNo());
+    }
+
+    @Override
     public ProductVersionModel getVersion(Integer id, Integer versionNo) {
         try {
             ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(id, versionNo)
@@ -184,6 +200,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
         ProductEntity product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
         if (product.getDevVersionNo() != null) {
             throw new IllegalArgumentException("only one version can be in dev status");
         }
@@ -286,17 +303,26 @@ public class ProductServiceImpl implements ProductService {
         List<String> jsonPaths = new ArrayList<>();
         Map<String, String> jsonValues = new HashMap<>();
 
-        jsonPaths.add("product.code");
-        jsonValues.put("product.code", productVersionModel.getCode());
+        jsonPaths.add("draftId");
+        jsonValues.put("draftId", "");
 
         jsonPaths.add("productCode");
         jsonValues.put("productCode", productVersionModel.getCode());
 
-        jsonPaths.add("package");
-        jsonValues.put("package", "0");
+//        jsonPaths.add("package");
+//        jsonValues.put("package", "0");
 
         jsonPaths.add("issueDate");
         jsonValues.put("issueDate", formattedNow());
+
+//        jsonPaths.add("insuredObjects.ioType");
+//        jsonValues.put("insuredObjects.ioType", "Person");
+
+        jsonPaths.add("insuredObjects.sumInsured");
+        jsonValues.put("insuredObjects.sumInsured", "");
+
+        jsonPaths.add("insuredObjects.packageCode");
+        jsonValues.put("insuredObjects.packageCode", "0");
 
         try {
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
@@ -309,9 +335,9 @@ public class ProductServiceImpl implements ProductService {
             jsonPaths.add("startDate");
             jsonValues.put("startDate", formattedNow());
         }
-    } catch (Exception e) {}
+        } catch (Exception e) {}
 
-    try {
+        try {
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
             String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
             if (values.length > 1) {
@@ -322,7 +348,7 @@ public class ProductServiceImpl implements ProductService {
             jsonPaths.add("endDate");
             jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
         }
-    } catch (Exception e) {}
+        } catch (Exception e) {}
 
         Set<String> validatorKeys = new HashSet<>();
 
@@ -353,32 +379,52 @@ public class ProductServiceImpl implements ProductService {
         List<String> jsonPaths = new ArrayList<>();
         Map<String, String> jsonValues = new HashMap<>();
 
-        jsonPaths.add("product.code");
-        jsonValues.put("product.code", productVersionModel.getCode());
+        jsonPaths.add("draftId");
+        jsonValues.put("draftId", "");
+
+        jsonPaths.add("productCode");
+        jsonValues.put("productCode", productVersionModel.getCode());
+
+//        jsonPaths.add("package");
+//        jsonValues.put("package", "0");
 
         jsonPaths.add("issueDate");
         jsonValues.put("issueDate", formattedNow());
 
+//        jsonPaths.add("insuredObjects.ioType");
+//        jsonValues.put("insuredObjects.ioType", "Person");
+
+        jsonPaths.add("insuredObjects[0].sumInsured");
+        jsonValues.put("insuredObjects[0].sumInsured", "");
+
+        jsonPaths.add("insuredObjects[0].packageCode");
+        jsonValues.put("insuredObjects[0].packageCode", "0");
+
+        try {
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-            String value = productVersionModel.getWaitingPeriod().getValidatorValue().split(",")[0].trim();
-            jsonPaths.add("waitingPeriod");
-            jsonValues.put("waitingPeriod", value);
+            String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
+            if (values.length > 1) {
+                jsonPaths.add("waitingPeriod");
+                jsonValues.put("waitingPeriod", values[0].trim());
+            }
         } else {
             jsonPaths.add("startDate");
             jsonValues.put("startDate", formattedNow());
         }
+        } catch (Exception e) {}
 
+        try {
         if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-            String value = productVersionModel.getPolicyTerm().getValidatorValue().split(",")[0].trim();
-            jsonPaths.add("policyTerm");
-            jsonValues.put("policyTerm", value);
+            String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
+            if (values.length > 1) {
+                jsonPaths.add("policyTerm");
+                jsonValues.put("policyTerm", values[0].trim());
+            }
         } else {
             jsonPaths.add("endDate");
             jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
         }
-
-        jsonPaths.add("insuredObject.packageCode");
-        jsonValues.put("insuredObject.packageCode", "0");
+        } catch (Exception e) {}
 
         Set<String> validatorKeys = new HashSet<>();
 
@@ -386,7 +432,10 @@ public class ProductServiceImpl implements ProductService {
             validatorKeys.add(validator.getKeyLeft());
             validatorKeys.add(validator.getKeyRight());
         });
-
+// добавляем все переменные из productVersionModel.getVars() в validatorKeys
+        productVersionModel.getVars().forEach(var -> {
+            validatorKeys.add(var.getVarCode());
+        });
         // for each validatorKeys get path by key from lob.mpVars
         lob.getMpVars().forEach(mpVar -> {
             if (mpVar.getVarType().equals("IN")) {
@@ -433,6 +482,23 @@ public class ProductServiceImpl implements ProductService {
             log.warn("No true version number resolution, we will take just not null");
             versionNo = entity.getProdVersionNo() == null ? entity.getDevVersionNo() : entity.getProdVersionNo();
         }
+        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
+                .orElseThrow();
+        try {
+            return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ProductVersionModel getProductByCodeAndVersionNo(String code, Integer versionNo) {
+
+        log.info("Finging product by code {}, versionNo - {}", code, versionNo);
+
+        var entity = productRepository.findByCodeAndIsDeletedFalse(code)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
         var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
                 .orElseThrow();
         try {

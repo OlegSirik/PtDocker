@@ -489,3 +489,88 @@ if filter list = 'Insured Object' then filter objects with path starts from 'ins
 all others functions the same as for Policy Holder
 
 If filter list = 'Others' then show record with varPath does not starts with 'policyHolder.' or 'insuredObject.'
+
+
+
+
+
+
+
+
+ "packages": [
+        {
+            "code": 0,
+            "name": "0",
+            "covers": [
+                {
+                    "code": "MOBILE_GLASS_NH",
+                    "deductibles": [
+                        {
+                            "id": 0,
+                            "text": "X рублей ttt"
+                        },
+                        {
+                            "id": 0,
+                            "text": "X рублей vv"
+                        },
+                        {
+                            "id": 3,
+                            "text": "X рублей"
+                        }
+                    ],
+                    "waitingPeriod": "P0D",
+                    "isMandatory": true,
+                    "coverageTerm": "P1Y",
+                    "isDeductibleMandatory": false,
+                    "limits": [
+                        {
+                            "premium": 100.0,
+                            "sumInsured": 10000.0
+                        }
+                    ]
+                }
+            ],
+            "files": [
+                {
+                    "fileCode": "policy",
+                    "fileName": "qr_1012668219760764.pdf",
+                    "fileId": 8
+                }
+            ]
+        }
+    ],
+
+
+First table packages. Mat header - Пакет покрытий.
+button add. when button pressed show dialog with 1 textitem "name";
+buttons save and cancel
+if "save" then calculate package.id as max(id) + 1
+add record to document.
+makes new record selected, update all child tables.
+2 columns code and name, action edit and delete. 
+When record cliecked - set currentPackage
+show in header (  package.name )
+
+next add tab set
+first tab - files. 
+put current card with files to the tab
+
+second tab - covers
+add table with array covers data
+header - Покрытия, button - add, show dialog, each item on new record, code - dropdown list
+columns - "code","isMandatory",waitingPeriod","coverageTerm","isDeductibleMandatory", action -edit, delete
+when record clicked - update detail tables - limits and deductibles
+
+table "limits", header Limits, button add
+dialog each textfield on new line - sumInsured, premium
+buttons add, cancel
+when add- validate that sumInsured is unique for the array, sumInsured and premium must be greater that 0
+each table record has 2 columns, edit, delete 
+               
+table "deductibles", header Deductible, button add
+dialog  each textfield on new line - id, text
+buttons add, cancel
+    when add- validate that id is unique for the array and id and text is not empty
+each table record has 2 columns, edit, delete 
+
+each data change must be corresponded to save button

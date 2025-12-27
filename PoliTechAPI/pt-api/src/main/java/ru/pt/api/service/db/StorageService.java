@@ -7,6 +7,7 @@ import ru.pt.api.dto.versioning.Version;
 import java.util.List;
 import java.util.UUID;
 
+import ru.pt.api.dto.process.PolicyDTO;
 /**
  * Сервис хранения договоров + методы доступа
  */
@@ -22,6 +23,15 @@ public interface StorageService {
      */
     PolicyData save(String policy, UserDetails userData, Version version, UUID uuid);
 
+    /**
+     * Сохранить полис
+     * @param policy договор
+     * @param userData данные о пользователе
+     * @param version версия под которой создан договор
+     * @param uuid идентификатор договора/процесса
+     * @return сохраненный договор
+     */
+    PolicyData save(PolicyDTO policy, UserDetails userData);
     /**
      * Обновить договор целиком
      * @param policyData данные договора для сохранения

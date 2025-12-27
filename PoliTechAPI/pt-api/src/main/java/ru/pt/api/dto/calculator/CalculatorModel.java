@@ -1,6 +1,6 @@
 package ru.pt.api.dto.calculator;
 
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class CalculatorModel {
     private String productCode;
     private Integer versionNo;
     private Integer packageNo;
-    private List<LobVar> vars = new ArrayList<>();
+    private List<PvVar> vars = new ArrayList<>();
     private List<FormulaDef> formulas = new ArrayList<>();
     private List<CoefficientDef> coefficients = new ArrayList<>();
 
@@ -55,11 +55,11 @@ public class CalculatorModel {
         this.packageNo = packageNo;
     }
 
-    public List<LobVar> getVars() {
+    public List<PvVar> getVars() {
         return vars;
     }
 
-    public void setVars(List<LobVar> vars) {
+    public void setVars(List<PvVar> vars) {
         this.vars = vars;
     }
 

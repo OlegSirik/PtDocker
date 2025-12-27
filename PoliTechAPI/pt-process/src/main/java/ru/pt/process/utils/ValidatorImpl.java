@@ -1,6 +1,6 @@
 package ru.pt.process.utils;
 
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.dto.product.VarDataType;
 
@@ -66,7 +66,7 @@ public class ValidatorImpl {
     }
 
     public static boolean validate(
-            Map<String, LobVar> dataMap,
+            Map<String, PvVar> dataMap,
             ValidatorRule validatorRule
     ) {
         String leftKey = validatorRule.getKeyLeft();
@@ -75,15 +75,15 @@ public class ValidatorImpl {
         String ruleType = validatorRule.getRuleType();
         try {
             // TODO медленно
-            LobVar leftVarDef = dataMap.get(leftKey);
-            LobVar rightVarDef = dataMap.get(rightKey);
+            PvVar leftVarDef = dataMap.get(leftKey);
+            PvVar rightVarDef = dataMap.get(rightKey);
             if (rightVarDef != null) {
                 if (!leftVarDef.getVarType().equalsIgnoreCase(rightVarDef.getVarType())) {
                     return false;
                 }
             }
             if (rightVarDef == null) {
-                rightVarDef = new LobVar(rightKey, "", "", leftVarDef.getVarType(), rightValue, leftVarDef.getVarDataType());
+                rightVarDef = new PvVar(rightKey, "", "", leftVarDef.getVarType(), rightValue, leftVarDef.getVarDataType());
             }
 
             if (leftVarDef == null || rightVarDef == null){

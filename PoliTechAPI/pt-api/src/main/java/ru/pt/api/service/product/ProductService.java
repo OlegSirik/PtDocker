@@ -24,6 +24,14 @@ public interface ProductService {
     ProductVersionModel create(ProductVersionModel productVersionModel);
 
     /**
+     * Опубликовать продукт в прод
+     * Выполнить все необходимые действия для публикации продукта в прод
+     * @param id айди продукта
+     * @return опубликованный продукт
+     */
+    ProductVersionModel publishToProd(Integer productId, Integer versionNo);
+
+    /**
      * Получить информацию о продукте по айди и номеру версии
      * @param id айди продукта
      * @param versionNo номер версии
@@ -84,6 +92,14 @@ public interface ProductService {
      */
     ProductVersionModel getProduct(Integer id, boolean forDev);
 
+    /**
+     * Получить продукт по коду и номеру версии
+     * @param code код продукта
+     * @param versionNo номер версии
+     * @return версия продукта
+     */
+    ProductVersionModel getProductByCodeAndVersionNo(String code, Integer versionNo);
+    
     /**
      * Получить продукт по коду
      * @param code код продукта
