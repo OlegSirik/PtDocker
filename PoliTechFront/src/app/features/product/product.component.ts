@@ -88,10 +88,6 @@ export class ProductComponent implements OnInit {
   lobOptions: string[] = [];
   keyLeftOptions: string[] = [];
   ruleTypeOptions: string[] = [];
-  coverCodeOptions: string[] = [];
-  deductibleTypeOptions: string[] = [];
-  deductibleUnitOptions: string[] = [];
-  deductibleSpecificOptions: string[] = [];
   validatorTypeOptions: string[] = [];
   resetPolicyOptions: string[] = [];
 
@@ -119,32 +115,24 @@ export class ProductComponent implements OnInit {
   filteredPackages: Package[] = [];
   paginatedPackages: Package[] = [];
 
-  // Covers table
-  coversDisplayedColumns = ['code', 'name', 'isMandatory', 'waitingPeriod', 'coverageTerm', 'isDeductibleMandatory', 'actions'];
-  coversSearchText = '';
-  coversPageSize = 10;
-  coversPageIndex = 0;
-  filteredCovers: Cover[] = [];
-  paginatedCovers: Cover[] = [];
   selectedPackageIndex = -1;
+  currentPackage: Package | null = null;
 
-  // Deductibles table
-  deductiblesDisplayedColumns = ['nr', 'deductibleType', 'deductible', 'deductibleUnit', 'deductibleSpecific', 'actions'];
-  deductiblesSearchText = '';
-  deductiblesPageSize = 10;
-  deductiblesPageIndex = 0;
-  filteredDeductibles: Deductible[] = [];
-  paginatedDeductibles: Deductible[] = [];
+  // Covers table
+  coversDisplayedColumns = ['code', 'isMandatory', 'waitingPeriod', 'coverageTerm', 'isDeductibleMandatory', 'actions'];
+  paginatedCovers: Cover[] = [];
   selectedCoverIndex = -1;
 
+  // Deductibles table
+  deductiblesDisplayedColumns = ['id', 'text', 'actions'];
+  paginatedDeductibles: Deductible[] = [];
+
   // Limits table
-  limitsDisplayedColumns = ['nr', 'sumInsured', 'premium', 'actions'];
-  limitsSearchText = '';
-  limitsPageSize = 10;
-  limitsPageIndex = 0;
-  filteredLimits: Limit[] = [];
+  limitsDisplayedColumns = ['sumInsured', 'premium', 'actions'];
   paginatedLimits: Limit[] = [];
-  limitsHasChanges = false;
+
+  // Dropdown options
+  coverCodeOptions: string[] = [];
 
   // Policy Variables table
   policyVarsDisplayedColumns = ['category', 'field', 'name', 'code', 'actions'];
@@ -209,12 +197,6 @@ export class ProductComponent implements OnInit {
     this.businessLineEditService.getLobVars(this.product.lob).subscribe(options => this.keyLeftOptions = options);
 
     this.productService.getRuleTypeOptions().subscribe(options => this.ruleTypeOptions = options);
-    //this.productService.getCoverCodeOptions().subscribe(options => this.coverCodeOptions = options);
-    this.businessLineEditService.getLobCovers(this.product.lob).subscribe(options => this.coverCodeOptions = options);
-
-    this.productService.getDeductibleTypeOptions().subscribe(options => this.deductibleTypeOptions = options);
-    this.productService.getDeductibleUnitOptions().subscribe(options => this.deductibleUnitOptions = options);
-    this.productService.getDeductibleSpecificOptions().subscribe(options => this.deductibleSpecificOptions = options);
     this.productService.getValidatorTypeOptions().subscribe(options => this.validatorTypeOptions = options);
     this.productService.getResetPolicyOptions().subscribe(options => this.resetPolicyOptions = options);
   }
@@ -224,11 +206,25 @@ export class ProductComponent implements OnInit {
       return this.productService.getProduct(id, versionNo || 0).pipe(
         tap((product) => {
           this.product = product;
-          // Ensure files arrays are initialized for all packages
+          // Ensure arrays are initialized for all packages and covers
           if (this.product.packages) {
             this.product.packages.forEach(pkg => {
               if (!pkg.files) {
                 pkg.files = [];
+              }
+              if (!pkg.covers) {
+                pkg.covers = [];
+              }
+              // Ensure deductibles and limits arrays are initialized for all covers
+              if (pkg.covers) {
+                pkg.covers.forEach((cover: Cover) => {
+                  if (!cover.deductibles) {
+                    cover.deductibles = [];
+                  }
+                  if (!cover.limits) {
+                    cover.limits = [];
+                  }
+                });
               }
             });
           }
@@ -285,13 +281,30 @@ export class ProductComponent implements OnInit {
   }
 
   createNewVersion(): void {
-    // Mock implementation
-    this.snackBar.open('Создание новой версии...', 'Закрыть', { duration: 2000 });
+    
+    this.productService.createVersion(this.product.id!, this.product.versionNo!).subscribe({
+      next: (createdProduct: any) => {
+        this.product = createdProduct;
+        this.snackBar.open('Новая версия создана успешно', 'Закрыть', { duration: 3000 });
+      },
+      error: (error: any) => {
+        console.error('Error creating new version:', error);
+        this.snackBar.open('Ошибка создания новой версии', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   goToProduction(): void {
-    // Mock implementation
-    this.snackBar.open('Переход в продакшн...', 'Закрыть', { duration: 2000 });
+    this.productService.publishToProd(this.product.id!, this.product.versionNo!).subscribe({
+      next: (publishedProduct: any) => {
+        this.product = publishedProduct;
+        this.snackBar.open('Продукт переведен в продакшн успешно', 'Закрыть', { duration: 3000 });
+      },
+      error: (error: any) => {
+        console.error('Error publishing product to production:', error);
+        this.snackBar.open('Ошибка перевода продукта в продакшн', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   openForm(): void {
@@ -459,12 +472,29 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Ensure files array is initialized
+        // Calculate package.id as max(id) + 1
+        const maxId = this.product.packages.length > 0 
+          ? Math.max(...this.product.packages.map(p => p.id || 0))
+          : 0;
+        result.id = maxId + 1;
+        result.code = result.id.toString();
+        
+        // Ensure arrays are initialized
         if (!result.files) {
           result.files = [];
         }
+        if (!result.covers) {
+          result.covers = [];
+        }
+        
         this.product.packages.push(result);
         this.updatePackagesTable();
+        
+        // Make new record selected and update child tables
+        this.selectedPackageIndex = this.product.packages.length - 1;
+        this.currentPackage = result;
+        this.updateChildTables();
+        
         this.updateChanges();
       }
     });
@@ -481,8 +511,23 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Preserve existing files and covers arrays if not provided
+        if (!result.files) {
+          result.files = pkg.files || [];
+        }
+        if (!result.covers) {
+          result.covers = pkg.covers || [];
+        }
+        // Preserve id and code
+        result.id = pkg.id;
+        result.code = pkg.code;
         this.product.packages[index] = result;
         this.updatePackagesTable();
+        // Update child tables if this package is selected
+        if (this.selectedPackageIndex === index) {
+          this.currentPackage = result;
+          this.updateChildTables();
+        }
         this.updateChanges();
       }
     });
@@ -495,17 +540,16 @@ export class ProductComponent implements OnInit {
       // Reset selection if deleted package was selected
       if (this.selectedPackageIndex === index) {
         this.selectedPackageIndex = -1;
+        this.currentPackage = null;
         this.selectedCoverIndex = -1;
       } else if (this.selectedPackageIndex > index) {
         // Adjust index if a package before the selected one was deleted
         this.selectedPackageIndex--;
+        this.currentPackage = this.product.packages[this.selectedPackageIndex];
       }
       
       this.updatePackagesTable();
-      this.updateCoversTable();
-      this.updateDeductiblesTable();
-      this.updateLimitsTable();
-      this.updateFilesTable();
+      this.updateChildTables();
       this.updateChanges();
     }
   }
@@ -521,10 +565,18 @@ export class ProductComponent implements OnInit {
     }
   }
 
-  showCovers(pkg: Package, index: number): void {
+  showFiles(pkg: Package, index: number): void {
     this.selectedPackageIndex = index;
-    this.updateCoversTable();
+    this.currentPackage = pkg;
+    this.selectedCoverIndex = -1;
+    this.updateChildTables();
+  }
+
+  updateChildTables(): void {
     this.updateFilesTable();
+    this.updateCoversTable();
+    this.updateDeductiblesTable();
+    this.updateLimitsTable();
   }
 
   openCalculator(pkg: Package): void {
@@ -549,6 +601,7 @@ export class ProductComponent implements OnInit {
   updatePackagesPagination() {
     console.log('updatePackagesPagination');
   }
+
   // Cover methods
   addCover(): void {
     if (this.selectedPackageIndex === -1) return;
@@ -565,8 +618,13 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        if (!result.deductibles) {
+          result.deductibles = [];
+        }
+        if (!result.limits) {
+          result.limits = [];
+        }
         this.product.packages[this.selectedPackageIndex].covers.push(result);
-        this.addCoverVars(result.code);
         this.updateCoversTable();
         this.updateChanges();
       }
@@ -574,6 +632,8 @@ export class ProductComponent implements OnInit {
   }
 
   editCover(cover: Cover, index: number): void {
+    this.loadDropdownOptions();
+    
     const dialogRef = this.dialog.open(CoverDialogComponent, {
       width: '600px',
       data: {
@@ -585,111 +645,61 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Preserve existing deductibles and limits arrays
+        if (!result.deductibles) {
+          result.deductibles = cover.deductibles || [];
+        }
+        if (!result.limits) {
+          result.limits = cover.limits || [];
+        }
         this.product.packages[this.selectedPackageIndex].covers[index] = result;
         this.updateCoversTable();
-        
+        // Update detail tables if this cover is selected
+        if (this.selectedCoverIndex === index) {
+          this.updateDeductiblesTable();
+          this.updateLimitsTable();
+        }
         this.updateChanges();
       }
     });
   }
 
-  addCoverVars(code: string): void {
-    // add var to mpVars if not exists - co_+code+_premium, co_+code+_sumInsured, co_+code+_deductibleNr
-      const newVars: any[] = [];
-      newVars.push({ 
-        varCode: 'co_' + code + '_premium', 
-        varType: 'VAR', 
-        varPath: '$..covers[?(@.cover.code == "' + code + '")].premium', 
-        varName: 'Премия по покрытию ' + code, 
-        varDataType: 'NUMBER',
-        varCdm: 'coverage.co_' + code + '_premium',
-        varNr: 1
-      });
-      newVars.push({ 
-        varCode: 'co_' + code + '_sumInsured', 
-        varType: 'VAR', 
-        varPath: '$..covers[?(@.cover.code == "' + code + '")].sumInsured', 
-        varName: 'Сумма страхования по покрытию ' + code, varDataType: 'NUMBER',
-        varCdm: 'coverage.co_' + code + '_sumInsured',
-        varNr: 2
-      });
-      newVars.push({ varCode: 'co_' + code + '_deductibleNr', varType: 'VAR', 
-        varPath: '', 
-        varName: 'Id франшизы по покрытию ' + code, varDataType: 'NUMBER',
-        varCdm: 'coverage.co_' + code + '_deductibleNr',
-        varNr: 3
-      });
-        newVars.push({ varCode: 'co_' + code + '_deductible', varType: 'VAR', 
-          varPath: '$..covers[?(@.cover.code == "' + code + '")].deductible', 
-          varName: 'Франшиза по покрытию ' + code, varDataType: 'NUMBER',
-          varCdm: 'coverage.co_' + code + '_deductible',
-          varNr: 4
-        });
-
-        this.product.vars = [...this.product.vars, ...newVars];
-      }
-    
-
   deleteCover(cover: Cover, index: number): void {
     if (confirm('Удалить покрытие?')) {
+      // Reset cover selection if deleted cover was selected
+      if (this.selectedCoverIndex === index) {
+        this.selectedCoverIndex = -1;
+      } else if (this.selectedCoverIndex > index) {
+        this.selectedCoverIndex--;
+      }
+      
       this.product.packages[this.selectedPackageIndex].covers.splice(index, 1);
       this.updateCoversTable();
-      this.deleteCoverVars(cover.code);
+      this.updateDeductiblesTable();
+      this.updateLimitsTable();
       this.updateChanges();
     }
   }
 
-  deleteCoverVars(code: string): void {
-    this.product.vars = this.product.vars.filter(v => v.varCode !== 'co_' + code);
-  }
-
-  showDeductibles(cover: Cover, index: number): void {
-    this.selectedCoverIndex = index;
-    this.updateDeductiblesTable();
-  }
-
-  showLimits(cover: Cover, index: number): void {
-    this.selectedCoverIndex = index;
-    this.updateLimitsTable();
-  }
-
   updateCoversTable(): void {
-    if (this.selectedPackageIndex === -1 || 
-        this.selectedPackageIndex >= this.product.packages.length ||
-        !this.product.packages[this.selectedPackageIndex]) {
-      this.filteredCovers = [];
+    if (this.selectedPackageIndex === -1) {
       this.paginatedCovers = [];
-      this.selectedPackageIndex = -1;
-      this.selectedCoverIndex = -1;
       return;
     }
 
-    // Only show covers for the currently selected package
     const selectedPackage = this.product.packages[this.selectedPackageIndex];
     if (!selectedPackage || !selectedPackage.covers) {
-      this.filteredCovers = [];
       this.paginatedCovers = [];
-      this.paginatedFiles = [];
       return;
     }
 
-    this.filteredCovers = selectedPackage.covers.filter(item =>
-      (item.code && item.code.toLowerCase().includes(this.coversSearchText.toLowerCase()))
-    );
-    this.updateCoversPagination();
-
-    this.paginatedFiles = selectedPackage.files;
-    
+    this.paginatedCovers = selectedPackage.covers;
   }
 
-  onCoversPageChange(event: PageEvent): void {
-    this.coversPageSize = event.pageSize;
-    this.coversPageIndex = event.pageIndex;
-    this.updateCoversPagination();
-  }
-
-  updateCoversPagination(): void {
-    this.paginatedCovers = this.filteredCovers
+  selectCover(cover: Cover, index: number): void {
+    this.selectedCoverIndex = index;
+    this.updateDeductiblesTable();
+    this.updateLimitsTable();
   }
 
   // Deductible methods
@@ -699,16 +709,32 @@ export class ProductComponent implements OnInit {
     const dialogRef = this.dialog.open(DeductibleDialogComponent, {
       width: '600px',
       data: {
-        isNew: true,
-        deductibleTypeOptions: this.deductibleTypeOptions,
-        deductibleUnitOptions: this.deductibleUnitOptions,
-        deductibleSpecificOptions: this.deductibleSpecificOptions
+        isNew: true
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles.push(result);
+        const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+        if (!cover.deductibles) {
+          cover.deductibles = [];
+        }
+        
+        // Validate: id must be unique and not empty
+        if (!result.id && result.id !== 0) {
+          this.snackBar.open('ID не может быть пустым', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (!result.text || result.text.trim() === '') {
+          this.snackBar.open('Текст не может быть пустым', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (cover.deductibles.some(d => d.id === result.id)) {
+          this.snackBar.open('ID должен быть уникальным', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        
+        cover.deductibles.push(result);
         this.updateDeductiblesTable();
         this.updateChanges();
       }
@@ -720,16 +746,32 @@ export class ProductComponent implements OnInit {
       width: '600px',
       data: {
         deductible: deductible,
-        isNew: false,
-        deductibleTypeOptions: this.deductibleTypeOptions,
-        deductibleUnitOptions: this.deductibleUnitOptions,
-        deductibleSpecificOptions: this.deductibleSpecificOptions
+        isNew: false
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles[index] = result;
+        const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+        if (!cover.deductibles) {
+          cover.deductibles = [];
+        }
+        
+        // Validate: id must be unique (excluding current index) and not empty
+        if (!result.id && result.id !== 0) {
+          this.snackBar.open('ID не может быть пустым', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (!result.text || result.text.trim() === '') {
+          this.snackBar.open('Текст не может быть пустым', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (cover.deductibles.some((d, i) => d.id === result.id && i !== index)) {
+          this.snackBar.open('ID должен быть уникальным', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        
+        cover.deductibles[index] = result;
         this.updateDeductiblesTable();
         this.updateChanges();
       }
@@ -738,7 +780,10 @@ export class ProductComponent implements OnInit {
 
   deleteDeductible(deductible: Deductible, index: number): void {
     if (confirm('Удалить франшизу?')) {
-      this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles.splice(index, 1);
+      const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+      if (cover.deductibles) {
+        cover.deductibles.splice(index, 1);
+      }
       this.updateDeductiblesTable();
       this.updateChanges();
     }
@@ -746,26 +791,23 @@ export class ProductComponent implements OnInit {
 
   updateDeductiblesTable(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) {
-      this.filteredDeductibles = [];
       this.paginatedDeductibles = [];
       return;
     }
 
-    this.filteredDeductibles = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles.filter(item =>
-      (item.deductibleType && item.deductibleType.toLowerCase().includes(this.deductiblesSearchText.toLowerCase()))
-    );
-    this.updateDeductiblesPagination();
-  }
+    const selectedPackage = this.product.packages[this.selectedPackageIndex];
+    if (!selectedPackage || !selectedPackage.covers || this.selectedCoverIndex >= selectedPackage.covers.length) {
+      this.paginatedDeductibles = [];
+      return;
+    }
 
-  onDeductiblesPageChange(event: PageEvent): void {
-    this.deductiblesPageSize = event.pageSize;
-    this.deductiblesPageIndex = event.pageIndex;
-    this.updateDeductiblesPagination();
-  }
+    const selectedCover = selectedPackage.covers[this.selectedCoverIndex];
+    if (!selectedCover || !selectedCover.deductibles) {
+      this.paginatedDeductibles = [];
+      return;
+    }
 
-  updateDeductiblesPagination(): void {
-    const startIndex = this.deductiblesPageIndex * this.deductiblesPageSize;
-    this.paginatedDeductibles = this.filteredDeductibles.slice(startIndex, startIndex + this.deductiblesPageSize);
+    this.paginatedDeductibles = selectedCover.deductibles;
   }
 
   // Limits methods
@@ -781,9 +823,27 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits.push(result);
+        const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+        if (!cover.limits) {
+          cover.limits = [];
+        }
+        
+        // Validate: sumInsured must be unique, sumInsured and premium must be > 0
+        if (!result.sumInsured || result.sumInsured <= 0) {
+          this.snackBar.open('Страховая сумма должна быть больше 0', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (!result.premium || result.premium <= 0) {
+          this.snackBar.open('Премия должна быть больше 0', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (cover.limits.some(l => l.sumInsured === result.sumInsured)) {
+          this.snackBar.open('Страховая сумма должна быть уникальной', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        
+        cover.limits.push(result);
         this.updateLimitsTable();
-        this.limitsHasChanges = true;
         this.updateChanges();
       }
     });
@@ -800,9 +860,27 @@ export class ProductComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits[index] = result;
+        const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+        if (!cover.limits) {
+          cover.limits = [];
+        }
+        
+        // Validate: sumInsured must be unique (excluding current index), sumInsured and premium must be > 0
+        if (!result.sumInsured || result.sumInsured <= 0) {
+          this.snackBar.open('Страховая сумма должна быть больше 0', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (!result.premium || result.premium <= 0) {
+          this.snackBar.open('Премия должна быть больше 0', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        if (cover.limits.some((l, i) => l.sumInsured === result.sumInsured && i !== index)) {
+          this.snackBar.open('Страховая сумма должна быть уникальной', 'Закрыть', { duration: 3000 });
+          return;
+        }
+        
+        cover.limits[index] = result;
         this.updateLimitsTable();
-        this.limitsHasChanges = true;
         this.updateChanges();
       }
     });
@@ -810,43 +888,34 @@ export class ProductComponent implements OnInit {
 
   deleteLimit(limit: Limit, index: number): void {
     if (confirm('Удалить лимит?')) {
-      this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits.splice(index, 1);
+      const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
+      if (cover.limits) {
+        cover.limits.splice(index, 1);
+      }
       this.updateLimitsTable();
-      this.limitsHasChanges = true;
       this.updateChanges();
     }
   }
 
   updateLimitsTable(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) {
-      this.filteredLimits = [];
       this.paginatedLimits = [];
       return;
     }
 
-    this.filteredLimits = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits.filter(item =>
-      (item.sumInsured && item.sumInsured.toString().toLowerCase().includes(this.limitsSearchText.toLowerCase())) ||
-      (item.premium && item.premium.toString().toLowerCase().includes(this.limitsSearchText.toLowerCase()))
-    );
-    this.updateLimitsPagination();
-  }
+    const selectedPackage = this.product.packages[this.selectedPackageIndex];
+    if (!selectedPackage || !selectedPackage.covers || this.selectedCoverIndex >= selectedPackage.covers.length) {
+      this.paginatedLimits = [];
+      return;
+    }
 
-  onLimitsPageChange(event: PageEvent): void {
-    this.limitsPageSize = event.pageSize;
-    this.limitsPageIndex = event.pageIndex;
-    this.updateLimitsPagination();
-  }
+    const selectedCover = selectedPackage.covers[this.selectedCoverIndex];
+    if (!selectedCover || !selectedCover.limits) {
+      this.paginatedLimits = [];
+      return;
+    }
 
-  updateLimitsPagination(): void {
-    const startIndex = this.limitsPageIndex * this.limitsPageSize;
-    this.paginatedLimits = this.filteredLimits.slice(startIndex, startIndex + this.limitsPageSize);
-  }
-
-
-  saveLimits(): void {
-    // Save logic here - for now just mark as saved
-    this.limitsHasChanges = false;
-    this.snackBar.open('Лимиты сохранены', 'Закрыть', { duration: 2000 });
+    this.paginatedLimits = selectedCover.limits;
   }
 
   updateTables(): void {
@@ -854,21 +923,18 @@ export class ProductComponent implements OnInit {
     this.updateSaveValidatorTable();
     this.updatePackagesTable();
     
-    // Validate selectedPackageIndex before updating covers
+    // Validate selectedPackageIndex before updating child tables
     if (this.selectedPackageIndex >= 0 && 
         this.selectedPackageIndex < this.product.packages.length) {
-      this.updateCoversTable();
-      this.updateFilesTable();
+      this.currentPackage = this.product.packages[this.selectedPackageIndex];
+      this.updateChildTables();
     } else {
       this.selectedPackageIndex = -1;
+      this.currentPackage = null;
       this.selectedCoverIndex = -1;
-      this.filteredCovers = [];
-      this.paginatedCovers = [];
-      this.updateFilesTable();
+      this.updateChildTables();
     }
     
-    this.updateDeductiblesTable();
-    this.updateLimitsTable();
     this.updatePolicyTable();
   }
 
@@ -1159,16 +1225,18 @@ console.log(pkg)
     const refIndex = this.product.packages.indexOf(pkg);
     if (refIndex !== -1) return refIndex;
     
-    // Fallback to matching by code
-    const index = this.product.packages.findIndex(p => p.code === pkg.code);
+    // Fallback to matching by code or id
+    const index = this.product.packages.findIndex(p => p.code === pkg.code || p.id === pkg.id);
     return index !== -1 ? index : 0;
   }
 
   getCoverIndex(cover: Cover): number {
     if (this.selectedPackageIndex === -1) return 0;
     
-    // Try to find by reference first (most reliable)
     const covers = this.product.packages[this.selectedPackageIndex].covers;
+    if (!covers) return 0;
+    
+    // Try to find by reference first (most reliable)
     const refIndex = covers.indexOf(cover);
     if (refIndex !== -1) return refIndex;
     
@@ -1177,39 +1245,6 @@ console.log(pkg)
     return index !== -1 ? index : 0;
   }
 
-  getDeductibleIndex(deductible: Deductible): number {
-    if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return 0;
-    
-    // Try to find by reference first (most reliable)
-    const deductibles = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].deductibles;
-    const refIndex = deductibles.indexOf(deductible);
-    if (refIndex !== -1) return refIndex;
-    
-    // Fallback to matching by properties
-    const index = deductibles.findIndex(d => 
-      d.nr === deductible.nr && 
-      d.deductibleType === deductible.deductibleType &&
-      d.deductible === deductible.deductible
-    );
-    return index !== -1 ? index : 0;
-  }
-
-  getLimitIndex(limit: Limit): number {
-    if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return 0;
-    
-    // Try to find by reference first (most reliable)
-    const limits = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex].limits;
-    const refIndex = limits.indexOf(limit);
-    if (refIndex !== -1) return refIndex;
-    
-    // Fallback to matching by properties
-    const index = limits.findIndex(l => 
-      l.nr === limit.nr && 
-      l.sumInsured === limit.sumInsured &&
-      l.premium === limit.premium
-    );
-    return index !== -1 ? index : 0;
-  }
 }
 
 @Component({

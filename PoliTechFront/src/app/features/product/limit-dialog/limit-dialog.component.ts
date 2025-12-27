@@ -19,22 +19,18 @@ import { Limit } from '../../../shared';
     template: `
   <h2 mat-dialog-title>{{ data.isNew ? 'Добавить лимит' : 'Редактировать лимит' }}</h2>
   <div mat-dialog-content>
-    <mat-form-field appearance="outline" style="min-width: 300px;">
-      <mat-label>№</mat-label>
-      <input matInput type="number" [(ngModel)]="model.nr" placeholder="1">
-    </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 300px;">
+    <mat-form-field appearance="outline" style="width: 100%; display: block; margin-bottom: 16px;">
       <mat-label>Страховая сумма</mat-label>
-      <input matInput type="number" [(ngModel)]="model.sumInsured" placeholder="0">
+      <input matInput type="number" [(ngModel)]="model.sumInsured" placeholder="0" required>
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 300px;">
+    <mat-form-field appearance="outline" style="width: 100%; display: block;">
       <mat-label>Премия</mat-label>
-      <input matInput type="number" [(ngModel)]="model.premium" placeholder="0">
+      <input matInput type="number" [(ngModel)]="model.premium" placeholder="0" required>
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">OK</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Добавить</button>
   </div>
   `
 })
@@ -45,10 +41,10 @@ export class LimitDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: { limit?: Limit; isNew: boolean },
     public dialogRef: MatDialogRef<LimitDialogComponent>
   ) {
-    this.model = data.limit ? { ...data.limit } : { sumInsured: 0, premium: 0 };
+    this.model = data.limit ? { ...data.limit } : { sumInsured: undefined as any, premium: undefined as any };
   }
 
   isValid(): boolean {
-    return this.model.sumInsured >= 0 && this.model.premium >= 0;
+    return !!(this.model.sumInsured && this.model.sumInsured > 0 && this.model.premium && this.model.premium > 0);
   }
 }

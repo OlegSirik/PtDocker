@@ -31,10 +31,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       
       if (error.status === HttpStatusCode.Unauthorized) {
         // 401: User is not authenticated → redirect to login
-        router.navigate(['/', tenantCode, 'login']);
+        if (tenantCode) {
+          router.navigate(['/', tenantCode, 'login']);
+        } else {
+          router.navigate(['/login']);
+        }
       } else if (error.status === HttpStatusCode.Forbidden) {
         // 403: User is authenticated but lacks permission → redirect to forbidden page
-        router.navigate(['/', tenantCode, 'forbidden']);
+        if (tenantCode) {
+          router.navigate(['/', tenantCode, 'forbidden']);
+        } else {
+          router.navigate(['/forbidden']);
+        }
       }
       
       return throwError(() => error);

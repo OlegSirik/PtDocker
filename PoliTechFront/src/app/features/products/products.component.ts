@@ -91,8 +91,8 @@ export class ProductsComponent implements OnInit {
     if (!product?.id) return;
 
     // Use devVersionNo if available, otherwise use prodVersionNo, fallback to 0
-    const versionNo = product.devVersionNo !== undefined ? product.devVersionNo :
-                     product.prodVersionNo !== undefined ? product.prodVersionNo : 0;
+    const versionNo = product.devVersionNo !== null ? product.devVersionNo :
+                     product.prodVersionNo !== null ? product.prodVersionNo : 0;
 
     this.router.navigate(['/', this.authService.tenant, 'product', product.id, 'version', versionNo]);
   }

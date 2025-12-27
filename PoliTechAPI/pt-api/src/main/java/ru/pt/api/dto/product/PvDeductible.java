@@ -9,6 +9,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PvDeductible {
 
+    @JsonProperty("id")
+    private Integer id;
+
+    @JsonProperty("text")
+    private String text;
+
     @JsonProperty("deductible")
     private Double deductible;
 
@@ -20,6 +26,16 @@ public class PvDeductible {
 
     @JsonProperty("deductibleSpecific")
     private String deductibleSpecific;
+
+ 
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public Double getDeductible() {
         return deductible;
@@ -51,5 +67,13 @@ public class PvDeductible {
 
     public void setDeductibleSpecific(String deductibleSpecific) {
         this.deductibleSpecific = deductibleSpecific;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 }

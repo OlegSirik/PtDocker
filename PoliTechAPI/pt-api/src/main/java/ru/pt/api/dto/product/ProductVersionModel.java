@@ -28,6 +28,12 @@ public class ProductVersionModel {
     @JsonProperty("versionStatus")
     private String versionStatus;
 
+    @JsonProperty("phType")
+    private String phType;
+
+    @JsonProperty("ioType")
+    private String ioType;
+
     @JsonProperty("waitingPeriod")
     private PeriodRule waitingPeriod;
 
@@ -151,5 +157,21 @@ public class ProductVersionModel {
 
     public void setVars(List<PvVar> vars) {
         this.vars = vars;
+    }
+
+    public String getPhType() {
+        return this.phType;
+    }
+
+    public void setPhType(String phType) {
+        this.phType = phType;
+    }
+
+    public String getIoType() {
+        return this.ioType;
+    }
+
+    public void setIoType(String ioType) {
+        this.ioType = ioType;
     }
 }

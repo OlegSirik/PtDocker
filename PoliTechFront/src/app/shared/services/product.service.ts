@@ -11,6 +11,8 @@ export interface Product {
   name: string;
   versionNo: number;
   versionStatus?: string;
+  phType?: string;
+  ioType?: string;
   waitingPeriod: {
     validatorType?: 'RANGE' | 'LIST' | 'NEXT_MONTH';
     validatorValue?: string;
@@ -59,6 +61,7 @@ export interface PackageFile {
 }
 
 export interface Package {
+  id?: number;
   code: string;
   name: string;
   covers: Cover[];
@@ -82,11 +85,8 @@ export interface Cover {
 }
 
 export interface Deductible {
-  nr?: number;
-  deductibleType: string;
-  deductible: number;
-  deductibleUnit: 'PERCENT' | 'DAY' | 'RUB';
-  deductibleSpecific: 'EVERY' | 'FROM_SECOND';
+  id: number;
+  text: string;
 }
 
 
@@ -178,6 +178,24 @@ export class ProductService {
     }
     this.mockData = product;
     return of({ ...product }).pipe(delay(500));
+  }
+
+  publishToProd(id: number, versionNo: number): Observable<Product> {
+    return this.http.post<Product>(`${this.authService.baseApiUrl}/admin/products/${id}/versions/${versionNo}/cmd/publish`, {}).pipe(
+      tap(publishedProduct => {
+        this.mockData = { ...publishedProduct };
+        this.fixProduct();
+      })
+    );
+  }
+
+  createVersion(id: number, versionNo: number): Observable<Product> {
+    return this.http.post<Product>(`${this.authService.baseApiUrl}/admin/products/${id}/versions/${versionNo}/cmd/create`, {}).pipe(
+      tap(createdProduct => {
+        this.mockData = { ...createdProduct };
+        this.fixProduct();
+      })
+    );
   }
 
   // PUT - Update existing product

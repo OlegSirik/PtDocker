@@ -117,7 +117,12 @@ public class FileServiceImpl implements FileService {
         try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             if (form != null) {
+                //form.getFields().forEach(System.out::println);
+
                 for (Map.Entry<String, String> e : keyValues.entrySet()) {
+                    //String key = e.getKey();
+                    //String value = e.getValue();
+
                     PDField field = form.getField(e.getKey());
                     if (field != null) {
                         System.out.println(e.getKey() + " " + e.getValue());
@@ -139,12 +144,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public byte[] getFile(String fileType, Map<String, String> keyValues) {
+    public byte[] getFile(Integer fileId, Map<String, String> keyValues) {
 
-        String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
-        String packageCode = keyValues.get("packageCode");
+        //String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
+        //String packageCode = keyValues.get("packageCode");
         
-        String fileId = keyValues.get("fileId");
+        //String fileId = keyValues.get("fileId");
         // TODO проверить что версия продукта сохраняется в keyValues !!!!!!!!
         if (fileId == null) {
             throw new IllegalArgumentException("File ID is not found");
@@ -153,7 +158,7 @@ public class FileServiceImpl implements FileService {
 //        FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))
 //                .orElseThrow(() -> new IllegalArgumentException("File not found"));
 //        return process(entity.getId(), keyValues);
-        return process(Long.parseLong(fileId), keyValues);
+        return process(fileId.longValue(), keyValues);
     }
 
 }

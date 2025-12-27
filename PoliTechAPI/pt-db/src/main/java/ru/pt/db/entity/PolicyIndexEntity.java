@@ -36,9 +36,6 @@ public class PolicyIndexEntity {
     @Column(name = "issue_date")
     private ZonedDateTime issueDate;
 
-    @Column(name = "issue_timezone", length = 50)
-    private String issueTimezone;
-
     @Column(name = "payment_date")
     private ZonedDateTime paymentDate;
 
@@ -63,6 +60,31 @@ public class PolicyIndexEntity {
 
     @Column(name = "payment_order_id", length = 100)
     private String paymentOrderId;
+
+    @Column(name = "ins_company", length = 10)
+    private String insCompany;
+
+    @Column(name = "product_version_no", nullable = false)
+    private Integer productVersionNo = 1;
+
+    @Column(name = "ph_digest", length = 250)
+    private String phDigest;
+
+    @Column(name = "io_digest", length = 250)
+    private String ioDigest;
+
+    @Column(name = "user_login", length = 250)
+    private String userLogin;
+
+    @Column(name = "premium", precision = 18, scale = 2)
+    private java.math.BigDecimal premium;
+
+    @Column(name = "agent_kv_percent", precision = 18, scale = 2)
+    private java.math.BigDecimal agentKvPercent;
+
+    @Column(name = "agent_kv_amount", precision = 18, scale = 2)
+    private java.math.BigDecimal agentKvAmount;
+
 
     // Constructors
     public PolicyIndexEntity() {
@@ -123,14 +145,6 @@ public class PolicyIndexEntity {
 
     public void setIssueDate(ZonedDateTime issueDate) {
         this.issueDate = issueDate;
-    }
-
-    public String getIssueTimezone() {
-        return issueTimezone;
-    }
-
-    public void setIssueTimezone(String issueTimezone) {
-        this.issueTimezone = issueTimezone;
     }
 
     public ZonedDateTime getPaymentDate() {
@@ -199,5 +213,69 @@ public class PolicyIndexEntity {
 
     public void setPaymentOrderId(String paymentOrderId) {
         this.paymentOrderId = paymentOrderId;
+    }
+
+    public String getInsCompany() {
+        return insCompany;
+    }
+
+    public void setInsCompany(String insCompany) {
+        this.insCompany = insCompany;
+    }
+
+    public Integer getProductVersionNo() {
+        return productVersionNo;
+    }
+
+    public void setProductVersionNo(Integer productVersionNo) {
+        this.productVersionNo = productVersionNo;
+    }
+
+    public String getPhDigest() {
+        return phDigest;
+    }
+
+    public void setPhDigest(String phDigest) {
+        this.phDigest = phDigest;
+    }
+
+    public String getIoDigest() {
+        return ioDigest;
+    }
+
+    public void setIoDigest(String ioDigest) {
+        this.ioDigest = ioDigest;
+    }
+
+    public String getUserLogin() {
+        return userLogin;
+    }
+
+    public void setUserLogin(String userLogin) {
+        this.userLogin = userLogin;
+    }
+
+    public java.math.BigDecimal getPremium() {
+        return premium;
+    }
+
+    public void setPremium(java.math.BigDecimal premium) {
+        this.premium = premium;
+    }
+
+    public java.math.BigDecimal getAgentKvPercent() {
+        return agentKvPercent;
+    }
+
+    public void setAgentKvPercent(java.math.BigDecimal agentKvPercent) {
+        this.agentKvPercent = agentKvPercent;
+    }
+
+    public java.math.BigDecimal getAgentKvAmount() {
+        return agentKvAmount;
+    }   
+
+    public void setAgentKvAmount(java.math.BigDecimal agentKvAmount) {
+        this.agentKvAmount = agentKvAmount;
     }
 }

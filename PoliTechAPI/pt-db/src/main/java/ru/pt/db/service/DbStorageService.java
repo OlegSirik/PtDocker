@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.dto.exception.BadRequestException;
@@ -29,6 +31,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ru.pt.api.dto.process.PolicyDTO;
+
 @Component
 @RequiredArgsConstructor
 public class DbStorageService implements StorageService {
@@ -38,6 +42,29 @@ public class DbStorageService implements StorageService {
     private final PolicyIndexRepository policyIndexRepository;
     private final PolicyProjectionService policyProjectionService;
     private final PolicyMapper policyMapper;
+
+
+    public PolicyData save(PolicyDTO policy, UserDetails userData) {
+
+        if (policy.getId() != null) {
+            policy.setId( UUID.randomUUID().toString() );
+        }
+        
+        var entity = policyMapper.policyEntityFromDTO(policy, userData);
+        policyRepository.save(entity);
+
+        var index = policyMapper.policyIndexFromDTO(policy, userData);
+        policyIndexRepository.save(index);
+
+        var policyData = new PolicyData();
+        policyData.setPolicyIndex(policyMapper.toDto(index));
+        policyData.setPolicyId(entity.getId());
+        policyData.setPolicyStatus(index.getPolicyStatus());
+        policyData.setPolicyNumber(index.getPolicyNumber());
+        policyData.setPolicy(entity.getPolicy());
+        return policyData;
+
+    }
 
     @Transactional
     @Override
@@ -190,7 +217,7 @@ public class DbStorageService implements StorageService {
      * Get all quotes from policy index for current account
      * @return List<QuoteDto>
      */
-    public List<QuoteDto> getAccountQuotes() {
+    public List<QuoteDto> getAccountQuotes(String qstr) {
         var userData = securityContextHelper.getCurrentUser()
             .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
         Long accountId = userData.getAccountId();
@@ -242,7 +269,7 @@ public class DbStorageService implements StorageService {
             p.payment_order_id
         FROM policy_index p
 */        
-        List<QuoteDto> quotes = policyIndexRepository.findPoliciesByAccountIdRecursive(accountId).stream().map(quote -> {
+        List<QuoteDto> quotes = policyIndexRepository.findPoliciesByAccountIdRecursive(accountId, qstr).stream().map(quote -> {
             // Helper method to convert Object to ZonedDateTime
             Function<Object, ZonedDateTime> toZonedDateTime = obj -> {
                 if (obj == null) return null;
@@ -271,12 +298,12 @@ public class DbStorageService implements StorageService {
                 toZonedDateTime.apply(quote[8]),                      // startDate
                 toZonedDateTime.apply(quote[9]),                      // endDate
                 quote[10] != null ? quote[10].toString() : null,     // policyStatus
-                "PH Digest",                                                  // phDigest (not in query)
-                "io Digest",                                                  // ioDigest (not in query)
-                1000.0,                                                  // premium (not in query)
+                quote[14] != null ? (String) quote[14] : null,        // phDigest (not in query)
+                quote[15] != null ? (String) quote[15] : null,        // ioDigest (not in query)
+                quote[16] != null ? (String) quote[16] : null,        // premium (not in query)
                 "account_id:",                                                  // agentDigest (not in query)
-                10.0,                                                  // agentKvPrecent (not in query)
-                123.0,                                                  // agentKvAmount (not in query)
+                quote[17] != null ? (String) quote[17] : null,        // agentKvPrecent (not in query)
+                quote[18] != null ? (String) quote[18] : null,        // agentKvAmount (not in query)
                 true,                                                  // comand1 (not in query)
                 false,                                                  // comand2 (not in query)
                 false,                                                  // comand3 (not in query)

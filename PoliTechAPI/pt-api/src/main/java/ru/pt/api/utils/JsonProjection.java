@@ -3,7 +3,7 @@ package ru.pt.api.utils;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import ru.pt.api.dto.process.InsuredObject;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ import static ru.pt.api.utils.DateTimeUtils.formatter;
 // TODO null -> Optional
 public class JsonProjection {
 
-    private final DocumentContext documentContext;
+    protected final DocumentContext documentContext;
 
     public JsonProjection(String json) {
         this.documentContext = JsonPath.parse(json);
@@ -28,32 +28,17 @@ public class JsonProjection {
     /**
      * Получить код продукта
      */
-    public String getProductCodeNew() {
-        try {
-        return documentContext.read("$.productCode", String.class);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
 
     public String getProductCode() {
-        String rv = getProductCodeNew();
-        if (rv != null) {return rv;}
-        return documentContext.read("$.product.code", String.class);
-    }
-
-    public Integer getPackageCodeNew() {
         try {
-            return documentContext.read("$.packageCode", Integer.class);
+            return documentContext.read("$.productCode", String.class);
         } catch (Exception e) {
             return null;
         }
     }
 
     public Integer getPackageCode() {
-        Integer rv = getPackageCodeNew();
-        if (rv != null) {return rv;}
         try {
             return documentContext.read("$.insuredObject.packageCode", Integer.class);
         } catch (Exception e) {
@@ -159,7 +144,7 @@ public class JsonProjection {
     }
 
     // код переменной -> значение переменной
-    public Map<String, Object> getProductMapFromRequest(List<LobVar> vars) {
+    public Map<String, Object> getProductMapFromRequest(List<PvVar> vars) {
         var result = new HashMap<String, Object>();
         vars.forEach(v -> {
             switch (v.getVarDataType()) {
@@ -172,10 +157,10 @@ public class JsonProjection {
         return result;
     }
 
-    public Map<String, Object> getProductMap(List<LobVar> vars) {
+    public Map<String, Object> getProductMap(List<PvVar> vars) {
         Map<String, Object> mapVars = new HashMap<>();
-        for (LobVar lobVar : vars) {
-            mapVars.put(lobVar.getVarCode(), lobVar.getVarValue());
+        for (PvVar pvVar : vars) {
+            mapVars.put(pvVar.getVarCode(), pvVar.getVarValue());
         }
         return mapVars;
     }

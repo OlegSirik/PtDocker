@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.dto.product.LobModel;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.service.process.PreProcessService;
@@ -44,19 +44,19 @@ public class ValidatorServiceImpl implements ValidatorService {
 
         ProductVersionModel productVersionModel = productService.getProductByCode(productCode, true);
 
-        LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
+        //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
 
         policy = preProcessService.enrichPolicy(policy, productVersionModel);
         // Fill Key-Value pairs for LOB Variables
-        List<LobVar> lobVars = preProcessService.evaluateAndEnrichVariables(policy, lobModel, productCode);
+        List<PvVar> pvVars = preProcessService.evaluateAndEnrichVariables(policy, productVersionModel.getVars(), productCode);
 
         // TODO полис тоже надо возвращать(не забыть при рефакторе)
-        return validate(validatorType, productVersionModel, lobVars);
+        return validate(validatorType, productVersionModel, pvVars);
     }
 
 
     @Override
-    public List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<LobVar> lobVars) {
+    public List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<PvVar> pvVars) {
         var result = new ArrayList<ValidationError>();
         var validatorRules = List.<ValidatorRule>of();
         if (ValidatorType.QUOTE.equals(validatorType)) {
@@ -72,8 +72,8 @@ public class ValidatorServiceImpl implements ValidatorService {
 
             boolean isValidAnd = true;
 
-            Map<String, LobVar> context = lobVars.stream()
-                    .collect(Collectors.toMap(LobVar::getVarCode, Function.identity()));
+            Map<String, PvVar> context = pvVars.stream()
+                    .collect(Collectors.toMap(PvVar::getVarCode, Function.identity()));
 
             for (ValidatorRule validatorRule : validatorRules) {
                 boolean isValid = ValidatorImpl.validate(
@@ -104,10 +104,10 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
 
-    public Map<String, Object> getMapVars(List<LobVar> lobVars) {
+    public Map<String, Object> getMapVars(List<PvVar> pvVars) {
         Map<String, Object> mapVars = new HashMap<>();
-        for (LobVar lobVar : lobVars) {
-            mapVars.put(lobVar.getVarCode(), lobVar.getVarValue());
+        for (PvVar pvVar : pvVars) {
+            mapVars.put(pvVar.getVarCode(), pvVar.getVarValue());
         }
         return mapVars;
     }

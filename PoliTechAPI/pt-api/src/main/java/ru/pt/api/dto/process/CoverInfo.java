@@ -1,9 +1,11 @@
 package ru.pt.api.dto.process;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true) 
 public class CoverInfo {
 
     @JsonProperty("code")
@@ -16,7 +18,11 @@ public class CoverInfo {
     private String description;
 
     // Constructors
-    public CoverInfo() {}
+    public CoverInfo() {
+        this.code = null;
+        this.option = null;
+        this.description = null;
+    }
 
     public CoverInfo(String code, String option, String description) {
         this.code = code;

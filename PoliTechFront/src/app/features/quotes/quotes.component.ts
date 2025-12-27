@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -14,6 +14,9 @@ import { LkQuoteService, Quote } from '../../shared/services/api/lk-quote.servic
 import { ProductsService, ProductList } from '../../shared/services/products.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { PolicyService } from '../../shared/services/policy.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+
 @Component({
   selector: 'app-quotes',
   standalone: true,
@@ -32,12 +35,14 @@ import { PolicyService } from '../../shared/services/policy.service';
   templateUrl: './quotes.component.html',
   styleUrls: ['./quotes.component.scss']
 })
-export class QuotesComponent implements OnInit {
+export class QuotesComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private quoteService = inject(LkQuoteService);
   private productsService = inject(ProductsService);
   private authService = inject(AuthService);
   private policyService = inject(PolicyService);
+  private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
 
   quotes: Quote[] = [];
   products: ProductList[] = [];
@@ -55,6 +60,20 @@ export class QuotesComponent implements OnInit {
   ngOnInit(): void {
     this.loadQuotes();
     this.loadProducts();
+    
+    // Setup debounced search
+    this.searchSubject$.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(searchText => {
+      this.performSearch(searchText);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadQuotes(): void {
@@ -104,7 +123,31 @@ export class QuotesComponent implements OnInit {
   }
 
   onSearchChange(): void {
-    this.applyFilters();
+    console.log('onSearchChange', this.searchText);
+    // Emit search text to subject for debouncing
+    this.performSearch(this.searchText);
+  }
+
+
+  private performSearch(searchText: string): void {
+    console.log('performSearch', searchText);
+    if (searchText.trim()) {
+      // Call service with search parameter
+      this.quoteService.getAccountQuotes(searchText.trim()).subscribe({
+        next: (quotes) => {
+          this.quotes = quotes;
+          this.applyFilters();
+        },
+        error: (error) => {
+          console.error('Error searching quotes:', error);
+          // Fallback to local filtering if service call fails
+          this.applyFilters();
+        }
+      });
+    } else {
+      // If search is empty, reload all quotes
+      this.loadQuotes();
+    }
   }
 
   onStatusChange(): void {
@@ -139,10 +182,16 @@ export class QuotesComponent implements OnInit {
       this.policyService.getPf(quote.policyNr || '', 'policy').subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
-          window.open(url, '_blank');
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `policy_${quote.policyNr || 'document'}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
         },
         error: (error) => {
-          console.error('Error printing policy:', error);
+          console.error('Error downloading policy:', error);
         }
       });
     }  

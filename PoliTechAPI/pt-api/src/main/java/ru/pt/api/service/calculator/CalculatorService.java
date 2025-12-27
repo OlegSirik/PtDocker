@@ -1,7 +1,7 @@
 package ru.pt.api.service.calculator;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
-import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.PvVar;
 
 import java.util.List;
 
@@ -46,7 +46,7 @@ public interface CalculatorService {
      * @param inputValues входные переменные
      * @return список переменных с рассчитанными значениями
      */
-    List<LobVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<LobVar> inputValues);
+    List<PvVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<PvVar> inputValues);
 
     /**
      * Заменить модель калькулятора

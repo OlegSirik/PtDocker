@@ -72,10 +72,10 @@ public interface FileService {
     /**
      * Получить файл по типу и параметрам
      *
-     * @param fileType  тип файла
+     * @param fileId  идентификатор файла
      * @param keyValues параметры поиска
      * @return файл в виде массива байт
      */
-    byte[] getFile(String fileType, Map<String, String> keyValues);
+    byte[] getFile(Integer fileId, Map<String, String> keyValues);
 
 }
