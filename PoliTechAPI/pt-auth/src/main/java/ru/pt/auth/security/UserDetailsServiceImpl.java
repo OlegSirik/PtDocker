@@ -7,9 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.entity.LoginEntity;
+import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.repository.ProductRoleRepository;
+import ru.pt.auth.security.context.RequestContext;
+import ru.pt.auth.service.ClientService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,26 +30,53 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final LoginRepository loginRepository;
     private final AccountLoginRepository accountLoginRepository;
     private final ProductRoleRepository productRoleRepository;
-
+    private final ClientService clientService;
+    private final RequestContext requestContext;
+    
     public UserDetailsServiceImpl(LoginRepository loginRepository,
                                   AccountLoginRepository accountLoginRepository,
-                                  ProductRoleRepository productRoleRepository) {
+                                  ProductRoleRepository productRoleRepository,
+                                  ClientService clientService,
+                                  RequestContext requestContext) {
         this.loginRepository = loginRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.productRoleRepository = productRoleRepository;
+        this.clientService = clientService;
+        this.requestContext = requestContext;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Находим LoginEntity по логину
-        LoginEntity loginEntity = loginRepository.findByUserLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + username));
+        Long accountId = Long.parseLong(username);
+        String tenantCode = requestContext.getTenant();
+        // tenant если есть то он уже проверен.
+        if (tenantCode == null || tenantCode.isEmpty()) {
+            throw new IllegalStateException("TenantContext not set");
+        }
+
+        String authClientId = requestContext.getClient();
+        if (authClientId == null || authClientId.isEmpty()) {
+            throw new IllegalStateException("ClientContext not set");
+        }
+        // Client не проверен.
+        ClientSecurityConfig clientSecurityConfig = clientService.getConfig(tenantCode, authClientId);
+        if (clientSecurityConfig == null) {
+            throw new IllegalArgumentException("Client not found: " + tenantCode + " " + authClientId);
+        }
+        Long defaultAccountId = clientSecurityConfig.defaultAccountId();
+
+        // Находим LoginEntity по логину & tenant
+        LoginEntity loginEntity = loginRepository.findByTenantCodeAndAccountId(tenantCode, accountId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + accountId));
 
         // Находим все AccountLoginEntity для этого пользователя
-        List<AccountLoginEntity> accountLogins = accountLoginRepository.findByUserLogin(username);
+        List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndAuthClientIdAndAccountId(
+            tenantCode, 
+            authClientId, 
+            accountId);
 
         if (accountLogins.isEmpty()) {
-            throw new UsernameNotFoundException("No accounts found for user: " + username);
+            throw new UsernameNotFoundException("No accounts found for user: " + accountId);
         }
 
         // Берем дефолтный аккаунт или первый доступный
@@ -55,6 +85,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .findFirst()
                 .orElse(accountLogins.getFirst());
 
+        requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
+
         // Инициализируем lazy-loaded поля внутри транзакции
         initializeLazyFields(defaultAccountLogin, loginEntity);
 
@@ -62,7 +94,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Set<String> productRoles = getProductRoles(defaultAccountLogin.getAccount().getId());
 
         // Создаем UserDetails без пароля (JWT авторизация)
-        return UserDetailsImpl.build(loginEntity, defaultAccountLogin, productRoles);
+        UserDetails userDetails = UserDetailsImpl.build(loginEntity, defaultAccountLogin, productRoles);
+        return userDetails;
     }
 
     /**

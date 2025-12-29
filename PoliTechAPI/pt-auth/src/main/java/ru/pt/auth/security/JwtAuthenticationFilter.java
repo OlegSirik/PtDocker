@@ -27,7 +27,7 @@ import java.util.Optional;
  * JWT фильтр для аутентификации пользователей по токену.
  * Извлекает JWT из заголовка Authorization, парсит логин и загружает пользователя из БД.
  */
-@Component
+
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);

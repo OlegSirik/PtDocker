@@ -2,7 +2,6 @@ package ru.pt.auth.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,8 +9,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import ru.pt.auth.security.JwtAuthenticationFilter;
-
+import ru.pt.auth.security.filter.TenantResolutionFilter;
+import ru.pt.auth.security.filter.IdentityResolutionFilter;
+import ru.pt.auth.security.filter.AccountResolutionFilter;
+import ru.pt.auth.security.filter.ContextCleanupFilter;
 /**
  * Конфигурация Spring Security для JWT Authentication.
  */
@@ -20,13 +21,25 @@ import ru.pt.auth.security.JwtAuthenticationFilter;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    //private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final SecurityConfigurationProperties securityConfigurationProperties;
+    private final TenantResolutionFilter tenantResolutionFilter;
+    private final IdentityResolutionFilter identityResolutionFilter;
+    private final AccountResolutionFilter accountResolutionFilter;
+    private final ContextCleanupFilter contextCleanupFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                         SecurityConfigurationProperties securityConfigurationProperties) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    public SecurityConfig(
+                         SecurityConfigurationProperties securityConfigurationProperties,
+                         TenantResolutionFilter tenantResolutionFilter,
+                         IdentityResolutionFilter identityResolutionFilter,
+                         AccountResolutionFilter accountResolutionFilter,
+                         ContextCleanupFilter contextCleanupFilter) {
+        //this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.securityConfigurationProperties = securityConfigurationProperties;
+        this.tenantResolutionFilter = tenantResolutionFilter;
+        this.identityResolutionFilter = identityResolutionFilter;
+        this.accountResolutionFilter = accountResolutionFilter;
+        this.contextCleanupFilter = contextCleanupFilter;
     }
 
    //  TODO: добавить авторизацию через Partner headers (проверить, что все работает)
@@ -46,11 +59,15 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(tenantResolutionFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(accountResolutionFilter, TenantResolutionFilter.class)
+            .addFilterAfter(identityResolutionFilter, AccountResolutionFilter.class)
+            //.addFilterAfter(jwtAuthenticationFilter, AccountResolutionFilter.class)
+            .addFilterAfter(contextCleanupFilter, IdentityResolutionFilter.class);
 
         return auth.build();
     }
     
-
+    
 }
 

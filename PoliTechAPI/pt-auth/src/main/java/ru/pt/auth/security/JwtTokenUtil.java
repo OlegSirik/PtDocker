@@ -165,6 +165,7 @@ public class JwtTokenUtil {
             if (accountLogin.getClient() != null) {
                 payload.put("clientId", accountLogin.getClient().getId());
                 payload.put("clientName", accountLogin.getClient().getName());
+                payload.put("client_id", accountLogin.getClient().getClientId());
             }
 
             if (accountLogin.getAccount() != null) {

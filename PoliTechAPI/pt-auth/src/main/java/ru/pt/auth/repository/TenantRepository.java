@@ -25,13 +25,13 @@ public interface TenantRepository extends JpaRepository<TenantEntity, Long> {
     /**
      * Найти все активные tenants
      */
-    @Query("SELECT t FROM TenantEntity t WHERE t.isDeleted = false ORDER BY t.name")
-    List<TenantEntity> findAllActive();
+    //@Query("SELECT t FROM TenantEntity t WHERE t.isDeleted = false ORDER BY t.name")
+    //List<TenantEntity> findAllActive();
 
     /**
      * Найти все tenants (включая удаленные)
      */
-    @Query("SELECT t FROM TenantEntity t ORDER BY t.name")
-    List<TenantEntity> findAllWithDeleted();
+    //@Query("SELECT t FROM TenantEntity t ORDER BY t.name")
+    //List<TenantEntity> findAllWithDeleted();
 }
 

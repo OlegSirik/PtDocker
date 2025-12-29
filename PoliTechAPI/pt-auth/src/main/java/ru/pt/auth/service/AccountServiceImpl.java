@@ -18,6 +18,7 @@ import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.ProductRoleRepository;
 import ru.pt.auth.utils.*;
+import ru.pt.auth.security.context.RequestContext;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountLoginRepository accountLoginRepository;
     private final AccountMapper accountMapper;
     private final ProductRoleMapper productRoleMapper;
+    private final RequestContext requestContext;
 
     @Override
     public Account getAccountById(Long id) {
@@ -126,7 +128,7 @@ public class AccountServiceImpl implements AccountService {
     public List<ProductRole> getProductRolesByAccountId(Long accountId) {
         List<ProductRole> productRoles = new ArrayList<>();
         List<Map<String, Object>> roles = productRoleRepository.findAllProductRolesByAccountId(accountId);
-        HashSet<String> allRoles = new HashSet();
+        HashSet<String> allRoles = new HashSet<>();
         for (Map<String, Object> role : roles) {
             String productName = role.get("roleProductCode").toString();
             if (!allRoles.contains(productName)) {
@@ -153,7 +155,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Set<String> getProductRoles(Long accountId) {
         List<Map<String, Object>> roles = productRoleRepository.findAllProductRolesByAccountId(accountId);
-        HashSet<String> allRoles = new HashSet();
+        HashSet<String> allRoles = new HashSet<>();
         for (Map<String, Object> role : roles) {
             String productName = role.get("roleProductCode").toString();
             if (!allRoles.contains(productName)) {
@@ -183,7 +185,7 @@ public class AccountServiceImpl implements AccountService {
                     .orElseThrow(() -> new NotFoundException("AccountLogin not found"));
         } else {
             accountLogin = accountLogins.stream()
-                    .filter(AccountLoginEntity::getDefault)
+                    .filter(al -> Boolean.TRUE.equals(al.getDefault()))
                     .findFirst()
                     .orElseThrow(() -> new NotFoundException("AccountLogin not found"));
         }
@@ -196,7 +198,7 @@ public class AccountServiceImpl implements AccountService {
         jsonNode.put("client", accountLogin.getClient().getClientId());
         jsonNode.put("accountId", accountLogin.getAccount().getId());
 
-        AccountEntity account = accountRepository.findById(accountLogin.getId())
+        AccountEntity account = accountRepository.findById(accountLogin.getAccount().getId())
                 .orElseThrow(() -> new NotFoundException("Account not found"));
         ObjectNode ob1 = jsonNode.putObject("currentAccount");
         ob1.put("id", account.getId());
@@ -219,10 +221,11 @@ public class AccountServiceImpl implements AccountService {
 
         List<Map<String, Object>> roles =
             productRoleRepository.findAllProductRolesByAccountId(accountLogin.getAccount().getId());
-        HashSet<String> allRoles = new HashSet();
+        Set<String> processedProducts = new HashSet<>();
         for (Map<String, Object> role : roles) {
             String productName = role.get("roleProductCode").toString();
-            if (!allRoles.contains(productName)) {
+            if (!processedProducts.contains(productName)) {
+                processedProducts.add(productName);
                 ObjectNode ob3 = arrayNode2.addObject();
                 ob3.put("name", productName);
 

@@ -13,8 +13,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
 
     Optional<ProductEntity> findByCodeAndIsDeletedFalse(String code);
 
-    @Query("select p from ProductEntity p where p.isDeleted = false order by p.code")
-    List<ProductEntity> listActive();
+    //@Query("select p from ProductEntity p where p.isDeleted = false order by p.code")
+    //List<ProductEntity> listActive();
 
     // TODO выше точно такой же метод
     @Query("""
@@ -25,8 +25,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     """)
     List<Object[]> listActiveSummaries();
 
-    @Query(value = "SELECT nextval('pt_seq')", nativeQuery = true)
-    Integer getNextProductId();
+    //@Query(value = "SELECT nextval('pt_seq')", nativeQuery = true)
+    //Integer getNextProductId();
 
     @Query(
         """

@@ -14,9 +14,9 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по ID tenant и client_id
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode AND c.clientId = :clientId AND c.isDeleted = false")
-    Optional<ClientEntity> findByTenantAndClientId(@Param("tenantCode") Long tenantCode, @Param("clientId") String clientId);
-
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.clientId = :authClientId AND c.isDeleted = false")
+    Optional<ClientEntity> findByTenantCodeAndAuthClientId(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId);
+    
     /**
      * Найти все active clients для tenant
      */
@@ -26,8 +26,8 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по имени в tenant
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode AND c.name = :name AND c.isDeleted = false")
-    Optional<ClientEntity> findByTenantAndName(@Param("tenantCode") String tenantCode, @Param("name") String name);
+    //@Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode AND c.name = :name AND c.isDeleted = false")
+    //Optional<ClientEntity> findByTenantAndName(@Param("tenantCode") String tenantCode, @Param("name") String name);
 
     /**
      * Найти client по clientId
