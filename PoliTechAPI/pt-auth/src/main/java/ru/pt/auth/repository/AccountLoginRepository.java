@@ -12,6 +12,23 @@ import java.util.Optional;
 
 public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity, Long> {
 
+   @Query("SELECT al FROM AccountLoginEntity al " +
+          "WHERE al.tenantEntity.code = :tenantCode " +
+          "AND al.clientEntity.clientId = :authClientId " +
+          "AND al.userLogin = :userLogin " +
+          "AND al.loginEntity.isDeleted = false " +
+          "ORDER BY al.isDefault DESC, al.id")
+    List<AccountLoginEntity> findByTenantCodeAndAuthClientIdAndLogin(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("userLogin") String userLogin);
+         
+    @Query("SELECT al FROM AccountLoginEntity al " +
+    "WHERE al.tenantEntity.code = :tenantCode " +
+    "AND al.clientEntity.clientId = :authClientId " +
+    "AND al.accountEntity.id = :accountId " +
+    "AND al.loginEntity.isDeleted = false " +
+    "ORDER BY al.isDefault DESC, al.id")
+    List<AccountLoginEntity> findByTenantCodeAndAuthClientIdAndAccountId(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("accountId") Long accountId);
+
+
     @Query("SELECT al FROM AccountLoginEntity al WHERE al.clientEntity.clientId = :client AND al.loginEntity.userLogin = :login ORDER BY al.id")
     List<AccountLoginEntity> findByClientAndLogin(@Param("client") String client, @Param("login") String login);
 
@@ -28,11 +45,11 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
     /**
      * Проверка существования записи для пользователя и клиента
      */
-    @Query("SELECT COUNT(al) > 0 FROM AccountLoginEntity al WHERE al.userLogin = :userLogin AND al.clientEntity.id = :clientId")
-    boolean existsByUserLoginAndClientId(@Param("userLogin") String userLogin, @Param("clientId") Long clientId);
+    //@Query("SELECT COUNT(al) > 0 FROM AccountLoginEntity al WHERE al.userLogin = :userLogin AND al.clientEntity.id = :clientId")
+    //boolean existsByUserLoginAndClientId(@Param("userLogin") String userLogin, @Param("clientId") Long clientId);
 
-    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.userRole = :userRole")
-    List<AccountLoginEntity> findByTenantAndUserRole(@Param("tenantCode") String tenantCode, @Param("userRole") String userRole);
+    //@Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.userRole = :userRole")
+    //List<AccountLoginEntity> findByTenantAndUserRole(@Param("tenantCode") String tenantCode, @Param("userRole") String userRole);
 
     @Query(value = "SELECT " +
             "al.id AS id, " +

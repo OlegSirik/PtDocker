@@ -22,3 +22,5 @@ alter table policy_index add agent_kv_percent numeric(18,2)
 alter table policy_index add agent_kv_amount numeric(18,2)
 
 alter table policy_index drop column issue_timezone;
+
+alter table acc_tenants add column auth_type varchar(20);

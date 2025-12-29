@@ -34,6 +34,8 @@ public class TenantEntity {
     @Column(name = "token_auth")
     private Boolean tokenAuth = false;
 
+    @Column(name = "auth_type", length = 20)
+    private String authType;
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -88,5 +90,9 @@ public class TenantEntity {
     public Boolean getTokenAuth() {return tokenAuth;}
 
     public void setTokenAuth(Boolean tokenAuth) {this.tokenAuth = tokenAuth;}
+
+    public String getAuthType() {return authType;}
+
+    public void setAuthType(String authType) {this.authType = authType;}
 
 }

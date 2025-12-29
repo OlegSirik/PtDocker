@@ -13,20 +13,20 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     /**
      * Find account by ID with eager loading of children
      */
-    @Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.children WHERE a.id = :id")
-    Optional<AccountEntity> findByIdWithChildren(Long id);
+    //@Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.children WHERE a.id = :id")
+    //Optional<AccountEntity> findByIdWithChildren(Long id);
 
     /**
      * Find account by ID with eager loading of parent
      */
-    @Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.parent WHERE a.id = :id")
-    Optional<AccountEntity> findByIdWithParent(Long id);
+    //@Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.parent WHERE a.id = :id")
+    //Optional<AccountEntity> findByIdWithParent(Long id);
 
     /**
      * Find all root accounts (accounts without parent)
      */
-    @Query("SELECT a FROM AccountEntity a WHERE a.parent.id IS NULL ORDER BY a.name")
-    List<AccountEntity> findRootAccounts();
+    //@Query("SELECT a FROM AccountEntity a WHERE a.parent.id IS NULL ORDER BY a.name")
+    //List<AccountEntity> findRootAccounts();
 
     /**
      * Find all child accounts of a specific parent
@@ -43,8 +43,8 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     /**
      * Find accounts by name containing the given string (case insensitive)
      */
-    @Query("SELECT a FROM AccountEntity a WHERE LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY a.name")
-    List<AccountEntity> findByNameContainingIgnoreCase(String name);
+    //@Query("SELECT a FROM AccountEntity a WHERE LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY a.name")
+    //List<AccountEntity> findByNameContainingIgnoreCase(String name);
 
     /**
      * Get next account ID from sequence

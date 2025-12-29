@@ -19,6 +19,9 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.userLogin = :userLogin")
     Optional<LoginEntity> findByTenantCodeAndUserLogin(@Param("tenantCode") String tenantCode, @Param("userLogin") String userLogin);
 
+    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.id = :accountId")
+    Optional<LoginEntity> findByTenantCodeAndAccountId(@Param("tenantCode") String tenantCode, @Param("accountId") Long accountId);
+
     /**
      * Получить все логины для тенанта
      */
