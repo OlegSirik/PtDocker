@@ -9,8 +9,10 @@ import java.util.Optional;
 
 public interface CalculatorRepository extends JpaRepository<CalculatorEntity, Integer> {
 
-    @Query("select c from CalculatorEntity c where c.productId = :productId and c.versionNo = :versionNo and c.packageNo = :packageNo")
-    Optional<CalculatorEntity> findByKeys(@Param("productId") Integer productId,
+    @Query("select c from CalculatorEntity c where c.tId = :tId and c.productId = :productId and c.versionNo = :versionNo and c.packageNo = :packageNo")
+    Optional<CalculatorEntity> findByKeys(
+        @Param("tId") Long tId,
+        @Param("productId") Integer productId,
                                           @Param("versionNo") Integer versionNo,
                                           @Param("packageNo") Integer packageNo);
 }

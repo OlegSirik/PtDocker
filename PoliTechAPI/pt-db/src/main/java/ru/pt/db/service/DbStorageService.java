@@ -46,7 +46,7 @@ public class DbStorageService implements StorageService {
 
     public PolicyData save(PolicyDTO policy, UserDetails userData) {
 
-        if (policy.getId() != null) {
+        if (policy.getId() == null || policy.getId().isEmpty()) {
             policy.setId( UUID.randomUUID().toString() );
         }
         

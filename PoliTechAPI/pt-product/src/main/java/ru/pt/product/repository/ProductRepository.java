@@ -2,6 +2,7 @@ package ru.pt.product.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.pt.product.entity.ProductEntity;
 
 import java.util.List;
@@ -9,24 +10,14 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Integer> {
 
-    Optional<ProductEntity> findByIdAndIsDeletedFalse(Integer id);
+    @Query("select p from ProductEntity p where p.tId = :tId and p.id = :id and p.isDeleted = false")
+    Optional<ProductEntity> findById(@Param("tId") Long tId, @Param("id") Integer id);
 
-    Optional<ProductEntity> findByCodeAndIsDeletedFalse(String code);
+    @Query("select p from ProductEntity p where p.tId = :tId and p.code = :code and p.isDeleted = false")
+    Optional<ProductEntity> findByCode(@Param("tId") Long tId, @Param("code") String code);
 
-    //@Query("select p from ProductEntity p where p.isDeleted = false order by p.code")
-    //List<ProductEntity> listActive();
-
-    // TODO выше точно такой же метод
-    @Query("""
-        select p.id, p.lob, p.code, p.name, p.prodVersionNo, p.devVersionNo
-        from ProductEntity p
-        where p.isDeleted = false
-        order by p.code
-    """)
-    List<Object[]> listActiveSummaries();
-
-    //@Query(value = "SELECT nextval('pt_seq')", nativeQuery = true)
-    //Integer getNextProductId();
+    @Query("select p.id as id, p.lob as lob, p.code as code, p.name as name, p.prodVersionNo as prodVersionNo, p.devVersionNo as devVersionNo from ProductEntity p where p.tId = :tId and p.isDeleted = false order by p.code")
+    List<Object[]> listActiveSummaries(@Param("tId") Long tId);
 
     @Query(
         """
@@ -35,6 +26,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             where pr.roleAccountEntity.id = ?1
         """
     )
-    List<Integer> findProductIdEntityByAccountId(String accountId);
+    List<Integer> findProductIdEntityByAccountId(Long accountId);
 
 }

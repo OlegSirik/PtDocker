@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -26,7 +27,7 @@ public class InsuredObject {
     private String objectId;
 
     @JsonProperty("sumInsured")
-    private Double sumInsured;
+    private BigDecimal sumInsured;
 
     // Additional attributes
     private Map<String, Object> additionalAttributes;
@@ -35,7 +36,7 @@ public class InsuredObject {
     // Constructors
     public InsuredObject() {}
 
-    public InsuredObject(Double sumInsured, Integer packageCode, List<Cover> covers, String objectId) {
+    public InsuredObject(BigDecimal sumInsured, Integer packageCode, List<Cover> covers, String objectId) {
         
         this.sumInsured = sumInsured;
         this.packageCode = packageCode;
@@ -44,11 +45,11 @@ public class InsuredObject {
     }
 
     // Getters and Setters
-    public Double getSumInsured() {
+    public BigDecimal getSumInsured() {
         return sumInsured;
     }
 
-    public void setSumInsured(Double sumInsured) {
+    public void setSumInsured(BigDecimal sumInsured) {
         this.sumInsured = sumInsured;
     }
 

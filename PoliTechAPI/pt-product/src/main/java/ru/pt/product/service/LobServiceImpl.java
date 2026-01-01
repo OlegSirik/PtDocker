@@ -1,19 +1,18 @@
 package ru.pt.product.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.Lob;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.service.product.LobService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.product.entity.LobEntity;
 import ru.pt.product.repository.LobRepository;
 
@@ -29,21 +28,37 @@ public class LobServiceImpl implements LobService {
 
     private final LobRepository lobRepository;
     private final ObjectMapper objectMapper;
+    private final SecurityContextHelper securityContextHelper;
     //private final DataSource dataSource;
 
-    public LobServiceImpl(LobRepository lobRepository, ObjectMapper objectMapper) {
+    public LobServiceImpl(LobRepository lobRepository, ObjectMapper objectMapper, SecurityContextHelper securityContextHelper) {
         this.lobRepository = lobRepository;
         this.objectMapper = objectMapper;
+        this.securityContextHelper = securityContextHelper;
+    }
+
+    /**
+     * Get current authenticated user from security context
+     * @return UserDetailsImpl representing the current user
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
+
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
     }
 
     @Override
     public List<Object[]> listActiveSummaries() {
-        return lobRepository.listActiveSummaries();
+        return lobRepository.listActiveSummaries(getCurrentTenantId());
     }
 
     @Override
     public LobModel getByCode(String code) {
-        LobEntity lob = lobRepository.findByCodeAndIsDeletedFalse(code).orElse(null);
+        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElse(null);
         if (lob == null) {
             return null;
         }
@@ -57,7 +72,7 @@ public class LobServiceImpl implements LobService {
     // get by id
     @Override
     public LobModel getById(Integer id) {
-        LobEntity lob = lobRepository.findByIdAndIsDeletedFalse(id).orElse(null);
+        LobEntity lob = lobRepository.findById(getCurrentTenantId(), id).orElse(null);
         if (lob == null) {
             return null;
         }
@@ -109,6 +124,7 @@ public class LobServiceImpl implements LobService {
 
         LobEntity lob = new LobEntity();
         lob.setId(nextId);
+        lob.setTid(getCurrentTenantId());
         lob.setCode(payload.getMpCode());
         lob.setName(payload.getMpName());
         String payloadJson;
@@ -131,7 +147,7 @@ public class LobServiceImpl implements LobService {
     @Transactional
     @Override
     public boolean softDeleteByCode(String code) {
-        LobEntity lob = lobRepository.findByCodeAndIsDeletedFalse(code).orElseThrow(() -> new NotFoundException("Lob not found"));
+        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElseThrow(() -> new NotFoundException("Lob not found"));
         lob.setDeleted(true);
         lobRepository.save(lob);
         return true;
@@ -140,7 +156,7 @@ public class LobServiceImpl implements LobService {
     @Transactional
     @Override
     public boolean softDeleteById(Integer id) {
-        LobEntity lob = lobRepository.findByIdAndIsDeletedFalse(id).orElseThrow(() -> new NotFoundException("Lob not found"));
+        LobEntity lob = lobRepository.findById(getCurrentTenantId(), id).orElseThrow(() -> new NotFoundException("Lob not found"));
         lob.setDeleted(true);
         lobRepository.save(lob);
         return true;
@@ -152,7 +168,7 @@ public class LobServiceImpl implements LobService {
     @Transactional
     @Override
     public LobModel updateByCode(String code, LobModel payload) {
-        LobEntity lob = lobRepository.findByCodeAndIsDeletedFalse(code).orElseThrow(() -> new NotFoundException("Lob not found"));
+        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElseThrow(() -> new NotFoundException("Lob not found"));
         if (!lob.getCode().equals(payload.getMpCode())) {
             throw new BadRequestException("Code cannot be changed");
         }

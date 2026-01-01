@@ -1,8 +1,11 @@
 package ru.pt.numbers.service;
 
 import org.springframework.stereotype.Service;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.service.numbers.NumberGeneratorService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.numbers.entity.NumberGeneratorEntity;
 import ru.pt.numbers.repository.NumberGeneratorRepository;
 import ru.pt.numbers.utils.NumberGeneratorMapper;
@@ -20,18 +23,40 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
     private final NumberGeneratorRepository repository;
     private final NumberGeneratorMapper mapper;
+    private final SecurityContextHelper securityContextHelper;
 
     public DatabaseNumberGeneratorService(NumberGeneratorRepository repository,
-                                  NumberGeneratorMapper mapper) {
+                                  NumberGeneratorMapper mapper,
+                                  SecurityContextHelper securityContextHelper) {
         this.repository = repository;
         this.mapper = mapper;
+        this.securityContextHelper = securityContextHelper;
+    }
+
+    /**
+     * Get current authenticated user from security context
+     * @return UserDetailsImpl representing the current user
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
+
+    /**
+     * Get current tenant ID from authenticated user
+     * @return Long representing the current tenant ID
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
     }
 
     @Override
     public String getNextNumber(Map<String, Object> values, String productCode) {
         NumberGeneratorEntity ng = null;
         if (productCode != null && !productCode.isEmpty()) {
-            ng = repository.findByProductCode(productCode)
+            ng = repository.findByProductCode(getCurrentTenantId(), productCode)
                     .orElseThrow(() -> new IllegalArgumentException("Generator not found: " + productCode));
         }
         if (ng == null) {
@@ -90,6 +115,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     @Override
     public void create(NumberGeneratorDescription numberGeneratorDescription) {
         var entity = mapper.toEntity(numberGeneratorDescription);
+        entity.setTid(getCurrentTenantId());
         repository.save(entity);
     }
 
@@ -98,7 +124,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
         if (numberGeneratorDescription.getId() == null) {
             throw new IllegalArgumentException("NumberGenerator ID must not be null for update");
         }
-        var existing = repository.findById(numberGeneratorDescription.getId())
+        var existing = repository.findByTidAndId(getCurrentTenantId(), numberGeneratorDescription.getId())
                 .orElseThrow(() -> new IllegalArgumentException("NumberGenerator not found with id: " + numberGeneratorDescription.getId()));
         existing.setProductCode(numberGeneratorDescription.getProductCode());
         existing.setMask(numberGeneratorDescription.getMask());
@@ -109,7 +135,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     }
 
     private NumberGeneratorEntity getNext(Integer id) {
-        NumberGeneratorEntity ng = repository.findById(id)
+        NumberGeneratorEntity ng = repository.findByTidAndId(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Generator not found: " + id));
 
         LocalDate today = LocalDate.now();

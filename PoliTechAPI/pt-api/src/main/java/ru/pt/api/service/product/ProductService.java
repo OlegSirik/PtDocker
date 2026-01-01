@@ -14,7 +14,7 @@ public interface ProductService {
      * Получить все продукты
      * @return список описаний продуктов
      */
-    List<Map<String, Object>> listSummaries();
+    List<Product> listSummaries();
 
     /**
      * Создать продукт

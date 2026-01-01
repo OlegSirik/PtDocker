@@ -13,6 +13,9 @@ public class NumberGeneratorEntity {
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @Column(name = "tid", nullable = false)
+    private Long tid;
+
     @Column(name = "product_code", nullable = false, length = 100)
     private String productCode;
 
@@ -41,6 +44,14 @@ public class NumberGeneratorEntity {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Long getTid() {
+        return tid;
+    }
+
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 
     public String getProductCode() {

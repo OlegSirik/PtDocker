@@ -12,6 +12,7 @@ import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.utils.JsonProjection;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.process.utils.ValidatorImpl;
 
 import java.util.*;
@@ -22,41 +23,11 @@ import java.util.stream.Collectors;
 @Component
 public class ValidatorServiceImpl implements ValidatorService {
 
-    private final ProductService productService;
-    private final LobService lobService;
-    private final PreProcessService preProcessService;
 
-    public ValidatorServiceImpl(
-            ProductService productService,
-            LobService lobService,
-            PreProcessService preProcessService
-    ) {
-        this.productService = productService;
-        this.lobService = lobService;
-        this.preProcessService = preProcessService;
-    }
+    public ValidatorServiceImpl() {}
 
     @Override
-    public List<ValidationError> validate(String policy, ValidatorType validatorType) {
-        JsonProjection projection = new JsonProjection(policy);
-
-        String productCode = projection.getProductCode();
-
-        ProductVersionModel productVersionModel = productService.getProductByCode(productCode, true);
-
-        //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
-
-        policy = preProcessService.enrichPolicy(policy, productVersionModel);
-        // Fill Key-Value pairs for LOB Variables
-        List<PvVar> pvVars = preProcessService.evaluateAndEnrichVariables(policy, productVersionModel.getVars(), productCode);
-
-        // TODO полис тоже надо возвращать(не забыть при рефакторе)
-        return validate(validatorType, productVersionModel, pvVars);
-    }
-
-
-    @Override
-    public List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<PvVar> pvVars) {
+    public List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, VariableContext varCtx) {
         var result = new ArrayList<ValidationError>();
         var validatorRules = List.<ValidatorRule>of();
         if (ValidatorType.QUOTE.equals(validatorType)) {
@@ -72,12 +43,9 @@ public class ValidatorServiceImpl implements ValidatorService {
 
             boolean isValidAnd = true;
 
-            Map<String, PvVar> context = pvVars.stream()
-                    .collect(Collectors.toMap(PvVar::getVarCode, Function.identity()));
-
             for (ValidatorRule validatorRule : validatorRules) {
                 boolean isValid = ValidatorImpl.validate(
-                        context,
+                        varCtx,
                         validatorRule
                 );
 
@@ -101,15 +69,6 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
 
         return result;
-    }
-
-
-    public Map<String, Object> getMapVars(List<PvVar> pvVars) {
-        Map<String, Object> mapVars = new HashMap<>();
-        for (PvVar pvVar : pvVars) {
-            mapVars.put(pvVar.getVarCode(), pvVar.getVarValue());
-        }
-        return mapVars;
     }
 
 }

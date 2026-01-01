@@ -38,7 +38,7 @@ public interface CoefficientService {
      */
     String getCoefficientValue(Integer calculatorId,
                                String coefficientCode,
-                               Map<String, String> values,
+                               Map<String, Object> values,
                                List<CoefficientColumn> columns);
 
 }

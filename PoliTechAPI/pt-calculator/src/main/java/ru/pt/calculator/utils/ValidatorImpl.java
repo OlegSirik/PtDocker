@@ -2,7 +2,10 @@ package ru.pt.calculator.utils;
 
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.VarDataType;
+import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.VariableContext;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,6 +54,19 @@ public class ValidatorImpl {
         }
     }
 
+    private static boolean checkNumber(String type, BigDecimal s1, BigDecimal s2) {
+
+        switch (type) {
+            case "=": return s1.compareTo(s2) == 0;
+            case "!=": return s1.compareTo(s2) != 0;
+            case ">": return s1.compareTo(s2) > 0;
+            case "<": return s1.compareTo(s2) < 0;
+            case ">=": return s1.compareTo(s2) >= 0;
+            case "<=": return s1.compareTo(s2) <= 0;
+            default: return false;
+        }
+    }
+
     public static boolean validate(List<PvVar> dataMap, String leftKey, String rightKey, String rightValue, String ruleType) {
         try {
             PvVar leftVarDef = dataMap.stream().filter(v -> v.getVarCode().equals(leftKey)).findFirst().orElse(null);
@@ -77,4 +93,38 @@ public class ValidatorImpl {
             return false;
         }
     }
+
+    public static boolean validate(VariableContext ctx, String leftKey, String rightKey, String rightValue, String ruleType) {
+        try {
+            PvVarDefinition leftVarDef = ctx.getDefinition(leftKey);
+            PvVarDefinition rightVarDef = ctx.getDefinition(rightKey);
+
+            if (leftVarDef == null ) return false;
+            if (rightVarDef == null && rightValue == null) return false;
+
+            if (rightVarDef != null) {
+                if (leftVarDef.getType() != rightVarDef.getType()) {
+                    return false;
+                }
+            }
+
+            if ( leftVarDef.getType() == PvVarDefinition.Type.NUMBER ) {
+                BigDecimal leftVal = ctx.getDecimal(leftKey);
+                BigDecimal rightVal = null;
+                if ( rightKey != null ) { rightVal = ctx.getDecimal(rightKey); }
+                else { rightVal = new BigDecimal(rightValue); } 
+                return checkNumber(ruleType, leftVal, rightVal);
+            } else {
+                String leftVal = ctx.getString(leftKey);
+                String rightVal = null;
+                if ( rightKey != null ) { rightVal = ctx.getString(rightKey); }
+                else { rightVal = rightValue; }
+                return checkString(ruleType, leftVal, rightVal);
+            }
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

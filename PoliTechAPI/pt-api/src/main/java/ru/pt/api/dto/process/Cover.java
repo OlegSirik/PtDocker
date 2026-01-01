@@ -3,6 +3,7 @@ package ru.pt.api.dto.process;
 import java.time.ZonedDateTime;
 import java.util.List;
 import ru.pt.api.dto.process.Deductible;
+import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,19 +26,10 @@ public class Cover {
     private ZonedDateTime endDate;
 
     @JsonProperty("sumInsured")
-    private Double sumInsured;
+    private BigDecimal sumInsured;
 
     @JsonProperty("premium")
-    private Double premium;
-//    private String deductibleType;
-//    private Double deductible;
-//    private Double sumInsuredCur;
-//    private Double premiumCur;
-//    private Double deductibleCur;
-//    private Double deductiblePercent;
-//    private Double deductibleMin;
-//    private String deductibleUnit;
-//    private String deductibleSpecific;
+    private BigDecimal premium;
 
     private Deductible deductible;
 
@@ -45,7 +37,7 @@ public class Cover {
     public Cover() {}
 
     public Cover(CoverInfo cover, List<String> risk, ZonedDateTime startDate, ZonedDateTime endDate,
-                 Double sumInsured, Double premium, Deductible deductible) {
+                 BigDecimal sumInsured, BigDecimal premium, Deductible deductible) {
         this.cover = cover;
         this.risk = risk;
         this.startDate = startDate;
@@ -89,19 +81,19 @@ public class Cover {
         this.endDate = endDate;
     }
 
-    public Double getSumInsured() {
+    public BigDecimal getSumInsured() {
         return sumInsured;
     }
 
-    public void setSumInsured(Double sumInsured) {
+    public void setSumInsured(BigDecimal sumInsured) {
         this.sumInsured = sumInsured;
     }
 
-    public Double getPremium() {
+    public BigDecimal getPremium() {
         return premium;
     }
 
-    public void setPremium(Double premium) {
+    public void setPremium(BigDecimal premium) {
         this.premium = premium;
     }
 

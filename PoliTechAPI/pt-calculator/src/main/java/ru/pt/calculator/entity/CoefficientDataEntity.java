@@ -11,6 +11,9 @@ public class CoefficientDataEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "coefficient_data_seq_gen")
     private Integer id;
 
+    @Column(name = "tid", nullable = false)
+    private Long tId;
+
     @Column(name = "calculator_id", nullable = false)
     private Integer calculatorId;
 
@@ -42,6 +45,14 @@ public class CoefficientDataEntity {
 
     @Column(name = "result_value")
     private Double resultValue;
+
+    public Long getTId() {
+        return tId;
+    }
+
+    public void setTId(Long tId) {
+        this.tId = tId;
+    }
 
     public Integer getId() {
         return id;

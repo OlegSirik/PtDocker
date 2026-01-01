@@ -18,7 +18,7 @@ public interface PreProcessService {
      * @param productVersionModel данные по продукту
      * @return дозаполненный договор
      */
-    String enrichPolicy(String policy, ProductVersionModel productVersionModel);
+    //String enrichPolicy(String policy, ProductVersionModel productVersionModel);
 
     /**
      * Вычислить значения переменных по jsonPath договора
@@ -28,7 +28,7 @@ public interface PreProcessService {
      * @param productCode код продукта
      * @return список переменных и значений
      */
-    List<PvVar> evaluateAndEnrichVariables(String policy, List<PvVar> pvVars, String productCode);
+    //List<PvVar> evaluateAndEnrichVariables(String policy, List<PvVar> pvVars, String productCode);
 
     /**
      * Добавить переменные для сохранения результатов расчета
@@ -36,7 +36,7 @@ public interface PreProcessService {
      * @param insObject объект с рисками и покрытиями
      * @param lobVars   переменные от продукта
      */
-    void enrichVariablesBeforeCalculation(InsuredObject insObject, List<PvVar> pvVars);
+    //void enrichVariablesBeforeCalculation(InsuredObject insObject, List<PvVar> pvVars);
 
     /**
      * Дозаполнить риски и покрытия в страхуемом объекте
@@ -45,7 +45,7 @@ public interface PreProcessService {
      * @param productVersionModel продукт
      * @return страхуемый объект с дозаполненными полями
      */
-    InsuredObject getInsuredObject(String policy, ProductVersionModel productVersionModel);
+    //InsuredObject getInsuredObject(String policy, ProductVersionModel productVersionModel);
 
 
     /**
@@ -55,7 +55,7 @@ public interface PreProcessService {
      * @param productVersionModel данные по продукту
      * @return дозаполненный договор
      */
-    PolicyDTO enrichPolicy(PolicyDTO policy, ProductVersionModel productVersionModel);
+    //PolicyDTO enrichPolicy(PolicyDTO policy, ProductVersionModel productVersionModel);
 
     /**
      * Вычислить значения переменных по jsonPath договора
@@ -65,16 +65,17 @@ public interface PreProcessService {
      * @param productCode код продукта
      * @return список переменных и значений
      */
-    List<PvVar> evaluateAndEnrichVariables(PolicyDTO policy, List<PvVar> pvVars, String productCode);
+    //List<PvVar> evaluateAndEnrichVariables(PolicyDTO policy, List<PvVar> pvVars, String productCode);
 
 
     /**
      * Дозаполнить риски и покрытия в страхуемом объекте
+     * Меняет policy !!!
      *
      * @param policy              договор
      * @param productVersionModel продукт
      * @return страхуемый объект с дозаполненными полями
      */
-    InsuredObject getInsuredObject(PolicyDTO policy, ProductVersionModel productVersionModel);
+    void applyProductMetadata(PolicyDTO policy, ProductVersionModel productVersionModel);
 
 }

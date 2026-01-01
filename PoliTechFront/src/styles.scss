@@ -54,3 +54,18 @@ $ng-front4-theme: mat.define-theme((
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// Error snackbar styles
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+  
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+    white-space: pre-line;
+  }
+  
+  .mat-mdc-button {
+    color: white !important;
+  }
+}
