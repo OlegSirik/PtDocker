@@ -13,6 +13,7 @@ import {
 } from 'keycloak-angular';
 import {keycloakConfig, keycloakInitOptions, urlCondition} from './keycloak.config';
 import {authInterceptor} from './shared/interceptors/auth.interceptor';
+import {errorInterceptor} from './shared/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,7 +40,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     //provideHttpClient(withInterceptors([includeBearerTokenInterceptor])), // todo: keycloak auth
-    provideHttpClient(withInterceptors([authInterceptor])), // todo: rest auth
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])), // todo: rest auth
     FormlyModule.forRoot({
       validationMessages: [
         { name: 'required', message: 'This field is required' },

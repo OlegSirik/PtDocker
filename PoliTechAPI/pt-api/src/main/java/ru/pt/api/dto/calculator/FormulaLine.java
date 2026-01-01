@@ -82,4 +82,13 @@ public class FormulaLine {
     public void setPostProcessor(String postProcessor) {
         this.postProcessor = postProcessor;
     }
+
+    public boolean hasCondition() {
+        return conditionLeft != null && !conditionLeft.isBlank()
+            && conditionOperator != null && !conditionOperator.isBlank();
+    }
+
+    public boolean hasResult() {
+        return expressionResult != null && !expressionResult.isBlank();
+    }
 }

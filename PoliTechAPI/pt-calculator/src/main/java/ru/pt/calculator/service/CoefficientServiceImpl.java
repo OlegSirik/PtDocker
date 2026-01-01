@@ -11,6 +11,9 @@ import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.calculator.entity.CoefficientDataEntity;
 import ru.pt.calculator.repository.CoefficientDataRepository;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.api.dto.exception.BadRequestException;
 
 import java.util.List;
 import java.util.Map;
@@ -21,11 +24,22 @@ public class CoefficientServiceImpl implements CoefficientService {
     private final CoefficientDataRepository repository;
     private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final SecurityContextHelper securityContextHelper;
 
-    public CoefficientServiceImpl(CoefficientDataRepository repository, ObjectMapper objectMapper, JdbcTemplate jdbcTemplate) {
+    public CoefficientServiceImpl(CoefficientDataRepository repository, ObjectMapper objectMapper, JdbcTemplate jdbcTemplate, SecurityContextHelper securityContextHelper) {
         this.repository = repository;
         this.objectMapper = objectMapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.securityContextHelper = securityContextHelper;
+        }
+
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
+
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
     }
 
     @Transactional
@@ -33,6 +47,7 @@ public class CoefficientServiceImpl implements CoefficientService {
         CoefficientDataEntity entity = new CoefficientDataEntity();
         entity.setCalculatorId(calculatorId);
         entity.setCoefficientCode(code);
+        entity.setTId(getCurrentTenantId());
         mapFromJson(entity, coefficientDataJson);
         return repository.save(entity);
     }
@@ -51,7 +66,7 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional(readOnly = true)
     public ArrayNode getTable(Integer calculatorId, String code) {
-        List<CoefficientDataEntity> rows = repository.findAllByCalcAndCode(calculatorId, code);
+        List<CoefficientDataEntity> rows = repository.findAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         ArrayNode data = objectMapper.createArrayNode();
         for (CoefficientDataEntity e : rows) {
             data.add(mapToJson(e));
@@ -61,7 +76,7 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional
     public ArrayNode replaceTable(Integer calculatorId, String code, ArrayNode tableJson) {
-        repository.deleteAllByCalcAndCode(calculatorId, code);
+        repository.deleteAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         //ArrayNode data = (tableJson.has("data") && tableJson.get("data").isArray()) ? (ArrayNode) tableJson.get("data") : objectMapper.createArrayNode();
         for (JsonNode row : tableJson) {
             insert(calculatorId, code, row);
@@ -72,7 +87,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     @Transactional(readOnly = true)
     public String getCoefficientValue(Integer calculatorId,
                                       String coefficientCode,
-                                      Map<String, String> values,
+                                      Map<String, Object> values,
                                       List<CoefficientColumn> columns) {
         if (calculatorId == null || coefficientCode == null || columns == null) {
             return null;
@@ -99,7 +114,7 @@ public class CoefficientServiceImpl implements CoefficientService {
             if (varCode == null || nr == null || op == null) return null;
             if (!nr.matches("1?0|[0-9]")) return null; // only 0..10
 
-            String varValue = values != null ? values.get(varCode) : null;
+            String varValue = values != null ? values.get(varCode).toString() : null;
             if (varValue == null) return null;
 
             String operator = normalizeOperator(op);

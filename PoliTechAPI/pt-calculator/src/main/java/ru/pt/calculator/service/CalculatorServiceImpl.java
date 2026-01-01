@@ -9,23 +9,26 @@ import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
-import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.calculator.entity.CalculatorEntity;
 import ru.pt.calculator.repository.CalculatorRepository;
 import ru.pt.calculator.utils.ValidatorImpl;
+import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.VariableContext;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.math.RoundingMode.HALF_UP;
 
@@ -38,10 +41,30 @@ public class CalculatorServiceImpl implements CalculatorService {
     private final ProductService productService;
     private final LobService lobService;
     private final ObjectMapper objectMapper;
+    private final SecurityContextHelper securityContextHelper;
+
+    /**
+     * Get current authenticated user from security context
+     * @return UserDetailsImpl representing the current user
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
+
+    /**
+     * Get current tenant ID from authenticated user
+     * @return Long representing the current tenant ID
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
+    }
 
     @Transactional(readOnly = true)
     public CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo) {
-        return calculatorRepository.findByKeys(productId, versionNo, packageNo)
+        return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
                 .map(CalculatorEntity::getCalculator)
                 .map(c -> {
                     try {
@@ -55,7 +78,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional
     public CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo) {
-        return calculatorRepository.findByKeys(productId, versionNo, packageNo)
+        return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
                 .map(CalculatorEntity::getCalculator)
                 .map(c -> {
                     try {
@@ -133,6 +156,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
 
                     CalculatorEntity e = new CalculatorEntity();
+                    e.setTId(getCurrentTenantId());
                     e.setProductId(productId);
                     e.setProductCode(productCode);
                     e.setVersionNo(versionNo);
@@ -167,7 +191,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional(readOnly = true)
     public CalculatorModel getCalculatorModel(Integer productId, Integer versionNo, Integer packageNo) {
-        CalculatorEntity entity = calculatorRepository.findByKeys(productId, versionNo, packageNo).orElse(null);
+        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo).orElse(null);
         if (entity == null) {
             return null;
         }
@@ -188,182 +212,9 @@ public class CalculatorServiceImpl implements CalculatorService {
         }
     }
 
-    //@Transactional(readOnly = true)
-    public List<PvVar> runCalculator(Integer productId, Integer versionNo, Integer packageNo, List<PvVar> inputValues) {
-        CalculatorModel model = getCalculatorModel(productId, versionNo, packageNo);
-        if (model == null) return inputValues;
-
-        // INSERT_YOUR_CODE
-        if (model.getVars() == null) {
-            model.setVars(new ArrayList<>());
-        }
-        List<PvVar> modelVars = model.getVars();
-        for (PvVar inputVar : inputValues) {
-            boolean found = false;
-            for (PvVar modelVar : modelVars) {
-                if (modelVar.getVarCode() != null && modelVar.getVarCode().equals(inputVar.getVarCode())) {
-                    modelVar.setVarValue(inputVar.getVarValue());
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                // Add a copy of inputVar to modelVars
-                PvVar newVar = new PvVar();
-                newVar.setVarCode(inputVar.getVarCode());
-                newVar.setVarValue(inputVar.getVarValue());
-                newVar.setVarType(inputVar.getVarType());
-                newVar.setVarPath(inputVar.getVarPath());
-                // Copy other fields if needed
-                modelVars.add(newVar);
-            }
-        }
-
-        if (model.getFormulas() != null && !model.getFormulas().isEmpty()) {
-            FormulaDef f = model.getFormulas().getFirst();
-            // Для пакета есть только 1 формула. Поэтому берем всегда 0-й элемент
-            // сортируем строки формулы по nr
-            // INSERT_YOUR_CODE
-            List<FormulaLine> lines = new ArrayList<>(f.getLines());
-            lines.sort((a, b) -> {
-                Integer na = a.getNr();
-                Integer nb = b.getNr();
-                if (na == null && nb == null) return 0;
-                if (na == null) return 1;
-                if (nb == null) return -1;
-                return na.compareTo(nb);
-            });
-
-            for (FormulaLine line : lines) {
-
-                if (!Objects.equals(line.getConditionOperator(), "") && !Objects.equals(line.getConditionLeft(), "")) {
-                    if (!ValidatorImpl.validate(modelVars, line.getConditionLeft(), line.getConditionOperator(), line.getConditionRight(), line.getConditionOperator())) {
-                        continue;
-                    }
-                }
-
-                PvVar lv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionLeft())).findFirst().orElse(null);
-                PvVar rv = modelVars.stream().filter(v -> v.getVarCode().equals(line.getExpressionRight())).findFirst().orElse(null);
-
-
-                if (lv != null && lv.getVarType().equals("COEFFICIENT")) {
-                    CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(lv.getVarCode())).findFirst().orElse(null);
-                    if (cd != null) {
-                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(PvVar::getVarCode, PvVar::getVarValue));
-                        String s = coefficientService.getCoefficientValue(model.getId(), lv.getVarCode(), modelVarsMap, cd.getColumns());
-                        lv.setVarValue(s);
-                    }
-                }
-                if (rv != null && rv.getVarType().equals("COEFFICIENT")) {
-                    CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(rv.getVarCode())).findFirst().orElse(null);
-                    if (cd != null) {
-                        Map<String, String> modelVarsMap = modelVars.stream().collect(Collectors.toMap(PvVar::getVarCode, PvVar::getVarValue));
-                        String s = coefficientService.getCoefficientValue(model.getId(), rv.getVarCode(), modelVarsMap, cd.getColumns());
-                        rv.setVarValue(s);
-                    }
-                }
-
-                Double dlv = null;
-                Double drv = null;
-
-                if (lv != null) {
-                    dlv = tryParseDouble(lv);
-                }
-                if (rv != null) {
-                    drv = tryParseDouble(rv);
-                }
-
-
-                Double res = compute(dlv, line.getExpressionOperator(), drv);
-                if (line.getPostProcessor() != null) {
-                    res = postProcess(res, line.getPostProcessor());
-                }
-
-                if (line.getExpressionResult() != null && !Objects.equals(line.getExpressionResult(), "")) {
-                    Objects.requireNonNull(modelVars.stream()
-                        .filter(v -> v.getVarCode().equals(line.getExpressionResult()))
-                        .findFirst().orElse(null)).setVarValue(res == null ? null : res.toString());
-                }
-            }
-        }
-
-        return modelVars;
-    }
-
-
-    private Double compute(Double left, String operator, Double right) {
-        if (operator == null || operator.isBlank()) return left;
-
-        switch (operator.trim()) {
-            case "+":
-                if (left != null && right != null) return trimZeros(left + right);
-                if (left == null && right == null) return null;
-                if (left == null) return trimZeros(right);
-                return trimZeros(left);
-            case "-":
-                if (left != null && right != null) return trimZeros(left - right);
-                if (left == null && right == null) return null;
-                if (left == null) return trimZeros(0 - right);
-                return trimZeros(left);
-            case "*":
-                if (left != null && right != null) return trimZeros(left * right);
-                return null;
-            case "/":
-                if (left != null && right != null && right != 0d) return trimZeros(left / right);
-                return null;
-            default:
-                return left;
-        }
-    }
-
-    private Double postProcess(Double value, String postProcessor) {
-        if (value == null) return null;
-        String pp = postProcessor.trim().toLowerCase();
-        if (pp.startsWith("round")) {
-            int scale = 0;
-            if ("round2".equals(pp)) scale = 2;
-            else {
-                String digits = pp.replaceAll("[^0-9]", "");
-                if (!digits.isEmpty()) try {
-                    scale = Integer.parseInt(digits);
-                } catch (Exception ignored) {
-                }
-            }
-            BigDecimal bd = new BigDecimal(value).setScale(scale, HALF_UP);
-            return trimZeros(bd.doubleValue());
-        }
-        return value;
-    }
-
-    private Double tryParseDouble(PvVar s) {
-        if (s == null) return null;
-
-        try {
-            return Double.parseDouble(s.getVarValue());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private Double trimZeros(double d) {
-        String s = Double.toString(d);
-        if (s.contains("E") || s.contains("e")) {
-            // Convert scientific notation to plain string and remove trailing zeros
-            s = new BigDecimal(s).stripTrailingZeros().toPlainString();
-        }
-        if (s.indexOf('.') >= 0) {
-            s = s.replaceAll("0+$", "").replaceAll("\\.$", "");
-        }
-        try {
-            return Double.valueOf(s);
-        } catch (Exception e) {
-            return d;
-        }
-    }
-
     public CalculatorModel replaceCalculator(Integer productId, String productCode, Integer versionNo,
                                              Integer packageNo, CalculatorModel newJson) {
-        CalculatorEntity entity = calculatorRepository.findByKeys(productId, versionNo, packageNo)
+        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
                 .orElseThrow(() -> new IllegalArgumentException("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo));
 
         newJson.setProductId(productId);
@@ -436,4 +287,175 @@ public class CalculatorServiceImpl implements CalculatorService {
         calculatorRepository.save(entity);
     }
 
+/*********************************/    
+    @Override
+    public void runCalculator(
+        Integer productId,
+        Integer versionNo,
+        Integer packageNo,
+        VariableContext ctx
+    ) {
+        // Получить описание калькулятора
+        CalculatorModel model = getCalculatorModel(productId, versionNo, packageNo);
+        if (model == null || model.getFormulas() == null || model.getFormulas().isEmpty()) {
+            return;
+        }
+
+        // Добавить переменные калькулятора в контекст.
+        model.getVars().forEach(v -> {
+            
+            PvVarDefinition varDef = new PvVarDefinition(
+                v.getVarCode(), 
+                v.getVarPath(),
+                v.getVarType().equals("NUMBER") ? PvVarDefinition.Type.NUMBER : PvVarDefinition.Type.STRING,
+                PvVarDefinition.VarScope.CALCULATOR,
+                PvVarDefinition.VarSourceType.valueOf(v.getVarType())
+            );
+
+            ctx.put(varDef.getCode(), varDef);
+            
+        });
+        
+        // Получить формулу калькулятора. Она у пакета одна
+        FormulaDef formula = model.getFormulas().getFirst();
+
+        List<FormulaLine> lines = new ArrayList<>(formula.getLines());
+        lines.sort(Comparator.comparing(FormulaLine::getNr, Comparator.nullsLast(Integer::compareTo)));
+
+        for (FormulaLine line : lines) {
+
+        // ---------- CONDITION ----------
+        if (line.hasCondition()) {
+            boolean ok = ValidatorImpl.validate(
+                ctx,
+                line.getConditionLeft(),
+                line.getConditionRight(),
+                null,
+                line.getConditionOperator()
+            );
+            if (!ok) continue;
+        }
+
+        // ---------- LEFT / RIGHT ----------
+        BigDecimal left = resolveValue(ctx, model, line.getExpressionLeft());
+        BigDecimal right = resolveValue(ctx, model, line.getExpressionRight());
+
+        // ---------- COMPUTE ----------
+        BigDecimal result = compute( left, line.getExpressionOperator(), right );
+
+        if (line.getPostProcessor() != null) {
+            result = postProcess(result, line.getPostProcessor());
+        }
+
+        // ---------- WRITE RESULT ----------
+        if (line.getExpressionResult() != null && !line.getExpressionResult().isBlank()) {
+            ctx.put(line.getExpressionResult(), result);
+        }
+    }
+}
+
+
+    protected BigDecimal resolveValue(VariableContext ctx, CalculatorModel model, String varCode)
+    {
+        PvVarDefinition varDef = ctx.getDefinition(varCode);
+        if (varDef == null) {
+            return null;
+        }
+
+        if (varDef.getSourceType() == PvVarDefinition.VarSourceType.COEFFICIENT) {
+            CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(varCode)).findFirst().orElse(null);
+            if (cd == null) {
+                return null;
+            }
+            String s = coefficientService.getCoefficientValue(model.getId(), varCode, ctx, cd.getColumns());
+            ctx.put(varCode, s);
+        }
+        return ctx.getDecimal(varCode);
+    }
+
+    private BigDecimal compute(BigDecimal left, String operator, BigDecimal right) {
+        if (operator == null || operator.isBlank()) return left;
+
+        switch (operator.trim()) {
+            case "+":
+                if (left != null && right != null) return left.add(right);
+                if (left == null && right == null) return null;
+                if (left == null) return right;
+                return left;
+            case "-":
+                if (left != null && right != null) return left.subtract(right);
+                if (left == null && right == null) return null;
+                if (left == null) return right.negate();
+                return left;
+            case "*":
+                if (left != null && right != null) return left.multiply(right);
+                return null;
+            case "/":
+                if (left != null && right != null && right != BigDecimal.ZERO) return left.divide(right);
+                return null;
+            default:
+                return left;
+        }
+    }
+
+    private BigDecimal postProcess(BigDecimal value, String postProcessor) {
+        if (value == null || postProcessor == null) return value;
+
+        String pp = postProcessor.trim().toLowerCase();
+        if (!pp.startsWith("round")) {
+            return value;
+        }
+
+        // Extract scale (default is 2)
+        int scale = 2;
+        if ("round2".equals(pp)) {
+            scale = 2;
+        } else {
+            String digits = pp.replaceAll("[^0-9]", "");
+            if (!digits.isEmpty()) {
+                try {
+                    scale = Integer.parseInt(digits);
+                } catch (Exception ignored) {
+                    // Keep default scale = 2
+                }
+            }
+        }
+
+        // Determine rounding mode
+        RoundingMode roundingMode = HALF_UP; // default
+        if (pp.contains("_")) {
+            String modePart = pp.substring(pp.lastIndexOf("_") + 1);
+            switch (modePart) {
+                case "up":
+                    roundingMode = RoundingMode.UP;
+                    break;
+                case "down":
+                    roundingMode = RoundingMode.DOWN;
+                    break;
+                case "ceiling":
+                    roundingMode = RoundingMode.CEILING;
+                    break;
+                case "floor":
+                    roundingMode = RoundingMode.FLOOR;
+                    break;
+                case "halfup":
+                case "half_up":
+                    roundingMode = RoundingMode.HALF_UP;
+                    break;
+                case "halfdown":
+                case "half_down":
+                    roundingMode = RoundingMode.HALF_DOWN;
+                    break;
+                case "halfeven":
+                case "half_even":
+                    roundingMode = RoundingMode.HALF_EVEN;
+                    break;
+                default:
+                    roundingMode = HALF_UP;
+                    break;
+            }
+        }
+
+        return value.setScale(scale, roundingMode);
+    }
 }

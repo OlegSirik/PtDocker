@@ -13,10 +13,13 @@ import org.springframework.stereotype.Component;
 
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientConfiguration;
+import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
+import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
@@ -41,6 +44,8 @@ import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.files.service.email.EmailGateService;
 import ru.pt.payments.service.PaymentClientSwitch;
 import ru.pt.process.utils.MdcWrapper;
@@ -53,6 +58,7 @@ import java.util.stream.Collectors;
 
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.product.VarDataType;
 
 import java.math.BigDecimal;
 
@@ -122,106 +128,102 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
     }
 
-    private PolicyDTO calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, List<PvVar> vars) {
+    private void calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, VariableContext varCtx) {
 
-        InsuredObject insObject = preProcessService.getInsuredObject(policyDTO, product);
+        addMandatoryVars(policyDTO, varCtx.getDefinitions());
 
-        preProcessService.enrichVariablesBeforeCalculation(insObject, vars);
+        CalculatorModel calculatorModel = calculatorService.getCalculator(
+            product.getId(), 
+            product.getVersionNo(), 
+            policyDTO.getInsuredObjects().get(0).getPackageCode());
 
-        List<PvVar> calculated = calculatorService.runCalculator(
-                product.getId(), product.getVersionNo(), insObject.getPackageCode(), vars
-        );
+        if (calculatorModel != null) {
+            calculatorService.runCalculator(
+                product.getId(), 
+                product.getVersionNo(), 
+                policyDTO.getInsuredObjects().get(0).getPackageCode(), 
+                varCtx );
 
-        insObject = postProcessService.setCovers(insObject, calculated);
-        
-        policyDTO.getInsuredObjects().get(0).setCovers(insObject.getCovers());
+                postProcessService.setCovers(policyDTO, varCtx);
 
-        BigDecimal premium = countPremium(insObject);
+            }
 
-        policyDTO.setPremium(premium);
 
-        for (PvVar var : calculated) {
-            logger.info("Var {} {}", var.getVarCode(), var.getVarValue());
+        policyDTO.setPremium(calculateTotalPremium(policyDTO));
+
+//        for ( PvVarDefinition var : varCtx.getDefinitions()) {
+//            logger.info("Var {} {}", var.getCode(),  varCtx.getString(var.getCode()));
+//        }
+
+    }
+
+    private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
+        varDefinitions.add(new PvVarDefinition("Product", "$,productCode", PvVarDefinition.Type.STRING));
+        varDefinitions.add(new PvVarDefinition("Package", "$,packageCode", PvVarDefinition.Type.STRING));
+        for (InsuredObject insuredObject : policyDTO.getInsuredObjects()) {
+            for (Cover cover : insuredObject.getCovers()) {
+                String coverCode = cover.getCover().getCode();
+                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_sumInsured", "", PvVarDefinition.Type.NUMBER));
+                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_premium", "", PvVarDefinition.Type.NUMBER));
+                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_deductibleNr", "", PvVarDefinition.Type.NUMBER));
+            }
         }
-
-        return policyDTO;
     }
 
     @Override
     public String calculate(String policy) {
 
-
- /* 
-        var projection = new JsonProjection(policy);
-
-        var productCode = projection.getProductCode();
-
-        var product = productService.getProductByCode(productCode, false);
-
-        //LobModel lobModel = lobService.getByCode(product.getLob());
-        List<PvVar> pvVars = product.getVars();
-
-        policy = preProcessService.enrichPolicy(policy, product);
-
-        List<PvVar> vars = preProcessService.evaluateAndEnrichVariables(policy, pvVars, productCode);
-
-        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, vars);
-
-        if (!errors.isEmpty()) {
-            // TODO нормальную структуру под ошибки
-            throw new BadRequestException(errors.stream()
-                    .map(ValidationError::getReason)
-                    .collect(Collectors.joining(","))
-            );
+        // 1. JSON → DTO contract
+        PolicyDTO policyDTO;
+        try {
+            policyDTO = policyFromJson(policy);
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid policy JSON", e);
         }
-
-        InsuredObject insObject = preProcessService.getInsuredObject(policy, product);
-
-        preProcessService.enrichVariablesBeforeCalculation(insObject, vars);
-
-        List<PvVar> calculated = calculatorService.runCalculator(
-                product.getId(), product.getVersionNo(), insObject.getPackageCode(), vars
-        );
-
-        insObject = postProcessService.setCovers(insObject, calculated);
-
-        var setter = new JsonSetter(policy);
-
-        setter.setObjectValue("insuredObject", insObject);
-//        setter.getObjectValue("insuredObject").setObjectValue("covers", insObject.getCovers());
-
-        Double premium = countPremium(insObject);
-
-        setter.setRawValue("premium", premium.toString());
-
-        logger.info("Result after calculation {}", setter.writeValue());
-
-        for (PvVar var : calculated) {
-            logger.info("Var {} {}", var.getVarCode(), var.getVarValue());
-        }
-
-        return setter.writeValue();
-*/
-
-        PolicyDTO policyDTO = policyFromJson(policy);
-
+        policyDTO.setProcessList(new ProcessList(ProcessList.QUOTE));
         /* Удалить возможный хлам */
         policyDTO.setPremium(null);
-
+        policyDTO.setPolicyNumber(null);
+        policyDTO.setProductVersion(0);
+        policyDTO.setId(null);
+        policyDTO.setStatusCode("NEW");
+        // 3. Получить продукт
+        ProductVersionModel product;
         String productCode = policyDTO.getProductCode();
-        var product = productService.getProductByCode(productCode, false);
 
-        //LobModel lobModel = lobService.getByCode(product.getLob());
-        List<PvVar> pvVars = product.getVars();
+        try {
+            product = productService.getProductByCode(productCode, false);
+        } catch (Exception e) {
+            throw new UnprocessableEntityException(
+                new ErrorModel(422, "Invalid product code: " + productCode,
+                    List.of(new ErrorModel.ErrorDetail("product", "invalid", e.getMessage(), "productCode"))));
+        }
+        // 4. Применение метаданных продукта
+        try {
+            preProcessService.applyProductMetadata(policyDTO, product);
+        } catch (Exception e) {
+            throw new UnprocessableEntityException(
+                new ErrorModel(422, "Error applying product metadata: " + productCode));
+        }
 
-        policyDTO = preProcessService.enrichPolicy(policyDTO, product);
-
-        /* обогащенные данные */
+        // 5. DTO → JSON (эталонная модель)
         String policyJSON = policyToJson(policyDTO);
+        
+        // 6. PvVar → PvVarDefinition
+        List<PvVarDefinition> varDefinitions = 
+            product.getVars().stream()
+                .map(this::toDefinition)
+                .toList();
 
-        List<PvVar> vars = preProcessService.evaluateAndEnrichVariables(policyJSON, pvVars, productCode);
 
-        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, vars);
+        // 7. Runtime-контекст
+        VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
+
+        // 8. Предобработка (если нужно задать значения явно)
+        //preProcessService.enrichVariables(ctx, product);
+
+        // 9. Валидация (lazy!)
+        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
 
         if (!errors.isEmpty()) {
             // TODO нормальную структуру под ошибки
@@ -231,8 +233,13 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             );
         }
 
-        policyDTO = calculatePremium(policyDTO, product, vars);
+        // 10. Расчёт премии (lazy!)
+        calculatePremium(policyDTO, product, varCtx);
 
+        // 11. Перенос результатов в DTO
+        //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
+
+        // 12. Ответ
         return policyToJson(policyDTO);
 
     }
@@ -240,29 +247,43 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     @Override
     public String save(String policy) {
 
+        // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
-
+        // Добавить помойку
         policyDTO.setProcessList(new ProcessList(ProcessList.SAVE));
-        
-
         /* Удалить возможный хлам */
         policyDTO.setPremium(null);
-
+        policyDTO.setPolicyNumber(null);
+        policyDTO.setProductVersion(0);
+        policyDTO.setId(null);
+        policyDTO.setStatusCode("NEW");
+        
+        // 3. Продукт
         String productCode = policyDTO.getProductCode();
         var product = productService.getProductByCode(productCode, false);
 
-        //LobModel lobModel = lobService.getByCode(product.getLob());
-        List<PvVar> pvVars = product.getVars();
+        // 4. Применение метаданных продукта
+        preProcessService.applyProductMetadata(policyDTO, product);
 
-        policyDTO = preProcessService.enrichPolicy(policyDTO, product);
-
+        // 5. DTO → JSON (эталонная модель)
         /* обогащенные данные */
         String policyJSON = policyToJson(policyDTO);
 
-        List<PvVar> vars = preProcessService.evaluateAndEnrichVariables(policyJSON, pvVars, productCode);
+        // 6. PvVar → PvVarDefinition
+        List<PvVarDefinition> varDefinitions = 
+            product.getVars().stream()
+                .map(this::toDefinition)
+                .toList();
 
-        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, vars);
-        errors.addAll(validatorService.validate(ValidatorType.SAVE, product, vars));
+        // 7. Runtime-контекст
+        VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
+
+        // 8. Предобработка (если нужно задать значения явно)
+        //preProcessService.enrichVariables(ctx, product);
+
+        // 9. Валидация (lazy!)
+        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
+        errors.addAll(validatorService.validate(ValidatorType.SAVE, product, varCtx));
 
         if (!errors.isEmpty()) {
             // TODO нормальную структуру под ошибки
@@ -272,29 +293,28 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             );
         }
 
-        policyDTO = calculatePremium(policyDTO, product, vars);
+        // 10. Расчёт премии (lazy!)
+        calculatePremium(policyDTO, product, varCtx);
         
-        Map<String, Object> paramMap = new HashMap<>();
-        for (PvVar pvVar : vars) {
-            paramMap.put(pvVar.getVarCode(), pvVar.getVarValue());
-        }
-
-        String nextNumber = numberGeneratorService.getNextNumber(paramMap, productCode);
+        // 11. Получить номер полиса
+        String nextNumber = numberGeneratorService.getNextNumber(varCtx, productCode);
         policyDTO.setPolicyNumber(nextNumber);
 
-        String ph_digest = VariablesService.getPhDigest(product.getPhType(), paramMap);
-        String io_digest = VariablesService.getIoDigest(product.getIoType(), paramMap);
+        // Доп атрибуты вычислить
+        String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
+        String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
 
+        // Текущий пользователь
         var userData = securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
-//        String newPolicyJson = policyToJson(policyDTO);
-
+        // 12. Сохранить договор в хранилище
         storageService.save(policyDTO, userData);
 
+        // 13. Ответ, удалить помойку
         policyDTO.setProcessList(null);
         String newPolicyJson = policyToJson(policyDTO);
 
@@ -434,15 +454,33 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         return policyData;
     }
 
-    private BigDecimal countPremium(InsuredObject insObject) {
+    private BigDecimal calculateTotalPremium(PolicyDTO policyDTO) {
         BigDecimal premium = BigDecimal.ZERO;
+        InsuredObject insObject = policyDTO.getInsuredObjects().get(0);
 
         for (Cover cover : insObject.getCovers()) {
             if (cover.getPremium() != null) {
-                premium = premium.add(BigDecimal.valueOf(cover.getPremium()));
+                premium = premium.add(cover.getPremium());
             }
         }
         return premium;
     }
 
+    private PvVarDefinition toDefinition(PvVar var) {
+        PvVarDefinition.Type type;
+        switch (var.getVarDataType()) {
+            case NUMBER:
+                type = PvVarDefinition.Type.NUMBER;
+                break;
+            case STRING:
+            default:
+                type = PvVarDefinition.Type.STRING;
+                break;
+        }
+        return new PvVarDefinition(
+            var.getVarCode(),
+            var.getVarPath(),
+            type
+        );
+    }
 }

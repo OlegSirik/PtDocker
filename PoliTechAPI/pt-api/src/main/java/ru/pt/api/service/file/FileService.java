@@ -67,7 +67,7 @@ public interface FileService {
      * @param keyValues параметры обработки
      * @return результат обработки
      */
-    byte[] process(Long id, Map<String, String> keyValues);
+    byte[] process(Long id, Map<String, Object> keyValues);
 
     /**
      * Получить файл по типу и параметрам
@@ -76,6 +76,6 @@ public interface FileService {
      * @param keyValues параметры поиска
      * @return файл в виде массива байт
      */
-    byte[] getFile(Integer fileId, Map<String, String> keyValues);
+    byte[] getFile(Integer fileId, Map<String, Object> keyValues);
 
 }

@@ -20,6 +20,7 @@ import static java.util.Optional.ofNullable;
 import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
+import ru.pt.auth.security.UserDetailsImpl;
 
 @Component
 public class PolicyMapper {
@@ -98,6 +99,9 @@ public class PolicyMapper {
 
     public PolicyIndexEntity policyIndexFromDTO(PolicyDTO policy, UserDetails userData) {
 
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+        
         ProcessList processList = policy.getProcessList();
         String phDigest = processList.getPhDigest();
         String ioDigest = processList.getIoDigest();
@@ -115,8 +119,8 @@ public class PolicyMapper {
         index.setPaymentDate(null);
         index.setStartDate(policy.getStartDate());
         index.setEndDate(policy.getEndDate());
-//        index.setUserAccountId(  userData.getAccountId());
-//        index.setClientAccountId(userData.getClientId());
+        index.setUserAccountId(  userDetails.getAccountId());
+        index.setClientAccountId(userDetails.getClientId());
 //        index.setVersionStatus(policy.getVersionStatus());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());

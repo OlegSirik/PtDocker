@@ -34,4 +34,7 @@ public class ProductEntity {
     @Column(name = "isDeleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "tid", nullable = false)
+    private Long tId;
+
 }

@@ -4,3 +4,4 @@ export * from './product.service';
 export * from './api/files.service';
 export * from './test.service';
 export * from './calculator.service';
+export * from './error-handler.service';

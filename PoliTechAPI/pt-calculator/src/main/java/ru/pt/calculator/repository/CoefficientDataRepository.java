@@ -10,12 +10,16 @@ import java.util.List;
 
 public interface CoefficientDataRepository extends JpaRepository<CoefficientDataEntity, Integer> {
 
-    @Query("select c from CoefficientDataEntity c where c.calculatorId = :calculatorId and c.coefficientCode = :code order by c.col1, c.col2, c.col3, c.col4, c.col5")
-    List<CoefficientDataEntity> findAllByCalcAndCode(@Param("calculatorId") Integer calculatorId,
-                                               @Param("code") String code);
+    @Query("select c from CoefficientDataEntity c where c.tId = :tId and c.calculatorId = :calculatorId and c.coefficientCode = :code order by c.col1, c.col2, c.col3, c.col4, c.col5")
+    List<CoefficientDataEntity> findAllByCalcAndCode(
+        @Param("tId") Long tId,
+        @Param("calculatorId") Integer calculatorId,
+        @Param("code") String code);
 
     @Modifying
-    @Query("delete from CoefficientDataEntity c where c.calculatorId = :calculatorId and c.coefficientCode = :code")
-    int deleteAllByCalcAndCode(@Param("calculatorId") Integer calculatorId,
-                               @Param("code") String code);
+    @Query("delete from CoefficientDataEntity c where c.tId = :tId and c.calculatorId = :calculatorId and c.coefficientCode = :code")
+    int deleteAllByCalcAndCode(
+        @Param("tId") Long tId,
+        @Param("calculatorId") Integer calculatorId,
+        @Param("code") String code);
 }

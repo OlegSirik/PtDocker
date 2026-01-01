@@ -1,28 +1,29 @@
 package ru.pt.api.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.math.BigDecimal;
 
 public class PvLimit {
 
     @JsonProperty("premium")
-    private Double premium;
+    private BigDecimal premium;
 
     @JsonProperty("sumInsured")
-    private Double sumInsured;
+    private BigDecimal sumInsured;
 
-    public Double getPremium() {
+    public BigDecimal getPremium() {
         return premium;
     }
 
-    public void setPremium(Double premium) {
+    public void setPremium(BigDecimal premium) {
         this.premium = premium;
     }
 
-    public Double getSumInsured() {
+    public BigDecimal getSumInsured() {
         return sumInsured;
     }
 
-    public void setSumInsured(Double sumInsured) {
+    public void setSumInsured(BigDecimal sumInsured) {
         this.sumInsured = sumInsured;
     }
 }

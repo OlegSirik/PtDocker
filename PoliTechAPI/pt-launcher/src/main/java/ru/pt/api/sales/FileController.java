@@ -138,9 +138,10 @@ public class FileController extends SecuredController {
             @PathVariable("fileId") Long fileId,
             @RequestBody List<Map<String, String>> pairs) {
         requireAdmin(user);
-        java.util.Map<String, String> kv = new java.util.HashMap<>();
+        java.util.Map<String, Object> kv = new java.util.HashMap<>();
         for (Map<String, String> p : pairs) {
-            kv.put(p.get("varCode"), p.get("varValue"));
+            Object val = p.get("varValue");
+            kv.put(p.get("varCode"), val);
         }
         byte[] bytes = fileService.process(fileId, kv);
         return ResponseEntity.ok()

@@ -28,6 +28,17 @@ public class CalculatorEntity {
     @Column(name = "calculator", columnDefinition = "jsonb", nullable = false)
     private String calculator;
 
+    @Column(name = "tid", nullable = false)
+    private Long tId;
+
+    public Long getTId() {
+        return tId;
+    }
+
+    public void setTId(Long tId) {
+        this.tId = tId;
+    }
+
     public Integer getId() {
         return id;
     }

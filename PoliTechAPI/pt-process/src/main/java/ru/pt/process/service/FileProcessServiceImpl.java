@@ -19,6 +19,8 @@ import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.PreProcessService;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
+import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.api.service.product.ProductService;
@@ -148,22 +150,14 @@ public class FileProcessServiceImpl implements FileProcessService {
 
         var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getVersionNo());
 
-        List<PvVar> vars = new LinkedList<>();
+        List<PvVarDefinition> varDefinitions = 
+                productVersion.getVars().stream()
+                .map(this::toDefinition)
+                .toList();
 
-        for (PvVar it : productVersion.getVars()) { vars.add(it); }
-        vars.forEach(it -> it.setVarValue(null));
-
-        // добавить запрос на получение номера пакета из договора 
-        //vars = VariablesService.addPackageNo(vars);
-        vars = preProcessService.evaluateAndEnrichVariables(policy.getPolicy(), vars, policyIndex.getProductCode());
-        String packageNo = VariablesService.getPackageNo(vars);
-
-        if (packageNo == null || packageNo.isEmpty() || packageNo.equals("")) {
-                // todo remove this. only for test
-                packageNo = "0";
-                // throw new IllegalArgumentException("Package no not found");
-        }
-
+        // 7. Runtime-контекст
+        VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
+        String packageNo = varCtx.getPackageNo();
         Integer fileId = null;
 
         for (PvPackage pvPackage : productVersion.getPackages()) {
@@ -181,16 +175,25 @@ public class FileProcessServiceImpl implements FileProcessService {
             throw new IllegalArgumentException("File id not found");
         }
 
-        Map<String, String> keyValues = new HashMap<>();
-
-        for (PvVar node : vars) {
-            String key = node.getVarCode();
-            String value = node.getVarValue();
-            System.out.println(key + " " + value);
-            keyValues.put(key, value);
-        }
-        return fileService.getFile(fileId, keyValues);
+        return fileService.getFile(fileId, varCtx);
+    
     }
 
-    
+    private PvVarDefinition toDefinition(PvVar var) {
+        PvVarDefinition.Type type;
+        switch (var.getVarDataType()) {
+            case NUMBER:
+                type = PvVarDefinition.Type.NUMBER;
+                break;
+            case STRING:
+            default:
+                type = PvVarDefinition.Type.STRING;
+                break;
+        }
+        return new PvVarDefinition(
+            var.getVarCode(),
+            var.getVarPath(),
+            type
+        );
+    }    
 }

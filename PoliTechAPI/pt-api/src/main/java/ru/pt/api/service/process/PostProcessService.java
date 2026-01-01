@@ -1,9 +1,10 @@
 package ru.pt.api.service.process;
 
 import ru.pt.api.dto.process.InsuredObject;
+import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.domain.model.VariableContext;
 
-import java.util.List;
 
 /**
  * Дополнительная логика после выполнения определенных процессов в моменте обработки договора
@@ -17,6 +18,6 @@ public interface PostProcessService {
      * @param calculatedValues переменные после расчета
      * @return заполненный объект
      */
-    InsuredObject setCovers(InsuredObject insuredObject, List<PvVar> calculatedValues);
+    void setCovers(PolicyDTO policyDTO, VariableContext ctx);
 
 }

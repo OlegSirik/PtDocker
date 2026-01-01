@@ -3,6 +3,7 @@ package ru.pt.api.service.process;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.api.dto.product.ProductVersionModel;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public interface ValidatorService {
      * @param validatorType тип валидации
      * @return список ошибок
      */
-    List<ValidationError> validate(String policy, ValidatorType validatorType);
+    //List<ValidationError> validate(String policy, ValidatorType validatorType);
 
     /**
      * Валидация полиса по переменным
@@ -29,6 +30,15 @@ public interface ValidatorService {
      * @param lobVars             переменные для валидации
      * @return список ошибок
      */
-    List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<PvVar> pvVars);
+    //List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, List<PvVar> pvVars);
 
+    /**
+     * Валидация полиса по переменным
+     *
+     * @param validatorType       тип валидатора
+     * @param productVersionModel версия продукта
+     * @param varCtx             контекст переменных
+     * @return список ошибок
+     */
+    List<ValidationError> validate(ValidatorType validatorType, ProductVersionModel productVersionModel, VariableContext varCtx);
 }

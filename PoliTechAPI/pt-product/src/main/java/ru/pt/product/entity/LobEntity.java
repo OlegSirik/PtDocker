@@ -28,6 +28,9 @@ public class LobEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "tid", nullable = false)
+    private Long tId;
+
     public Long getId() {
         return id;
     }
@@ -66,5 +69,13 @@ public class LobEntity {
 
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public Long getTid() {
+        return tId;
+    }
+
+    public void setTid(Long tid) {
+        this.tId = tid;
     }
 }

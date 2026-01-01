@@ -60,7 +60,7 @@ export class AuthService {
   login(credentials: LoginData): Observable<AuthResponse> {
     console.log(credentials);
     
-    let url = `${this.baseUrl}/${credentials.tenantCode ?? 'demo'}/auth/login`;
+    let url = `${this.baseUrl}/api/v1/${credentials.tenantCode ?? 'demo'}/auth/login`;
     return this.http.post<AuthResponse>( url, credentials)
       .pipe(
         tap(response => {

@@ -10,16 +10,17 @@ import java.util.Optional;
 
 public interface LobRepository extends JpaRepository<LobEntity, Integer> {
 
-    Optional<LobEntity> findByCodeAndIsDeletedFalse(String code);
+    @Query("select l from LobEntity l where l.tId = :tId and l.code = :code and l.isDeleted = false")
+    Optional<LobEntity> findByCode(@Param("tId") Long tId, @Param("code") String code);
 
-    //@Query("select l from LobEntity l where l.id = :id and l.isDeleted = false")
-    //Optional<LobEntity> findActiveById(@Param("id") Integer id);
+    @Query("select l from LobEntity l where l.tId = :tId and l.id = :id and l.isDeleted = false")
+    Optional<LobEntity> findById(@Param("tId") Long tId, @Param("id") Integer id);
 
-    @Query("select l.id as id, l.code as code, l.name as name from LobEntity l where l.isDeleted = false order by l.code")
-    List<Object[]> listActiveSummaries();
+    @Query("select l.id as id, l.code as code, l.name as name from LobEntity l where l.tId = :tId and l.isDeleted = false order by l.code")
+    List<Object[]> listActiveSummaries(@Param("tId") Long tenantId);
 
     @Query("select nextval('pt_seq')")
     Integer nextLobId();
 
-    Optional<LobEntity> findByIdAndIsDeletedFalse(Integer id);
+    
 }

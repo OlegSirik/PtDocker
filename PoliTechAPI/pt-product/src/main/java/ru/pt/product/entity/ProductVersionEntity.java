@@ -15,6 +15,9 @@ public class ProductVersionEntity {
     @SequenceGenerator(name = "pt_product_versions_seq", sequenceName = "pt_product_versions_seq", allocationSize = 1)
     private Integer id;
 
+    @Column(name = "tid", nullable = false)
+    private Long tid;
+
     @Column(name = "product_id", nullable = false)
     private Integer productId;
 
@@ -31,6 +34,14 @@ public class ProductVersionEntity {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Long getTid() {
+        return tid;
+    }
+
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 
     public Integer getProductId() {

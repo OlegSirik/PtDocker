@@ -55,20 +55,28 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
     }
 
+    /**
+     * Get current tenant ID from authenticated user
+     * @return Long representing the current tenant ID
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
+    }
+
     @Override
-    public List<Map<String, Object>> listSummaries() {
-        String tCode = getCurrentUser().getTenantCode();
-        
-        return productRepository.listActiveSummaries().stream()
+    public List<Product> listSummaries() {
+        return productRepository.listActiveSummaries(getCurrentTenantId()).stream()
                 .map(r -> {
-                    java.util.LinkedHashMap<String, Object> m = new java.util.LinkedHashMap<>();
-                    m.put("id", r[0]);
-                    m.put("lob", r[1]);
-                    m.put("code", r[2]);
-                    m.put("name", r[3]);
-                    m.put("prodVersionNo", r[4]);
-                    m.put("devVersionNo", r[5]);
-                    return m;
+                    Product product = new Product();
+                    product.setId((Integer) r[0]);
+                    product.setLob((String) r[1]);
+                    product.setCode((String) r[2]);
+                    product.setName((String) r[3]);
+                    product.setProdVersionNo((Integer) r[4]);
+                    product.setDevVersionNo((Integer) r[5]);
+                    product.setDeleted(false);
+                    return product;
                 })
                 .collect(Collectors.toList());
     }
@@ -89,6 +97,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductEntity product = new ProductEntity();
+        product.setTId(getCurrentTenantId());
         var versionStatus = productVersionModel.getVersionStatus();
         if (versionStatus!= null && versionStatus.equals("PROD")) {
             product.setProdVersionNo(productVersionModel.getVersionNo());
@@ -124,6 +133,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVersionEntity pv = new ProductVersionEntity();
         pv.setProductId(saved.getId());
         pv.setVersionNo(productVersionModel.getVersionNo());
+        pv.setTid(getCurrentTenantId());
 
         log.info("Getting lob data by code {}", productVersionModel.getLob());
         LobModel lob = lobService.getByCode(productVersionModel.getLob());
@@ -172,11 +182,29 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
-        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(productId)
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         if (product.getDevVersionNo() == null) {
             throw new IllegalArgumentException("No dev version to publish");
         }
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), productId, product.getDevVersionNo())
+                .orElseThrow(() -> new IllegalArgumentException("Version not found"));
+        ProductVersionModel productVersionModel;
+        try {
+            productVersionModel = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        productVersionModel.setVersionStatus("PROD");
+        productVersionModel.setVersionNo(versionNo);
+        try {
+            pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        
+        productVersionRepository.save(pv);
+
         product.setProdVersionNo(product.getDevVersionNo());
         product.setDevVersionNo(null);
         productRepository.save(product);
@@ -187,7 +215,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductVersionModel getVersion(Integer id, Integer versionNo) {
         try {
-            ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(id, versionNo)
+            ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                     .orElse(null);
 
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -198,7 +226,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
-        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(id)
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
         if (product.getDevVersionNo() != null) {
@@ -206,7 +234,7 @@ public class ProductServiceImpl implements ProductService {
         }
         int newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
 
-        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(id, versionNo)
+        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                 .orElseThrow(() -> new IllegalArgumentException("Base version not found"))
                 .getProduct();
 
@@ -223,6 +251,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVersionEntity pv = new ProductVersionEntity();
         pv.setProductId(id);
         pv.setVersionNo(newVersion);
+        pv.setTid(getCurrentTenantId());
         try {
             pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
         } catch (JsonProcessingException e) {
@@ -237,7 +266,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel updateVersion(Integer id, Integer versionNo, ProductVersionModel newProductVersionModel) {
-        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(id)
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
             throw new IllegalArgumentException("only dev version can be updated");
@@ -247,7 +276,7 @@ public class ProductServiceImpl implements ProductService {
         newProductVersionModel.setVersionNo(versionNo);
         newProductVersionModel.setVersionStatus("DEV");
 
-        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(id, versionNo)
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                 .orElseThrow(() -> new IllegalArgumentException("Version not found"));
 
         String newProductVersionJson;
@@ -271,7 +300,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void softDeleteProduct(Integer id) {
-        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(id)
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         product.setDeleted(true);
         productRepository.save(product);
@@ -279,12 +308,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteVersion(Integer id, Integer versionNo) {
-        ProductEntity product = productRepository.findByIdAndIsDeletedFalse(id)
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
             throw new IllegalArgumentException("only dev version can be deleted");
         }
-        int deleted = productVersionRepository.deleteByProductIdAndVersionNo(id, versionNo);
+        int deleted = productVersionRepository.deleteByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo);
         if (deleted == 0) {
             throw new IllegalArgumentException("Version not found");
         }
@@ -454,11 +483,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel getProduct(Integer id, boolean forDev) {
-        var entity = productRepository.findByIdAndIsDeletedFalse(id)
+        var entity = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
-        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
+        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -474,7 +503,7 @@ public class ProductServiceImpl implements ProductService {
 
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
-        var entity = productRepository.findByCodeAndIsDeletedFalse(code)
+        var entity = productRepository.findByCode(getCurrentTenantId(), code)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
         if (versionNo == null) {
@@ -482,7 +511,7 @@ public class ProductServiceImpl implements ProductService {
             log.warn("No true version number resolution, we will take just not null");
             versionNo = entity.getProdVersionNo() == null ? entity.getDevVersionNo() : entity.getProdVersionNo();
         }
-        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
+        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -496,10 +525,10 @@ public class ProductServiceImpl implements ProductService {
 
         log.info("Finging product by code {}, versionNo - {}", code, versionNo);
 
-        var entity = productRepository.findByCodeAndIsDeletedFalse(code)
+        var entity = productRepository.findByCode(getCurrentTenantId(), code)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        var pv = productVersionRepository.findByProductIdAndVersionNo(entity.getId(), versionNo)
+        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -510,8 +539,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getProductByAccountId(String accountId) {
-        var productId = productRepository.findProductIdEntityByAccountId(accountId);
-        return productRepository.findAllById(productId).stream().map(productMapper::toDto).toList();
+        var productId = productRepository.findProductIdEntityByAccountId(Long.parseLong(accountId));
+        return productRepository.findAllById(productId).stream()
+                .map(productMapper::toDto).toList();
     }
 
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {

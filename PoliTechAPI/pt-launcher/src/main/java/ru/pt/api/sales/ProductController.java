@@ -36,7 +36,7 @@ public class ProductController extends SecuredController {
     }
 
     @GetMapping
-    public List<Map<String, Object>> list(
+    public List<Product> list(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
         //requireAdmin(user);

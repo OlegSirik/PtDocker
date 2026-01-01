@@ -1,14 +1,16 @@
 package ru.pt.files.service;
 
-import com.jayway.jsonpath.JsonPath;
 import jakarta.transaction.Transactional;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.stereotype.Service;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.file.FileModel;
 import ru.pt.api.service.file.FileService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
 
@@ -23,10 +25,30 @@ import java.util.Map;
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
+    private final SecurityContextHelper securityContextHelper;
 
-    public FileServiceImpl(FileRepository fileRepository) {
+    public FileServiceImpl(FileRepository fileRepository, SecurityContextHelper securityContextHelper) {
         this.fileRepository = fileRepository;
-        
+        this.securityContextHelper = securityContextHelper;
+    }
+
+    /**
+     * Get current authenticated user from security context
+     * @return UserDetailsImpl representing the current user
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+    }
+
+    /**
+     * Get current tenant ID from authenticated user
+     * @return Long representing the current tenant ID
+     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     */
+    protected Long getCurrentTenantId() {
+        return getCurrentUser().getTenantId();
     }
 
     // pt_files will contain only id and fileDate. Other columns should be removed
@@ -40,6 +62,7 @@ public class FileServiceImpl implements FileService {
         e.setProductCode(productCode);
         e.setPackageCode(packageCode);
         e.setDeleted(false);
+        e.setTid(getCurrentTenantId());
         var saved = fileRepository.save(e);
         var model = new FileModel();
         model.setId(saved.getId());
@@ -54,7 +77,7 @@ public class FileServiceImpl implements FileService {
     @Transactional
     @Override
     public void uploadBody(Long id, byte[] file) {
-        FileEntity entity = fileRepository.findActiveById(id)
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         entity.setFileBody(file);
         fileRepository.save(entity);
@@ -67,13 +90,14 @@ public class FileServiceImpl implements FileService {
         entity.setTid(tid);
         entity.setFileBody(file);
         entity.setDeleted(false);
+        entity.setTid(getCurrentTenantId());
         var saved = fileRepository.save(entity);
         return saved.getId();
     }
 
     @Override
     public List<Map<String, Object>> list(String productCode) {
-        List<Object[]> rows = fileRepository.listSummaries(productCode);
+        List<Object[]> rows = fileRepository.listSummaries(getCurrentTenantId(), productCode);
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -89,7 +113,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public byte[] download(Long id) {
-        FileEntity entity = fileRepository.findActiveById(id)
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         if (entity.getFileBody() == null) {
             throw new IllegalArgumentException("File body is empty");
@@ -100,15 +124,15 @@ public class FileServiceImpl implements FileService {
     @Transactional
     @Override
     public void softDelete(Long id) {
-        FileEntity entity = fileRepository.findActiveById(id)
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         entity.setDeleted(true);
         fileRepository.save(entity);
     }
 
     @Override
-    public byte[] process(Long id, Map<String, String> keyValues) {
-        FileEntity entity = fileRepository.findActiveById(id)
+    public byte[] process(Long id, Map<String, Object> keyValues) {
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         if (entity.getFileBody() == null) {
             throw new IllegalArgumentException("File body is empty");
@@ -119,7 +143,7 @@ public class FileServiceImpl implements FileService {
             if (form != null) {
                 //form.getFields().forEach(System.out::println);
 
-                for (Map.Entry<String, String> e : keyValues.entrySet()) {
+                for (Map.Entry<String, Object> e : keyValues.entrySet()) {
                     //String key = e.getKey();
                     //String value = e.getValue();
 
@@ -127,7 +151,7 @@ public class FileServiceImpl implements FileService {
                     if (field != null) {
                         System.out.println(e.getKey() + " " + e.getValue());
                         try {
-                            field.setValue(e.getValue());
+                            field.setValue(e.getValue().toString());
                         } catch (Exception ex) {
                             System.out.println(ex.getMessage());
                         }
@@ -144,7 +168,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public byte[] getFile(Integer fileId, Map<String, String> keyValues) {
+    public byte[] getFile(Integer fileId, Map<String, Object> keyValues) {
 
         //String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
         //String packageCode = keyValues.get("packageCode");

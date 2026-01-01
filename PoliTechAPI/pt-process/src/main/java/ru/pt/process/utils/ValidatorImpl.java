@@ -3,7 +3,10 @@ package ru.pt.process.utils;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.dto.product.VarDataType;
+import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.VariableContext;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,4 +104,86 @@ public class ValidatorImpl {
             return false;
         }
     }
+
+
+
+    private static boolean checkBigD(String type, BigDecimal s1, BigDecimal s2) {
+    
+        switch (type) {
+            case "=": {
+                return s1.compareTo(s2) == 0;
+            }
+            case "!=": {
+                return s1.compareTo(s2) != 0;
+            }
+            case ">": {
+                return s1.compareTo(s2) > 0;
+            }
+            case "<": {
+                return s1.compareTo(s2) < 0;
+            }
+            case ">=": {
+                return s1.compareTo(s2) >= 0;
+            }
+            case "<=": {
+                return s1.compareTo(s2) <= 0;
+            }
+            default:
+                throw new IllegalArgumentException("Unknown operator: " + type);
+        }
+    }
+    
+    public static boolean validate(VariableContext ctx, ValidatorRule rule) {
+        String leftKey = rule.getKeyLeft();
+        String rightKey = rule.getKeyRight();
+        String rightValue = rule.getValueRight();
+        String ruleType = rule.getRuleType();
+    
+        try {
+            PvVarDefinition leftDef = ctx.getDefinition(leftKey);
+            if (leftDef == null) return false;
+    
+            PvVarDefinition rightDef = ctx.getDefinition(rightKey);
+    
+            Object rightVal;
+    
+            if (rightDef != null) {
+                // проверяем совпадение типа
+                if (leftDef.getType() != rightDef.getType()) {
+                    return false;
+                }
+                rightVal = ctx.get(rightKey);
+            } else {
+                // если нет переменной в контексте, используем константу
+                if (leftDef.getType() == PvVarDefinition.Type.NUMBER) {
+                    rightVal = new BigDecimal(rightValue.trim());
+                } else {
+                    rightVal = rightValue;
+                }
+            }
+    
+            Object leftVal = ctx.get(leftKey);
+            if (leftVal == null || rightVal == null) return false;
+    
+            switch (leftDef.getType()) {
+                case NUMBER -> {
+                    BigDecimal leftNum = (BigDecimal) leftVal;
+                    BigDecimal rightNum = (BigDecimal) rightVal;
+                    return checkBigD(ruleType, leftNum, rightNum);
+                }
+                case STRING -> {
+                    String leftStr = leftVal.toString();
+                    String rightStr = rightVal.toString();
+                    return checkString(ruleType, leftStr, rightStr);
+                }
+                default -> {
+                    return false;
+                }
+            }
+    
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
 }

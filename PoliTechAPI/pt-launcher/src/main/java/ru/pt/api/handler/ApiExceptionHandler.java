@@ -66,6 +66,13 @@ public class ApiExceptionHandler {
                 .body(ex.getErrorModel());
     }
 
+    @ExceptionHandler(UnprocessableEntityException.class)
+    public ResponseEntity<ErrorModel> handleUnprocessableEntity(UnprocessableEntityException ex) {
+        log.error("Error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ex.getErrorModel());
+    }
+
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ErrorModel> handleInternalServerError(InternalServerErrorException ex) {
         log.error("Error: {}", ex.getMessage(), ex);
