@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.repository.AccountLoginRepository;
 
 import javax.crypto.Mac;
@@ -55,7 +56,7 @@ public class JwtTokenUtil {
     public String createToken(String tenantCode, String clientId, String userLogin) {
         try {
             // Найти пользователя в БД для клиента
-            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndClientIdAndUserLogin(tenantCode, clientId, userLogin);
+            List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndUserLogin(tenantCode, userLogin);
 
             if (accountLogins.isEmpty()) {
                 logger.error("User not found: {} for CLIENT_ID ", userLogin);
@@ -63,7 +64,7 @@ public class JwtTokenUtil {
             }
 
             // Если clientId указан, найти соответствующий AccountLogin
-            AccountLoginEntity accountLogin;
+            AccountLoginEntity accountLogin = null;
             if (clientId != null) {
                 accountLogin = accountLogins.stream()
                         .filter(al -> al.getClient() != null && al.getClient().getClientId().equals(clientId))
@@ -154,7 +155,7 @@ public class JwtTokenUtil {
             payload.put("sub", accountLogin.getUserLogin());
             payload.put("iat", nowSeconds);
             payload.put("exp", nowSeconds + validityInSeconds);
-            payload.put("role", accountLogin.getUserRole());
+            payload.put("role", accountLogin.getAccount().getNodeType() != null ? accountLogin.getAccount().getNodeType().getValue() : null);
 
             // Добавляем дополнительные данные
             if (accountLogin.getTenant() != null) {
@@ -195,7 +196,7 @@ public class JwtTokenUtil {
             String token = dataToSign + "." + signature;
 
             logger.debug("Generated JWT token for user: {}, role: {}",
-                    accountLogin.getUserLogin(), accountLogin.getUserRole());
+                    accountLogin.getUserLogin(), accountLogin.getAccount().getNodeType() != null ? accountLogin.getAccount().getNodeType().getValue() : null);
 
             return token;
 

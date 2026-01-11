@@ -20,7 +20,7 @@ import ru.pt.product.repository.LobRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import ru.pt.api.dto.exception.UnauthorizedException;
 @Component
 public class LobServiceImpl implements LobService {
 
@@ -40,11 +40,11 @@ public class LobServiceImpl implements LobService {
     /**
      * Get current authenticated user from security context
      * @return UserDetailsImpl representing the current user
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
     protected UserDetailsImpl getCurrentUser() {
         return securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 
     protected Long getCurrentTenantId() {

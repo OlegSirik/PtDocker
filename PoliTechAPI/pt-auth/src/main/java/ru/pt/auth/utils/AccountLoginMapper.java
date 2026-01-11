@@ -41,7 +41,6 @@ public class AccountLoginMapper {
 
         entity.setUserLogin(dto.getUserLogin());
         entity.setDefault(dto.getIsDefault());
-        entity.setUserRole(dto.getUserRole());
         entity.setCreatedAt(dto.getCreatedAt());
         entity.setUpdatedAt(dto.getUpdatedAt());
 
@@ -60,7 +59,6 @@ public class AccountLoginMapper {
         dto.setAccountId(entity.getAccount() != null ? entity.getAccount().getId() : null);
         dto.setUserLogin(entity.getUserLogin());
         dto.setIsDefault(entity.getDefault());
-        dto.setUserRole(entity.getUserRole());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 

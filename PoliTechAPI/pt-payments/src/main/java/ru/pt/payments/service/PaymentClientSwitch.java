@@ -5,7 +5,7 @@ import ru.pt.api.dto.auth.Client;
 import ru.pt.api.service.payment.PaymentClient;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.ClientService;
 
 import java.util.Map;
 
@@ -13,14 +13,14 @@ import java.util.Map;
 public class PaymentClientSwitch {
 
     private final Map<String, PaymentClient> availableClients;
-    private final AdminUserManagementService userService;
+    private final ClientService clientService;
     private final SecurityContextHelper securityContextHelper;
 
     public PaymentClientSwitch(Map<String, PaymentClient> availableClients,
-                               AdminUserManagementService userService,
+                               ClientService clientService,
                                SecurityContextHelper securityContextHelper) {
         this.availableClients = availableClients;
-        this.userService = userService;
+        this.clientService = clientService;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -38,7 +38,7 @@ public class PaymentClientSwitch {
         if (clientId == null) {
             throw new IllegalStateException("Client id is required to resolve payment gate");
         }
-        Client client = userService.getClientById(clientId);
+        Client client = clientService.getClientById(clientId);
         if (client.getClientConfiguration() == null) {
             throw new IllegalStateException("No payment configuration provided! You need to configure it first");
         }

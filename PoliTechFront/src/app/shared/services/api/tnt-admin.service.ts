@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap, catchError, delay, map } from 'rxjs/operators';
@@ -27,8 +27,12 @@ export class TntAdminService extends BaseApiService<TntAdmin> {
   }
 
   /** Получить TNT admins по tenant code */
+  /*
   getByTenantCode(tenantCode: string): Observable<TntAdmin[]> {
-    const url = this.env.BASE_URL + '/api/v1/' + tenantCode + '/' + this.resourcePath;
-    return this.http.get<TntAdmin[]>(url);
+    const headers = new HttpHeaders()
+    .set('X-Imp-Tenant', tenantCode);
+
+    return this.http.get<TntAdmin[]>(this.getUrl(), { headers });
   }
+    */
 }

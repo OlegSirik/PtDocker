@@ -1,10 +1,10 @@
-import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap, catchError, delay, map, switchMap } from 'rxjs/operators';
 import { EnvService } from '../env.service';
 import { AuthService, LoginData, User } from '../auth.service';
 import { BaseApiService } from './base-api.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface Login {
     id?: number;
@@ -21,26 +21,30 @@ export interface Login {
 
 export class LoginService extends BaseApiService<Login> {
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
-    super(http, env, 'logins', authService);
+    super(http, env, 'admin/logins', authService);
   }
-
- getUrl2(tenant: string, id?: (number | string)): string {
-
-    let url = this.resourcePath;
     
-    if (id) {
-      url += '/' + id;
-    }
-    return this.env.BASE_URL + '/api/v1/' + tenant + '/' + url;
-
-    //let url2 = this.authService.baseApiUrl.toString();
-    
-    //return url2 + '/' + url;
-  }
-  
+  /*
   getAll2(tenant: string): Observable<Login[]> {
-    return this.http.get<Login[]>(this.getUrl2(tenant));
+    const headers = new HttpHeaders().set('X-Imp-Tenant', tenant);
+    return this.http.get<Login[]>(this.getUrl(), { headers });
   }
+
+  create2(tenant: string,login: Login): Observable<Login> {
+    const headers = new HttpHeaders().set('X-Imp-Tenant', tenant);
+    return this.http.post<Login>(this.getUrl(), login, { headers });
+  }
+
+  update2(tenant: string,login: Login): Observable<Login> {
+    const headers = new HttpHeaders().set('X-Imp-Tenant', tenant);
+    return this.http.put<Login>(this.getUrl(), login, { headers });
+  }
+
+  delete2(tenant: string, login: Login): Observable<Login> {  
+    const headers = new HttpHeaders().set('X-Imp-Tenant', tenant);
+    return this.http.delete<Login>(this.getUrl(), { headers });
+  }
+*/
 /** Обновить пароль */
 updatePassword(login: string, tenantCode: string, password: string): Observable<LoginData> {
   return this.authService.getCurrentUser().pipe(

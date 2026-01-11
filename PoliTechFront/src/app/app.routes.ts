@@ -16,6 +16,7 @@ import {ClientEditComponent} from './features/admin-panel/client-edit/client-edi
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 import { TenantGuard } from './shared/guards/tenant.guard';
 import { QuotesComponent } from './features/quotes/quotes.component';
+import { UserProfileComponent } from './features/user-profile/user-profile.component';
 
 
 export const routes: Routes = [
@@ -45,7 +46,8 @@ export const routes: Routes = [
   { path: 'admin/clients', component: ClientsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/clients/:client-id', component: ClientEditComponent, canActivate: [authGuard] },
-  { path: 'admin/accounts/:id', component: AccountDetailPageComponent, canActivate: [authGuard] }
+  { path: 'admin/accounts/:id', component: AccountDetailPageComponent, canActivate: [authGuard] },
+  { path: 'user_profile', component: UserProfileComponent, canActivate: [authGuard] }
 ]},
 {
   path: '',

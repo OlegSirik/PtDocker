@@ -155,4 +155,142 @@ public class AccountEntity {
         this.accountTokenEntities = accountTokenEntities;
     }
 
+    // --- Конструктор для фабрик ---
+    private AccountEntity(TenantEntity tenant, ClientEntity client, AccountEntity parent,
+        AccountNodeType nodeType, String name) {
+        this.tenantEntity = tenant;
+        this.clientEntity = client;
+        this.parent = parent;
+        this.nodeType = nodeType;
+        this.name = name;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.productRoleEntities = new ArrayList<>();
+        this.accountLoginEntities = new ArrayList<>();
+        this.accountTokenEntities = new ArrayList<>();
+    }
+
+
+    /**
+    * Создаёт корневой аккаунт тенанта
+    */
+    public static AccountEntity tenantAccount(TenantEntity tenant) {
+        return new AccountEntity(tenant, null, null, AccountNodeType.TENANT, tenant.getName());
+    }
+
+    /**
+    * Создаёт аккаунт клиента под тенантом
+    */
+    public static AccountEntity clientAccount(ClientEntity client, AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.TENANT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type TENANT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            client,          // клиент копируем из параметра
+            parentAccount,
+            AccountNodeType.CLIENT,
+            client.getName()
+        );
+    }
+
+    /**
+    * Создаёт группу под клиентом
+    */
+    public static AccountEntity groupAccount(AccountEntity parentAccount, String name) {
+    if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),  // копируем клиента с родителя
+            parentAccount,
+            AccountNodeType.GROUP,
+            name
+        );
+    }
+
+    /**
+    * Создаёт стандартный аккаунт под клиентом (например, default)
+    */
+    public static AccountEntity defaultClientAccount(AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),
+            parentAccount,
+            AccountNodeType.ACCOUNT,
+            "Default account for client"
+        );
+    }
+
+    public static AccountEntity sysAdminAccount(AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),
+            parentAccount,
+            AccountNodeType.SYS_ADMIN,
+        "SYS_ADMIN"
+        );
+    }
+
+    public static AccountEntity tntAdminAccount(AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),
+            parentAccount,
+            AccountNodeType.TNT_ADMIN,
+            "TNT_ADMIN"
+        );
+    }
+
+    public static AccountEntity productAdminAccount(AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),
+            parentAccount,
+            AccountNodeType.PRODUCT_ADMIN,
+            "PRODUCT_ADMIN"
+        );
+    }
+
+    public static AccountEntity groupAdminAccount(AccountEntity parentAccount) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+            throw new IllegalArgumentException(
+                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+            );
+        }
+        return new AccountEntity(
+            parentAccount.getTenant(),
+            parentAccount.getClient(),
+            parentAccount,
+            AccountNodeType.GROUP_ADMIN,
+            "GROUP_ADMIN"
+        );
+    }
+
 }

@@ -11,6 +11,8 @@ import java.util.List;
 @Entity
 @Table(name = "acc_clients")
 public class ClientEntity {
+    public static final String SYS_CLIENT_ID = "sys";
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
     @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
@@ -46,6 +48,16 @@ public class ClientEntity {
     @OneToOne(targetEntity = ClientConfigurationEntity.class, cascade = CascadeType.ALL)
     private ClientConfigurationEntity clientConfigurationEntity;
 
+    @Column(name = "auth_type", nullable = false, length = 10)
+    private String authType;
+
+    public String getAuthType() {
+        return authType;
+    }
+
+    public void setAuthType(String authType) {
+        this.authType = authType;
+    }
     // constructors, getters, setters
     public ClientEntity() {}
 
@@ -143,5 +155,21 @@ public class ClientEntity {
 
     public void setClientConfigurationEntity(ClientConfigurationEntity clientConfigurationEntity) {
         this.clientConfigurationEntity = clientConfigurationEntity;
+    }
+
+    public boolean isSystem() {return SYS_CLIENT_ID.equals(clientId);}
+
+    private ClientEntity(String authClientId,String name, TenantEntity tenantEntity) {
+        this.name = name;
+        this.tenantEntity = tenantEntity;
+        this.clientId = authClientId.toLowerCase();
+        this.defaultAccountId = null;
+        this.isDeleted = false;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public static ClientEntity defaultForTenant(TenantEntity tenantEntity) {
+        return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", tenantEntity);
     }
 }

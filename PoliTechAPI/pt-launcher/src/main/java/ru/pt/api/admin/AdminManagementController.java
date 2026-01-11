@@ -2,20 +2,18 @@ package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.security.SecuredController;
-import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.model.AdminResponse;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.api.dto.exception.BadRequestException;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 
 /**
  * Контроллер для управления администраторами всех уровней
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @SecurityRequirement(name = "bearerAuth")
-@RequestMapping("/api/v1/{tenantCode}/admin/admins")
+@RequestMapping("/api/v1/{tenantCode}/admins/roles")
 public class AdminManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
@@ -37,316 +35,61 @@ public class AdminManagementController extends SecuredController {
         this.adminUserManagementService = adminUserManagementService;
     }
 
-    // ========== SYS_ADMIN MANAGEMENT (SYS_ADMIN) ==========
+    // ========== UNIFIED ADMIN MANAGEMENT METHODS ==========
 
     /**
-     * SYS_ADMIN: Создание TNT_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/sys-admins
+     * Unified GET endpoint for admins by role name
+     * GET /api/v1/{tenantCode}/admin/admins/{role_name}
+     * role_name: sys-admin, tnt-admin, product-admin
      */
-    @GetMapping("/sys-admins")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<AdminResponse>> getSysAdmins() {
-        try {
-            List<AdminResponse> admins = adminUserManagementService.getSysAdmins();
-            
-            return ResponseEntity.ok(admins);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-
-    /**
-     * SYS_ADMIN: Создание TNT_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
-     */
-    @PostMapping("/sys-admins")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createSysAdmin(
+    @GetMapping("/{roleName}")
+    public ResponseEntity<List<AdminResponse>> getAdminsByRole(
             @PathVariable String tenantCode,
-            @RequestBody CreateAdminRequest request) {
-        try {
-            AccountLoginEntity accountLogin = adminUserManagementService.createSysAdmin(
-                    tenantCode,
-                    request.getUserLogin(),
-                    request.getUserName()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", accountLogin.getId());
-            response.put("userLogin", accountLogin.getUserLogin());
-            response.put("userRole", accountLogin.getUserRole());
-            response.put("accountId", accountLogin.getAccount().getId());
-
-            return buildCreatedResponse(response, "SYS_ADMIN user created successfully");
-        } catch (Exception e) {
-            return handleException(e);
+            @PathVariable String roleName) {
+        
+        UserRole role = UserRole.valueOf(roleName.toUpperCase());
+        if (role == null) {
+            throw new BadRequestException("Invalid role: " + roleName + ". Valid values: SYS_ADMIN, TNT_ADMIN, PRODUCT_ADMIN");
         }
+        List<AdminResponse> admins = adminUserManagementService.getAdmins(tenantCode, role);
+        return ResponseEntity.ok(admins);
     }
 
-    // ========== TNT_ADMIN MANAGEMENT (SYS_ADMIN) ==========
-
     /**
-     * SYS_ADMIN: Создание TNT_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
+     * Unified POST endpoint for creating admins
+     * POST /api/v1/{tenantCode}/admin/admins
+     * Body: RoleAssignmentRequest with role and login
      */
-    @GetMapping("/tnt-admins")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<AdminResponse>> getTntAdmins(
-            @PathVariable String tenantCode) {
-        try {
-            List<AdminResponse> admins = adminUserManagementService.getTntAdmins(tenantCode);
-
-            return ResponseEntity.ok(admins);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-
-    /**
-     * SYS_ADMIN: Создание TNT_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/tnt-admins
-     */
-    @PostMapping("/tnt-admins")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createTntAdmin(
+    @PostMapping
+    public ResponseEntity<AdminResponse> createAdmin(
             @PathVariable String tenantCode,
-            @RequestBody CreateTntAdminRequest request) {
-        try {
-            AccountLoginEntity accountLogin = adminUserManagementService.createTntAdmin(
-                    request.getTenantCode(),
-                    request.getFullName(),
-                    request.getUserLogin(),
-                    request.getUserName()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", accountLogin.getId());
-            response.put("userLogin", accountLogin.getUserLogin());
-            response.put("userRole", accountLogin.getUserRole());
-            response.put("accountId", accountLogin.getAccount().getId());
-
-            return buildCreatedResponse(response, "TNT_ADMIN user created successfully");
-        } catch (Exception e) {
-            return handleException(e);
+            @RequestBody RoleAssignmentRequest request) {
+        
+        if (request.role() == null || request.userLogin() == null) {
+            throw new BadRequestException("Role and login are required");
         }
+        
+        UserRole role = UserRole.valueOf(request.role().toUpperCase());
+        if (role == null) {
+            throw new BadRequestException("Invalid role: " + request.role() + ". Valid values: SYS_ADMIN, TNT_ADMIN, PRODUCT_ADMIN");
+        }
+        AdminResponse admin = adminUserManagementService.createAdmin(tenantCode, request.authClientId(), request.userLogin(), role);
+        return ResponseEntity.ok(admin);
     }
 
     /**
-     * SYS_ADMIN: Удаление TNT_ADMIN пользователя
-     * DELETE /api/v1/{tenantCode}/admin/admins/tnt-admins/{adminId}
+     * Unified DELETE endpoint for deleting admins by ID
+     * DELETE /api/v1/{tenantCode}/admin/admins/{adminId}
+     * The role is determined from the admin record
      */
-    @DeleteMapping("/tnt-admins/{adminId}")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteTntAdmin(
+    @DeleteMapping("/{roleId}")
+    public ResponseEntity<Void> deleteAdmin(
             @PathVariable String tenantCode,
-            @PathVariable Long adminId) {
-        try {
-
-            adminUserManagementService.deleteTntAdmin(adminId);
-
-            Map<String, Object> response = buildSimpleResponse("TNT_ADMIN user deleted successfully");
-            response.put("adminId", adminId);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+            @PathVariable Long roleId) {
+        adminUserManagementService.deleteAdmin(tenantCode, roleId);
+        return ResponseEntity.noContent().build();
     }
 
-    // ========== GROUP_ADMIN MANAGEMENT (TNT_ADMIN) ==========
+    public record RoleAssignmentRequest(String role, String userLogin, String authClientId) {}
 
-    /**
-     * TNT_ADMIN: Создание GROUP_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/group-admins
-     */
-    @PostMapping("/group-admins")
-    @PreAuthorize("hasRole('TNT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createGroupAdmin(
-            @PathVariable String tenantCode,
-            @RequestBody CreateAdminRequest request) {
-        try {
-
-            AccountLoginEntity accountLogin = adminUserManagementService.createGroupAdmin(
-                    request.getUserLogin(),
-                    request.getUserName(),
-                    request.getFullName()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", accountLogin.getId());
-            response.put("userLogin", accountLogin.getUserLogin());
-            response.put("userRole", accountLogin.getUserRole());
-            response.put("accountId", accountLogin.getAccount().getId());
-
-            return buildCreatedResponse(response, "GROUP_ADMIN user created successfully");
-        } catch (Exception e) {
-            return handleException(e);
-        }
-    }
-
-    /**
-     * TNT_ADMIN: Удаление GROUP_ADMIN пользователя
-     * DELETE /api/v1/{tenantCode}/admin/admins/group-admins/{adminId}
-     */
-    @DeleteMapping("/group-admins/{adminId}")
-    @PreAuthorize("hasRole('TNT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteGroupAdmin(
-            @PathVariable String tenantCode,
-            @PathVariable Long adminId) {
-        try {
-
-            adminUserManagementService.deleteGroupAdmin(adminId);
-
-            Map<String, Object> response = buildSimpleResponse("GROUP_ADMIN user deleted successfully");
-            response.put("adminId", adminId);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleException(e);
-        }
-    }
-
-    // ========== PRODUCT_ADMIN MANAGEMENT (GROUP_ADMIN) ==========
-
-    /**
-     * GROUP_ADMIN: Создание PRODUCT_ADMIN пользователя
-     * POST /api/v1/{tenantCode}/admin/admins/product-admins
-     */
-    @PostMapping("/product-admins")
-    @PreAuthorize("hasRole('GROUP_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createProductAdmin(
-            @PathVariable String tenantCode,
-            @RequestBody CreateAdminRequest request) {
-        try {
-            AccountLoginEntity accountLogin = adminUserManagementService.createProductAdmin(
-                    request.getUserLogin(),
-                    request.getUserName(),
-                    request.getFullName()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", accountLogin.getId());
-            response.put("userLogin", accountLogin.getUserLogin());
-            response.put("fullName", accountLogin.getLogin().getFullName());
-            response.put("userRole", accountLogin.getUserRole());
-            response.put("accountId", accountLogin.getAccount().getId());
-
-            return buildCreatedResponse(response, "PRODUCT_ADMIN user created successfully");
-        } catch (Exception e) {
-            return handleException(e);
-        }
-    }
-
-    /**
-     * GROUP_ADMIN: Редактирование PRODUCT_ADMIN пользователя
-     * PUT /api/v1/{tenantCode}/admin/admins/product-admins/{adminId}
-     */
-    @PutMapping("/product-admins/{adminId}")
-    @PreAuthorize("hasRole('GROUP_ADMIN')")
-    public ResponseEntity<Map<String, Object>> updateProductAdmin(
-            @PathVariable String tenantCode,
-            @PathVariable Long adminId,
-            @RequestBody UpdateAdminRequest request) {
-        try {
-
-            AccountLoginEntity accountLogin = adminUserManagementService.updateProductAdmin(
-                    adminId,
-                    request.getUserRole()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", accountLogin.getId());
-            response.put("userRole", accountLogin.getUserRole());
-
-            return buildSuccessResponse(response, "PRODUCT_ADMIN user updated successfully");
-        } catch (Exception e) {
-            return handleException(e);
-        }
-    }
-
-    // DTO Classes
-    public static class CreateTntAdminRequest {
-        private String tenantCode;
-        private String userLogin;
-        private String userName;
-        private String fullName;
-
-        public String getTenantCode() {
-            return tenantCode;
-        }
-
-        public void setTenantCode(String tenantCode) {
-            this.tenantCode = tenantCode;
-        }
-
-        public String getUserLogin() {
-            return userLogin;
-        }
-
-        public void setUserLogin(String userLogin) {
-            this.userLogin = userLogin;
-        }
-
-        public String getUserName() {
-            return userName;
-        }
-
-        public void setUserName(String fullName) {
-            this.userName = userName;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
-
-        public void setFullName(String fullName) {
-            this.fullName = fullName;
-        }
-
-
-    }
-
-    public static class CreateAdminRequest {
-        private String userLogin;
-        private String userName;
-        private String fullName;
-
-        public String getUserLogin() {
-            return userLogin;
-        }
-
-        public void setUserLogin(String userLogin) {
-            this.userLogin = userLogin;
-        }
-
-        public String getUserName() {
-            return userName;
-        }
-
-        public void setUserName(String userName) {
-            this.userName = userName;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
-
-        public void setFullName(String fullName) {
-            this.fullName = fullName;
-        }
-    }
-
-    public static class UpdateAdminRequest {
-        private String userRole;
-
-        public String getUserRole() {
-            return userRole;
-        }
-
-        public void setUserRole(String userRole) {
-            this.userRole = userRole;
-        }
-    }
 }

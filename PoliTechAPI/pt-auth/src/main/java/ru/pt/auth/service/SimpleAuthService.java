@@ -42,7 +42,7 @@ public class SimpleAuthService {
      * @return JWT токен или null если аутентификация не удалась
      */
     @Transactional(readOnly = true)
-    public String authenticate(String tenantCode, String userLogin, String password, String clientId) {
+    public String authenticate(String tenantCode, String userLogin, String password, String authClientId) {
         try {
             // Найти пользователя
             Optional<LoginEntity> loginEntityOpt = loginRepository.findByTenantCodeAndUserLogin(tenantCode,userLogin);
@@ -66,7 +66,7 @@ public class SimpleAuthService {
             }
 
             // Пароль верный, создать токен
-            String token = jwtTokenUtil.createToken(tenantCode, clientId, userLogin);
+            String token = jwtTokenUtil.createToken(tenantCode, authClientId, userLogin);
 
             if (token == null) {
                 logger.error("Failed to create token for user: {}", userLogin);

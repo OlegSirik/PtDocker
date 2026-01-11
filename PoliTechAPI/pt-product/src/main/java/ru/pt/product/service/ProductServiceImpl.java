@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.numbers.NumberGeneratorService;
@@ -29,7 +30,8 @@ import java.util.stream.Collectors;
 
 import static ru.pt.api.utils.DateTimeUtils.formattedNow;
 import static ru.pt.api.utils.DateTimeUtils.formatter;
-
+import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 
 @Component
 @RequiredArgsConstructor
@@ -165,7 +167,7 @@ public class ProductServiceImpl implements ProductService {
             productJson = objectMapper.writeValueAsString(productVersionModel);
         } catch (JsonProcessingException e) {
             // TODO exception handling
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
         }
         pv.setProduct(productJson);
 
@@ -183,24 +185,24 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null) {
-            throw new IllegalArgumentException("No dev version to publish");
+            throw new UnprocessableEntityException("No dev version to publish");
         }
         ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), productId, product.getDevVersionNo())
-                .orElseThrow(() -> new IllegalArgumentException("Version not found"));
+                .orElseThrow(() -> new NotFoundException("Version not found"));
         ProductVersionModel productVersionModel;
         try {
             productVersionModel = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
         productVersionModel.setVersionStatus("PROD");
         productVersionModel.setVersionNo(versionNo);
         try {
             pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
         }
         
         productVersionRepository.save(pv);
@@ -220,29 +222,29 @@ public class ProductServiceImpl implements ProductService {
 
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Version not found");
+            throw new NotFoundException("Version not found");
         }
     }
 
     @Override
     public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (product.getDevVersionNo() != null) {
-            throw new IllegalArgumentException("only one version can be in dev status");
+            throw new UnprocessableEntityException("only one version can be in dev status");
         }
         int newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
 
         String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
-                .orElseThrow(() -> new IllegalArgumentException("Base version not found"))
+                .orElseThrow(() -> new NotFoundException("Base version not found"))
                 .getProduct();
 
         ProductVersionModel productVersionModel;
         try {
             productVersionModel = objectMapper.readValue(productVersionJson, ProductVersionModel.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
 
         productVersionModel.setVersionNo(newVersion);
@@ -255,7 +257,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
         }
         productVersionRepository.save(pv);
 
@@ -267,9 +269,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductVersionModel updateVersion(Integer id, Integer versionNo, ProductVersionModel newProductVersionModel) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
-            throw new IllegalArgumentException("only dev version can be updated");
+            throw new UnprocessableEntityException("only dev version can be updated");
         }
 
         newProductVersionModel.setId(id);
@@ -277,13 +279,13 @@ public class ProductServiceImpl implements ProductService {
         newProductVersionModel.setVersionStatus("DEV");
 
         ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
-                .orElseThrow(() -> new IllegalArgumentException("Version not found"));
+                .orElseThrow(() -> new NotFoundException("Version not found"));
 
         String newProductVersionJson;
         try {
             newProductVersionJson = objectMapper.writeValueAsString(newProductVersionModel);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
         }
 
         pv.setProduct(newProductVersionJson);
@@ -301,7 +303,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void softDeleteProduct(Integer id) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         product.setDeleted(true);
         productRepository.save(product);
     }
@@ -309,13 +311,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteVersion(Integer id, Integer versionNo) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
-            throw new IllegalArgumentException("only dev version can be deleted");
+            throw new UnprocessableEntityException("only dev version can be deleted");
         }
         int deleted = productVersionRepository.deleteByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo);
         if (deleted == 0) {
-            throw new IllegalArgumentException("Version not found");
+            throw new NotFoundException("Version not found");
         }
         product.setDevVersionNo(null);
         Integer pv = product.getProdVersionNo();
@@ -484,7 +486,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductVersionModel getProduct(Integer id, boolean forDev) {
         var entity = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
@@ -504,7 +506,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
         var entity = productRepository.findByCode(getCurrentTenantId(), code)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
         if (versionNo == null) {
             // TODO fix me
@@ -516,7 +518,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
     }
 
@@ -526,14 +528,14 @@ public class ProductServiceImpl implements ProductService {
         log.info("Finging product by code {}, versionNo - {}", code, versionNo);
 
         var entity = productRepository.findByCode(getCurrentTenantId(), code)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
             return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
     }
 

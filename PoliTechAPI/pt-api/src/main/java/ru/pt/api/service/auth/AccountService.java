@@ -78,4 +78,13 @@ public interface AccountService {
     ObjectNode getAccountLogin(String login, String client, Long accountId);
 
     List<Account> getAccountsByParentId(Long parentId);
+
+    /**
+     * Получить все аккаунты для текущего пользователя
+     * @param tenantCode код тенанта
+     * @param authClientId код клиента
+     * @param userLogin логин пользователя
+     * @return список аккаунтов
+     */
+    List<Account> getAllMyAccounts(String tenantCode, Long clientId, String userLogin);
 }

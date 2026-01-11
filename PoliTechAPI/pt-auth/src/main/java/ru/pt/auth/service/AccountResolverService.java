@@ -11,7 +11,9 @@ import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.security.context.RequestContext;
-
+import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 @Service
 public class AccountResolverService {
 
@@ -35,37 +37,44 @@ public class AccountResolverService {
         String accountId = requestContext.getAccount();
         
         if (tenantCode == null || tenantCode.isEmpty()) {
-            throw new IllegalStateException("TenantContext not set");
+            throw new NotFoundException("TenantContext not set");
         }
         if (authClientId == null || authClientId.isEmpty()) {
-            throw new IllegalStateException("ClientContext not set");
+            throw new NotFoundException("ClientContext not set");
         }
         
         // Client не проверен.
         ClientSecurityConfig clientSecurityConfig = clientService.getConfig(tenantCode, authClientId);
         if (clientSecurityConfig == null) {
-            throw new IllegalArgumentException("Client not found: " + tenantCode + " " + authClientId);
+            throw new NotFoundException("Client not found: " + tenantCode + " " + authClientId);
         }
-        Long defaultAccountId = clientSecurityConfig.defaultAccountId();
-    
-        if (userLogin == null || userLogin.isEmpty()) {
-            // userLogin не задан, значит это клиентский аккаунт.Но нет дефолтного аккаунта.
+
+        // Если это CLIENT_AUTH то всегда берем экаутн с клиента
+        if (clientSecurityConfig.authType() == ClientAuthType.CLIENT) {
+            //  это клиентский аккаунт.Но нет дефолтного аккаунта.
+            Long defaultAccountId = clientSecurityConfig.defaultAccountId();
+
             if (defaultAccountId == null) {
-                throw new IllegalStateException("Default account not set for client: " + authClientId);
+                throw new UnprocessableEntityException("Default account not set for client: " + authClientId);
             }
             // если accountId задан, то проверяем, что он равен defaultAccountId. Иначе выбрасываем ошибку.
             if (accountId != null && !accountId.equals(defaultAccountId.toString())) {
-                throw new IllegalStateException("Account in context is invalid for this user");
+                throw new UnprocessableEntityException("Account in context is invalid for this user");
             }
             // текущий эккаун это клиентский экаутн.
             requestContext.setAccount(defaultAccountId.toString());
             return;
         }
 
-        // userLogin задан, значит это пользовательский аккаунт.
+        // Это USER_AUTH и если экаунт передан в заголовке то ничего не переопределяем. Проверим в следующем фильтре
+        if (accountId != null && !accountId.isEmpty()) {
+            return;
+        }
+
+        // uэто пользовательский аккаунт.
         // Находим LoginEntity по логину & tenant и пользователь не залочен
         LoginEntity loginEntity = loginRepository.findByTenantCodeAndUserLogin(tenantCode, userLogin)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + userLogin));
+                .orElseThrow(() -> new NotFoundException("User not found with login: " + userLogin));
     
         // Находим все AccountLoginEntity для этого пользователя
         List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndClientIdAndUserLogin(
@@ -74,7 +83,7 @@ public class AccountResolverService {
                 userLogin);
     
         if (accountLogins.isEmpty()) {
-            throw new UsernameNotFoundException("No accounts found for user: " + userLogin);
+            throw new NotFoundException("No accounts found for user: " + userLogin);
         }
     
         // Берем дефолтный аккаунт или первый доступный

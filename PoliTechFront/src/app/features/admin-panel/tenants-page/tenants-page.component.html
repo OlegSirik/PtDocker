@@ -92,11 +92,36 @@
                 <mat-label>Code</mat-label>
                 <input matInput [(ngModel)]="currentTenantData.code" [readonly]="true" required>
               </mat-form-field>
+            </div>  
+            <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Название</mat-label>
                 <input matInput [(ngModel)]="currentTenantData.name" required />
               </mat-form-field>
             </div>
+            <div class="form-row">
+              <mat-form-field class="form-field" appearance="outline">
+                <mat-label>Статус</mat-label>
+                <mat-select [(ngModel)]="currentTenantData.isDeleted" name="isDeleted" required>
+                  <mat-option [value]="false">ACTIVE</mat-option>
+                  <mat-option [value]="true">SUSPENDED</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field" appearance="outline">
+                <mat-label>Auth Type</mat-label>
+                <mat-select [(ngModel)]="currentTenantData.authType" name="authType" required>
+                  <mat-option value="JWT">JWT</mat-option>
+                  <mat-option value="HEADER">HEADER</mat-option>
+                  <mat-option value="API-KEY">API-KEY</mat-option>
+                  <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>
+                  <mat-option value="NONE">NONE</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
             <div class="form-row">
               <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
                 <button mat-raised-button color="primary" (click)="saveCurrentTenant()" [disabled]="!isTenantDataValid()">
@@ -221,6 +246,68 @@
 
               <tr mat-header-row *matHeaderRowDef="tntAdminsDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: tntAdminsDisplayedColumns;"></tr>
+            </table>
+          </mat-card-content>
+        </mat-card>
+        </div>
+      </mat-tab>
+    }
+
+    <!-- Product Admin Tab -->
+    @if (getCurrentTenantCode() !== 'sys') {
+      <mat-tab label="Product Admin">
+        <div class="tab-content">
+          <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="button-section">
+              <button mat-raised-button color="primary" class="add-button" (click)="createNewProductAdmin()">
+                <mat-icon>add</mat-icon>
+                Добавить
+              </button>
+            </div>
+
+            <div class="table-header">
+              <h3>Product Admin</h3>
+            </div>
+
+            <div *ngIf="loading" class="loading">Загрузка product admins...</div>
+            <table mat-table [dataSource]="productAdmins" class="business-table" *ngIf="!loading">
+              <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef>ID</th>
+                <td mat-cell *matCellDef="let element">{{element.id}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="userLogin">
+                <th mat-header-cell *matHeaderCellDef>Login</th>
+                <td mat-cell *matCellDef="let element">{{element.userLogin}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="fullName">
+                <th mat-header-cell *matHeaderCellDef>Full Name</th>
+                <td mat-cell *matCellDef="let element">{{element.fullName}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="position">
+                <th mat-header-cell *matHeaderCellDef>Position</th>
+                <td mat-cell *matCellDef="let element">{{element.position}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>...</th>
+                <td mat-cell *matCellDef="let element">
+                  <div class="action-buttons">
+                    <button mat-button color="primary" class="action-button" (click)="editProductAdmin(element)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-button color="warn" class="action-button" (click)="deleteProductAdmin(element)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="productAdminsDisplayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: productAdminsDisplayedColumns;"></tr>
             </table>
           </mat-card-content>
         </mat-card>

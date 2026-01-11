@@ -10,7 +10,7 @@ import ru.pt.api.dto.email.EmailMessage;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.utils.JsonProjection;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.ClientService;
 
 import java.util.List;
 import java.util.Locale;
@@ -20,19 +20,19 @@ import java.util.Map;
 public class EmailGateService {
 
     private final Map<String, EmailClient> emailClients;
-    private final AdminUserManagementService userManagementService;
+    private final ClientService clientService;
     private final FileProcessService fileProcessService;
 
     public EmailGateService(Map<String, EmailClient> emailClients,
-                            AdminUserManagementService userManagementService,
+                            ClientService clientService,
                             FileProcessService fileProcessService) {
         this.emailClients = emailClients;
-        this.userManagementService = userManagementService;
+        this.clientService = clientService;
         this.fileProcessService = fileProcessService;
     }
 
     public EmailClient resolveForCurrentUser(Long clientId) {
-        Client client = userManagementService.getClientById(clientId);
+        Client client = clientService.getClientById(clientId);
         ClientConfiguration configuration = client.getClientConfiguration();
         if (configuration == null || !StringUtils.hasText(configuration.getEmailGate())) {
             throw new IllegalStateException("Email gate is not configured for client");

@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import ru.pt.auth.repository.AccountRepository;
+import ru.pt.auth.entity.AccountEntity;
 
 /**
  * Реализация UserDetailsService для Spring Security.
@@ -29,17 +31,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final LoginRepository loginRepository;
     private final AccountLoginRepository accountLoginRepository;
+    private final AccountRepository accountRepository;
     private final ProductRoleRepository productRoleRepository;
     private final ClientService clientService;
     private final RequestContext requestContext;
     
     public UserDetailsServiceImpl(LoginRepository loginRepository,
                                   AccountLoginRepository accountLoginRepository,
+                                  AccountRepository accountRepository,
                                   ProductRoleRepository productRoleRepository,
                                   ClientService clientService,
                                   RequestContext requestContext) {
         this.loginRepository = loginRepository;
         this.accountLoginRepository = accountLoginRepository;
+        this.accountRepository = accountRepository;
         this.productRoleRepository = productRoleRepository;
         this.clientService = clientService;
         this.requestContext = requestContext;
@@ -47,6 +52,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //username это acc_account.id 
+        // id анонимной учетки с правами
+
         Long accountId = Long.parseLong(username);
         String tenantCode = requestContext.getTenant();
         // tenant если есть то он уже проверен.
@@ -59,42 +67,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new IllegalStateException("ClientContext not set");
         }
         // Client не проверен.
-        ClientSecurityConfig clientSecurityConfig = clientService.getConfig(tenantCode, authClientId);
-        if (clientSecurityConfig == null) {
-            throw new IllegalArgumentException("Client not found: " + tenantCode + " " + authClientId);
-        }
-        Long defaultAccountId = clientSecurityConfig.defaultAccountId();
+        String login = requestContext.getLogin();
 
-        // Находим LoginEntity по логину & tenant
-        LoginEntity loginEntity = loginRepository.findByTenantCodeAndAccountId(tenantCode, accountId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + accountId));
-
-        // Находим все AccountLoginEntity для этого пользователя
-        List<AccountLoginEntity> accountLogins = accountLoginRepository.findByTenantCodeAndAuthClientIdAndAccountId(
-            tenantCode, 
-            authClientId, 
-            accountId);
-
-        if (accountLogins.isEmpty()) {
-            throw new UsernameNotFoundException("No accounts found for user: " + accountId);
-        }
-
-        // Берем дефолтный аккаунт или первый доступный
-        AccountLoginEntity defaultAccountLogin = accountLogins.stream()
-                .filter(AccountLoginEntity::getDefault)
-                .findFirst()
-                .orElse(accountLogins.getFirst());
-
-        requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
-
+        AccountLoginEntity accountLoginEntity = accountLoginRepository.findByAll4Fields(tenantCode, authClientId, login, accountId).
+            orElseThrow(() -> new UsernameNotFoundException("AccountLogin not found with id: " + accountId));
+        //requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
+        requestContext.setAccount(username);
         // Инициализируем lazy-loaded поля внутри транзакции
-        initializeLazyFields(defaultAccountLogin, loginEntity);
+        //initializeLazyFields(defaultAccountLogin, loginEntity);
 
         // Получаем роли продуктов для аккаунта
-        Set<String> productRoles = getProductRoles(defaultAccountLogin.getAccount().getId());
+        Set<String> productRoles = getProductRoles(accountId);
 
         // Создаем UserDetails без пароля (JWT авторизация)
-        UserDetails userDetails = UserDetailsImpl.build(loginEntity, defaultAccountLogin, productRoles);
+        UserDetails userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles);
         return userDetails;
     }
 

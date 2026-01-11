@@ -14,6 +14,7 @@ export interface Tenant {
     isDeleted: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    authType?: string ;
   }
 
 @Injectable({

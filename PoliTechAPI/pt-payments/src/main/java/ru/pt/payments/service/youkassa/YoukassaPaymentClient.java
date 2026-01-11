@@ -28,7 +28,7 @@ import ru.pt.api.service.payment.PaymentClient;
 import ru.pt.api.service.payment.PolicyPurchaseCallbackApi;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.ClientService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -54,7 +54,7 @@ public class YoukassaPaymentClient implements PaymentClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final SecurityContextHelper securityContextHelper;
-    private final AdminUserManagementService userManagementService;
+    private final ClientService clientService;
     private final String paymentsEndpoint;
     private final StorageService storageService;
     private final String redirectBaseUrl;
@@ -63,7 +63,7 @@ public class YoukassaPaymentClient implements PaymentClient {
 
     public YoukassaPaymentClient(ObjectMapper objectMapper,
                                  SecurityContextHelper securityContextHelper,
-                                 AdminUserManagementService userManagementService,
+                                 ClientService clientService,
                                  @Value("${payments.youkassa.api-url:" + DEFAULT_API_BASE + "}") String apiBaseUrl,
                                  StorageService storageService,
                                  @Value("${payments.youkassa.redirect-base-url:http://localhost:8080}") String redirectBaseUrl,
@@ -73,7 +73,7 @@ public class YoukassaPaymentClient implements PaymentClient {
         this.restTemplate = new RestTemplate();
         this.objectMapper = objectMapper;
         this.securityContextHelper = securityContextHelper;
-        this.userManagementService = userManagementService;
+        this.clientService = clientService;
         this.paymentsEndpoint = normalizeEndpoint(apiBaseUrl);
         this.redirectBaseUrl = redirectBaseUrl;
         this.redirectPath = redirectPath;
@@ -162,7 +162,7 @@ public class YoukassaPaymentClient implements PaymentClient {
             throw new IllegalStateException("Authenticated user does not have client context");
         }
 
-        Client client = userManagementService.getClientById(currentUser.getClientId());
+        Client client = clientService.getClientById(currentUser.getClientId());
         ClientConfiguration configuration = client.getClientConfiguration();
         if (configuration == null) {
             throw new IllegalStateException("Client does not have payment configuration");

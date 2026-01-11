@@ -21,6 +21,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import ru.pt.api.dto.exception.UnauthorizedException;
+import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.InternalServerErrorException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
+
 @Service
 public class FileServiceImpl implements FileService {
 
@@ -35,17 +40,17 @@ public class FileServiceImpl implements FileService {
     /**
      * Get current authenticated user from security context
      * @return UserDetailsImpl representing the current user
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
     protected UserDetailsImpl getCurrentUser() {
         return securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 
     /**
      * Get current tenant ID from authenticated user
      * @return Long representing the current tenant ID
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
     protected Long getCurrentTenantId() {
         return getCurrentUser().getTenantId();
@@ -78,7 +83,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public void uploadBody(Long id, byte[] file) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
         entity.setFileBody(file);
         fileRepository.save(entity);
     }
@@ -114,9 +119,9 @@ public class FileServiceImpl implements FileService {
     @Override
     public byte[] download(Long id) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
         if (entity.getFileBody() == null) {
-            throw new IllegalArgumentException("File body is empty");
+            throw new UnprocessableEntityException("File body is empty");
         }
         return entity.getFileBody();
     }
@@ -125,7 +130,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public void softDelete(Long id) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
         entity.setDeleted(true);
         fileRepository.save(entity);
     }
@@ -133,7 +138,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public byte[] process(Long id, Map<String, Object> keyValues) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
         if (entity.getFileBody() == null) {
             throw new IllegalArgumentException("File body is empty");
         }
@@ -163,7 +168,7 @@ public class FileServiceImpl implements FileService {
             doc.save(out);
             return out.toByteArray();
         } catch (IOException ex) {
-            throw new IllegalArgumentException("Failed to process PDF", ex);
+            throw new InternalServerErrorException("Failed to process PDF", ex);
         }
     }
 
@@ -176,7 +181,7 @@ public class FileServiceImpl implements FileService {
         //String fileId = keyValues.get("fileId");
         // TODO проверить что версия продукта сохраняется в keyValues !!!!!!!!
         if (fileId == null) {
-            throw new IllegalArgumentException("File ID is not found");
+            throw new NotFoundException("File ID is not found");
         }
 
 //        FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))

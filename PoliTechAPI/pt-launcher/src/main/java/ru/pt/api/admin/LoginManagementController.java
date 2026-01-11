@@ -10,6 +10,7 @@ import ru.pt.api.admin.dto.LoginResponse;
 import ru.pt.api.admin.dto.UpdateLoginRequest;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.LoginEntity;
+import ru.pt.auth.model.LoginDto;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.LoginManagementService;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @SecurityRequirement(name = "bearerAuth")
-@RequestMapping("/api/v1/{tenantCode}/logins")
+@RequestMapping("/api/v1/{tenantCode}/admin/logins")
 public class LoginManagementController extends SecuredController {
 
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
@@ -47,40 +48,17 @@ public class LoginManagementController extends SecuredController {
      * POST /api/v1/{tenantCode}/logins
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
-    public ResponseEntity<LoginResponse> createLogin(
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN''GROUP_ADMIN')")
+    public ResponseEntity<LoginDto> createLogin(
             @PathVariable String tenantCode,
             @RequestBody CreateLoginRequest request) {
-        try {
-            requireAnyRole("SYS_ADMIN", "TNT_ADMIN", "GROUP_ADMIN");
-
-            String tntCode = tenantCode;
-
-            UserDetailsImpl curUser = getCurrentUser();
-            if ( "SYS_ADMIN".equals(curUser.getUserRole()) )
-            {
-                /* SYS_ADMIN can create logins for any tenant */
-                tntCode = request.getTenantCode();
-            }
-            
-            LoginEntity login = loginManagementService.createLogin(
-                    tntCode,
+    
+            return ResponseEntity.ok(loginManagementService.createLogin(
+                    tenantCode,
                     request.getUserLogin(),
                     request.getFullName(),
                     request.getPosition()
-            );
-
-            LoginResponse response = new LoginResponse();
-            response.setId(String.valueOf(login.getId()));
-            response.setTenantCode(String.valueOf(tntCode));
-            response.setUserLogin(login.getUserLogin());
-            response.setFullName(login.getFullName());
-            response.setPosition(login.getPosition());
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+            ));
     }
 
     /**
@@ -88,43 +66,19 @@ public class LoginManagementController extends SecuredController {
      * PATCH /tnts/{tenantCode}/logins/{loginId}
      */
     @PatchMapping("/{loginId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
-    public ResponseEntity<Map<String, Object>> updateLogin(
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN', 'GROUP_ADMIN')")
+    public ResponseEntity<LoginDto> updateLogin(
             @PathVariable String tenantCode,
             @PathVariable Long loginId,
             @RequestBody UpdateLoginRequest request) {
-        try {
-            String tntCode = tenantCode;
-
-            UserDetailsImpl curUser = getCurrentUser();
-            if ( "SYS_ADMIN".equals(curUser.getUserRole()) )
-            {
-                /* SYS_ADMIN can update logins for any tenant */
-                tntCode = request.getTenantCode();
-            }
-            LoginEntity login = loginManagementService.updateLogin(
+        
+            return ResponseEntity.ok(loginManagementService.updateLogin(
                     tenantCode,
                     loginId,
                     request.getFullName(),
                     request.getPosition(),
                     request.getIsDeleted()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            if (request.getFullName() != null) {
-                response.put("fullName", login.getFullName());
-            }
-            if (request.getPosition() != null) {
-                response.put("position", login.getPosition());
-            }
-            if (request.getIsDeleted() != null) {
-                response.put("isDeleted", login.getIsDeleted());
-            }
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+            ));
     }
 
     /**
@@ -132,35 +86,19 @@ public class LoginManagementController extends SecuredController {
      * PATCH /tnts/{tenantCode}/logins/{loginId}
      */
     @PutMapping("/{loginId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
-    public ResponseEntity<Map<String, Object>> updateLoginFull(
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN', 'GROUP_ADMIN', 'SALES')")
+    public ResponseEntity<LoginDto> updateLoginFull(
             @PathVariable String tenantCode,
             @PathVariable Long loginId,
             @RequestBody UpdateLoginRequest request) {
-        try {
-            LoginEntity login = loginManagementService.updateLogin(
+        
+            return ResponseEntity.ok(loginManagementService.updateLogin(
                     tenantCode,
                     loginId,
                     request.getFullName(),
                     request.getPosition(),
                     request.getIsDeleted()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            if (request.getFullName() != null) {
-                response.put("fullName", login.getFullName());
-            }
-            if (request.getPosition() != null) {
-                response.put("position", login.getPosition());
-            }
-            if (request.getIsDeleted() != null) {
-                response.put("isDeleted", login.getIsDeleted());
-            }
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+            ));
     }
 
     /**
@@ -168,21 +106,9 @@ public class LoginManagementController extends SecuredController {
      * GET /tnts/{tenantCode}/logins
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<List<LoginResponse>> getLogins(@PathVariable String tenantCode) {
-        try {
-            requireAnyRole("SYS_ADMIN", "TNT_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-
-            List<LoginEntity> logins = loginManagementService.getLoginsByTenant(tenantCode);
-
-            List<LoginResponse> response = logins.stream()
-                    .map(this::convertToResponse)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN')")
+    public ResponseEntity<List<LoginDto>> getLogins(@PathVariable String tenantCode) {
+            return ResponseEntity.ok(loginManagementService.getLoginsByTenant(tenantCode));
     }
 
     /**
@@ -194,20 +120,8 @@ public class LoginManagementController extends SecuredController {
     public ResponseEntity<Map<String, Object>> deleteLogin(
             @PathVariable String tenantCode,
             @PathVariable Long loginId) {
-        try {
-            requireAnyRole("SYS_ADMIN", "TNT_ADMIN", "GROUP_ADMIN");
-
-            LoginEntity login = loginManagementService.deleteLogin(tenantCode, loginId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", String.valueOf(login.getId()));
-            response.put("userLogin", login.getUserLogin());
-            response.put("isDeleted", login.getIsDeleted());
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+            loginManagementService.deleteLogin(tenantCode, loginId);
+            return ResponseEntity.noContent().build();
     }
 
     /**

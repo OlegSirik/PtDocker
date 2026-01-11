@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.SetPasswordRequest;
+import ru.pt.api.dto.auth.Principal;
 import ru.pt.api.service.auth.AccountService;
 import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
@@ -21,7 +22,9 @@ import ru.pt.auth.service.SimpleAuthService;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.List;
+import java.util.stream.Collectors;
+import ru.pt.api.dto.auth.PrincipalAccount;
 /**
  * Контроллер для работы с текущим пользователем.
  * Демонстрирует использование UserDetailsImpl и SecurityContextHelper с JWT авторизацией.
@@ -43,28 +46,31 @@ public class AuthenticationController {
      */
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
-    private ResponseEntity<Map<String, Object>> getCurrentUser(
+    private ResponseEntity<Principal> getCurrentUser(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", userDetails.getId());
-        response.put("username", userDetails.getUsername());
-        response.put("tenantCode", userDetails.getTenantCode());
-        response.put("accountName", userDetails.getAccountName());
-        response.put("clientId", userDetails.getClientId());
-        response.put("clientName", userDetails.getClientName());
-        response.put("userRole", userDetails.getUserRole());
-        response.put("productRoles", userDetails.getProductRoles());
-        response.put("authorities", userDetails.getAuthorities());
-        response.put("isDefault", userDetails.isDefault());
+        var accounts = accountService.getAllMyAccounts(userDetails.getTenantCode(), userDetails.getClientId(), userDetails.getUsername());
+        
+        List<PrincipalAccount> principalAccounts = accounts.stream()
+            .map(account -> new PrincipalAccount(account.getId(), account.getName(), account.getNodeType()))
+            .collect(Collectors.toList());
 
-        var accountId = userDetails.getAccountId();
-        var accounts = accountService.getAccountsByParentId(accountId);
+        Principal principal = new Principal(
+            userDetails.getId(),
+            userDetails.getUsername(),
+            userDetails.getTenantCode(),
+            userDetails.getAccountName(),
+            userDetails.getClientId(),
+            userDetails.getClientName(),
+            userDetails.getUserRole(),
+            userDetails.getProductRoles(),
+            userDetails.getAuthorities(),
+            userDetails.isDefault(),
+            userDetails.getAccountId(),
+            principalAccounts
+        );
 
-        response.put("accountId", accountId);
-        response.put("accounts", accounts);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(principal);
     }
 
     /**

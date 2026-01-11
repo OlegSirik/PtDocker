@@ -13,12 +13,13 @@ public class TenantMapper {
         }
 
         TenantEntity entity = new TenantEntity();
-        entity.setId(dto.getId());
-        entity.setName(dto.getName());
-        entity.setDeleted(dto.getIsDeleted());
-        entity.setCreatedAt(dto.getCreatedAt());
-        entity.setUpdatedAt(dto.getUpdatedAt());
-
+        entity.setId(dto.id());
+        entity.setName(dto.name());
+        entity.setDeleted(dto.isDeleted());
+        entity.setCreatedAt(dto.createdAt());
+        entity.setUpdatedAt(dto.updatedAt());
+        entity.setAuthType(dto.authType());
+        entity.setCode(dto.code());
         return entity;
     }
 
@@ -26,15 +27,15 @@ public class TenantMapper {
         if (entity == null) {
             return null;
         }
-
-        Tenant dto = new Tenant();
-        dto.setId(entity.getId());
-        dto.setName(entity.getName());
-        dto.setIsDeleted(entity.getDeleted());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-
-        return dto;
+        return new Tenant(
+                entity.getId(), 
+                entity.getName(), 
+                entity.getDeleted(), 
+                entity.getAuthType(),
+                entity.getCode(),
+                entity.getCreatedAt(), 
+                entity.getUpdatedAt()
+            );
     }
 
 }

@@ -56,7 +56,7 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       userLogin: ['', [Validators.required]],
       password: ['', [Validators.required]],
-      clientId: ['SYS', [Validators.required]],
+      clientId: ['sys', [Validators.required]],
       tenantCode: [this.urlTenant]
     });
   }
@@ -106,7 +106,7 @@ export class LoginComponent implements OnInit {
     this.loginForm.patchValue({
       userLogin: 'sys_admin',
       password: '5222',
-      clientId: 'SYS'
+      clientId: 'sys'
     });
   }
 

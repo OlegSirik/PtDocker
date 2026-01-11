@@ -11,13 +11,15 @@ import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.security.SecurityContextHelper;
-
+import ru.pt.auth.model.LoginDto;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с логинами пользователей согласно документации acc_logins.md
@@ -50,9 +52,11 @@ public class LoginManagementService {
      * Создание пользователя (логина)
      * POST /tnts/{tenantCode}/logins
      */
-    public LoginEntity createLogin(String tenantCode, String userLogin, String fullName, String position) {
+    public LoginDto createLogin(String tenantCode, String userLogin, String fullName, String position) {
+        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+
         // Шаг 1: Проверка обязательных параметров
-        if (tenantCode == null || tenantCode.isBlank()) {
+        if (tntCode == null || tntCode.isBlank()) {
             throw new BadRequestException("tenantCode is required");
         }
         if (userLogin == null || userLogin.isBlank()) {
@@ -61,14 +65,14 @@ public class LoginManagementService {
         if (fullName == null || fullName.isBlank()) {
             throw new BadRequestException("fullName is required");
         }
-
+        
         // Шаг 2: Проверка наличия тенанта по tenantCode
-        TenantEntity tenant = tenantService.findByCode(tenantCode)
-                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
+        TenantEntity tenant = tenantService.findByCode(tntCode)
+                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
 
         // Шаг 3: Проверка уникальности пользователя для данного тенанта
         if (loginRepository.existsByTenantCodeAndUserLogin(tenant.getCode(), userLogin)) {
-            throw new BadRequestException("User with login '" + userLogin + "' already exists for tenant '" + tenantCode + "'");
+            throw new BadRequestException("User with login '" + userLogin + "' already exists for tenant '" + tntCode + "'");
         }
 
         // Шаг 4: Создание записи в таблице acc_logins
@@ -81,9 +85,9 @@ public class LoginManagementService {
 
         LoginEntity savedLogin = loginRepository.save(login);
 
-        logger.info("Created login for user '{}' in tenant '{}'", userLogin, tenantCode);
+        logger.info("Created login for user '{}' in tenant '{}'", userLogin, tntCode);
 
-        return savedLogin;
+        return fromEntity(savedLogin);
     }
 
     /**
@@ -92,6 +96,7 @@ public class LoginManagementService {
      * Требуется роль SYS_ADMIN
      */
     public void setPassword(String tenantCode, String userLogin, String password) {
+        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
         // Шаг 1: Проверка обязательных параметров
         if (userLogin == null || userLogin.isBlank()) {
             throw new BadRequestException("userLogin is required");
@@ -99,28 +104,11 @@ public class LoginManagementService {
         if (password == null || password.isBlank()) {
             throw new BadRequestException("password is required");
         }
-//        if (clientId == null || clientId.isBlank()) {
-//            throw new BadRequestException("clientId is required");
-//        }
 
         // Шаг 2: Проверка наличия пользователя в таблице acc_logins
-        LoginEntity login = loginRepository.findByTenantCodeAndUserLogin(tenantCode, userLogin)
+        LoginEntity login = loginRepository.findByTenantCodeAndUserLogin(tntCode, userLogin)
                 .orElseThrow(() -> new NotFoundException("User with login '" + userLogin + "' not found"));
 
-        // Шаг 3: Проверка наличия пользователя для данного клиента
-        //Long clientIdLong;
-        //try {
-        //    clientIdLong = Long.parseLong(clientId);
-        //} catch (NumberFormatException e) {
-        //    throw new BadRequestException("Invalid clientId format");
-        //}
-
-     // ToDo чтото тут с логикой не так - нужно проверять тип клиента. если это SYSTEM то можно менять все, если нет, то только своим пользакам
-         
-        //boolean hasClientAccess = accountLoginRepository.existsByUserLoginAndClientId(userLogin, clientIdLong);
-        //if (!hasClientAccess) {
-        //    throw new NotFoundException("User '" + userLogin + "' is not associated with client ID " + clientId);
-        //}
 
         // Шаг 4: Хэшировать и установить пароль
         String hashedPassword = passwordEncoder.encode(password);
@@ -134,11 +122,11 @@ public class LoginManagementService {
      * Обновление данных пользователя
      * PATCH /tnts/{tenantCode}/logins/{id}
      */
-    public LoginEntity updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
-        
+    public LoginDto updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
+        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
         // Шаг 1: Проверка наличия тенанта
-        TenantEntity tenant = tenantService.findByCode(tenantCode)
-                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
+        TenantEntity tenant = tenantService.findByCode(tntCode)
+                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
 
         // Шаг 2: Проверка наличия пользователя
         if (id == null) {
@@ -147,7 +135,7 @@ public class LoginManagementService {
 
         // Шаг 3: Проверка наличия пользователя для данного тенанта
         LoginEntity login = loginRepository.findByIdAndTenantCode(id, tenant.getCode())
-                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tenantCode + "'"));
+                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tntCode + "'"));
         
         // Шаг 4: Обновление данных
         boolean updated = false;
@@ -166,10 +154,10 @@ public class LoginManagementService {
 
         if (updated) {
             login = loginRepository.save(login);
-            logger.info("Updated login for user '{}' in tenant '{}'", login.getUserLogin(), tenantCode);
+            logger.info("Updated login for user '{}' in tenant '{}'", login.getUserLogin(), tntCode);
         }
 
-        return login;
+        return fromEntity(login);
     }
 
     /**
@@ -177,12 +165,13 @@ public class LoginManagementService {
      * GET /tnts/{tenantCode}/logins
      */
     @Transactional(readOnly = true)
-    public List<LoginEntity> getLoginsByTenant(String tenantCode) {
+    public List<LoginDto> getLoginsByTenant(String tenantCode) {
+        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
         // Шаг 1: Проверка наличия тенанта
         List<LoginEntity> logins = new ArrayList<LoginEntity>();
         try {
-        TenantEntity tenant = tenantService.findByCode(tenantCode)
-                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
+        TenantEntity tenant = tenantService.findByCode(tntCode)
+                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
 
         // Шаг 2: Получение всех логинов для тенанта
         
@@ -190,20 +179,21 @@ public class LoginManagementService {
         } catch (NotFoundException e) {}
 
         if (logins.isEmpty()) {
-            logger.warn("No logins found for tenant '{}'", tenantCode);
+            logger.warn("No logins found for tenant '{}'", tntCode);
         }
 
-        return logins;
+        return logins.stream().map(this::fromEntity).collect(Collectors.toList());
     }
 
     /**
      * Удаление пользователя (soft delete)
      * DELETE /tnts/{tenantCode}/logins/{id}
      */
-    public LoginEntity deleteLogin(String tenantCode, Long id) {
+    public void deleteLogin(String tenantCode, Long id) {
+        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
         // Шаг 1: Проверка наличия тенанта
-        TenantEntity tenant = tenantService.findByCode(tenantCode)
-                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tenantCode + "' not found"));
+        TenantEntity tenant = tenantService.findByCode(tntCode)
+                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
 
         // Шаг 2: Проверка наличия пользователя
         if (id == null) {
@@ -212,15 +202,55 @@ public class LoginManagementService {
 
         // Шаг 3: Проверка наличия пользователя для данного тенанта
         LoginEntity login = loginRepository.findByIdAndTenantCode(id, tenant.getCode())
-                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tenantCode + "'"));
+                .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tntCode + "'"));
 
         // Шаг 4: Установка флага удаления
         login.setIsDeleted(true);
         login = loginRepository.save(login);
 
-        logger.info("Deleted (soft) login for user '{}' in tenant '{}'", login.getUserLogin(), tenantCode);
+        logger.info("Deleted (soft) login for user '{}' in tenant '{}'", login.getUserLogin(), tntCode);
 
-        return login;
+    }
+
+
+
+    // HELPERS 
+    private UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new ForbiddenException("Not authenticated"));
+    }
+    
+    private boolean userIsSysAdmin() {
+        UserDetailsImpl currentUser = getCurrentUser();
+        return UserRole.SYS_ADMIN.getValue().equals(currentUser.getUserRole());
+    }
+
+    private String checkPermitionAndGetTenantCode(String tenantCode) {
+
+        if ( userIsSysAdmin() )
+        {
+            String currentTenantCode = getCurrentUser().getImpersonatedTenantCode();
+            if (currentTenantCode == null) {
+                throw new ForbiddenException("SYS ADMIN must be impersonated");
+            }
+            return currentTenantCode;
+        }
+        if ( !tenantCode.equals( getCurrentUser().getTenantCode() )) {
+            throw new ForbiddenException("Only SYS_ADMIN or TNT_ADMIN can access other tenants");
+        }
+        return tenantCode;
+    }
+
+    private LoginDto fromEntity(LoginEntity login) {
+        
+        return new LoginDto(
+            Long.valueOf(login.getId()),
+            null,
+            "",
+            login.getUserLogin(),
+            login.getFullName(),
+            login.getPosition()
+        );
     }
 }
 

@@ -57,7 +57,7 @@ public class ClientMapper {
         dto.setIsDeleted(entity.getDeleted());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-
+        dto.setAuthType(entity.getAuthType());
         if (entity.getClientConfigurationEntity() != null) {
             dto.setClientConfiguration(
                     clientConfigurationMapper.toDto(entity.getClientConfigurationEntity())

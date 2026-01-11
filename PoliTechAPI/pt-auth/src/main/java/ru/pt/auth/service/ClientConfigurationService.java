@@ -12,21 +12,21 @@ import ru.pt.auth.repository.ClientRepository;
 @Service
 public class ClientConfigurationService {
 
-    private final AdminUserManagementService userService;
+    private final ClientService clientService;
     private final ClientRepository clientRepository;
     private final ClientConfigurationMapper clientConfigurationMapper;
 
-    public ClientConfigurationService(AdminUserManagementService userService,
+    public ClientConfigurationService(ClientService clientService,
                                       ClientRepository clientRepository,
                                       ClientConfigurationMapper clientConfigurationMapper) {
-        this.userService = userService;
+        this.clientService = clientService;
         this.clientRepository = clientRepository;
         this.clientConfigurationMapper = clientConfigurationMapper;
     }
 
     @Transactional
     public ClientConfiguration saveClientConfiguration(Long clientId, ClientConfiguration clientConfiguration) {
-        Client client = userService.getClientById(clientId);
+        Client client = clientService.getClientById(clientId);
         ClientEntity clientEntity = clientRepository.findById(client.getId())
                 .orElseThrow(() -> new NotFoundException("Client not found: " + client.getId()));
 
@@ -50,7 +50,7 @@ public class ClientConfigurationService {
     }
 
     public ClientConfiguration getClientConfiguration(Long clientId) {
-        Client client = userService.getClientById(clientId);
+        Client client = clientService.getClientById(clientId);
         ClientEntity clientEntity = clientRepository.findById(client.getId())
                 .orElseThrow(() -> new NotFoundException("Client not found: " + client.getId()));
 
