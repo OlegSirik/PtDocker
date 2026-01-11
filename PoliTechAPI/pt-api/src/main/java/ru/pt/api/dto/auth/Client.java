@@ -13,6 +13,7 @@ public class Client {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private ClientConfiguration clientConfiguration;
+    private String authType;
 
     // constructors
     public Client() {
@@ -97,6 +98,14 @@ public class Client {
 
     public void setClientConfiguration(ClientConfiguration clientConfiguration) {
         this.clientConfiguration = clientConfiguration;
+    }
+
+    public String getAuthType() {
+        return authType;
+    }
+
+    public void setAuthType(String authType) {
+        this.authType = authType;
     }
 
 }

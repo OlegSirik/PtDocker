@@ -50,19 +50,19 @@ public class AccountManagementController extends SecuredController {
         try {
             requireAnyRole("GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            Map<String, Object> result = adminUserManagementService.createAccount(
-                    request.getParentAccountId(),
-                    request.getName(),
-                    request.getNodeType()
-            );
+            //Map<String, Object> result = adminUserManagementService.createAccount(
+            //        request.getParentAccountId(),
+            //        request.getName(),
+            //        request.getNodeType()
+            //);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", result.get("id"));
-            response.put("name", result.get("name"));
-            response.put("nodeType", result.get("nodeType"));
-            response.put("parentId", result.get("parentId"));
+            //Map<String, Object> response = new HashMap<>();
+            //response.put("id", result.get("id"));
+            //response.put("name", result.get("name"));
+            //response.put("nodeType", result.get("nodeType"));
+            //response.put("parentId", result.get("parentId"));
 
-            return buildCreatedResponse(response, "Account created successfully");
+            return buildCreatedResponse(null, "Account created successfully");
         } catch (Exception e) {
             return handleException(e);
         }
@@ -75,8 +75,9 @@ public class AccountManagementController extends SecuredController {
     public ResponseEntity<Map<String, Object>> getAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
         try {
             requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-            Map<String, Object> account = adminUserManagementService.getAccount(accountId);
-            return ResponseEntity.ok(account);
+            //Map<String, Object> account = adminUserManagementService.getAccount(accountId);
+            //return ResponseEntity.ok(account);
+            return ResponseEntity.ok(null);
         } catch (Exception e) {
             return handleException(e);
         }
@@ -89,8 +90,9 @@ public class AccountManagementController extends SecuredController {
     public ResponseEntity<?> getAccountAccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
         try {
             requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-            List<Map<String, Object>> accounts = adminUserManagementService.getAccountAccounts(accountId);
-            return ResponseEntity.ok(accounts);
+            //List<Map<String, Object>> accounts = adminUserManagementService.getAccountAccounts(accountId);
+            //return ResponseEntity.ok(accounts);
+            return ResponseEntity.ok(null);
         } catch (Exception e) {
             return handleException(e);
         }
@@ -107,19 +109,19 @@ public class AccountManagementController extends SecuredController {
         try {
             requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            Map<String, Object> result = adminUserManagementService.createAccount(
-                    accountId,
-                    request.getName(),
-                    request.getNodeType()
-            );
+            //Map<String, Object> result = adminUserManagementService.createAccount(
+            //        accountId,
+            //        request.getName(),
+            //        request.getNodeType()
+            //);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", result.get("id"));
-            response.put("name", result.get("name"));
-            response.put("nodeType", result.get("nodeType"));
-            response.put("parentId", result.get("parentId"));
+            //Map<String, Object> response = new HashMap<>();
+            //response.put("id", result.get("id"));
+            //response.put("name", result.get("name"));
+            //response.put("nodeType", result.get("nodeType"));
+            //response.put("parentId", result.get("parentId"));
 
-            return buildCreatedResponse(response, "Account created successfully");
+            return buildCreatedResponse(null, "Account created successfully");
         } catch (Exception e) {
             return handleException(e);
         }
@@ -135,8 +137,10 @@ public class AccountManagementController extends SecuredController {
         try {
             requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            List<Map<String, Object>> hierarchy = adminUserManagementService.getAccountsHierarchy();
-            return ResponseEntity.ok(hierarchy);
+            //List<Map<String, Object>> hierarchy = adminUserManagementService.getAccountsHierarchy();
+            //return ResponseEntity.ok(hierarchy);
+            return ResponseEntity.ok(null);
+            //return ResponseEntity.ok(hierarchy);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

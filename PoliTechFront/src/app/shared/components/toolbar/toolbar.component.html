@@ -10,9 +10,33 @@
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
       @if ((currentUser$ | async); as user) {
-        <button mat-button (click)="logout()" class="nav-button">Выйти из {{user.username}}</button>
+        <button mat-button [matMenuTriggerFor]="userMenu" class="nav-button">{{user.username}}</button>
+        <mat-menu #userMenu="matMenu">
+          <div class="menu-username">{{user.username}}</div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="navigateToProfile()">
+            <mat-icon>person</mat-icon>
+            <span>Profile</span>
+          </button>
+          @if (user.accounts && user.accounts.length > 0) {
+            <mat-divider></mat-divider>
+            @for (account of user.accounts; track account.id) {
+              <button mat-menu-item (click)="setAccountId(account.id)" [class.active-account]="isCurrentAccount(account.id)">
+                @if (isCurrentAccount(account.id)) {
+                  <mat-icon>check</mat-icon>
+                }
+                <span [class.bold-account]="isCurrentAccount(account.id)">{{account.name}}</span>
+              </button>
+            }
+          }
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Sign out</span>
+          </button>
+        </mat-menu>
       } @else {
-        <button mat-button [routerLink]="['/', tenantCode,  'login']" class="nav-button">Войти</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'login']" class="nav-button">Login</button>
       }
     </div>
   </div>

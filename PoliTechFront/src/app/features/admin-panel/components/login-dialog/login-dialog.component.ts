@@ -99,7 +99,7 @@ export class LoginDialogComponent {
       if (this.isEditMode && this.data.login?.id) {
         // Update existing login
         loginData.id = this.data.login.id;
-        this.loginService.update(this.data.login.id, loginData).subscribe({
+        this.loginService.update( this.data.login.id, loginData, {'X-Imp-Tenant': this.tenantCode}).subscribe({
           next: () => {
             // If password was changed, update password separately
             if (this.changePassword && formValue.password) {
@@ -123,7 +123,7 @@ export class LoginDialogComponent {
         });
       } else {
         // Create new login
-        this.loginService.create(loginData).subscribe({
+        this.loginService.create(loginData, {'X-Imp-Tenant': this.tenantCode}).subscribe({
           next: () => {
             // Update password after creating login
             if (formValue.password) {
@@ -155,7 +155,7 @@ export class LoginDialogComponent {
     }
 
     if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      this.loginService.delete(this.data.login.id).subscribe({
+      this.loginService.delete(this.data.login.id, {'X-Imp-Tenant': this.tenantCode}).subscribe({
         next: () => {
           this.dialogRef.close({ success: true, action: 'delete' });
         },

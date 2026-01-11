@@ -11,6 +11,7 @@ import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.security.filter.IdentityResolutionFilter;
 import ru.pt.auth.security.filter.AccountResolutionFilter;
 import ru.pt.auth.security.filter.ContextCleanupFilter;
+import ru.pt.auth.security.filter.TenantImpersonationFilter;
 import ru.pt.auth.security.strategy.IdentitySourceStrategy;
 import ru.pt.auth.service.AccountResolverService;
 import ru.pt.auth.service.TenantSecurityConfigService;
@@ -57,5 +58,12 @@ public class SecurityFilterConfig {
             RequestContext requestContext
     ) {
         return new ContextCleanupFilter(requestContext);
+    }
+
+    @Bean
+    public TenantImpersonationFilter tenantImpersonationFilter(
+            SecurityConfigurationProperties securityConfigurationProperties
+    ) {
+        return new TenantImpersonationFilter(securityConfigurationProperties);
     }
 }

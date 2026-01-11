@@ -40,8 +40,9 @@ public class AccountLoginEntity {
     @Column(name = "is_default")
     private Boolean isDefault = false;
 
-    @Column(name = "user_role", nullable = false, length = 30)
-    private String userRole;
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "user_role", nullable = false, length = 30)
+//    private UserRole userRole;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -110,14 +111,6 @@ public class AccountLoginEntity {
         isDefault = aDefault;
     }
 
-    public String getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(String userRole) {
-        this.userRole = userRole;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -134,4 +127,47 @@ public class AccountLoginEntity {
         this.updatedAt = updatedAt;
     }
 
+    private AccountLoginEntity(TenantEntity tenantEntity, ClientEntity clientEntity, AccountEntity accountEntity, String userLogin) {
+        this.tenantEntity = tenantEntity;
+        this.clientEntity = clientEntity;
+        this.accountEntity = accountEntity;
+        this.userLogin = userLogin;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public static AccountLoginEntity createSysAdmin(AccountEntity accountEntity, String userLogin) {
+        if (accountEntity.getNodeType() != AccountNodeType.SYS_ADMIN ) {
+            throw new IllegalArgumentException("Account must be of type SYS_ADMIN");
+        }
+        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+    }
+
+    public static AccountLoginEntity createTntAdmin(AccountEntity accountEntity, String userLogin) {
+        if (accountEntity.getNodeType() != AccountNodeType.TNT_ADMIN ) {
+            throw new IllegalArgumentException("Account must be of type CLIENT");
+        }
+        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+    }
+
+    public static AccountLoginEntity createClientAdmin(AccountEntity accountEntity, String userLogin) {
+        if (accountEntity.getNodeType() != AccountNodeType.CLIENT_ADMIN) {
+            throw new IllegalArgumentException("Account must be of type CLIENT");
+        }
+        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+    }
+
+    public static AccountLoginEntity createGroupAdmin(AccountEntity accountEntity, String userLogin) {
+        if (accountEntity.getNodeType() != AccountNodeType.GROUP_ADMIN) {
+            throw new IllegalArgumentException("Account must be of type GROUP or CLIENT");
+        }
+        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+    }
+    
+    public static AccountLoginEntity createProductAdmin(AccountEntity accountEntity, String userLogin) {
+        if (accountEntity.getNodeType() != AccountNodeType.PRODUCT_ADMIN ) {
+            throw new IllegalArgumentException("Account must be of type PRODUCT_ADMIN");
+        }
+        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+    }
 }

@@ -62,6 +62,15 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
         requestContext.setClient(clientId);
         
         requestContext.setLogin(username);
+        String accountId = request.getHeader("X-Account-Id");
+        if (accountId != null && !accountId.isEmpty()) {
+            try {
+                Long.parseLong(accountId);
+            } catch (NumberFormatException e) {
+                throw new BadCredentialsException("X-Account-Id must be a number");
+            }
+        }
+        requestContext.setAccount(accountId);
     }
         
     /**

@@ -37,6 +37,12 @@ export interface User {
   userRole: string;
   authorities: Authority[];
   username: string;
+  accounts?: Account[];
+}
+export interface Account {
+  id: number;
+  name: string;
+  role: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -56,6 +62,7 @@ export class AuthService {
   public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
   public tenant = '';
   public tenantId = -1;
+  private accountId: number | null = null;
 
   login(credentials: LoginData): Observable<AuthResponse> {
     console.log(credentials);
@@ -74,7 +81,8 @@ export class AuthService {
   }
 
   changePassword(credentials: LoginData): Observable<LoginData> {
-    return this.http.post<LoginData>( `${this.baseApiUrl}/auth/set-password`, credentials);
+    return this.http.post<LoginData>( `${this.baseApiUrl}/auth/set-password`, credentials
+      , { headers: { 'X-Imp-Tenant': credentials.tenantCode } });
   }
 
   getCurrentUser(): Observable<User> {
@@ -87,6 +95,7 @@ export class AuthService {
           this.tenant = user.tenantCode;
           this.tenantId = user.tenantId;
           this.isAuthenticated.next(true);
+          this.setAccountId(user.accountId);
         })
       );
   }
@@ -128,5 +137,13 @@ export class AuthService {
       return this.getCurrentUser();
     }
     return null;
+  }
+
+  setAccountId(accountId: number) {
+    this.accountId = accountId;
+  }
+
+  getAccountId(): number | null {
+    return this.accountId ?? null;
   }
 }

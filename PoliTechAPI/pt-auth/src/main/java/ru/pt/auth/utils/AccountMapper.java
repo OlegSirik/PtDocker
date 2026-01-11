@@ -39,7 +39,7 @@ public class AccountMapper {
             entity.setParent(parent);
         }
 
-        entity.setNodeType(AccountNodeType.valueOf(dto.getNodeType()));
+        entity.setNodeType(AccountNodeType.fromString(dto.getNodeType()));
         entity.setName(dto.getName());
         entity.setCreatedAt(dto.getCreatedAt());
         entity.setUpdatedAt(dto.getUpdatedAt());
@@ -57,7 +57,7 @@ public class AccountMapper {
         dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
         dto.setClientId(entity.getClient() != null ? entity.getClient().getId() : null);
         dto.setParentId(entity.getParent() != null ? entity.getParent().getId() : null);
-        dto.setNodeType(entity.getNodeType().name());
+        dto.setNodeType(entity.getNodeType().getValue());
         dto.setName(entity.getName());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

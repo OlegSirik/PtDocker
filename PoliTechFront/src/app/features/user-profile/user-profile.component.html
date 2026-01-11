@@ -1,0 +1,42 @@
+<div class="user-profile-container">
+  <div class="page-header">
+    <h1 class="page-title">User Profile</h1>
+  </div>
+
+  <mat-card class="profile-card">
+    <mat-card-content>
+      @if ((currentUser$ | async); as user) {
+        <div class="profile-info">
+          <h2>{{ user.username }}</h2>
+          <div class="info-row">
+            <span class="label">Account ID:</span>
+            <span>{{ user.accountId }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Account Name:</span>
+            <span>{{ user.accountName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Client ID:</span>
+            <span>{{ user.clientId }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Client Name:</span>
+            <span>{{ user.clientName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Tenant Code:</span>
+            <span>{{ user.tenantCode }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">User Role:</span>
+            <span>{{ user.userRole }}</span>
+          </div>
+        </div>
+      } @else {
+        <p>No user information available</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+

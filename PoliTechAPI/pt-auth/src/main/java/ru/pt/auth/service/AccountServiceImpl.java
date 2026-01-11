@@ -250,8 +250,25 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> getAccountsByParentId(Long parentId) {
-        return accountRepository.findAllByParentId(parentId)
+         return accountRepository.findAllByParentId(parentId)
             .stream().map(accountMapper::toDto)
             .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Account> getAllMyAccounts(String tenantCode, Long clientId, String userLogin) {
+        return accountRepository.findByTenantCodeAndClientIdAndUserLogin(tenantCode, clientId, userLogin)
+            .stream()
+            .map(entity -> {
+                Account account = accountMapper.toDto(entity);
+                account.setTid(null);
+                account.setClientId(null);
+                account.setParentId(null);
+                account.setCreatedAt(null);
+                account.setUpdatedAt(null);
+                return account;
+            })
+            .collect(Collectors.toList());
+    }
+
 }

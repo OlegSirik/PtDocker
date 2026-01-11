@@ -47,6 +47,7 @@ export class ClientEditComponent implements OnInit {
     clientId: '',
     name: '',
     isDeleted: false,
+    authType: 'CLIENT',
     clientConfiguration: {
       paymentGate: '',
       sendEmailAfterBuy: false,

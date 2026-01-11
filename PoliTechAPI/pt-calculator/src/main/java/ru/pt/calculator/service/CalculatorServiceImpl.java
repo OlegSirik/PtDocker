@@ -12,6 +12,7 @@ import ru.pt.api.dto.calculator.FormulaLine;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
@@ -258,13 +259,13 @@ public class CalculatorServiceImpl implements CalculatorService {
         // get productVersionModel from repository
         ProductVersionModel productVersionModel = productService.getProduct(entity.getProductId(), false);
         if (productVersionModel == null) {
-            throw new IllegalArgumentException("Product not found for id=" + entity.getProductId());
+            throw new NotFoundException("Product not found for id=" + entity.getProductId());
         }
 
         // get productVersionModel version from repository
         ProductVersionModel productVersion = productService.getVersion(entity.getProductId(), entity.getVersionNo());
         if (productVersion == null) {
-            throw new IllegalArgumentException("Product version not found for id=" + entity.getProductId() + " and versionNo=" + entity.getVersionNo());
+            throw new NotFoundException("Product version not found for id=" + entity.getProductId() + " and versionNo=" + entity.getVersionNo());
         }
 
 

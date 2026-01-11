@@ -41,3 +41,17 @@
     transform: translateY(0);
   }
 }
+
+.menu-username {
+  padding: 8px 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.bold-account {
+  font-weight: 600;
+}
+
+.active-account {
+  background-color: rgba(0, 0, 0, 0.04);
+}

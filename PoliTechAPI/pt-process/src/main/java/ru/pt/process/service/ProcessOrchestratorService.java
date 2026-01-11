@@ -43,7 +43,7 @@ import ru.pt.api.utils.JsonProjection;
 
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.ClientService;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.files.service.email.EmailGateService;
@@ -90,7 +90,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final PreProcessService preProcessService;
     private final PostProcessService postProcessService;
     private final PaymentClientSwitch paymentClient;
-    private final AdminUserManagementService userService;
+    private final ClientService clientService;
     private final EmailGateService emailGateService;
 
     
@@ -358,7 +358,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyData.setPolicyStatus(PolicyStatus.PAID);
         storageService.update(policyData);
 
-        Client clientById = userService.getClientById(policyData.getPolicyIndex().getClientAccountId());
+        Client clientById = clientService.getClientById(policyData.getPolicyIndex().getClientAccountId());
         ClientConfiguration clientConfiguration = clientById.getClientConfiguration();
         if (clientConfiguration.isSendEmailAfterBuy()) {
             emailGateService.resolveForCurrentUser(clientById.getId())

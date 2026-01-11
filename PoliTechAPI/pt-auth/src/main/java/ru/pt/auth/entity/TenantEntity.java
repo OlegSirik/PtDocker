@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "acc_tenants")
 public class TenantEntity {
+    public static final String SYS_TENANT_CODE = "sys";
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
     @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
@@ -95,4 +97,19 @@ public class TenantEntity {
 
     public void setAuthType(String authType) {this.authType = authType;}
 
+    public boolean isSystem() {return SYS_TENANT_CODE.equals(code);}
+
+    private TenantEntity(String code, String name, String authType) {
+        this.code = code;
+        this.name = name;
+        this.authType = authType;
+        this.isDeleted = false;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.tokenAuth = false;
+    }
+
+    public static TenantEntity create(String code, String name, String authType) {
+        return new TenantEntity(code, name, authType);
+    }
 }

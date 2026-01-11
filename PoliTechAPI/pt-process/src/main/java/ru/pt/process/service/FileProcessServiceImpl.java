@@ -172,7 +172,7 @@ public class FileProcessServiceImpl implements FileProcessService {
             }
         }
         if (fileId == null) {
-            throw new IllegalArgumentException("File id not found");
+            throw new NotFoundException("File id not found");
         }
 
         return fileService.getFile(fileId, varCtx);

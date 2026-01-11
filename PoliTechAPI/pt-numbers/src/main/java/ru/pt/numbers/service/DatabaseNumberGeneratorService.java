@@ -2,6 +2,7 @@ package ru.pt.numbers.service;
 
 import org.springframework.stereotype.Service;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.service.numbers.NumberGeneratorService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import ru.pt.api.dto.exception.UnauthorizedException;
 
 /**
  * Кор реализация сервиса генерации номеров через таблицу в БД
@@ -40,7 +42,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
      */
     protected UserDetailsImpl getCurrentUser() {
         return securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 
     /**
@@ -57,11 +59,11 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
         NumberGeneratorEntity ng = null;
         if (productCode != null && !productCode.isEmpty()) {
             ng = repository.findByProductCode(getCurrentTenantId(), productCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Generator not found: " + productCode));
+                    .orElseThrow(() -> new NotFoundException("Generator not found: " + productCode));
         }
         if (ng == null) {
             // TODO кастомное исключение
-            throw new IllegalArgumentException("Generator not found: " + productCode);
+            throw new NotFoundException("Generator not found: " + productCode);
         }
         ng = getNext(ng.getId());
 
@@ -122,10 +124,10 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     @Override
     public void update(NumberGeneratorDescription numberGeneratorDescription) {
         if (numberGeneratorDescription.getId() == null) {
-            throw new IllegalArgumentException("NumberGenerator ID must not be null for update");
+            throw new BadRequestException("NumberGenerator ID must not be null for update");
         }
         var existing = repository.findByTidAndId(getCurrentTenantId(), numberGeneratorDescription.getId())
-                .orElseThrow(() -> new IllegalArgumentException("NumberGenerator not found with id: " + numberGeneratorDescription.getId()));
+                .orElseThrow(() -> new NotFoundException("NumberGenerator not found with id: " + numberGeneratorDescription.getId()));
         existing.setProductCode(numberGeneratorDescription.getProductCode());
         existing.setMask(numberGeneratorDescription.getMask());
         existing.setResetPolicy(numberGeneratorDescription.getResetPolicy());
@@ -136,7 +138,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
     private NumberGeneratorEntity getNext(Integer id) {
         NumberGeneratorEntity ng = repository.findByTidAndId(getCurrentTenantId(), id)
-                .orElseThrow(() -> new IllegalArgumentException("Generator not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Generator not found: " + id));
 
         LocalDate today = LocalDate.now();
         switch (ng.getResetPolicy()) {

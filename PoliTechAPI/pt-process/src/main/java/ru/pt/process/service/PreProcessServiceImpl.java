@@ -2,6 +2,7 @@ package ru.pt.process.service;
 
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.CoverInfo;
 import ru.pt.api.dto.process.Deductible;
@@ -66,7 +67,7 @@ public class PreProcessServiceImpl implements PreProcessService {
                 .orElse(null);
 
         if (pvPackage == null) {
-            throw new IllegalArgumentException("Package not found: " + inPackageNo);
+            throw new NotFoundException("Package not found: " + inPackageNo);
         }
 
         insuredObject.setPackageCode(pkgCode);
@@ -225,7 +226,7 @@ public class PreProcessServiceImpl implements PreProcessService {
                     }
 
                     if (!PeriodUtils.isDateInRange(startDate, endDate, validatorValue)) {
-                        throw new IllegalArgumentException("Activation delay is not in range");
+                        throw new BadRequestException("Activation delay is not in range");
                     }
                     Period prd = Period.between(startDate.toLocalDate(), endDate.toLocalDate());
                     //setter.setRawValue("policyTerm", validatorValue);
@@ -237,12 +238,12 @@ public class PreProcessServiceImpl implements PreProcessService {
                     String[] list = validatorValue.split(",");
                     // если только одно значение, то только оно и возможно
                     if (list.length == 0) {
-                        throw new IllegalAccessError("validatorValue is invalid");
+                        throw new BadRequestException("validatorValue is invalid");
                     } else if (list.length == 1) {
                         policyTerm = list[0];
                     } else {
                         if (policyTerm == null) {
-                            throw new IllegalAccessError("Policy term is required");
+                            throw new BadRequestException("Policy term is required");
                         }
 
                         boolean found = false;
@@ -254,7 +255,7 @@ public class PreProcessServiceImpl implements PreProcessService {
                             }
                         }
                         if (!found) {
-                            throw new IllegalArgumentException("Policy term is not in list");
+                            throw new BadRequestException("Policy term is not in list");
                         }
                     }
 

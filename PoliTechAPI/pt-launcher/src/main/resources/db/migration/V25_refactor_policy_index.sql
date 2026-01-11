@@ -57,3 +57,15 @@ alter table number_generators add column tid bigint not null default 1;
 
 alter table files add column tid bigint not null default 1;
 
+DROP INDEX IF EXISTS public.acc_account_logins_uk;
+
+ALTER TABLE acc_account_logins ALTER COLUMN client_id DROP NOT NULL;
+
+ALTER TABLE acc_logins add COLUMN client_id bigint;
+
+alter table acc_account_logins drop column user_role;
+
+alter TABLE acc_accounts alter column node_type TYPE varchar(20);
+
+alter table acc_clients add auth_type varchar(10) not null default 'CLIENT';
+

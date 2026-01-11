@@ -2,6 +2,7 @@ package ru.pt.auth.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountNodeType;
 
@@ -10,23 +11,15 @@ import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
-    /**
-     * Find account by ID with eager loading of children
-     */
-    //@Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.children WHERE a.id = :id")
-    //Optional<AccountEntity> findByIdWithChildren(Long id);
 
-    /**
-     * Find account by ID with eager loading of parent
-     */
-    //@Query("SELECT a FROM AccountEntity a LEFT JOIN FETCH a.parent WHERE a.id = :id")
-    //Optional<AccountEntity> findByIdWithParent(Long id);
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.nodeType = 'TENANT'")
+    Optional<AccountEntity> findTenantAccount(@Param("tenantCode") String tenantCode);
 
-    /**
-     * Find all root accounts (accounts without parent)
-     */
-    //@Query("SELECT a FROM AccountEntity a WHERE a.parent.id IS NULL ORDER BY a.name")
-    //List<AccountEntity> findRootAccounts();
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = 'CLIENT'")
+    Optional<AccountEntity> findClientAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId);
+
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = :nodeType")
+    Optional<AccountEntity> findAdminAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("nodeType") AccountNodeType nodeType);
 
     /**
      * Find all child accounts of a specific parent
@@ -40,11 +33,8 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("SELECT a FROM AccountEntity a WHERE a.nodeType = :nodeType ORDER BY a.name")
     List<AccountEntity> findByNodeType(AccountNodeType nodeType);
 
-    /**
-     * Find accounts by name containing the given string (case insensitive)
-     */
-    //@Query("SELECT a FROM AccountEntity a WHERE LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY a.name")
-    //List<AccountEntity> findByNameContainingIgnoreCase(String name);
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId AND a.id = :accountId")
+    Optional<AccountEntity> findByTenantCodeAndClientIdAndId(@Param("tenantCode") String tenantCode, @Param("clientId") Long clientId, @Param("accountId") Long accountId);
 
     /**
      * Get next account ID from sequence
@@ -91,5 +81,11 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
     List<AccountEntity> findAllByParentId(Long parentId);
 
+    /**
+     * Find accounts by tenant code, client id, and user login.
+     * Joins through AccountLoginEntity to access userLogin field.
+     */
+    @Query("SELECT DISTINCT a FROM AccountEntity a JOIN a.accountLoginEntities al WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId AND al.userLogin = :userLogin")
+    List<AccountEntity> findByTenantCodeAndClientIdAndUserLogin(@Param("tenantCode") String tenantCode, @Param("clientId") Long clientId, @Param("userLogin") String userLogin);
 
 }

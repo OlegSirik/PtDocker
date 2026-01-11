@@ -14,11 +14,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChip } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { LoginService, Login } from '../../../shared/services/api/logins.service';
-import { SysAdminService, SysAdmin } from '../../../shared/services/api/sys-admin.service';
-import { TntAdminService, TntAdmin } from '../../../shared/services/api/tnt-admin.service';
+import { TenantAdminService, TenantAdmin } from '../../../shared/services/api/tenant-admins.service';
 import { AuthService as RestAuthService, User } from '../../../shared/services/auth.service';
 import { LoginDialogComponent } from '../components/login-dialog/login-dialog.component';
 import { take } from 'rxjs/operators';
@@ -50,8 +50,7 @@ import { take } from 'rxjs/operators';
 export class TenantsPageComponent implements OnInit {
   private tenantsService = inject(TenantsService);
   private loginService = inject(LoginService);
-  private sysAdminService = inject(SysAdminService);
-  private tntAdminService = inject(TntAdminService);
+  private tenantAdminService = inject(TenantAdminService);
   private restAuth = inject(RestAuthService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
@@ -61,10 +60,12 @@ export class TenantsPageComponent implements OnInit {
   currentTenantName: string | null = null;
   isSysAdmin: boolean = false;
   selectedTenantCode: string | null = null;
+
   currentTenantData: Tenant = {
     name: '',
     code: '',
-    isDeleted: false
+    isDeleted: false,
+    authType: ''
   };
 
   // Tenants tab
@@ -75,12 +76,16 @@ export class TenantsPageComponent implements OnInit {
   tenantListItems: Tenant[] = [];
 
   // Sys Admins tab
-  sysAdmins: SysAdmin[] = [];
+  sysAdmins: TenantAdmin[] = [];
   sysAdminsDisplayedColumns: string[] = ['id', 'userLogin', 'fullName', 'position', 'actions'];
 
   // TNT Admins tab
-  tntAdmins: TntAdmin[] = [];
+  tntAdmins: TenantAdmin[] = [];
   tntAdminsDisplayedColumns: string[] = ['id', 'userLogin', 'fullName', 'position', 'actions'];
+
+  // Product Admins tab
+  productAdmins: TenantAdmin[] = [];
+  productAdminsDisplayedColumns: string[] = ['id', 'userLogin', 'fullName', 'position', 'actions'];
 
   // Logins/Users tab
   logins: Login[] = [];
@@ -139,6 +144,7 @@ export class TenantsPageComponent implements OnInit {
       const tenantCode = this.selectedTenantCode || this.currentTenantCode;
       if (tenantCode && tenantCode !== 'sys') {
         this.loadTntAdmins();
+        this.loadProductAdmins();
       }
     }
   }
@@ -175,7 +181,8 @@ export class TenantsPageComponent implements OnInit {
         code: tenant.code,
         isDeleted: tenant.isDeleted || false,
         createdAt: tenant.createdAt,
-        updatedAt: tenant.updatedAt
+        updatedAt: tenant.updatedAt,
+        authType: tenant.authType || ''
       };
     } else {
       // If tenant not found in list, try to load it
@@ -189,7 +196,8 @@ export class TenantsPageComponent implements OnInit {
               code: foundTenant.code,
               isDeleted: foundTenant.isDeleted || false,
               createdAt: foundTenant.createdAt,
-              updatedAt: foundTenant.updatedAt
+              updatedAt: foundTenant.updatedAt,
+              authType: foundTenant.authType || ''
             };
           }
         },
@@ -214,7 +222,8 @@ export class TenantsPageComponent implements OnInit {
     this.tenantsService.update(this.currentTenantData.id, {
       name: this.currentTenantData.name,
       code: this.currentTenantData.code,
-      isDeleted: this.currentTenantData.isDeleted
+      isDeleted: this.currentTenantData.isDeleted,
+      authType: this.currentTenantData.authType
     }).subscribe({
       next: () => {
         this.loading = false;
@@ -351,8 +360,8 @@ export class TenantsPageComponent implements OnInit {
 
   loadSysAdmins() {
     this.loading = true;
-    this.sysAdminService.getAll().subscribe({
-      next: (admins: SysAdmin[]) => {
+    this.tenantAdminService.getSysADmins(this.selectedTenantCode || this.currentTenantCode || 'NULL').subscribe({
+      next: (admins: TenantAdmin[]) => {
         this.sysAdmins = admins;
         this.loading = false;
       },
@@ -371,19 +380,17 @@ export class TenantsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: string | undefined) => {
       if (result) {
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
         // Find login by userLogin to get full details
-        this.loginService.getAll().subscribe({
-          next: (logins: Login[]) => {
-            const login = logins.find(l => l.userLogin === result);
-            if (login) {
-              const sysAdminData: SysAdmin = {
+
+              const sysAdminData: TenantAdmin = {
                 tenantCode: 'sys',
-                userLogin: login.userLogin,
-                fullName: login.fullName || '',
-                position: login.position || ''
+                userLogin: result,
+                role: 'SYS_ADMIN',
+                authClientId: 'sys'
               };
 
-              this.sysAdminService.create(sysAdminData).subscribe({
+              this.tenantAdminService.create(sysAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
                 next: () => {
                   this.loadSysAdmins();
                   this.snack.open('Sys Admin создан', 'OK', { duration: 2000 });
@@ -393,20 +400,12 @@ export class TenantsPageComponent implements OnInit {
                   this.snack.open('Ошибка при создании sys admin', 'OK', { duration: 2000 });
                 }
               });
-            } else {
-              this.snack.open('Пользователь с таким логином не найден', 'OK', { duration: 2000 });
-            }
-          },
-          error: (error: unknown) => {
-            console.error('Error loading logins:', error);
-            this.snack.open('Ошибка при загрузке пользователей', 'OK', { duration: 2000 });
-          }
-        });
       }
     });
   }
 
-  deleteSysAdmin(admin: SysAdmin) {
+  deleteSysAdmin(admin: TenantAdmin) {
+    const tenantCode = this.selectedTenantCode || this.currentTenantCode;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: { message: `Удалить sys admin "${admin.userLogin}"?` }
@@ -414,7 +413,7 @@ export class TenantsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: boolean | undefined) => {
       if (result && admin.id) {
-        this.sysAdminService.delete(admin.id).subscribe({
+        this.tenantAdminService.delete(admin.id, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
           next: () => {
             this.loadSysAdmins();
             this.snack.open('Sys Admin удален', 'OK', { duration: 2000 });
@@ -437,8 +436,8 @@ export class TenantsPageComponent implements OnInit {
     }
 
     this.loading = true;
-    this.tntAdminService.getByTenantCode(tenantCode).subscribe({
-      next: (admins: TntAdmin[]) => {
+    this.tenantAdminService.getTntADmins(tenantCode || 'NULL').subscribe({
+      next: (admins: TenantAdmin[]) => {
         this.tntAdmins = admins;
         this.loading = false;
       },
@@ -459,15 +458,17 @@ export class TenantsPageComponent implements OnInit {
       if (result) {
         const tenantCode = this.selectedTenantCode || this.currentTenantCode;
         // Find login by userLogin from the list of logins
-        const login = this.logins.find(l => l.userLogin === result);
+        //const login = this.logins.find(l => l.userLogin === result);
 
-        if (login) {
-          const tntAdminData: TntAdmin = {
+        //if (login) {
+          const tntAdminData: TenantAdmin = {
             tenantCode: tenantCode || '',
             userLogin: result,
+            role: 'TNT_ADMIN',
+            authClientId: 'sys'
           };
 
-          this.tntAdminService.create(tntAdminData).subscribe({
+          this.tenantAdminService.create(tntAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
             next: () => {
               this.loadTntAdmins();
               this.snack.open('Tenant Admin создан', 'OK', { duration: 2000 });
@@ -477,12 +478,12 @@ export class TenantsPageComponent implements OnInit {
               this.snack.open('Ошибка при создании tenant admin', 'OK', { duration: 2000 });
             }
           });
-      }
+      //}
     }
   });
 }
 
-  deleteTntAdmin(admin: TntAdmin) {
+  deleteTntAdmin(admin: TenantAdmin) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: { message: `Удалить tenant admin "${admin.userLogin}"?` }
@@ -490,10 +491,119 @@ export class TenantsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: boolean | undefined) => {
       if (result && admin.id) {
-        this.tntAdminService.delete(admin.id).subscribe({
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        this.tenantAdminService.delete(admin.id, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
           next: () => {
             this.loadTntAdmins();
             this.snack.open('Tenant Admin удален', 'OK', { duration: 2000 });
+          },
+          error: () => {
+            this.snack.open('Ошибка при удалении', 'OK', { duration: 2000 });
+          }
+        });
+      }
+    });
+  }
+
+  // ========== PRODUCT ADMINS METHODS ==========
+
+  loadProductAdmins() {
+    const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+    if (!tenantCode || tenantCode === 'sys') {
+      this.productAdmins = [];
+      return;
+    }
+
+    this.loading = true;
+    this.tenantAdminService.getProductAdmins(tenantCode || 'NULL').subscribe({
+      next: (admins: TenantAdmin[]) => {
+        this.productAdmins = admins;
+        this.loading = false;
+      },
+      error: (error: unknown) => {
+        console.error('Error loading product admins:', error);
+        this.loading = false;
+        this.snack.open('Ошибка при загрузке product admins', 'OK', { duration: 2000 });
+      }
+    });
+  }
+
+  createNewProductAdmin() {
+    const dialogRef = this.dialog.open(ProductAdminAddDialogComponent, {
+      width: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+      if (result) {
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        // Find login by userLogin from the list of logins
+        //const login = this.logins.find(l => l.userLogin === result);
+
+        //if (login) {
+          const productAdminData: TenantAdmin = {
+            tenantCode: tenantCode || '',
+            userLogin: result,
+            role: 'PRODUCT_ADMIN',
+            authClientId: 'sys'
+          };
+
+          this.tenantAdminService.create(productAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
+            next: () => {
+              this.loadProductAdmins();
+              this.snack.open('Product Admin создан', 'OK', { duration: 2000 });
+            },
+            error: (error: unknown) => {
+              console.error('Error creating product admin:', error);
+              this.snack.open('Ошибка при создании product admin', 'OK', { duration: 2000 });
+            }
+          });
+        //}
+      }
+    });
+  }
+
+  editProductAdmin(admin: TenantAdmin) {
+    const dialogRef = this.dialog.open(ProductAdminAddDialogComponent, {
+      width: '400px',
+      data: { admin: admin }
+    });
+
+    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+      if (result && admin.id) {
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        const productAdminData: TenantAdmin = {
+          tenantCode: tenantCode || '',
+          userLogin: result,
+          role: 'PRODUCT_ADMIN',
+        };
+
+        this.tenantAdminService.update(admin.id, productAdminData).subscribe({
+          next: () => {
+            this.loadProductAdmins();
+            this.snack.open('Product Admin обновлен', 'OK', { duration: 2000 });
+          },
+          error: (error: unknown) => {
+            console.error('Error updating product admin:', error);
+            this.snack.open('Ошибка при обновлении product admin', 'OK', { duration: 2000 });
+          }
+        });
+      }
+    });
+  }
+
+  deleteProductAdmin(admin: TenantAdmin) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { message: `Удалить product admin "${admin.userLogin}"?` }
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean | undefined) => {
+      if (result && admin.id) {
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        this.tenantAdminService.delete(admin.id, {'X-Imp-Tenant': tenantCode || ''}).subscribe({
+          next: () => {
+            this.loadProductAdmins();
+            this.snack.open('Product Admin удален', 'OK', { duration: 2000 });
           },
           error: () => {
             this.snack.open('Ошибка при удалении', 'OK', { duration: 2000 });
@@ -523,7 +633,7 @@ export class TenantsPageComponent implements OnInit {
 
   loadLogins() {
     this.loading = true;
-    this.loginService.getAll2(this.selectedTenantCode || this.currentTenantCode || 'NULL' ).subscribe({
+    this.loginService.getAll( {'X-Imp-Tenant': this.selectedTenantCode || this.currentTenantCode || 'NULL' } ).subscribe({
       next: (logins: Login[]) => {
         this.logins = logins;
         this.loading = false;
@@ -538,7 +648,6 @@ export class TenantsPageComponent implements OnInit {
 
   createNewLogin() {
 
-    console.log('this.currentTenantCode-', this.selectedTenantCode);
 
     const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '600px',
@@ -589,7 +698,8 @@ export class TenantsPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: boolean | undefined) => {
       if (result && login.id) {
-        this.loginService.delete(login.id).subscribe({
+        const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        this.loginService.delete(login.id, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
           next: () => {
             this.loadLogins();
             this.snack.open('Пользователь удален', 'OK', { duration: 2000 });
@@ -639,10 +749,12 @@ export class ConfirmDialogComponent {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatDividerModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data.isNew ? 'Новый tenant' : 'Редактировать tenant' }}</h2>
+    <mat-divider></mat-divider>
     <mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 12px;">
         <mat-label>Name</mat-label>
@@ -699,10 +811,12 @@ export class TenantDialogComponent {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatDividerModule
   ],
   template: `
     <h2 mat-dialog-title>Sys Admin</h2>
+    <mat-divider></mat-divider>
     <mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%;">
         <mat-label>Login</mat-label>
@@ -741,10 +855,12 @@ export class SysAdminAddDialogComponent {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatDividerModule
   ],
   template: `
     <h2 mat-dialog-title>Tenant Admin</h2>
+    <mat-divider></mat-divider>
     <mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%;">
         <mat-label>Login</mat-label>
@@ -769,6 +885,57 @@ export class TntAdminAddDialogComponent {
   }
 
   onAdd(): void {
+    if (this.userLogin) {
+      this.dialogRef.close(this.userLogin);
+    }
+  }
+}
+
+// Product Admin Add Dialog Component
+@Component({
+  selector: 'app-product-admin-add-dialog',
+  imports: [
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDividerModule
+  ],
+  template: `
+    <h2 mat-dialog-title>{{ data?.admin ? 'Редактировать Product Admin' : 'Product Admin' }}</h2>
+    <mat-divider></mat-divider>
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>Login</mat-label>
+        <input matInput [(ngModel)]="userLogin" required>
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()">Отмена</button>
+      <button mat-raised-button color="primary" [disabled]="!userLogin" (click)="onSave()">
+        {{ data?.admin ? 'Сохранить' : 'Добавить' }}
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class ProductAdminAddDialogComponent {
+  userLogin: string = '';
+
+  constructor(
+    public dialogRef: MatDialogRef<ProductAdminAddDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { admin?: TenantAdmin } | null
+  ) {
+    if (data?.admin) {
+      this.userLogin = data.admin.userLogin || '';
+    }
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+
+  onSave(): void {
     if (this.userLogin) {
       this.dialogRef.close(this.userLogin);
     }

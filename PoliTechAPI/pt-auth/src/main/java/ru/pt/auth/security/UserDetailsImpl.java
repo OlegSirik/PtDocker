@@ -32,6 +32,7 @@ public class UserDetailsImpl implements UserDetails {
     private final boolean accountNonExpired;
     private final boolean accountNonLocked;
     private final boolean credentialsNonExpired;
+    private String impersonatedTenantCode;  
 
     public UserDetailsImpl(Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
@@ -67,9 +68,28 @@ public class UserDetailsImpl implements UserDetails {
                 accountLoginEntity.getAccount().getName(),
                 accountLoginEntity.getClient().getId(),
                 accountLoginEntity.getClient().getName(),
-                accountLoginEntity.getUserRole(),
+                accountLoginEntity.getAccount().getNodeType().getValue(),
                 productRoles,
                 accountLoginEntity.getDefault()
+        );
+    }
+
+    public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles) {
+        /*Long id, String username, String tenantCode, Long tenantId,
+                          Long accountId, String accountName, Long clientId, String clientName,
+                          String userRole, Set<String> productRoles, boolean isDefault */
+        return new UserDetailsImpl(
+            accountLoginEntity.getId(),   //Long id
+            accountLoginEntity.getUserLogin(), //String username
+            accountLoginEntity.getTenant().getCode(), //String tenantCode
+            accountLoginEntity.getTenant().getId(), //Long tenantId
+            accountLoginEntity.getAccount().getId(), //Long accountId
+            accountLoginEntity.getAccount().getName(), //String accountName
+            accountLoginEntity.getClient().getId(), //Long clientId
+            accountLoginEntity.getClient().getName(), //String clientName
+            accountLoginEntity.getAccount().getNodeType().getValue(), //String userRole
+            productRoles, //Set<String> productRoles
+            accountLoginEntity.getDefault() //boolean isDefault
         );
     }
 
@@ -160,6 +180,14 @@ public class UserDetailsImpl implements UserDetails {
 
     public boolean isDefault() {
         return isDefault;
+    }
+
+    public String getImpersonatedTenantCode() {
+        return impersonatedTenantCode;
+    }
+
+    public void setImpersonatedTenantCode(String impersonatedTenantCode) {
+        this.impersonatedTenantCode = impersonatedTenantCode;
     }
 
     /**

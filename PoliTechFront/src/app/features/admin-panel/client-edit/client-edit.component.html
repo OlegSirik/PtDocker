@@ -43,9 +43,18 @@
               <mat-option [value]="true">SUSPENDED</mat-option>
             </mat-select>
           </mat-form-field>
+
           <mat-form-field class="form-field" appearance="outline">
             <mat-label>Account ID</mat-label>
             <input matInput [value]="client.clientAccountId || ''" readonly>
+          </mat-form-field>
+       
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Тип авторизации</mat-label>
+            <mat-select [(ngModel)]="client.authType" (ngModelChange)="onFieldChange()">
+              <mat-option value="CLIENT">CLIENT</mat-option>
+              <mat-option value="USER">USER</mat-option>
+            </mat-select>
           </mat-form-field>
         </div>
         <div *ngIf="!loading && client.clientAccountId" class="form-row">

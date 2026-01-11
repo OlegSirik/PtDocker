@@ -13,16 +13,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const token = authService.getToken();
-  let result;
+  const accountId = authService.getAccountId();
+  let clonedReq = req;
 
+  // Add Authorization header if token exists
   if (token) {
-    const cloned = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+    clonedReq = clonedReq.clone({
+      headers: clonedReq.headers.set('Authorization', `Bearer ${token}`)
     });
-    result = next(cloned);
-  } else {
-    result = next(req)
   }
+
+  // Add X-Account-Id header if accountId exists
+  if (accountId !== null) {
+    clonedReq = clonedReq.clone({
+      headers: clonedReq.headers.set('X-Account-Id', accountId.toString())
+    });
+  }
+
+  const result = next(clonedReq);
 
   return result.pipe(
     catchError((error: HttpErrorResponse) => {
