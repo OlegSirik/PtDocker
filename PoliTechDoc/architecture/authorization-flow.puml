@@ -1,0 +1,15 @@
+@startuml
+actor User
+participant "Spring Security" as SS
+participant "Service Layer" as S
+participant "AuthorizationService" as AZ
+participant "AuthorizationPolicy" as P
+
+User -> SS: HTTP request + JWT
+SS -> SS: Validate token & scopes
+SS -> S: Method invocation
+S -> AZ: check(action, resource)
+AZ -> P: policy.check(...)
+P --> AZ: allow / deny
+AZ --> S: OK / Forbidden
+@enduml
