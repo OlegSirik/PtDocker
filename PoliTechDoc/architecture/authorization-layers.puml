@@ -1,0 +1,14 @@
+@startuml
+layer "OAuth2 / Scopes" {
+  RBAC
+}
+
+layer "Spring Security" {
+  @PreAuthorize
+}
+
+layer "Domain Authorization" {
+  AuthorizationService
+  AuthorizationPolicy
+}
+@enduml

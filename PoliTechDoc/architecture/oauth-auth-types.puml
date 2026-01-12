@@ -1,0 +1,14 @@
+@startuml
+rectangle USER {
+  Authorization Code
+  JWT with user claims
+}
+
+rectangle CLIENT {
+  Client Credentials
+  JWT without user
+}
+
+USER --> API
+CLIENT --> API
+@enduml
