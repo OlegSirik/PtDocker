@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS acc_tenants (
     id BIGINT PRIMARY KEY DEFAULT nextval('acc_tenants_seq'),
     name VARCHAR(250),
     code VARCHAR(50) NOT NULL,
-    token_auth BOOLEAN DEFAULT TRUE,
     auth_type VARCHAR(20),
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

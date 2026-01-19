@@ -33,9 +33,6 @@ public class TenantEntity {
     @Column(name = "code", length = 100, unique = true, nullable = false)
     private String code;
 
-    @Column(name = "token_auth")
-    private Boolean tokenAuth = false;
-
     @Column(name = "auth_type", length = 20)
     private String authType;
     // constructors, getters, setters
@@ -89,10 +86,6 @@ public class TenantEntity {
         this.updatedAt = updatedAt;
     }
 
-    public Boolean getTokenAuth() {return tokenAuth;}
-
-    public void setTokenAuth(Boolean tokenAuth) {this.tokenAuth = tokenAuth;}
-
     public String getAuthType() {return authType;}
 
     public void setAuthType(String authType) {this.authType = authType;}
@@ -106,7 +99,6 @@ public class TenantEntity {
         this.isDeleted = false;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        this.tokenAuth = false;
     }
 
     public static TenantEntity create(String code, String name, String authType) {
