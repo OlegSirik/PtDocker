@@ -10,6 +10,7 @@ import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -308,15 +309,24 @@ public class CalculatorServiceImpl implements CalculatorService {
             PvVarDefinition varDef = new PvVarDefinition(
                 v.getVarCode(), 
                 v.getVarPath(),
-                v.getVarType().equals("NUMBER") ? PvVarDefinition.Type.NUMBER : PvVarDefinition.Type.STRING,
+                v.getVarDataType() == VarDataType.NUMBER ? PvVarDefinition.Type.NUMBER : PvVarDefinition.Type.STRING,
                 PvVarDefinition.VarScope.CALCULATOR,
                 PvVarDefinition.VarSourceType.valueOf(v.getVarType())
             );
 
-            ctx.put(varDef.getCode(), varDef);
-            
+            ctx.putDefinition(varDef);
+
+            if (v.getVarType().equals("CONST")) {
+                ctx.put(v.getVarCode(), new BigDecimal(v.getVarValue()));
+            };
         });
-        
+/*         
+        System.out.println("=== Variable Definitions ===");
+        ctx.getDefinitions().forEach(def -> {
+            System.out.println("varCode: " + def.getCode() + ", varDataType: " + def.getType());
+        });
+        System.out.println("===========================");
+*/
         // Получить формулу калькулятора. Она у пакета одна
         FormulaDef formula = model.getFormulas().getFirst();
 
@@ -344,6 +354,13 @@ public class CalculatorServiceImpl implements CalculatorService {
         // ---------- COMPUTE ----------
         BigDecimal result = compute( left, line.getExpressionOperator(), right );
 
+        String rslt = result.toString();
+        String lft = left.toString();
+        String rgt = right != null ? right.toString() : "";
+        String opr = line.getExpressionOperator();
+
+        //logger.info("Calculator result: {} {} {} {} {}", rslt, lft, opr, rgt);
+
         if (line.getPostProcessor() != null) {
             result = postProcess(result, line.getPostProcessor());
         }
@@ -369,7 +386,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                 return null;
             }
             String s = coefficientService.getCoefficientValue(model.getId(), varCode, ctx, cd.getColumns());
-            ctx.put(varCode, s);
+            ctx.put(varCode, new BigDecimal(s));
         }
         return ctx.getDecimal(varCode);
     }

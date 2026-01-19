@@ -31,8 +31,9 @@ public class ClientMapper {
         entity.setDefaultAccountId(dto.getDefaultAccountId());
         entity.setName(dto.getName());
         entity.setDeleted(dto.getIsDeleted());
-        entity.setCreatedAt(dto.getCreatedAt());
-        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setAuthType(dto.getAuthType());
+        //entity.setCreatedAt(dto.getCreatedAt());
+        //entity.setUpdatedAt(dto.getUpdatedAt());
 
         if (dto.getClientConfiguration() != null) {
             entity.setClientConfigurationEntity(
@@ -55,8 +56,8 @@ public class ClientMapper {
         dto.setDefaultAccountId(entity.getDefaultAccountId());
         dto.setName(entity.getName());
         dto.setIsDeleted(entity.getDeleted());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
+        //dto.setCreatedAt(entity.getCreatedAt());
+        //dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setAuthType(entity.getAuthType());
         if (entity.getClientConfigurationEntity() != null) {
             dto.setClientConfiguration(

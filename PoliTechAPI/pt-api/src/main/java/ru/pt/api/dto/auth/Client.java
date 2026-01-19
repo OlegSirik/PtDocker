@@ -1,6 +1,6 @@
 package ru.pt.api.dto.auth;
 
-import java.time.LocalDateTime;
+import ru.pt.api.dto.product.Product;
 
 public class Client {
     private Long id;
@@ -10,16 +10,13 @@ public class Client {
     private Long clientAccountId;
     private String name;
     private Boolean isDeleted;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private ClientConfiguration clientConfiguration;
     private String authType;
+    private Product[] products;
 
-    // constructors
     public Client() {
     }
 
-    // getters and setters
     public Long getId() {
         return id;
     }
@@ -76,22 +73,6 @@ public class Client {
         this.isDeleted = isDeleted;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     public ClientConfiguration getClientConfiguration() {
         return clientConfiguration;
     }
@@ -108,4 +89,11 @@ public class Client {
         this.authType = authType;
     }
 
+    public Product[] getProducts() {
+        return products;
+    }
+
+    public void setProducts(Product[] products) {
+        this.products = products;
+    }
 }

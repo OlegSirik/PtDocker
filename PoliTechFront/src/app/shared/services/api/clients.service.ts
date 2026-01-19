@@ -30,6 +30,14 @@ export interface Client {
     employeeEmail?: string;
   }
 
+  export interface ClientProduct {
+    id?: number;
+    lobCode: string;
+    roleProductId: number;
+    productCode: string;
+    productName: string;
+    isDeleted: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -40,4 +48,23 @@ export class ClientsService extends BaseApiService<Client> {
     super(http, env, 'admin/clients', authService);
   }
 
+  /** Получить все записи */
+  getProductsAll(): Observable<ClientProduct[]> {
+    return this.http.get<ClientProduct[]>(this.getUrl() + "/products");
+  }
+
+  /** Получить продукты клиента */
+  getClientProducts(clientId: string | number): Observable<ClientProduct[]> {
+    return this.http.get<ClientProduct[]>(this.getUrl(clientId) + "/products");
+  }
+
+  /** Создать новую запись */
+  grantProduct(clientid: string | number, item: ClientProduct): Observable<ClientProduct> {
+    return this.http.post<ClientProduct>(this.getUrl(clientid) + "/products", item);
+  }
+
+  /** Удалить запись */
+  revokeProduct(id: string | number, grantId: string | number): Observable<void> {
+    return this.http.delete<void>(this.getUrl(id) + "/products/" + grantId);
+  }  
 }

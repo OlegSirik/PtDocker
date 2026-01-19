@@ -1,1 +1,0 @@
-ALTER TABLE policy_index ADD COLUMN "policy_status" VARCHAR(20) NOT NULL;

@@ -108,6 +108,8 @@ public class ValidatorImpl {
                 }
             }
 
+            String sp = leftVarDef.getType().toString();
+            
             if ( leftVarDef.getType() == PvVarDefinition.Type.NUMBER ) {
                 BigDecimal leftVal = ctx.getDecimal(leftKey);
                 BigDecimal rightVal = null;

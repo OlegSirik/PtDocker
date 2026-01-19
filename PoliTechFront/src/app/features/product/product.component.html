@@ -33,6 +33,12 @@
                 <mat-icon>publish</mat-icon>
                 Go to production
               </button>
+              <!--- @if (product.versionStatus === 'DEV') { -->
+                <button mat-raised-button color="warn" class="action-button" (click)="deleteProductVersion()">
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
+              <!--- } -->
               <button mat-raised-button color="warn" class="action-button" (click)="openForm()">
                 <mat-icon>description</mat-icon>
                 Open Form

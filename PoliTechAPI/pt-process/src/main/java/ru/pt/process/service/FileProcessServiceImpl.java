@@ -193,7 +193,8 @@ public class FileProcessServiceImpl implements FileProcessService {
         return new PvVarDefinition(
             var.getVarCode(),
             var.getVarPath(),
-            type
+            type,
+            var.getVarType()
         );
     }    
 }

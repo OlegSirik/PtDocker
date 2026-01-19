@@ -4,17 +4,20 @@ import { BoxContacts } from './contacts-box.model';
 import { BoxIdentifier } from './identifier-box.model';
 import { BoxAddress } from './address-box.model';
 import { BoxDevice } from './device-box.model';
+import { BoxTravelSegment } from './travel-segment-box.model';
 
 export class BoxInsuredObject {
   ioType: string = '';
   packageCode: string = '';
   coverage: BoxCover[] = [];
   objectId: string = '';
+  sumInsured: string = '';
   person: BoxPerson = new BoxPerson();
   contacts: BoxContacts = new BoxContacts();
   identifiers: BoxIdentifier = new BoxIdentifier();
   address: BoxAddress = new BoxAddress();
   device: BoxDevice = new BoxDevice();
+  travelSegments: BoxTravelSegment[] = [];
 
   constructor(data?: Partial<BoxInsuredObject>) {
     if (data) {

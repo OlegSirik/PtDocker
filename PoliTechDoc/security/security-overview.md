@@ -22,5 +22,6 @@
 
 ## Связанные документы
 - security/authentication.md
+- security/authentication-process.md
 - security/oauth2.md
 - authorization/authorization-overview.md

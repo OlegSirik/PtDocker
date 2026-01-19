@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.SetPasswordRequest;
@@ -52,7 +51,7 @@ public class AuthenticationController {
         var accounts = accountService.getAllMyAccounts(userDetails.getTenantCode(), userDetails.getClientId(), userDetails.getUsername());
         
         List<PrincipalAccount> principalAccounts = accounts.stream()
-            .map(account -> new PrincipalAccount(account.getId(), account.getName(), account.getNodeType()))
+            .map(account -> new PrincipalAccount(account.id(), account.nodeType(), account.name()))
             .collect(Collectors.toList());
 
         Principal principal = new Principal(

@@ -105,7 +105,14 @@ export class VarsService {
     if (type === 'property') {
         return this.ioPropertyVars;
     }
-    return [];
+    if (type === 'avia-ns') {
+      return [
+        ...this.getIoPersonVars(),
+        ...this.getIoContactsVars(),
+        ...this.ioTravelSegmentsVars
+      ];
+  }
+  return [];
   }
 
   getIoCategories(type: string): string[] | any[] {
@@ -131,30 +138,17 @@ export class VarsService {
         "additionalProperties"
       ];
     }
+    if (type === 'avia-ns') {
+      return [
+        "person",
+        "contacts",
+        "travelSegments",
+        "additionalProperties"
+      ];
+    }
     return [];
   }
-/*
-  enrichVar(v: LobVar): LobVar {
-    //console.log('enrichVar', v);
-    let newVar: LobVar = v as LobVar;
-    //console.log('newVar 1', newVar);
-    const existingVar = this.allVars.find(a => a.varCode === v.varCode);
-    //console.log('existingVar', existingVar);
-    if (existingVar) {
-        newVar.varCdm = existingVar.varCdm;
-        newVar.varNr = existingVar.varNr;
-    } else {
-        if (v.varPath) {
-            newVar.varCdm = v.varPath.substring(0, v.varPath.indexOf('.')) + "additionalProperties";
-        } else {
-            newVar.varCdm = "";
-        }
-        newVar.varNr = 1;
-    }
-    //console.log('newVar 2', newVar);
-    return newVar;
-  }
-*/
+
   getIoPersonVars(): LobVar[] {
     return this.phPersonVars.map(v => ({
       ...v,
@@ -1043,12 +1037,12 @@ export class VarsService {
         {
           "varNr": 10,
           "varDataType": "NUMBER",
-          "varCode": "io_insAmount",
+          "varCode": "sumInsured",
           "varName": "Страховая сумма объекта страхования",
-          "varPath": "insuredObject.insAmount",
+          "varPath": "insuredObjects[0].sumInsured",
           "varType": "IN",
           "varValue": "100000",
-          "varCdm": "insuredObject.insAmount"
+          "varCdm": "insuredObject.sumInsured"
         },
         {
         "varNr": 1001,
@@ -1551,5 +1545,79 @@ export class VarsService {
     "varCdm": "policy.magic.termDays"
   }
   ];     
+
+  ioTravelSegmentsVars: LobVar[] = [
+    {
+      "varNr": 101,
+      "varDataType": "NUMBER",
+      "varCode": "io_legs",
+      "varName": "количество перелетов",
+      "varPath": "insuredObjects[0].travelSegments[*].count()",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.travelSegments.legs"
+      },
+      {
+        "varNr": 101,
+        "varDataType": "NUMBER",
+        "varCode": "io_ticketPrice",
+        "varName": "стоимость билета",
+        "varPath": "insuredObjects[0].travelSegments[*].ticketPrice.sum()",
+        "varType": "IN",
+        "varValue": "",
+        "varCdm": "insuredObject.travelSegments.ticketPrice"
+        },
+        {
+    "varNr": 1001,
+    "varDataType": "STRING",
+    "varCode": "io_ticket_nr",
+    "varName": "номер билета",
+    "varPath": "insuredObjects[0].travelSegments[*].ticketNr",
+    "varType": "IN",
+    "varValue": "",
+    "varCdm": "insuredObject.travelSegments.ticketNr"
+    },
+    {
+    "varNr": 1002,
+    "varDataType": "STRING",
+    "varCode": "io_departure_date",
+    "varName": "дата вылета",
+    "varPath": "insuredObjects[0].travelSegments[*].departureDate",
+    "varType": "IN",
+    "varValue": "",
+    "varCdm": "insuredObject.travelSegments.departureDate"
+    },
+    {
+    "varNr": 1003,
+    "varDataType": "STRING",
+    "varCode": "io_departure_time",
+    "varName": "время вылета",
+    "varPath": "insuredObjects[0].travelSegments[*].departureTime",
+    "varType": "IN",
+    "varValue": "",
+    "varCdm": "insuredObject.travelSegments.departureTime"
+    },
+    {
+    "varNr": 1004,
+    "varDataType": "STRING",
+    "varCode": "io_departure_city",
+    "varName": "город вылета",
+    "varPath": "insuredObjects[0].travelSegments[*].departureCity",
+    "varType": "IN",
+    "varValue": "",
+    "varCdm": "insuredObject.travelSegments.departureCity"
+    },
+    {
+    "varNr": 1005,
+    "varDataType": "STRING",
+    "varCode": "io_arrival_city",
+    "varName": "город прилета",
+    "varPath": "insuredObjects[0].travelSegments[*].arrivalCity",
+    "varType": "IN",
+    "varValue": "",
+    "varCdm": "insuredObject.travelSegments.arrivalCity"
+    }
+  ]
+
 
 }

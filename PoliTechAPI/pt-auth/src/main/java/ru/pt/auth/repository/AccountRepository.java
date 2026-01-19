@@ -18,8 +18,14 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = 'CLIENT'")
     Optional<AccountEntity> findClientAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId);
 
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.Id = :clientId AND a.nodeType = 'CLIENT'")
+    Optional<AccountEntity> findClientAccountById(@Param("tenantCode") String tenantCode, @Param("clientId") Long clientId);
+
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = :nodeType")
     Optional<AccountEntity> findAdminAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("nodeType") AccountNodeType nodeType);
+
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.id = :id")
+    Optional<AccountEntity> findByTenantCodeAndId(@Param("tenantCode") String tenantCode, @Param("id") Long id);
 
     /**
      * Find all child accounts of a specific parent
@@ -87,5 +93,24 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      */
     @Query("SELECT DISTINCT a FROM AccountEntity a JOIN a.accountLoginEntities al WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId AND al.userLogin = :userLogin")
     List<AccountEntity> findByTenantCodeAndClientIdAndUserLogin(@Param("tenantCode") String tenantCode, @Param("clientId") Long clientId, @Param("userLogin") String userLogin);
+
+    @Query(value = """
+            WITH RECURSIVE ancestor_path AS (
+                SELECT id, parent_id
+                FROM accounts
+                WHERE id = :resourceAccountId
+
+                UNION ALL
+
+                SELECT a.id, a.parent_id
+                FROM accounts a
+                INNER JOIN ancestor_path ap ON a.id = ap.parent_id
+            )
+            SELECT COUNT(*) > 0
+            FROM ancestor_path
+            WHERE id = :userAccountId
+            """, nativeQuery = true)
+    boolean iCanSeeResource(@Param("userAccountId") Long userAccountId,
+                            @Param("resourceAccountId") Long resourceAccountId);
 
 }

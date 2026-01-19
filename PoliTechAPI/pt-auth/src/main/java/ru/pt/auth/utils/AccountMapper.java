@@ -16,33 +16,31 @@ public class AccountMapper {
         }
 
         AccountEntity entity = new AccountEntity();
-        entity.setId(dto.getId());
+        entity.setId(dto.id());
 
         // Tenant
-        if (dto.getTid() != null) {
+        if (dto.tid() != null) {
             TenantEntity tenant = new TenantEntity();
-            tenant.setId(dto.getTid());
+            tenant.setId(dto.tid());
             entity.setTenant(tenant);
         }
 
         // Client
-        if (dto.getClientId() != null) {
+        if (dto.clientId() != null) {
             ClientEntity client = new ClientEntity();
-            client.setId(dto.getClientId());
+            client.setId(dto.clientId());
             entity.setClient(client);
         }
 
         // Parent
-        if (dto.getParentId() != null) {
+        if (dto.parentId() != null) {
             AccountEntity parent = new AccountEntity();
-            parent.setId(dto.getParentId());
+            parent.setId(dto.parentId());
             entity.setParent(parent);
         }
 
-        entity.setNodeType(AccountNodeType.fromString(dto.getNodeType()));
-        entity.setName(dto.getName());
-        entity.setCreatedAt(dto.getCreatedAt());
-        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setNodeType(AccountNodeType.fromString(dto.nodeType()));
+        entity.setName(dto.name());
 
         return entity;
     }
@@ -52,17 +50,14 @@ public class AccountMapper {
             return null;
         }
 
-        Account dto = new Account();
-        dto.setId(entity.getId());
-        dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
-        dto.setClientId(entity.getClient() != null ? entity.getClient().getId() : null);
-        dto.setParentId(entity.getParent() != null ? entity.getParent().getId() : null);
-        dto.setNodeType(entity.getNodeType().getValue());
-        dto.setName(entity.getName());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-
-        return dto;
+        return new Account(
+            entity.getId(),
+            entity.getTenant() != null ? entity.getTenant().getId() : null,
+            entity.getClient() != null ? entity.getClient().getId() : null,
+            entity.getParent() != null ? entity.getParent().getId() : null,
+            entity.getNodeType() != null ? entity.getNodeType().getValue() : null,
+            entity.getName()
+        );
     }
 
 }

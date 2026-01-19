@@ -72,6 +72,11 @@ export class CalculatorComponent implements OnInit {
   filteredVars: CalculatorVar[] = [];
   paginatedVars: CalculatorVar[] = [];
 
+  // Constants
+  get constants(): CalculatorVar[] {
+    return this.calculator.vars.filter(v => v.varType === 'CONST');
+  }
+
   // Formulas table
   formulasDisplayedColumns = ['varCode', 'varName', 'actions'];
   formulasSearchText = '';
@@ -84,7 +89,7 @@ export class CalculatorComponent implements OnInit {
   // Formula lines table
   linesDisplayedColumns = ['nr', 'conditionLeft', 'conditionOperator', 'conditionRight', 'expressionResult', 'expressionLeft', 'expressionOperator', 'expressionRight', 'postProcessor', 'actions'];
   linesSearchText = '';
-  linesPageSize = 10;
+  linesPageSize = 200;
   linesPageIndex = 0;
   filteredLines: FormulaLine[] = [];
   paginatedLines: FormulaLine[] = [];
@@ -176,6 +181,14 @@ export class CalculatorComponent implements OnInit {
 
   updateChanges(): void {
     this.hasChanges = true;
+  }
+
+  updateConstantValue(constant: CalculatorVar, newValue: string): void {
+    const varIndex = this.calculator.vars.findIndex(v => v.varCode === constant.varCode);
+    if (varIndex !== -1) {
+      this.calculator.vars[varIndex].varValue = newValue;
+      this.updateChanges();
+    }
   }
 
   save(): void {
@@ -277,14 +290,20 @@ export class CalculatorComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Find the actual index in calculator.vars array by varCode
+        const actualIndex = this.calculator.vars.findIndex(v => v.varCode === varItem.varCode);
+        if (actualIndex === -1) {
+          return;
+        }
+        
         // Check if varCode is unique (excluding current item)
-        const existingVar = this.calculator.vars.find((v, i) => i !== index && v.varCode === result.varCode);
+        const existingVar = this.calculator.vars.find((v, i) => i !== actualIndex && v.varCode === result.varCode);
         if (existingVar) {
           this.snackBar.open('Код переменной должен быть уникальным', 'Закрыть', { duration: 3000 });
           return;
         }
         
-        this.calculator.vars[index] = result;
+        this.calculator.vars[actualIndex] = result;
         this.updateVarsTable();
         this.updateChanges();
       }
@@ -293,9 +312,13 @@ export class CalculatorComponent implements OnInit {
 
   deleteVar(varItem: CalculatorVar, index: number): void {
     if (confirm('Удалить переменную?')) {
-      this.calculator.vars.splice(index, 1);
-      this.updateVarsTable();
-      this.updateChanges();
+      // Find the actual index in calculator.vars array by varCode
+      const actualIndex = this.calculator.vars.findIndex(v => v.varCode === varItem.varCode);
+      if (actualIndex !== -1) {
+        this.calculator.vars.splice(actualIndex, 1);
+        this.updateVarsTable();
+        this.updateChanges();
+      }
     }
   }
 

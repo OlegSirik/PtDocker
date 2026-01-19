@@ -103,6 +103,7 @@ security:
 
 logging:
   level:
+    ru.pt.process.service.ValidatorServiceImpl: DEBUG
     ru.pt.auth.security.filter: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web.filter: TRACE

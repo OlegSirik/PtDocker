@@ -199,6 +199,15 @@ export class ProductComponent implements OnInit {
     this.productService.getRuleTypeOptions().subscribe(options => this.ruleTypeOptions = options);
     this.productService.getValidatorTypeOptions().subscribe(options => this.validatorTypeOptions = options);
     this.productService.getResetPolicyOptions().subscribe(options => this.resetPolicyOptions = options);
+
+    // Get cover codes from existing product covers
+    const existingCoverCodes = this.product.packages.flatMap(pkg => pkg.covers.map(cover => cover.code));
+    
+    // Get cover codes from LOB (business line) if available
+    const lobCoverCodes = this.lob?.mpCovers?.map(cover => cover.coverCode) || [];
+    
+    // Combine both sources and remove duplicates
+    this.coverCodeOptions = [...new Set([...existingCoverCodes, ...lobCoverCodes])];
   }
 
   loadProduct(id?: number, versionNo?: number): Observable<Product | null> {
@@ -303,6 +312,29 @@ export class ProductComponent implements OnInit {
       error: (error: any) => {
         console.error('Error publishing product to production:', error);
         this.snackBar.open('Ошибка перевода продукта в продакшн', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  deleteProductVersion(): void {
+    if (!confirm('Вы уверены, что хотите удалить эту версию продукта?')) {
+      return;
+    }
+
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Не удалось определить ID продукта или номер версии', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    this.productService.deleteProductVersion(this.product.id, this.product.versionNo).subscribe({
+      next: () => {
+        this.snackBar.open('Версия продукта удалена успешно', 'Закрыть', { duration: 3000 });
+        // Navigate back to products list or previous page
+        this.router.navigate(['/products']);
+      },
+      error: (error: any) => {
+        console.error('Error deleting product version:', error);
+        this.snackBar.open('Ошибка удаления версии продукта', 'Закрыть', { duration: 3000 });
       }
     });
   }
@@ -693,7 +725,8 @@ export class ProductComponent implements OnInit {
       return;
     }
 
-    this.paginatedCovers = selectedPackage.covers;
+    // Create a new array reference to trigger Angular change detection
+    this.paginatedCovers = [...selectedPackage.covers];
   }
 
   selectCover(cover: Cover, index: number): void {
@@ -807,7 +840,8 @@ export class ProductComponent implements OnInit {
       return;
     }
 
-    this.paginatedDeductibles = selectedCover.deductibles;
+    // Create a new array reference to trigger Angular change detection
+    this.paginatedDeductibles = [...selectedCover.deductibles];
   }
 
   // Limits methods
@@ -915,7 +949,8 @@ export class ProductComponent implements OnInit {
       return;
     }
 
-    this.paginatedLimits = selectedCover.limits;
+    // Create a new array reference to trigger Angular change detection
+    this.paginatedLimits = [...selectedCover.limits];
   }
 
   updateTables(): void {

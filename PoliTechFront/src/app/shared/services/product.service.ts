@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, delay, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { ProductList } from './products.service';
 
 export interface Product {
   id?: number;
@@ -160,6 +161,15 @@ export class ProductService {
     );
   }
 
+  getProductsList(): Observable<ProductList[]> {
+    return this.http.get<ProductList[]>(`${this.authService.baseApiUrl}/admin/products`).pipe(
+      catchError(error => {
+        console.error('Error fetching products:', error);
+        return of([]);
+      })
+    );
+  }
+
   // POST - Create new product
   createProduct(product: Product): Observable<Product> {
 
@@ -227,8 +237,19 @@ export class ProductService {
 
       this.mockData;
       return of(void 0).pipe(delay(500));
+  }
 
-    throw new Error('Product not found');
+  // DELETE - Delete product version
+  deleteProductVersion(id: number, versionNo: number): Observable<void> {
+    if (this.http) {
+      return this.http.delete<void>(`${this.authService.baseApiUrl}/admin/products/${id}/versions/${versionNo}`).pipe(
+        catchError(error => {
+          this.handleHttpError(error);
+          return throwError(() => error);
+        })
+      );
+    }
+    return of(void 0).pipe(delay(500));
   }
 
   // Mock data for dropdowns

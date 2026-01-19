@@ -5,9 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientAuthType;
 import ru.pt.api.dto.auth.ClientConfiguration;
+import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.service.auth.AccountService;
+import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.entity.*;
 import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
@@ -17,9 +20,10 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.utils.ClientMapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
@@ -31,19 +35,25 @@ public class ClientService {
     private final TenantService tenantService;
     private final SecurityContextHelper securityContextHelper;
     private final ClientMapper clientMapper;
+    private final AccountService accountService;
+    private final ProductService productService;
 
     public ClientService(
             ClientRepository clientRepository,
             AccountLoginRepository accountLoginRepository,
             AccountRepository accountRepository,
             TenantService tenantService,
-            SecurityContextHelper securityContextHelper) {
+            SecurityContextHelper securityContextHelper,
+            AccountService accountService,
+            ProductService productService) {
         this.clientRepository = clientRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.accountRepository = accountRepository;
         this.tenantService = tenantService;
         this.securityContextHelper = securityContextHelper;
         this.clientMapper = new ClientMapper();
+        this.accountService = accountService;
+        this.productService = productService;
     }
 
     public Optional<ClientEntity> findByClientId(String clientId) {
@@ -105,16 +115,19 @@ public class ClientService {
         }
 
         ClientEntity clientEntity = clientMapper.toEntity(client);
+        clientEntity.setId(accountRepository.getNextAccountId());
         ClientEntity saved = clientRepository.save(clientEntity);
 
         AccountEntity tenantAccount = accountRepository.findByTenantId(tenant.getId())
                 .orElseThrow(() -> new NotFoundException("Tenant account not found for tenant id: " + tenant.getId()));
 
         AccountEntity account = AccountEntity.clientAccount(clientEntity, tenantAccount);
+        account.setId(saved.getId());
         AccountEntity savedAccount = accountRepository.save(account);
 
         // default account
         AccountEntity defAccount = AccountEntity.defaultClientAccount(savedAccount);
+        defAccount.setId(accountRepository.getNextAccountId());
         AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
         saved.setDefaultAccountId(savedDefAccount.getId());
@@ -159,7 +172,7 @@ public class ClientService {
             }
         }
 
-        client.setUpdatedAt(LocalDateTime.now());
+        //client.setUpdatedAt(LocalDateTime.now());
         client.setTid(tenant.getId());
 
         ClientEntity clientEntity = clientMapper.toEntity(client);
@@ -177,14 +190,50 @@ public class ClientService {
      * TNT_ADMIN: Получить список всех клиентов
      */
     @Transactional(readOnly = true)
-    public List<ClientEntity> listClients() {
+    public List<Client> listClients() {
+
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only TNT_ADMIN can list clients");
         }
 
         List<ClientEntity> clients = clientRepository.findBytenantCode(currentUser.getTenantCode());
-        return clients;
+
+        List<Client> clientsDto = clients.stream()
+            .map(client -> {
+                //ClientConfiguration configuration = clientConfigurationService.getClientConfiguration(client.getId());
+                Client dto = new Client();
+                dto.setId(client.getId());
+                dto.setTid(client.getTenant().getId());
+                dto.setClientId(client.getClientId());
+                dto.setName(client.getName());
+                dto.setIsDeleted(client.getDeleted());
+                //dto.setCreatedAt(client.getCreatedAt());
+                //dto.setUpdatedAt(client.getUpdatedAt());
+                dto.setTid(client.getTenant().getId());
+                dto.setDefaultAccountId(client.getDefaultAccountId());
+                dto.setAuthType(client.getAuthType());
+                ClientConfigurationEntity conf = client.getClientConfigurationEntity();
+                if (conf != null) {
+                 
+                ClientConfiguration configuration = new ClientConfiguration();
+                    configuration.setPaymentGate(conf.getPaymentGate());
+                    configuration.setSendEmailAfterBuy(conf.isSendEmailAfterBuy());
+                    configuration.setSendSmsAfterBuy(conf.isSendSmsAfterBuy());
+                    configuration.setPaymentGateAgentNumber(conf.getPaymentGateAgentNumber());
+                    configuration.setPaymentGateLogin(conf.getPaymentGateLogin());
+                    configuration.setPaymentGatePassword(conf.getPaymentGatePassword());
+                    configuration.setEmployeeEmail(conf.getEmployeeEmail());
+                
+                    dto.setClientConfiguration(configuration);
+                }
+                   
+                
+                return dto;
+            })
+            .collect(Collectors.toList());
+
+        return clientsDto;
     }
 
     /**
@@ -218,4 +267,60 @@ public class ClientService {
         return securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new ForbiddenException("Not authenticated"));
     }
+
+    @Transactional(readOnly = true)
+    public List<ProductRole> listClientProducts(Long clientId) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
+            .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
+
+        return accountService.getProductRolesByAccountId(account.getId());
+        //accountService.getProd
+    }
+
+    @Transactional
+    public void grantProduct(Long clientId, ProductRole productRole) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
+            .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
+
+        // set all boolean columns like can% to true
+        ProductRole updatedProductRole = new ProductRole(
+            productRole.id(),
+            account.getTenant().getId(),
+            clientId,
+            account.getId(),
+            productRole.roleProductId(),
+            account.getId(),
+            productRole.lob(),
+            productRole.productCode(),
+            productRole.productName(),
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+        );
+
+        accountService.grantProduct(account.getId(), updatedProductRole);
+    }
+
+    // add revoke method as soft delete
+    @Transactional
+    public void revokeProduct(Long clientId, Long id) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
+            .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
+
+        ProductRole productRole = accountService.getProductRolesByAccountId(account.getId()).stream()
+            .filter(role -> Objects.equals(role.id(), id))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("Product role not found for id: " + id));
+
+        accountService.revokeProduct(account.getId(), productRole);
+    }
+
+    
 }

@@ -165,7 +165,10 @@ export class CalculatorService extends BaseApiService<Calculator> {
   }
 
   getPostProcessorOptions(): Observable<string[]> {
-    return of(['ROUND', 'FLOOR', 'CEIL', 'ABS', 'NONE']).pipe(delay(200));
+    return of(['round2_up', 'round2_down', 'round2_ceiling', 'round2_floor'
+      , 'round2_halfup', 'round2_halfdown', 'round2_halfeven'
+      , 'NONE']).pipe(delay(200));
+
   }
 
   getSortOrderOptions(): Observable<string[]> {

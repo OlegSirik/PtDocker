@@ -88,6 +88,9 @@ public class TenantService implements TenantSecurityConfigService {
         }
     }
 
+    private Long getNextId() {
+        return accountRepository.getNextAccountId();
+    }
     /**
      * SYS_ADMIN: Создание нового tenant
      */
@@ -105,15 +108,17 @@ public class TenantService implements TenantSecurityConfigService {
 
         //TODO AuthType
         TenantEntity tenant = TenantEntity.create(tenantDto.code(), tenantDto.name(), "JWT");
+        tenant.setId(getNextId());
         TenantEntity savedTenant = save(tenant);
 
         // Создаем tenant account
-        AccountEntity tenantAccount = AccountEntity.tenantAccount(tenant);
+        AccountEntity tenantAccount = AccountEntity.tenantAccount(savedTenant);
         AccountEntity savedTenantAccount = accountRepository.save(tenantAccount);
 
         logger.info("Tenant '{}' created by SYS_ADMIN", tenant.getName());
 
         ClientEntity client = ClientEntity.defaultForTenant(tenant);
+        client.setId(getNextId());
         ClientEntity savedClient = clientRepository.save(client);
 
         AccountEntity clientAccount = AccountEntity.clientAccount(savedClient, savedTenantAccount);
@@ -122,16 +127,20 @@ public class TenantService implements TenantSecurityConfigService {
 
         if ( tenant.isSystem()) {
             AccountEntity sysAdminAccount = AccountEntity.sysAdminAccount(savedClientAccount);
+            sysAdminAccount.setId(getNextId());
             accountRepository.save(sysAdminAccount);
         } else {
             AccountEntity tntAdminAccount = AccountEntity.tntAdminAccount(savedClientAccount);
+            tntAdminAccount.setId(getNextId());
             accountRepository.save(tntAdminAccount);
         }
 
         AccountEntity productAdminAccount = AccountEntity.productAdminAccount(savedClientAccount);
+        productAdminAccount.setId(getNextId());
         accountRepository.save(productAdminAccount);
 
         AccountEntity defaultClientAccount = AccountEntity.defaultClientAccount(savedClientAccount);
+        defaultClientAccount.setId(getNextId());
         AccountEntity savedDefaultClientAccount = accountRepository.save(defaultClientAccount);
 
         savedClient.setDefaultAccountId(savedDefaultClientAccount.getId());

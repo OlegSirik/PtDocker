@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 
 public class ComputedVars {
 
@@ -47,6 +48,12 @@ public class ComputedVars {
                 LocalDate endDate = LocalDate.parse(ctx.getString("pl_endDate"));
                 long days = ChronoUnit.DAYS.between(startDate, endDate);
                 return Long.toString(days);
+            case "io_legs":
+                Object io = ctx.get("io_ticket_nr");
+                if (io instanceof Collection) {
+                    return Integer.toString(((Collection<?>) io).size());
+                }
+                return "0";
             default:
                 return key + " Not Found";
         }

@@ -5,7 +5,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.AccountNodeType;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
@@ -50,6 +52,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.requestContext = requestContext;
     }
 
+    // TODO create method public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    // without requestContext for initial load and testing
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         //username это acc_account.id 
@@ -79,14 +84,52 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Получаем роли продуктов для аккаунта
         Set<String> productRoles = getProductRoles(accountId);
 
+        Long actingAccountId = null;
+
+        AccountEntity accountEntity = accountRepository.findByTenantCodeAndId(tenantCode, accountId)
+            .orElseThrow(() -> new UsernameNotFoundException("Account not found with id: " + accountId));
+
+        switch (accountEntity.getNodeType()) {
+            case SUB: // Для саба данные от родителя
+                actingAccountId = accountEntity.getParent() != null
+                    ? accountEntity.getParent().getId()
+                    : accountEntity.getId();
+                break;
+            case ACCOUNT:  // Только свой узел 
+                actingAccountId = accountEntity.getId();
+                break;
+            case SYS_ADMIN:
+                //ToDO Если сис админ имперсонировался то нужно подменить account
+            case TNT_ADMIN:
+            case PRODUCT_ADMIN:
+                    // От узла - тенант 
+                AccountEntity tenantAccount = accountRepository.findByTenantId(accountEntity.getTenant().getId())
+                    .orElseThrow(() -> new UsernameNotFoundException("Tenant account not found for tenant: " + tenantCode));
+                actingAccountId = tenantAccount.getId();
+                break;
+            case GROUP_ADMIN:
+                // Родитель - это группа или клиент
+                actingAccountId = accountEntity.getParent() != null
+                    ? accountEntity.getParent().getId()
+                    : accountEntity.getId();
+                break;
+            case GROUP:
+            case CLIENT:
+            case TENANT:
+                // Это технические узлы. Под ними работать нельзя
+                throw new ForbiddenException("Недопустимый тип узла для авторизации");
+            default:
+                throw new ForbiddenException("Недопустимый тип узла для авторизации");
+        }
+
         // Создаем UserDetails без пароля (JWT авторизация)
-        UserDetails userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles);
+        UserDetails userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountId);
         return userDetails;
     }
 
     /**
      * Загружает пользователя по логину и ID аккаунта
-     */
+     *
     public UserDetails loadUserByUsernameAndAccountId(String username, Long accountId) throws UsernameNotFoundException {
         LoginEntity loginEntity = loginRepository.findByUserLogin(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + username));
@@ -101,10 +144,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return UserDetailsImpl.build(loginEntity, accountLogin, productRoles);
     }
-
+*/
     /**
      * Загружает пользователя по логину и клиенту
-     */
+     *
     public UserDetails loadUserByUsernameAndClient(String username, String client) throws UsernameNotFoundException {
         LoginEntity loginEntity = loginRepository.findByUserLogin(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + username));
@@ -128,9 +171,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return UserDetailsImpl.build(loginEntity, defaultAccountLogin, productRoles);
     }
 
-    /**
+    **
      * Инициализирует lazy-loaded поля для избежания LazyInitializationException
-     */
+     *
     private void initializeLazyFields(AccountLoginEntity accountLogin, LoginEntity loginEntity) {
         // Инициализируем связанные сущности, обращаясь к их методам
         if (accountLogin.getAccount() != null) {
@@ -146,7 +189,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             loginEntity.getTenant().getName();
         }
     }
-
+*/
     /**
      * Получает все роли продуктов для аккаунта
      */

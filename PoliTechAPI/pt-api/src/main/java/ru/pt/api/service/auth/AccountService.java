@@ -20,7 +20,7 @@ public interface AccountService {
      * @param name имя клиента
      * @return созданная запись
      */
-    Account createClient(String name);
+    //Account createClient(String name);
 
     /**
      * Создать группу внутри клиента
@@ -53,6 +53,14 @@ public interface AccountService {
      * @return обновленная запись роли
      */
     Account grantProduct(Long accountId, ProductRole productRole);
+
+    /**
+     * Назначить роли продукта аккаунту
+     * @param accountId идентификатор аккаунта
+     * @param productRole описание прав по продукту
+     * @return обновленная запись роли
+     */
+    Account revokeProduct(Long accountId, ProductRole productRole);
 
     /**
      * Получить роли продукта в полном описании

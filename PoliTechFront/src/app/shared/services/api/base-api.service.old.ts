@@ -20,10 +20,10 @@ export abstract class BaseApiService<T> {
     if (id) {
       url += '/' + id;
     }
-    console.log('getUrl: ' + this.env.BASE_URL + '/api/v1/' + tenantId + '/' + url);
+    //console.log('getUrl: ' + this.env.BASE_URL + '/api/v1/' + tenantId + '/' + url);
 
     let url2 = this.authService.baseApiUrl.toString();
-    console.log('url2', url2);
+    //console.log('url2', url2);
     return url2 + '/' + url;
     //return this.env.BASE_URL + '/api/v1/' + tenantId + '/' + url;
   }

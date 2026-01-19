@@ -23,8 +23,7 @@ export class Policy {
   installmentType?: string;
   
   policyHolder: PolicyHolder = new PolicyHolder();
-  insuredObject: InsuredObject = new InsuredObject();
-  coverage: Cover[] = []
+  insuredObjects: InsuredObject[] = [];
 
   constructor(data?: Partial<Policy>) {
     if (data) {
@@ -42,9 +41,10 @@ export class Policy {
       if (data.policyHolder) {
         this.policyHolder = new PolicyHolder(data.policyHolder);
       }
-      if (data.insuredObject) {
-        this.insuredObject = new InsuredObject(data.insuredObject);
+      if (data.insuredObjects) {
+        this.insuredObjects[0] = new InsuredObject(data.insuredObjects[0]);
+      }
       }
     }
   }
-}
+

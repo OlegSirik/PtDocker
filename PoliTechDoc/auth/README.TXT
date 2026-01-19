@@ -48,3 +48,17 @@ Entity
 
 Заголовки
 X-Account-Id"
+
+
+роли
+sys_admin - tnt_admin:all:manage, tnt:all:manage
+tenant_admin - tnt:own:manage, client::create client::manage
+
+group_admin subgroup::create, group:data:view
+sales : account:data:view
+
+tnt:all
+tnt:name
+
+client:all:manage
+client:name:manage 
