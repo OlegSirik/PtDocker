@@ -138,6 +138,7 @@ public class FileProcessServiceImpl implements FileProcessService {
 
     @Override
     public byte[] generatePrintForm(String policyNumber, String printFormType) {
+        logger.info("Generating print form. policyNumber={}, printFormType={}", policyNumber, printFormType);
         var policyIndex = policyIndexRepository
                 .findByPolicyNumber(policyNumber)
                 .orElseThrow(() ->
@@ -149,6 +150,7 @@ public class FileProcessServiceImpl implements FileProcessService {
                 );
 
         var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getVersionNo());
+        logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getVersionNo());
 
         List<PvVarDefinition> varDefinitions = 
                 productVersion.getVars().stream()
@@ -158,6 +160,7 @@ public class FileProcessServiceImpl implements FileProcessService {
         // 7. Runtime-контекст
         VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
         String packageNo = varCtx.getPackageNo();
+        logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
         Integer fileId = null;
 
         for (PvPackage pvPackage : productVersion.getPackages()) {
@@ -165,6 +168,7 @@ public class FileProcessServiceImpl implements FileProcessService {
                 for (PvFile pvFile : pvPackage.getFiles()) {
                     if (pvFile.getFileCode().equals(printFormType)) {
                         fileId = pvFile.getFileId();
+                        logger.debug("Matched print form file. packageNo={}, fileCode={}, fileId={}", packageNo, printFormType, fileId);
                         break;
                     }
                 }
@@ -172,9 +176,11 @@ public class FileProcessServiceImpl implements FileProcessService {
             }
         }
         if (fileId == null) {
+            logger.warn("Print form file not found. policyNumber={}, packageNo={}, printFormType={}", policyNumber, packageNo, printFormType);
             throw new NotFoundException("File id not found");
         }
 
+        logger.info("Print form resolved. policyNumber={}, fileId={}", policyNumber, fileId);
         return fileService.getFile(fileId, varCtx);
     
     }
