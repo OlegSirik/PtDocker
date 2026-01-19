@@ -27,7 +27,7 @@ import ru.pt.auth.security.UserDetailsImpl;
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/calculators")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('SYS_ADMIN')")
+//@PreAuthorize("hasRole('SYS_ADMIN')")
 public class CalculatorController extends SecuredController {
 
     private final CalculatorService calculateService;
