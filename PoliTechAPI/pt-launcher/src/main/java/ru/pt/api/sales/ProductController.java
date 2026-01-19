@@ -95,7 +95,7 @@ public class ProductController extends SecuredController {
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo,
             @RequestBody ProductVersionModel payload) {
-        requireAdmin(user);
+        //requireAdmin(user);
         return ResponseEntity.ok(productService.updateVersion(productId, versionNo, payload));
     }
 
@@ -104,7 +104,7 @@ public class ProductController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId) {
-        requireAdmin(user);
+        //requireAdmin(user);
         productService.softDeleteProduct(productId);
         return ResponseEntity.noContent().build();
     }
@@ -115,7 +115,7 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
-        requireAdmin(user);
+        //requireAdmin(user);
         productService.deleteVersion(productId, versionNo);
         return ResponseEntity.noContent().build();
     }
@@ -126,7 +126,7 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
-        requireAdmin(user);
+        //requireAdmin(user);
         return ResponseEntity.ok(productService.getJsonExampleQuote(productId, versionNo));
     }
 
@@ -136,7 +136,7 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Integer productId,
             @PathVariable("versionNo") Integer versionNo) {
-        requireAdmin(user);
+        //requireAdmin(user);
         return ResponseEntity.ok(productService.getJsonExampleSave(productId, versionNo));
     }
 }
