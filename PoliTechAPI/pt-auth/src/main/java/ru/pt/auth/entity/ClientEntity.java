@@ -159,7 +159,7 @@ public class ClientEntity {
 
     public boolean isSystem() {return SYS_CLIENT_ID.equals(clientId);}
 
-    private ClientEntity(String authClientId,String name, TenantEntity tenantEntity) {
+    private ClientEntity(String authClientId,String name, String authType, TenantEntity tenantEntity) {
         this.name = name;
         this.tenantEntity = tenantEntity;
         this.clientId = authClientId.toLowerCase();
@@ -167,9 +167,10 @@ public class ClientEntity {
         this.isDeleted = false;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.authType = authType;
     }
 
     public static ClientEntity defaultForTenant(TenantEntity tenantEntity) {
-        return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", tenantEntity);
+        return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", "USER", tenantEntity);
     }
 }
