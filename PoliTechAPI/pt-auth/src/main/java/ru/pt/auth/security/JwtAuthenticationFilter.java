@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             TenantEntity tenantEntity = tenantService.findByCode(tenantCode).orElseThrow(
                     () -> new NotFoundException("Tenant with code " + tenantCode + " not found")
             );
-            if (tenantEntity.getTokenAuth()) {
+            if (false) { //tenantEntity.getTokenAuth()) {
 
                 String jwt = extractJwtFromRequest(request);
 
