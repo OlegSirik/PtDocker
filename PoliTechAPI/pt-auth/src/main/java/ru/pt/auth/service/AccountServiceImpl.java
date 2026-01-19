@@ -42,17 +42,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account createClient(String name) {
-        // TODO слабая логика
-        AccountEntity account = new AccountEntity();
-        account.setId(accountRepository.getNextAccountId());
-        account.setName(name);
-        account.setNodeType(AccountNodeType.CLIENT);
-
-        return accountMapper.toDto(accountRepository.save(account));
-    }
-
-    @Override
     public Account createGroup(String name, Long parentId) {
         AccountEntity parentAccount = accountRepository.findById(parentId).orElseThrow();
         if (parentAccount.getNodeType() != AccountNodeType.CLIENT
@@ -125,6 +114,30 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public Account revokeProduct(Long accountId, ProductRole productRole) {
+        var account = accountRepository.findById(accountId).orElseThrow();
+        Long productRoleId = null;
+        var roleToRemove = account.getProductRoles().stream()
+            .filter(role ->
+                Objects.equals(role.getRoleProductId(), productRole.roleProductId())
+                    && Objects.equals(role.getRoleAccount() != null ? role.getRoleAccount().getId() : null, accountId)
+            )
+            .findFirst()
+            .orElse(null);
+
+        if (roleToRemove != null) {
+            productRoleId = roleToRemove.getId();
+            account.getProductRoles().remove(roleToRemove);
+        }
+
+        if (productRoleId != null) {
+            productRoleRepository.deleteById(productRoleId);
+        }
+        var saved = accountRepository.save(account);
+        return accountMapper.toDto(saved);
+    }
+
+    @Override
     public List<ProductRole> getProductRolesByAccountId(Long accountId) {
         List<ProductRole> productRoles = new ArrayList<>();
         List<Map<String, Object>> roles = productRoleRepository.findAllProductRolesByAccountId(accountId);
@@ -133,18 +146,24 @@ public class AccountServiceImpl implements AccountService {
             String productName = role.get("roleProductCode").toString();
             if (!allRoles.contains(productName)) {
                 allRoles.add(productName);
-                ProductRole productRole = new ProductRole();
-                productRole.setId((Long) role.get("id"));
-                productRole.setAccountId(accountId);
-                productRole.setRoleProductId((Long) role.get("roleProductId"));
-                productRole.setRoleAccountId((Long) role.get("roleAccountId"));
-
-                productRole.setCanRead(Boolean.TRUE.equals(role.get("canRead")));
-                productRole.setCanQuote(Boolean.TRUE.equals(role.get("canQuote")));
-                productRole.setCanPolicy(Boolean.TRUE.equals(role.get("canPolicy")));
-                productRole.setCanAddendum(Boolean.TRUE.equals(role.get("canAddendum")));
-                productRole.setCanCancel(Boolean.TRUE.equals(role.get("canCancel")));
-                productRole.setCanProlongate(Boolean.TRUE.equals(role.get("canProlongate")));
+                ProductRole productRole = new ProductRole(
+                    (Long) role.get("id"),
+                    null,
+                    null,
+                    accountId,
+                    (Long) role.get("roleProductId"),
+                    (Long) role.get("roleAccountId"),
+                    String.valueOf(role.get("lobCode")),
+                    String.valueOf(role.get("productCode")),
+                    String.valueOf(role.get("productName")),
+                    Boolean.TRUE.equals(role.get("isDeleted")),
+                    Boolean.TRUE.equals(role.get("canRead")),
+                    Boolean.TRUE.equals(role.get("canQuote")),
+                    Boolean.TRUE.equals(role.get("canPolicy")),
+                    Boolean.TRUE.equals(role.get("canAddendum")),
+                    Boolean.TRUE.equals(role.get("canCancel")),
+                    Boolean.TRUE.equals(role.get("canProlongate"))
+                );
 
                 productRoles.add(productRole);
             }
@@ -261,12 +280,14 @@ public class AccountServiceImpl implements AccountService {
             .stream()
             .map(entity -> {
                 Account account = accountMapper.toDto(entity);
-                account.setTid(null);
-                account.setClientId(null);
-                account.setParentId(null);
-                account.setCreatedAt(null);
-                account.setUpdatedAt(null);
-                return account;
+                return new Account(
+                    account.id(),
+                    null,
+                    null,
+                    null,
+                    account.nodeType(),
+                    account.name()
+                );
             })
             .collect(Collectors.toList());
     }

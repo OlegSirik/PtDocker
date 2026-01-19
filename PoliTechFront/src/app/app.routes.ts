@@ -17,6 +17,7 @@ import {AccountDetailPageComponent} from './features/admin-panel/account-detail-
 import { TenantGuard } from './shared/guards/tenant.guard';
 import { QuotesComponent } from './features/quotes/quotes.component';
 import { UserProfileComponent } from './features/user-profile/user-profile.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 
 export const routes: Routes = [
@@ -35,6 +36,7 @@ export const routes: Routes = [
   { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'lob-edit/:mpCode', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'product/:id/version/:versionNo', component: ProductComponent, canActivate: [authGuard] },
   { path: 'product/new', component: ProductComponent, canActivate: [authGuard] },
   { path: 'product/:product-id/version/:version-no/form', component: FormlyFormsComponent, canActivate: [authGuard] },

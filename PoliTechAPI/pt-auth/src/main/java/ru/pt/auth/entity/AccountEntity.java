@@ -13,8 +13,8 @@ import java.util.List;
 @Table(name = "acc_accounts")
 public class AccountEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
+    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    //@SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -156,8 +156,9 @@ public class AccountEntity {
     }
 
     // --- Конструктор для фабрик ---
-    private AccountEntity(TenantEntity tenant, ClientEntity client, AccountEntity parent,
+    private AccountEntity(Long id,TenantEntity tenant, ClientEntity client, AccountEntity parent,
         AccountNodeType nodeType, String name) {
+        this.id = id;
         this.tenantEntity = tenant;
         this.clientEntity = client;
         this.parent = parent;
@@ -175,7 +176,7 @@ public class AccountEntity {
     * Создаёт корневой аккаунт тенанта
     */
     public static AccountEntity tenantAccount(TenantEntity tenant) {
-        return new AccountEntity(tenant, null, null, AccountNodeType.TENANT, tenant.getName());
+        return new AccountEntity(tenant.getId(), tenant, null, null, AccountNodeType.TENANT, tenant.getName());
     }
 
     /**
@@ -188,6 +189,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            client.getId(),
             parentAccount.getTenant(),
             client,          // клиент копируем из параметра
             parentAccount,
@@ -206,6 +208,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),  // копируем клиента с родителя
             parentAccount,
@@ -225,6 +228,7 @@ public class AccountEntity {
         }
 
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),
             parentAccount,
@@ -240,6 +244,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),
             parentAccount,
@@ -255,6 +260,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),
             parentAccount,
@@ -270,6 +276,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),
             parentAccount,
@@ -285,6 +292,7 @@ public class AccountEntity {
             );
         }
         return new AccountEntity(
+            null,
             parentAccount.getTenant(),
             parentAccount.getClient(),
             parentAccount,

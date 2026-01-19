@@ -499,6 +499,7 @@
       <mat-card-title>Insured Object</mat-card-title>
     </mat-card-header>
     <mat-card-content>
+    @if (getShowIoDevice()) {  
       <h3>Device</h3>
       <div class="display-flex">
         @if (getFieldVisible('io_device_typeCode')) {
@@ -581,6 +582,71 @@
           </mat-form-field>
         }
       </div>
+    }
+    @if (getShowIoTravelSegments()) {
+      <h3>Авиа перевозки</h3>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" (click)="addTravelSegment()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+      <table mat-table [dataSource]="travelSegmentsDataSource" class="coverage-table">
+        <ng-container matColumnDef="ticketNr">
+          <th mat-header-cell *matHeaderCellDef>Ticket Nr</th>
+          <td mat-cell *matCellDef="let element">{{ element.ticketNr || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="ticketPrice">
+          <th mat-header-cell *matHeaderCellDef>Ticket Price</th>
+          <td mat-cell *matCellDef="let element">{{ element.ticketPrice || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="departureDate">
+          <th mat-header-cell *matHeaderCellDef>Departure Date</th>
+          <td mat-cell *matCellDef="let element">{{ element.departureDate || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="departureTime">
+          <th mat-header-cell *matHeaderCellDef>Departure Time</th>
+          <td mat-cell *matCellDef="let element">{{ element.departureTime || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="departureCity">
+          <th mat-header-cell *matHeaderCellDef>Departure City</th>
+          <td mat-cell *matCellDef="let element">{{ element.departureCity || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="arrivalCity">
+          <th mat-header-cell *matHeaderCellDef>Arrival City</th>
+          <td mat-cell *matCellDef="let element">{{ element.arrivalCity || '' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="warn" (click)="deleteTravelSegment(travelSegmentsDataSource.data.indexOf(element))">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="travelSegmentsDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: travelSegmentsDisplayedColumns;"></tr>
+      </table>
+    }
+    
+
+      <mat-divider class="section-separator"></mat-divider>
+
+      <div class="display-flex">
+        @if (getFieldVisible('io_sumInsured')) {
+          <mat-form-field class="form-field flex-3" appearance="outline">
+            <mat-label>{{ getFieldLabel('io_sumInsired') }}</mat-label>
+            <input matInput class="text-right" [(ngModel)]="policy.insuredObject.sumInsured" name="io_sumInsured">
+          </mat-form-field>
+        }
+      </div>  
     </mat-card-content>
   </mat-card>
 

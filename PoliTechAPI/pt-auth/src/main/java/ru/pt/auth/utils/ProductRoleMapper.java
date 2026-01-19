@@ -16,46 +16,44 @@ public class ProductRoleMapper {
         }
 
         ProductRoleEntity entity = new ProductRoleEntity();
-        entity.setId(dto.getId());
+        entity.setId(dto.id());
 
         // Tenant
-        if (dto.getTid() != null) {
+        if (dto.tid() != null) {
             TenantEntity tenant = new TenantEntity();
-            tenant.setId(dto.getTid());
+            tenant.setId(dto.tid());
             entity.setTenant(tenant);
         }
 
         // Client
-        if (dto.getClientId() != null) {
+        if (dto.clientId() != null) {
             ClientEntity client = new ClientEntity();
-            client.setId(dto.getClientId());
+            client.setId(dto.clientId());
             entity.setClient(client);
         }
 
         // Account
-        if (dto.getAccountId() != null) {
+        if (dto.accountId() != null) {
             AccountEntity account = new AccountEntity();
-            account.setId(dto.getAccountId());
+            account.setId(dto.accountId());
             entity.setAccount(account);
         }
 
         // Role Account
-        if (dto.getRoleAccountId() != null) {
+        if (dto.roleAccountId() != null) {
             AccountEntity roleAccount = new AccountEntity();
-            roleAccount.setId(dto.getRoleAccountId());
+            roleAccount.setId(dto.roleAccountId());
             entity.setRoleAccount(roleAccount);
         }
 
-        entity.setRoleProductId(dto.getRoleProductId());
-        entity.setDeleted(dto.getIsDeleted());
-        entity.setCanRead(dto.getCanRead());
-        entity.setCanQuote(dto.getCanQuote());
-        entity.setCanPolicy(dto.getCanPolicy());
-        entity.setCanAddendum(dto.getCanAddendum());
-        entity.setCanCancel(dto.getCanCancel());
-        entity.setCanProlongate(dto.getCanProlongate());
-        entity.setCreatedAt(dto.getCreatedAt());
-        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setRoleProductId(dto.roleProductId());
+        entity.setDeleted(dto.isDeleted());
+        entity.setCanRead(dto.canRead());
+        entity.setCanQuote(dto.canQuote());
+        entity.setCanPolicy(dto.canPolicy());
+        entity.setCanAddendum(dto.canAddendum());
+        entity.setCanCancel(dto.canCancel());
+        entity.setCanProlongate(dto.canProlongate());
 
         return entity;
     }
@@ -65,24 +63,24 @@ public class ProductRoleMapper {
             return null;
         }
 
-        ProductRole dto = new ProductRole();
-        dto.setId(entity.getId());
-        dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
-        dto.setClientId(entity.getClient() != null ? entity.getClient().getId() : null);
-        dto.setAccountId(entity.getAccount() != null ? entity.getAccount().getId() : null);
-        dto.setRoleProductId(entity.getRoleProductId());
-        dto.setRoleAccountId(entity.getRoleAccount() != null ? entity.getRoleAccount().getId() : null);
-        dto.setIsDeleted(entity.getDeleted());
-        dto.setCanRead(entity.getCanRead());
-        dto.setCanQuote(entity.getCanQuote());
-        dto.setCanPolicy(entity.getCanPolicy());
-        dto.setCanAddendum(entity.getCanAddendum());
-        dto.setCanCancel(entity.getCanCancel());
-        dto.setCanProlongate(entity.getCanProlongate());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-
-        return dto;
+        return new ProductRole(
+            entity.getId(),
+            entity.getTenant() != null ? entity.getTenant().getId() : null,
+            entity.getClient() != null ? entity.getClient().getId() : null,
+            entity.getAccount() != null ? entity.getAccount().getId() : null,
+            entity.getRoleProductId(),
+            entity.getRoleAccount() != null ? entity.getRoleAccount().getId() : null,
+            null,
+            null,
+            null,
+            entity.getDeleted(),
+            entity.getCanRead(),
+            entity.getCanQuote(),
+            entity.getCanPolicy(),
+            entity.getCanAddendum(),
+            entity.getCanCancel(),
+            entity.getCanProlongate()
+        );
     }
 
 }

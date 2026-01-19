@@ -396,7 +396,40 @@
       </div>
     </mat-tab>
 
-
+    <!-- Constants Tab -->
+    <mat-tab label="Constants">
+      <div class="tab-content">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Constants</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px; padding: 16px;">
+              @for (constant of constants; track constant.varCode) {
+                <div style="display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <div style="flex: 1; font-weight: 500;">
+                    {{ constant.varName }}
+                  </div>
+                  <mat-form-field appearance="outline" style="width: 200px;">
+                    <mat-label>Value</mat-label>
+                    <input 
+                      matInput 
+                      [value]="constant.varValue || ''" 
+                      (input)="updateConstantValue(constant, $any($event.target).value)"
+                      [placeholder]="constant.varDataType === 'NUMBER' ? '0' : ''">
+                  </mat-form-field>
+                </div>
+              }
+              @if (constants.length === 0) {
+                <div style="text-align: center; padding: 32px; color: #999;">
+                  No constants found
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
 
   </mat-tab-group>
 </div>

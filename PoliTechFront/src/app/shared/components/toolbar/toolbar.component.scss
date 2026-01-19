@@ -1,6 +1,10 @@
 @import '../../../../styles/variables';
 @import '../../../../styles/mixins';
 
+mat-toolbar {
+  background-color: #9385E6 !important;
+}
+
 .toolbar-content {
   @include flex-between;
   width: 100%;

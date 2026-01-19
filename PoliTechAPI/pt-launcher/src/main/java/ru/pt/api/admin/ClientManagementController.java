@@ -1,19 +1,19 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.auth.Client;
-import ru.pt.api.dto.auth.ClientConfiguration;
+import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.security.SecuredController;
-import ru.pt.auth.entity.ClientConfigurationEntity;
-import ru.pt.auth.entity.ClientEntity;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.service.ClientAdminsManagementService;
 import ru.pt.auth.service.ClientService;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+
 
 /**
  * Контроллер для управления клиентами (приложениями)
@@ -30,7 +30,8 @@ public class ClientManagementController extends SecuredController {
     private final ClientService clientService;
 
     public ClientManagementController(SecurityContextHelper securityContextHelper,
-                                      ClientService clientService) {
+                                      ClientService clientService,
+                                      ClientAdminsManagementService clientAdminsManagementService) {
         super(securityContextHelper);
         this.clientService = clientService;
     }
@@ -40,9 +41,7 @@ public class ClientManagementController extends SecuredController {
      * POST /api/v1/{tenantCode}/admin/clients
      */
     @PostMapping
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<Client> createClient(
-            @PathVariable String tenantCode,
             @RequestBody Client request) {
         
         Client newClient = clientService.createClient(request);
@@ -55,42 +54,8 @@ public class ClientManagementController extends SecuredController {
      * GET /api/v1/{tenantCode}/admin/clients
      */
     @GetMapping
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<List<Client>> listClients(@PathVariable String tenantCode) {
-        
-            List<ClientEntity> clients = clientService.listClients();
-            List<Client> clientsDto = clients.stream()
-                .map(client -> {
-                    //ClientConfiguration configuration = clientConfigurationService.getClientConfiguration(client.getId());
-                    Client dto = new Client();
-                    dto.setId(client.getId());
-                    dto.setTid(client.getTenant().getId());
-                    dto.setClientId(client.getClientId());
-                    dto.setName(client.getName());
-                    dto.setIsDeleted(client.getDeleted());
-                    dto.setCreatedAt(client.getCreatedAt());
-                    dto.setUpdatedAt(client.getUpdatedAt());
-                    dto.setTid(client.getTenant().getId());
-                    dto.setDefaultAccountId(client.getDefaultAccountId());
-                    dto.setAuthType(client.getAuthType());
-                    ClientConfigurationEntity conf = client.getClientConfigurationEntity();
-                    if (conf != null) {
-                     
-                    ClientConfiguration configuration = new ClientConfiguration();
-                        configuration.setPaymentGate(conf.getPaymentGate());
-                        configuration.setSendEmailAfterBuy(conf.isSendEmailAfterBuy());
-                        configuration.setSendSmsAfterBuy(conf.isSendSmsAfterBuy());
-                        configuration.setPaymentGateAgentNumber(conf.getPaymentGateAgentNumber());
-                        configuration.setPaymentGateLogin(conf.getPaymentGateLogin());
-                        configuration.setPaymentGatePassword(conf.getPaymentGatePassword());
-                        configuration.setEmployeeEmail(conf.getEmployeeEmail());
-                    
-                        dto.setClientConfiguration(configuration);
-                    }
-                    return dto;
-                })
-                .collect(Collectors.toList());
-            return ResponseEntity.ok(clientsDto);
+    public ResponseEntity<List<Client>> listClients() { 
+            return ResponseEntity.ok(clientService.listClients());
     }
 
     /**
@@ -98,19 +63,48 @@ public class ClientManagementController extends SecuredController {
      * GET /api/v1/{tenantCode}/admin/clients/{clientId}
      */
     @GetMapping("/{clientId}")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<Client> getClient(@PathVariable String tenantCode, @PathVariable Long clientId) {
+    public ResponseEntity<Client> getClient(@PathVariable Long clientId) {
         Client client = clientService.getClientById(clientId);
         return ResponseEntity.ok(client);
     }
 
 
     @PutMapping("/{clientId}")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
-    public ResponseEntity<Client> updateClient(@PathVariable String tenantCode, @PathVariable Long clientId, @RequestBody Client request) {  
+    public ResponseEntity<Client> updateClient(@PathVariable Long clientId, @RequestBody Client request) {  
         Client updatedClient = clientService.updateClient(request);
         return ResponseEntity.ok(updatedClient);  
     }
 
+    /**
+     * Client products
+     */
+
+    @GetMapping("/{clientId}/products")
+    public ResponseEntity<List<ProductRole>> listClientProducts
+        ( @PathVariable Long clientId
+        ) {
+            List<ProductRole> products = clientService.listClientProducts(clientId);
+            return ResponseEntity.ok(products);
+    }
+
+    @PostMapping("/{clientId}/products")
+    public ResponseEntity<Void> grantClientProduct
+        ( @RequestBody ProductRole productRole
+        , @PathVariable Long clientId
+    ) {
+        clientService.grantProduct(clientId, productRole);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{clientId}/products/{productRoleId}")
+    public ResponseEntity<Void> revokeClientProduct
+        ( @PathVariable Long clientId
+        , @PathVariable Long productRoleId
+    ) {
+        clientService.revokeProduct(clientId, productRoleId);
+        return ResponseEntity.accepted().build();
+    }
+    
+    
 }
 

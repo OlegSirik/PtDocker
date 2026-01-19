@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatOption } from "@angular/material/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -16,6 +17,7 @@ import type { Field } from './formly-forms.service';
 import { FormlyFormsService} from './formly-forms.service';
 import { Product, ProductService } from '../../shared/services/product.service';
 import { BoxPolicy, BoxPolicyHolder, InsuredObject, Identifier, Address, Organization, Device, BoxIdentifier, BoxAddress, BoxOrganization, BoxDevice, Policy } from '../../shared/models/policy.models';
+import { BoxTravelSegment } from '../../shared/models/box/travel-segment-box.model';
 import { PolicyService } from '../../shared/services/policy.service';
 
 
@@ -37,6 +39,7 @@ interface LoV {
     MatInputModule,
     MatIconModule,
     MatSelectModule,
+    MatDividerModule,
     MatTableModule,
   ]
 })
@@ -94,6 +97,16 @@ export class FormlyFormsComponent implements OnInit {
   
   coverageDataSource = new MatTableDataSource<any>([]);
   coverageDisplayedColumns: string[] = ['code', 'risk', 'startDate', 'endDate', 'sumInsured', 'premium', 'deductibleType', 'deductibleText'];
+  travelSegmentsDataSource = new MatTableDataSource<BoxTravelSegment>([]);
+  travelSegmentsDisplayedColumns: string[] = [
+    'ticketNr',
+    'ticketPrice',
+    'departureDate',
+    'departureTime',
+    'departureCity',
+    'arrivalCity',
+    'actions'
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -136,6 +149,8 @@ export class FormlyFormsComponent implements OnInit {
           // Use BoxPolicy constructor to properly instantiate nested objects
           this.policy = new BoxPolicy(parsedData);
           console.log('Converted to BoxPolicy:', this.policy);
+          this.updateCoverageTable();
+          this.updateTravelSegmentsTable();
         } catch (parseError) {
           console.error('Error parsing JSON:', parseError);
           console.error('Invalid JSON string:', jsonString);
@@ -169,7 +184,10 @@ export class FormlyFormsComponent implements OnInit {
     }
   }
 
-  updateTables(): void {}
+  updateTables(): void {
+    this.updateCoverageTable();
+    this.updateTravelSegmentsTable();
+  }
 
   /*
   private applyStylesToField(wrapper: HTMLElement, config: any): void {
@@ -279,6 +297,22 @@ export class FormlyFormsComponent implements OnInit {
     return this.product.vars.some(v => v.varPath && v.varPath.startsWith("policyHolder.customFields"));
   }
 
+  getShowIoDevice(): boolean {
+    return this.product.vars.some(v => v.varCdm && v.varCdm.startsWith("insuredObject.device"));
+  }
+
+  getShowIoTravelSegments(): boolean {
+    return this.product.vars.some(v => v.varCdm && (
+      v.varCdm.startsWith("insuredObject.travelSegments") ||
+      v.varCdm.startsWith("insuredObject.travelSegment")
+    ));
+  }
+
+  // Backwards-compatible wrapper
+  getShowIoTravelSegment(): boolean {
+    return this.getShowIoTravelSegments();
+  }
+
   getAdressTypes(): LoV[] {
     const validator = this.product?.saveValidator?.find(
       (v: any) => v.keyLeft === "ph_addr_typeCode" && v.ruleType === "IN_LIST"
@@ -321,11 +355,52 @@ export class FormlyFormsComponent implements OnInit {
     return this.policy.insuredObject.device;
   }
 
+  ensureTravelSegments(): BoxTravelSegment[] {
+    if (!this.policy.insuredObject.travelSegments) {
+      this.policy.insuredObject.travelSegments = [];
+    }
+    return this.policy.insuredObject.travelSegments;
+  }
+
   updateCoverageTable(): void {
     if (this.policy.coverage && Array.isArray(this.policy.coverage)) {
       this.coverageDataSource.data = this.policy.coverage;
     } else {
       this.coverageDataSource.data = [];
+    }
+  }
+
+  updateTravelSegmentsTable(): void {
+    if (this.policy.insuredObject.travelSegments && Array.isArray(this.policy.insuredObject.travelSegments)) {
+      this.travelSegmentsDataSource.data = [...this.policy.insuredObject.travelSegments];
+    } else {
+      this.travelSegmentsDataSource.data = [];
+    }
+  }
+
+  addTravelSegment(): void {
+    const dialogRef = this.dialog.open(TravelSegmentDialog, {
+      width: '600px',
+      data: {
+        segment: new BoxTravelSegment(),
+        isNew: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const segments = this.ensureTravelSegments();
+        segments.push(new BoxTravelSegment(result));
+        this.updateTravelSegmentsTable();
+      }
+    });
+  }
+
+  deleteTravelSegment(index: number): void {
+    const segments = this.ensureTravelSegments();
+    if (index >= 0 && index < segments.length) {
+      segments.splice(index, 1);
+      this.updateTravelSegmentsTable();
     }
   }
 
@@ -336,6 +411,76 @@ export class FormlyFormsComponent implements OnInit {
     return risk.join(', ');
   }
 
+}
+
+@Component({
+  selector: 'app-travel-segment-dialog',
+  imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule],
+  template: `
+    <h2 mat-dialog-title>{{ data.isNew ? 'Add Travel Segment' : 'Edit Travel Segment' }}</h2>
+    <div mat-dialog-content class="travel-segment-dialog">
+      <div class="row">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Ticket Nr</mat-label>
+          <input matInput [(ngModel)]="segment.ticketNr" name="ticketNr">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Ticket Price</mat-label>
+          <input matInput [(ngModel)]="segment.ticketPrice" name="ticketPrice">
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Departure Date</mat-label>
+          <input matInput [(ngModel)]="segment.departureDate" name="departureDate">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Departure Time</mat-label>
+          <input matInput [(ngModel)]="segment.departureTime" name="departureTime">
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Departure City</mat-label>
+          <input matInput [(ngModel)]="segment.departureCity" name="departureCity">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Arrival City</mat-label>
+          <input matInput [(ngModel)]="segment.arrivalCity" name="arrivalCity">
+        </mat-form-field>
+      </div>
+    </div>
+    <div mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-raised-button color="primary" [mat-dialog-close]="segment">Save</button>
+    </div>
+  `,
+  styles: [`
+    .travel-segment-dialog {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 520px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field {
+      width: 100%;
+    }
+  `]
+})
+export class TravelSegmentDialog {
+  segment: BoxTravelSegment;
+
+  constructor(
+    public dialogRef: MatDialogRef<TravelSegmentDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: { segment: BoxTravelSegment; isNew: boolean }
+  ) {
+    this.segment = data.segment ? new BoxTravelSegment(data.segment) : new BoxTravelSegment();
+  }
 }
 
 @Component({

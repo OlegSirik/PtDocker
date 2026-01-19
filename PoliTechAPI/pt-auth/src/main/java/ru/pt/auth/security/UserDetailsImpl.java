@@ -16,6 +16,12 @@ import java.util.stream.Collectors;
  * Содержит информацию о пользователе, его аккаунте и ролях продуктов.
  */
 public class UserDetailsImpl implements UserDetails {
+    /*
+    principal (accountId) — WHO
+    acting account — WHERE
+    permission — WHAT
+    resource — ON WHAT
+    */
 
     private final Long id;
     private final String username;
@@ -33,10 +39,11 @@ public class UserDetailsImpl implements UserDetails {
     private final boolean accountNonLocked;
     private final boolean credentialsNonExpired;
     private String impersonatedTenantCode;  
+    private final Long actingAccountId;  // вершина для дерева доступа, отличается от Id листа account роли
 
     public UserDetailsImpl(Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
-                          String userRole, Set<String> productRoles, boolean isDefault) {
+                          String userRole, Set<String> productRoles, boolean isDefault, Long actingAccountId) {
         this.id = id;
         this.username = username;
         this.tenantCode = tenantCode;
@@ -52,11 +59,12 @@ public class UserDetailsImpl implements UserDetails {
         this.accountNonExpired = true;
         this.accountNonLocked = true;
         this.credentialsNonExpired = true;
+        this.actingAccountId = actingAccountId;
     }
 
     /**
      * Создает UserDetailsImpl из LoginEntity и AccountLoginEntity
-     */
+     *
     public static UserDetailsImpl build(LoginEntity loginEntity, AccountLoginEntity accountLoginEntity,
                                         Set<String> productRoles) {
         return new UserDetailsImpl(
@@ -70,11 +78,13 @@ public class UserDetailsImpl implements UserDetails {
                 accountLoginEntity.getClient().getName(),
                 accountLoginEntity.getAccount().getNodeType().getValue(),
                 productRoles,
-                accountLoginEntity.getDefault()
+                accountLoginEntity.getDefault(),
+                accountLoginEntity.getAccount().getParent().getId()
         );
     }
+    */
 
-    public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles) {
+    public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
         /*Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
                           String userRole, Set<String> productRoles, boolean isDefault */
@@ -90,6 +100,7 @@ public class UserDetailsImpl implements UserDetails {
             accountLoginEntity.getAccount().getNodeType().getValue(), //String userRole
             productRoles, //Set<String> productRoles
             accountLoginEntity.getDefault() //boolean isDefault
+            , actingAccountId
         );
     }
 
@@ -188,6 +199,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public void setImpersonatedTenantCode(String impersonatedTenantCode) {
         this.impersonatedTenantCode = impersonatedTenantCode;
+    }
+
+    public Long getActingAccountId() {
+        return this.actingAccountId;
     }
 
     /**

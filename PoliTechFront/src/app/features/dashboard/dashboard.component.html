@@ -1,0 +1,41 @@
+<div class="dashboard-container">
+  <div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <mat-form-field appearance="outline" class="period-select">
+      <mat-label>Period</mat-label>
+      <mat-select [(ngModel)]="selectedPeriod" (selectionChange)="onPeriodChange()">
+        <mat-option *ngFor="let option of periodOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="table-header">
+        <h3>Sales by period</h3>
+      </div>
+
+      <div *ngIf="loadingChart" class="loading">Загрузка...</div>
+      <div class="chart-wrapper" *ngIf="!loadingChart && chartPoints.length">
+        <canvas #chartCanvas></canvas>
+      </div>
+      <div *ngIf="!loadingChart && !chartPoints.length" class="empty-state">
+        Нет данных для графика
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="cards-grid">
+    <mat-card class="stat-card" *ngFor="let card of cards">
+      <mat-card-content>
+        <div class="stat-title">{{ card.title }}</div>
+        <div class="stat-value">
+          {{ card.value }}
+          <span class="stat-unit" *ngIf="card.unit">{{ card.unit }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

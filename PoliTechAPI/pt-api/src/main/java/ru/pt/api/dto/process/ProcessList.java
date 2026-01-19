@@ -1,10 +1,14 @@
 package ru.pt.api.dto.process;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ProcessList {
 
     private String currentOperation;  //quote or save
     private String phDigest;
     private String ioDigest;
+    private Map<String, Object> vars = new HashMap<>();
 
     public static String QUOTE = "quote";
     public static String SAVE = "save";
@@ -37,5 +41,13 @@ public class ProcessList {
 
     public void setIoDigest(String ioDigest) {
         this.ioDigest = ioDigest;
+    }
+
+    public Map<String, Object> getVars() {
+        return vars;
+    }
+
+    public void setVars (Map<String, Object> vars) {
+        this.vars.putAll(vars);
     }
 }

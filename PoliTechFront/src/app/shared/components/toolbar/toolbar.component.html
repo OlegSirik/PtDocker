@@ -3,6 +3,7 @@
     <div class="tenant-code">{{ tenantCode }}</div>
     <div class="nav-sections">
       <button mat-button [routerLink]="['/', tenantCode, 'business-line']" class="nav-button">Линия бизнеса</button>
+      <button mat-button [routerLink]="['/', tenantCode, 'dashboard']" class="nav-button">Dashboard</button>
       <button mat-button [routerLink]="['/', tenantCode, 'products']" class="nav-button">Продукты</button>
       <button mat-button [routerLink]="['/', tenantCode, 'lk', 'quotes']" class="nav-button">Quotes</button>
       <button mat-button [routerLink]="['/', tenantCode, 'test']" class="nav-button">Тестирование</button>

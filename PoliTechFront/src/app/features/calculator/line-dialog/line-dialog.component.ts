@@ -5,17 +5,21 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-line-dialog',
     imports: [
     FormsModule,
+    CommonModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatAutocompleteModule,
     MatButtonModule
 ],
     template: `
@@ -69,31 +73,43 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
       <div class="row row-3">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Результат выражения</mat-label>
-          <mat-select [(ngModel)]="line.expressionResult" required>
-            @for (varItem of data.vars; track varItem) {
-              <mat-option [value]="varItem.varCode">
+          <input 
+            matInput 
+            [(ngModel)]="expressionResultInput" 
+            [matAutocomplete]="expressionResultAuto"
+            (input)="filterExpressionResult($event)"
+            required>
+          <mat-autocomplete #expressionResultAuto="matAutocomplete" [displayWith]="displayVar" (optionSelected)="onExpressionResultSelected($event)">
+            @for (varItem of filteredExpressionResultVars; track varItem.varCode) {
+              <mat-option [value]="varItem">
                 {{ varItem.varCode }} - {{ varItem.varName }}
               </mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
         </mat-form-field>
       </div>
     
-      <!-- Row 3: expressionResult -->
+      <!-- Row 3: expressionLeft -->
       <div class="row row-3">
-      <mat-form-field class="field" appearance="outline">
+        <mat-form-field class="field" appearance="outline">
           <mat-label>Выражение слева</mat-label>
-          <mat-select [(ngModel)]="line.expressionLeft" required>
-            @for (varItem of data.vars; track varItem) {
-              <mat-option [value]="varItem.varCode">
+          <input 
+            matInput 
+            [(ngModel)]="expressionLeftInput" 
+            [matAutocomplete]="expressionLeftAuto"
+            (input)="filterExpressionLeft($event)"
+            required>
+          <mat-autocomplete #expressionLeftAuto="matAutocomplete" [displayWith]="displayVar" (optionSelected)="onExpressionLeftSelected($event)">
+            @for (varItem of filteredExpressionLeftVars; track varItem.varCode) {
+              <mat-option [value]="varItem">
                 {{ varItem.varCode }} - {{ varItem.varName }}
               </mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
         </mat-form-field>
       </div>
 
-      <!-- Row 4: expressionLeft, expressionOperator, expressionRight -->
+      <!-- Row 4: expressionOperator, expressionRight -->
       <div class="row row-4">
         <mat-form-field class="field" appearance="outline">
           <mat-label>Оператор выражения</mat-label>
@@ -107,13 +123,18 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
         </mat-form-field>
         <mat-form-field class="field" appearance="outline">
           <mat-label>Выражение справа</mat-label>
-          <mat-select [(ngModel)]="line.expressionRight" >
-            @for (varItem of data.vars; track varItem) {
-              <mat-option [value]="varItem.varCode">
+          <input 
+            matInput 
+            [(ngModel)]="expressionRightInput" 
+            [matAutocomplete]="expressionRightAuto"
+            (input)="filterExpressionRight($event)">
+          <mat-autocomplete #expressionRightAuto="matAutocomplete" [displayWith]="displayVar" (optionSelected)="onExpressionRightSelected($event)">
+            @for (varItem of filteredExpressionRightVars; track varItem.varCode) {
+              <mat-option [value]="varItem">
                 {{ varItem.varCode }} - {{ varItem.varName }}
               </mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
         </mat-form-field>
       </div>
     
@@ -156,6 +177,12 @@ import { FormulaLine, CalculatorVar } from '../../../shared/services/calculator.
 })
 export class LineDialogComponent {
   line: FormulaLine;
+  expressionResultInput: string = '';
+  filteredExpressionResultVars: CalculatorVar[] = [];
+  expressionLeftInput: string = '';
+  filteredExpressionLeftVars: CalculatorVar[] = [];
+  expressionRightInput: string = '';
+  filteredExpressionRightVars: CalculatorVar[] = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { 
@@ -179,6 +206,92 @@ export class LineDialogComponent {
       expressionRight: '',
       postProcessor: ''
     };
+    
+    // Initialize filtered vars and input value
+    this.filteredExpressionResultVars = [...this.data.vars];
+    if (this.line.expressionResult) {
+      const selectedVar = this.data.vars.find(v => v.varCode === this.line.expressionResult);
+      if (selectedVar) {
+        this.expressionResultInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+      } else {
+        this.expressionResultInput = this.line.expressionResult;
+      }
+    }
+    
+    // Initialize expressionLeft
+    this.filteredExpressionLeftVars = [...this.data.vars];
+    if (this.line.expressionLeft) {
+      const selectedVar = this.data.vars.find(v => v.varCode === this.line.expressionLeft);
+      if (selectedVar) {
+        this.expressionLeftInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+      } else {
+        this.expressionLeftInput = this.line.expressionLeft;
+      }
+    }
+    
+    // Initialize expressionRight
+    this.filteredExpressionRightVars = [...this.data.vars];
+    if (this.line.expressionRight) {
+      const selectedVar = this.data.vars.find(v => v.varCode === this.line.expressionRight);
+      if (selectedVar) {
+        this.expressionRightInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+      } else {
+        this.expressionRightInput = this.line.expressionRight;
+      }
+    }
+  }
+
+  filterExpressionResult(event: Event): void {
+    const input = (event.target as HTMLInputElement).value;
+    const filterValue = input.toLowerCase();
+    
+    this.filteredExpressionResultVars = this.data.vars.filter(varItem =>
+      varItem.varCode.toLowerCase().includes(filterValue) ||
+      varItem.varName.toLowerCase().includes(filterValue)
+    );
+  }
+
+  onExpressionResultSelected(event: any): void {
+    const selectedVar = event.option.value as CalculatorVar;
+    this.line.expressionResult = selectedVar.varCode;
+    this.expressionResultInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+  }
+
+  filterExpressionLeft(event: Event): void {
+    const input = (event.target as HTMLInputElement).value;
+    const filterValue = input.toLowerCase();
+    
+    this.filteredExpressionLeftVars = this.data.vars.filter(varItem =>
+      varItem.varCode.toLowerCase().includes(filterValue) ||
+      varItem.varName.toLowerCase().includes(filterValue)
+    );
+  }
+
+  onExpressionLeftSelected(event: any): void {
+    const selectedVar = event.option.value as CalculatorVar;
+    this.line.expressionLeft = selectedVar.varCode;
+    this.expressionLeftInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+  }
+
+  filterExpressionRight(event: Event): void {
+    const input = (event.target as HTMLInputElement).value;
+    const filterValue = input.toLowerCase();
+    
+    this.filteredExpressionRightVars = this.data.vars.filter(varItem =>
+      varItem.varCode.toLowerCase().includes(filterValue) ||
+      varItem.varName.toLowerCase().includes(filterValue)
+    );
+  }
+
+  onExpressionRightSelected(event: any): void {
+    const selectedVar = event.option.value as CalculatorVar;
+    this.line.expressionRight = selectedVar.varCode;
+    this.expressionRightInput = `${selectedVar.varCode} - ${selectedVar.varName}`;
+  }
+
+  displayVar(varItem: CalculatorVar | null): string {
+    if (!varItem) return '';
+    return `${varItem.varCode} - ${varItem.varName}`;
   }
 
   isValid(): boolean {

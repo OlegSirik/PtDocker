@@ -4,7 +4,8 @@ import { Observable, of } from 'rxjs';
 import { 
   BoxPolicy, BoxPolicyHolder, BoxInsuredObject, BoxPerson, BoxContacts, BoxIdentifier, 
   BoxAddress, BoxOrganization, BoxCover, BoxCoverDetails, BoxDevice,
-  Policy, PolicyHolder, InsuredObject, Person, Address, Organization, Cover, CoverDetails, Device
+  Policy, PolicyHolder, InsuredObject, Person, Address, Organization, Cover, CoverDetails, Device,
+  TravelSegment
 } from '../models/policy.models';
 import { Contacts } from '../models/contacts.model';
 import { Identifier } from '../models/identifier.model';
@@ -190,25 +191,26 @@ override  getUrl(id?: (number | string)): string {
     
     // Copy insuredObject - convert to BoxInsuredObject
     box.insuredObject = new BoxInsuredObject();
-    box.insuredObject.ioType = policy.insuredObject.ioType || '';
-    box.insuredObject.packageCode = policy.insuredObject.packageCode || '';
-    box.insuredObject.objectId = policy.insuredObject.objectId || '';
-    
+    box.insuredObject.ioType = policy.insuredObjects[0].ioType || '';
+    box.insuredObject.packageCode = policy.insuredObjects[0].packageCode || '';
+    box.insuredObject.objectId = policy.insuredObjects[0].objectId || '';
+    box.insuredObject.sumInsured = policy.insuredObjects[0].sumInsured || '';
+
     // Copy coverage if exists - convert to BoxCover array
     // Handle both single Cover object and Cover[] array
 
-    if (Array.isArray(policy.insuredObject.covers) && policy.insuredObject.covers.length > 0) {
+    if (Array.isArray(policy.insuredObjects[0].covers) && policy.insuredObjects[0].covers.length > 0) {
 
-      policy.insuredObject.coverage = policy.insuredObject.covers;
-    } else if (policy.insuredObject.covers && !Array.isArray(policy.insuredObject.covers)) {
-      policy.insuredObject.coverage = [policy.insuredObject.covers];
+      policy.insuredObjects[0].coverage = policy.insuredObjects[0].covers;
+    } else if (policy.insuredObjects[0].covers && !Array.isArray(policy.insuredObjects[0].covers)) {
+      policy.insuredObjects[0].coverage = [policy.insuredObjects[0].covers];
     }
 
 
-    if (policy.insuredObject.coverage) {
-      const coverages = Array.isArray(policy.insuredObject.coverage) 
-        ? policy.insuredObject.coverage 
-        : [policy.insuredObject.coverage];
+    if (policy.insuredObjects[0].coverage) {
+      const coverages = Array.isArray(policy.insuredObjects[0].coverage) 
+        ? policy.insuredObjects[0].coverage 
+        : [policy.insuredObjects[0].coverage];
       
       box.coverage = coverages.map(cover => new BoxCover({
         cover: new BoxCoverDetails({
@@ -241,85 +243,85 @@ override  getUrl(id?: (number | string)): string {
     }
     
     // Copy person from insuredObject if exists
-    if (policy.insuredObject.person) {
+    if (policy.insuredObjects[0].person) {
       box.insuredObject.person = new BoxPerson({
-        firstName: policy.insuredObject.person.firstName || '',
-        lastName: policy.insuredObject.person.lastName || '',
-        middleName: policy.insuredObject.person.middleName || '',
-        birthDate: policy.insuredObject.person.birthDate || '',
-        fullName: policy.insuredObject.person.fullName || '',
-        fullNameEn: policy.insuredObject.person.fullNameEn || '',
-        birthPlace: policy.insuredObject.person.birthPlace || '',
-        citizenship: policy.insuredObject.person.citizenship || '',
-        gender: policy.insuredObject.person.gender || '',
-        familyState: policy.insuredObject.person.familyState || '',
-        isPublicOfficial: policy.insuredObject.person.isPublicOfficial?.toString() || '',
-        isResident: policy.insuredObject.person.isResident?.toString() || '',
-        ext_id: policy.insuredObject.person.ext_id || ''
+        firstName: policy.insuredObjects[0].person.firstName || '',
+        lastName: policy.insuredObjects[0].person.lastName || '',
+        middleName: policy.insuredObjects[0].person.middleName || '',
+        birthDate: policy.insuredObjects[0].person.birthDate || '',
+        fullName: policy.insuredObjects[0].person.fullName || '',
+        fullNameEn: policy.insuredObjects[0].person.fullNameEn || '',
+        birthPlace: policy.insuredObjects[0].person.birthPlace || '',
+        citizenship: policy.insuredObjects[0].person.citizenship || '',
+        gender: policy.insuredObjects[0].person.gender || '',
+        familyState: policy.insuredObjects[0].person.familyState || '',
+        isPublicOfficial: policy.insuredObjects[0].person.isPublicOfficial?.toString() || '',
+        isResident: policy.insuredObjects[0].person.isResident?.toString() || '',
+        ext_id: policy.insuredObjects[0].person.ext_id || ''
       });
     }
     
     // Copy contacts from insuredObject if exists
-    if (policy.insuredObject.contacts) {
+    if (policy.insuredObjects[0].contacts) {
       box.insuredObject.contacts = new BoxContacts({
-        phone: policy.insuredObject.contacts.phone || '',
-        email: policy.insuredObject.contacts.email || '',
-        telegram: policy.insuredObject.contacts.telegram || ''
+        phone: policy.insuredObjects[0].contacts.phone || '',
+        email: policy.insuredObjects[0].contacts.email || '',
+        telegram: policy.insuredObjects[0].contacts.telegram || ''
       });
     }
     
     // Copy identifiers from insuredObject if exists
-    if (policy.insuredObject.identifiers) {
+    if (policy.insuredObjects[0].identifiers) {
       box.insuredObject.identifiers = new BoxIdentifier({
-        isPrimary: policy.insuredObject.identifiers.isPrimary?.toString() || '',
-        typeCode: policy.insuredObject.identifiers.typeCode || '',
-        serial: policy.insuredObject.identifiers.serial || '',
-        number: policy.insuredObject.identifiers.number || '',
-        dateIssue: policy.insuredObject.identifiers.dateIssue || '',
-        validUntil: policy.insuredObject.identifiers.validUntil || '',
-        whom: policy.insuredObject.identifiers.whom || '',
-        divisionCode: policy.insuredObject.identifiers.divisionCode || '',
-        ext_id: policy.insuredObject.identifiers.ext_id || '',
-        countryCode: policy.insuredObject.identifiers.countryCode || ''
+        isPrimary: policy.insuredObjects[0].identifiers.isPrimary?.toString() || '',
+        typeCode: policy.insuredObjects[0].identifiers.typeCode || '',
+        serial: policy.insuredObjects[0].identifiers.serial || '',
+        number: policy.insuredObjects[0].identifiers.number || '',
+        dateIssue: policy.insuredObjects[0].identifiers.dateIssue || '',
+        validUntil: policy.insuredObjects[0].identifiers.validUntil || '',
+        whom: policy.insuredObjects[0].identifiers.whom || '',
+        divisionCode: policy.insuredObjects[0].identifiers.divisionCode || '',
+        ext_id: policy.insuredObjects[0].identifiers.ext_id || '',
+        countryCode: policy.insuredObjects[0].identifiers.countryCode || ''
       });
     }
     
     // Copy address from insuredObject if exists
-    if (policy.insuredObject.address) {
+    if (policy.insuredObjects[0].address) {
       box.insuredObject.address = new BoxAddress({
-        isPrimary: policy.insuredObject.address.isPrimary?.toString() || '',
-        typeCode: policy.insuredObject.address.typeCode || '',
-        countryCode: policy.insuredObject.address.countryCode || '',
-        region: policy.insuredObject.address.region || '',
-        city: policy.insuredObject.address.city || '',
-        street: policy.insuredObject.address.street || '',
-        house: policy.insuredObject.address.house || '',
-        building: policy.insuredObject.address.building || '',
-        flat: policy.insuredObject.address.flat || '',
-        room: policy.insuredObject.address.room || '',
-        zipCode: policy.insuredObject.address.zipCode || '',
-        kladrId: policy.insuredObject.address.kladrId || '',
-        fiasId: policy.insuredObject.address.fiasId || '',
-        addressStr: policy.insuredObject.address.addressStr || '',
-        addressStrEn: policy.insuredObject.address.addressStrEn || '',
-        ext_id: policy.insuredObject.address.ext_id || ''
+        isPrimary: policy.insuredObjects[0].address.isPrimary?.toString() || '',
+        typeCode: policy.insuredObjects[0].address.typeCode || '',
+        countryCode: policy.insuredObjects[0].address.countryCode || '',
+        region: policy.insuredObjects[0].address.region || '',
+        city: policy.insuredObjects[0].address.city || '',
+        street: policy.insuredObjects[0].address.street || '',
+        house: policy.insuredObjects[0].address.house || '',
+        building: policy.insuredObjects[0].address.building || '',
+        flat: policy.insuredObjects[0].address.flat || '',
+        room: policy.insuredObjects[0].address.room || '',
+        zipCode: policy.insuredObjects[0].address.zipCode || '',
+        kladrId: policy.insuredObjects[0].address.kladrId || '',
+        fiasId: policy.insuredObjects[0].address.fiasId || '',
+        addressStr: policy.insuredObjects[0].address.addressStr || '',
+        addressStrEn: policy.insuredObjects[0].address.addressStrEn || '',
+        ext_id: policy.insuredObjects[0].address.ext_id || ''
       });
     }
     
     // Copy device from insuredObject if exists
-    if (policy.insuredObject.device) {
+    if (policy.insuredObjects[0].device) {
       box.insuredObject.device = new BoxDevice({
-        deviceName: policy.insuredObject.device.deviceName || '',
-        deviceTypeCode: policy.insuredObject.device.deviceTypeCode || '',
-        tradeMark: policy.insuredObject.device.tradeMark || '',
-        model: policy.insuredObject.device.model || '',
-        serialNr: policy.insuredObject.device.serialNr || '',
-        licenseKey: policy.insuredObject.device.licenseKey || '',
-        imei: policy.insuredObject.device.imei || '',
-        osName: policy.insuredObject.device.osName || '',
-        osVersion: policy.insuredObject.device.osVersion || '',
-        countryCode: policy.insuredObject.device.countryCode || '',
-        devicePrice: policy.insuredObject.device.devicePrice?.toString() || ''
+        deviceName: policy.insuredObjects[0].device.deviceName || '',
+        deviceTypeCode: policy.insuredObjects[0].device.deviceTypeCode || '',
+        tradeMark: policy.insuredObjects[0].device.tradeMark || '',
+        model: policy.insuredObjects[0].device.model || '',
+        serialNr: policy.insuredObjects[0].device.serialNr || '',
+        licenseKey: policy.insuredObjects[0].device.licenseKey || '',
+        imei: policy.insuredObjects[0].device.imei || '',
+        osName: policy.insuredObjects[0].device.osName || '',
+        osVersion: policy.insuredObjects[0].device.osVersion || '',
+        countryCode: policy.insuredObjects[0].device.countryCode || '',
+        devicePrice: policy.insuredObjects[0].device.devicePrice?.toString() || ''
       });
     }
     
@@ -582,13 +584,16 @@ override  getUrl(id?: (number | string)): string {
     }
     
     // Copy insuredObject - convert to InsuredObject
-    policy.insuredObject = new InsuredObject();
-    policy.insuredObject.ioType = box.insuredObject.ioType || '';
+    policy.insuredObjects[0] = new InsuredObject();
+    policy.insuredObjects[0].ioType = box.insuredObject.ioType || '';
     if (box.insuredObject.packageCode && box.insuredObject.packageCode !== '') {
-      policy.insuredObject.packageCode = box.insuredObject.packageCode;
+      policy.insuredObjects[0].packageCode = box.insuredObject.packageCode;
     }
     if (box.insuredObject.objectId && box.insuredObject.objectId !== '') {
-      policy.insuredObject.objectId = box.insuredObject.objectId;
+      policy.insuredObjects[0].objectId = box.insuredObject.objectId;
+    }
+    if (box.insuredObject.sumInsured && box.insuredObject.sumInsured != '') {
+      policy.insuredObjects[0].sumInsured = box.insuredObject.sumInsured;
     }
     
     // Copy coverage from box.coverage array - convert each BoxCover to Cover
@@ -646,7 +651,7 @@ override  getUrl(id?: (number | string)): string {
       
       // Set coverage - use array if multiple, single object if one
       if (convertedCoverages.length > 0) {
-        policy.insuredObject.coverage = convertedCoverages.length === 1 
+        policy.insuredObjects[0].coverage = convertedCoverages.length === 1 
           ? convertedCoverages[0] 
           : convertedCoverages as any; // Type assertion needed because InsuredObject.coverage can be Cover or Cover[]
       }
@@ -669,7 +674,7 @@ override  getUrl(id?: (number | string)): string {
       if (firstName !== '' || lastName !== '' || middleName !== '' || birthDate !== '' || 
           fullName !== '' || fullNameEn !== '' || birthPlace !== '' || citizenship !== '' || 
           gender !== '' || familyState !== '' || ext_id !== '') {
-        policy.insuredObject.person = new Person({
+        policy.insuredObjects[0].person = new Person({
           firstName: firstName,
           lastName: lastName || undefined,
           middleName: middleName || undefined,
@@ -694,7 +699,7 @@ override  getUrl(id?: (number | string)): string {
       const telegram = box.insuredObject.contacts.telegram || '';
       
       if (phone !== '' || email !== '' || telegram !== '') {
-        policy.insuredObject.contacts = new Contacts({
+        policy.insuredObjects[0].contacts = new Contacts({
           phone: phone,
           email: email,
           telegram: telegram
@@ -716,7 +721,7 @@ override  getUrl(id?: (number | string)): string {
       
       if (typeCode !== '' || serial !== '' || number !== '' || dateIssue !== '' || 
           validUntil !== '' || whom !== '' || divisionCode !== '' || ext_id !== '' || countryCode !== '') {
-        policy.insuredObject.identifiers = new Identifier({
+        policy.insuredObjects[0].identifiers = new Identifier({
           isPrimary: box.insuredObject.identifiers.isPrimary === 'true' || box.insuredObject.identifiers.isPrimary === '1',
           typeCode: typeCode,
           serial: serial || undefined,
@@ -753,7 +758,7 @@ override  getUrl(id?: (number | string)): string {
           street !== '' || house !== '' || building !== '' || flat !== '' || room !== '' || 
           zipCode !== '' || kladrId !== '' || fiasId !== '' || addressStr !== '' || 
           addressStrEn !== '' || ext_id !== '') {
-        policy.insuredObject.address = new Address({
+        policy.insuredObjects[0].address = new Address({
           isPrimary: box.insuredObject.address.isPrimary === 'true' || box.insuredObject.address.isPrimary === '1',
           typeCode: typeCode || 'REGISTRATION',
           countryCode: countryCode || undefined,
@@ -791,7 +796,7 @@ override  getUrl(id?: (number | string)): string {
       if (deviceName !== '' || deviceTypeCode !== '' || tradeMark !== '' || model !== '' || 
           serialNr !== '' || licenseKey !== '' || imei !== '' || osName !== '' || 
           osVersion !== '' || countryCode !== '' || devicePrice !== '') {
-        policy.insuredObject.device = new Device({
+        policy.insuredObjects[0].device = new Device({
           deviceName: deviceName,
           deviceTypeCode: deviceTypeCode || undefined,
           tradeMark: tradeMark || undefined,
@@ -807,6 +812,20 @@ override  getUrl(id?: (number | string)): string {
       }
     }
     
+    if (box.insuredObject.travelSegments && Array.isArray(box.insuredObject.travelSegments)) {
+      const segments = box.insuredObject.travelSegments
+        .map(segment => new TravelSegment(segment))
+        .filter(segment => Object.values(segment).some(value => value !== ''));
+
+      if (segments.length > 0) {
+        // Keep backward compatibility with singular travelSegment
+        policy.insuredObjects[0].travelSegment = segments[0];
+        // Preserve array for APIs expecting travelSegments
+        (policy.insuredObjects[0] as any).travelSegments = segments;
+      }
+    }
+
+
     // Filter out empty string values and create a new Policy instance
     const filteredData = Object.fromEntries(
       Object.entries(policy).filter(([_, v]) => {
@@ -820,7 +839,7 @@ override  getUrl(id?: (number | string)): string {
     if (!filteredData.productCode) filteredData.productCode = policy.productCode;
     if (!filteredData.statusCode) filteredData.statusCode = policy.statusCode;
     if (!filteredData.policyHolder) filteredData.policyHolder = policy.policyHolder;
-    if (!filteredData.insuredObject) filteredData.insuredObject = policy.insuredObject;
+    if (!filteredData.insuredObjects) filteredData.insuredObjects = policy.insuredObjects;
     
     return new Policy(filteredData);
   }

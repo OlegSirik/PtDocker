@@ -5,9 +5,9 @@ import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.dto.product.VarDataType;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.VariableContext;
+import ru.pt.process.utils.validators.StandardValidators;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,7 +16,12 @@ public class ValidatorImpl {
 
 
     private static boolean checkString(String type, String v1, String v2) {
+        // First check standard validators (email, phone, etc.)
+        if (type.matches("^(EMAIL|PHONE|PHONE_RU|PHONE_INTERNATIONAL|INN|SNILS|PASSPORT)$")) {
+            return StandardValidators.validate(type, v1);
+        }
 
+        // Then check other string validations
         switch (type) {
             case "NOT_NULL":
                 return v1 != null && !v1.isEmpty();
@@ -141,6 +146,8 @@ public class ValidatorImpl {
     
         try {
             PvVarDefinition leftDef = ctx.getDefinition(leftKey);
+            String tp = leftDef.getType().toString();
+            
             if (leftDef == null) return false;
     
             PvVarDefinition rightDef = ctx.getDefinition(rightKey);
@@ -172,8 +179,8 @@ public class ValidatorImpl {
                     return checkBigD(ruleType, leftNum, rightNum);
                 }
                 case STRING -> {
-                    String leftStr = leftVal.toString();
                     String rightStr = rightVal.toString();
+                    String leftStr = leftVal.toString();
                     return checkString(ruleType, leftStr, rightStr);
                 }
                 default -> {

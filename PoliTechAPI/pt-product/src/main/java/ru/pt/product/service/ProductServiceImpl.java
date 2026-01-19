@@ -179,6 +179,7 @@ public class ProductServiceImpl implements ProductService {
             numberGeneratorService.create(numberGeneratorDescription);
 
         }
+        productVersionModel = syncCoversVars(productVersionModel);
         return productVersionModel;
     }
 
@@ -250,6 +251,8 @@ public class ProductServiceImpl implements ProductService {
         productVersionModel.setVersionNo(newVersion);
         productVersionModel.setVersionStatus("DEV");
 
+        productVersionModel = syncCoversVars(productVersionModel);
+
         ProductVersionEntity pv = new ProductVersionEntity();
         pv.setProductId(id);
         pv.setVersionNo(newVersion);
@@ -281,6 +284,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                 .orElseThrow(() -> new NotFoundException("Version not found"));
 
+        newProductVersionModel = syncCoversVars(newProductVersionModel);
         String newProductVersionJson;
         try {
             newProductVersionJson = objectMapper.writeValueAsString(newProductVersionModel);
@@ -309,6 +313,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public void deleteVersion(Integer id, Integer versionNo) {
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
@@ -544,6 +549,43 @@ public class ProductServiceImpl implements ProductService {
         var productId = productRepository.findProductIdEntityByAccountId(Long.parseLong(accountId));
         return productRepository.findAllById(productId).stream()
                 .map(productMapper::toDto).toList();
+    }
+
+    private ProductVersionModel syncCoversVars(ProductVersionModel productVersionModel) {
+        if (productVersionModel == null) {
+            return productVersionModel;
+        }
+
+        List<PvVar> existingVars = productVersionModel.getVars();
+        List<PvVar> vars;
+        if (existingVars == null) {
+            vars = new java.util.ArrayList<>();
+        } else {
+            // Create a new list to avoid potential issues with unmodifiable lists
+            vars = new java.util.ArrayList<>(existingVars);
+        }
+
+        // Remove existing cover-related vars
+        vars.removeIf(var -> var != null && var.getVarCode() != null && var.getVarCode().startsWith("co_"));
+
+        // Add vars for each cover in each package
+        List<PvPackage> packages = productVersionModel.getPackages();
+        if (packages != null) {
+            for (PvPackage pkg : packages) {
+                if (pkg != null && pkg.getCovers() != null) {
+                    for (PvCover cover : pkg.getCovers()) {
+                        if (cover != null && cover.getCode() != null) {
+                            vars.add(PvVar.varSumInsured(cover.getCode()));
+                            vars.add(PvVar.varPremium(cover.getCode()));
+                            vars.add(PvVar.varDeductibleNr(cover.getCode()));
+                        }
+                    }
+                }
+            }
+        }
+
+        productVersionModel.setVars(vars);
+        return productVersionModel;
     }
 
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {

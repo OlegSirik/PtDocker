@@ -48,6 +48,17 @@ public class PvVar {
         this.varDataType = varDataType;
     }
 
+    public PvVar(String varCode, String varName, String varPath, String varType, String varValue, VarDataType varDataType, String varCdm, String varNr) {
+        this.varCode = varCode;
+        this.varName = varName;
+        this.varPath = varPath;
+        this.varType = varType;
+        this.varValue = varValue;
+        this.varDataType = varDataType;
+        this.varCdm = varCdm;
+        this.varNr = varNr;
+    }
+
     // Getters and Setters
     public String getVarCode() {
         return varCode;
@@ -113,5 +124,14 @@ public class PvVar {
     public void setVarNr(String varNr) {
         this.varNr = varNr;
     }
-    
+
+    public static PvVar varSumInsured(String coverCode) {
+        return new PvVar("co_" + coverCode + "_sumInsured", "Страховая сумма по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+    }
+    public static PvVar varPremium(String coverCode) {
+        return new PvVar("co_" + coverCode + "_premium", "Премия по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+    }
+    public static PvVar varDeductibleNr(String coverCode) {
+        return new PvVar("co_" + coverCode + "_deductibleNr", "Id франшизы по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+    }
 }

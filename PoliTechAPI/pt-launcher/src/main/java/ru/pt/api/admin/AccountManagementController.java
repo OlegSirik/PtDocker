@@ -150,7 +150,7 @@ public class AccountManagementController extends SecuredController {
     public ResponseEntity<Account> createSubaccount(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody Account account) {
-        Account result = accountService.createSubaccount(account.getName(), account.getParentId());
+        Account result = accountService.createSubaccount(account.name(), account.parentId());
         return ResponseEntity.ok(result);
     }
 
