@@ -2,12 +2,15 @@ package ru.pt.product.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
@@ -32,6 +35,11 @@ import static ru.pt.api.utils.DateTimeUtils.formattedNow;
 import static ru.pt.api.utils.DateTimeUtils.formatter;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
+import ru.pt.auth.security.permitions.AuthorizationService;
+import ru.pt.auth.security.permitions.AuthZ.ResourceType;
+import ru.pt.auth.security.permitions.AuthZ.Action;
+
+
 
 @Component
 @RequiredArgsConstructor
@@ -46,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductVersionRepository productVersionRepository;
     private final NumberGeneratorService numberGeneratorService;
     private final SecurityContextHelper securityContextHelper;
-
+    private final AuthorizationService authService;
     /**
      * Get current authenticated user from security context
      * @return UserDetailsImpl representing the current user
@@ -66,8 +74,15 @@ public class ProductServiceImpl implements ProductService {
         return getCurrentUser().getTenantId();
     }
 
+    private void checkProductAccess(Action action, String resourceId) {
+        UserDetailsImpl user = getCurrentUser();
+        Long resourceAccountId = user.getActingAccountId() != null ? user.getActingAccountId() : user.getAccountId();
+        authService.check(user, ResourceType.PRODUCT, resourceId, resourceAccountId, action);
+    }
+
     @Override
     public List<Product> listSummaries() {
+        checkProductAccess(Action.VIEW, "products");
         return productRepository.listActiveSummaries(getCurrentTenantId()).stream()
                 .map(r -> {
                     Product product = new Product();
@@ -86,6 +101,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductVersionModel create(ProductVersionModel productVersionModel) {
+        checkProductAccess(Action.ALL, "product:create");
 
         if (StringUtils.isBlank(productVersionModel.getLob())) {
             throw new BadRequestException("lob must not be empty");
@@ -185,6 +201,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
+        checkProductAccess(Action.ALL, String.valueOf(productId));
         ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null) {
@@ -217,6 +234,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel getVersion(Integer id, Integer versionNo) {
+        checkProductAccess(Action.VIEW, String.valueOf(id));
         try {
             ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                     .orElse(null);
@@ -229,6 +247,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
+        checkProductAccess(Action.ALL, String.valueOf(id));
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
@@ -271,6 +290,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel updateVersion(Integer id, Integer versionNo, ProductVersionModel newProductVersionModel) {
+        checkProductAccess(Action.ALL, String.valueOf(id));
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
@@ -306,6 +326,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void softDeleteProduct(Integer id) {
+        checkProductAccess(Action.ALL, String.valueOf(id));
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         product.setDeleted(true);
@@ -315,6 +336,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteVersion(Integer id, Integer versionNo) {
+        checkProductAccess(Action.ALL, String.valueOf(id));
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
@@ -333,6 +355,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public String getJsonExampleQuote(Integer id, Integer versionNo) {
+        checkProductAccess(Action.VIEW, String.valueOf(id));
         ProductVersionModel productVersionModel = getVersion(id, versionNo);
         LobModel lob = lobService.getByCode(productVersionModel.getLob());
 
@@ -409,6 +432,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public String getJsonExampleSave(Integer id, Integer versionNo) {
+        checkProductAccess(Action.VIEW, String.valueOf(id));
         ProductVersionModel productVersionModel = getVersion(id, versionNo);
         LobModel lob = lobService.getByCode(productVersionModel.getLob());
 
@@ -490,6 +514,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel getProduct(Integer id, boolean forDev) {
+        checkProductAccess(Action.VIEW, String.valueOf(id));
         var entity = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
@@ -507,6 +532,7 @@ public class ProductServiceImpl implements ProductService {
     //get product by code and isDeletedFalse
     @Override
     public ProductVersionModel getProductByCode(String code, boolean forDev) {
+        checkProductAccess(Action.VIEW, code);
 
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
@@ -529,6 +555,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel getProductByCodeAndVersionNo(String code, Integer versionNo) {
+        checkProductAccess(Action.VIEW, code);
 
         log.info("Finging product by code {}, versionNo - {}", code, versionNo);
 
@@ -546,6 +573,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getProductByAccountId(String accountId) {
+        checkProductAccess(Action.VIEW, accountId);
         var productId = productRepository.findProductIdEntityByAccountId(Long.parseLong(accountId));
         return productRepository.findAllById(productId).stream()
                 .map(productMapper::toDto).toList();
