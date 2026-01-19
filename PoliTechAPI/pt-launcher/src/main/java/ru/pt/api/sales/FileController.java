@@ -51,7 +51,7 @@ public class FileController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody Map<String, String> body) {
-        requireAdmin(user);
+        //requireAdmin(user);
         String fileType = body.get("fileType").toLowerCase();
         String fileDesc = body.get("fileDescription");
         String productCode = body.get("productCode");
@@ -68,7 +68,7 @@ public class FileController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestPart("file") MultipartFile file) {
-        requireAdmin(user);
+        //requireAdmin(user);
         TenantEntity tenant = tenantService.findByCode(tenantCode)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found"));
         try {
@@ -86,7 +86,7 @@ public class FileController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("fileId") Long fileId,
             @RequestPart("file") MultipartFile file) {
-        requireAdmin(user);
+        //requireAdmin(user);
         try {
             fileService.uploadBody(fileId, file.getBytes());
         } catch (IOException e) {
@@ -101,7 +101,7 @@ public class FileController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("fileId") Long fileId) {
-        requireAdmin(user);
+        //requireAdmin(user);
         fileService.softDelete(fileId);
         return ResponseEntity.noContent().build();
     }
@@ -122,7 +122,7 @@ public class FileController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("fileId") Long fileId) {
-        requireAdmin(user);
+        //requireAdmin(user);
         byte[] bytes = fileService.download(fileId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=output.pdf")
@@ -137,7 +137,7 @@ public class FileController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("fileId") Long fileId,
             @RequestBody List<Map<String, String>> pairs) {
-        requireAdmin(user);
+        //requireAdmin(user);
         java.util.Map<String, Object> kv = new java.util.HashMap<>();
         for (Map<String, String> p : pairs) {
             Object val = p.get("varValue");
