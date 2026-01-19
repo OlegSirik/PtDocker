@@ -1,10 +1,14 @@
-import {KeycloakConfig, KeycloakInitOptions} from 'keycloak-js';
-import {createInterceptorCondition, IncludeBearerTokenCondition} from 'keycloak-angular';
+import { KeycloakConfig, KeycloakInitOptions } from 'keycloak-js';
+import { createInterceptorCondition, IncludeBearerTokenCondition } from 'keycloak-angular';
+
+const env = (globalThis as any) as {
+  __env?: { KEYCLOAK_URL?: string; KEYCLOAK_REALM?: string; KEYCLOAK_CLIENT_ID?: string };
+};
 
 export const keycloakConfig: KeycloakConfig = {
-  url: 'http://localhost:8000',
-  realm: 'keycloak-angular-sandbox',
-  clientId: 'keycloak-angular',
+  url: env.__env?.KEYCLOAK_URL || window.location.origin,
+  realm: env.__env?.KEYCLOAK_REALM || '',
+  clientId: env.__env?.KEYCLOAK_CLIENT_ID || '',
 };
 
 export const keycloakInitOptions: KeycloakInitOptions = {

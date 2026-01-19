@@ -12,7 +12,12 @@ docker build -t olegsirik/vsk-robot-zaytsev-front:latest .
 ## Run locally
 
 ```bash
-docker run --rm -p 8080:80 olegsirik/vsk-robot-zaytsev-front:latest
+docker run --rm -p 8080:80 \
+  -e BASE_URL="http://host.docker.internal:8080" \
+  -e KEYCLOAK_URL="http://host.docker.internal:8000" \
+  -e KEYCLOAK_REALM="keycloak-angular-sandbox" \
+  -e KEYCLOAK_CLIENT_ID="keycloak-angular" \
+  olegsirik/vsk-robot-zaytsev-front:latest
 # open http://localhost:8080
 ```
 

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { EnvService } from '../env.service';
 
 export interface UserAccountSummary {
   id: number;
@@ -26,7 +27,6 @@ export interface UserProfile {
 export class AuthService {
   private readonly TOKEN_KEY = 'auth.jwt';
   private readonly PROFILE_KEY = 'auth.profile';
-  private readonly BASE_URL = 'http://localhost:8080';
   private readonly TENANT_KEY = 'tenant_id';
   private readonly CLIENT_KEY = 'client_id';
   private readonly ACCOUNT_KEY = 'account_id';
@@ -37,7 +37,11 @@ export class AuthService {
   private readonly tokenSubject = new BehaviorSubject<string | null>(this.loadToken());
   readonly token$ = this.tokenSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private envService: EnvService) {}
+
+  private get baseUrl(): string {
+    return this.envService.BASE_URL;
+  }
 
   get token(): string | null {
     return this.tokenSubject.value;
@@ -84,7 +88,7 @@ export class AuthService {
       Authorization: 'Basic ' + btoa(`${username}:${password}`)
     });
 
-    return this.http.get<UserProfile>(`${this.BASE_URL}/acc/me/profile`, { headers }).pipe(
+    return this.http.get<UserProfile>(`${this.baseUrl}/acc/me/profile`, { headers }).pipe(
       catchError((_error: HttpErrorResponse) => {
         return of(this.createMockProfile(username));
       }),
