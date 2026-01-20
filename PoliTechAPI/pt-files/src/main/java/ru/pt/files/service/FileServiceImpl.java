@@ -3,9 +3,14 @@ package ru.pt.files.service;
 import jakarta.transaction.Transactional;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.file.FileModel;
 import ru.pt.api.service.file.FileService;
@@ -15,7 +20,10 @@ import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,12 +37,56 @@ import ru.pt.api.dto.exception.UnprocessableEntityException;
 @Service
 public class FileServiceImpl implements FileService {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
+
     private final FileRepository fileRepository;
     private final SecurityContextHelper securityContextHelper;
 
     public FileServiceImpl(FileRepository fileRepository, SecurityContextHelper securityContextHelper) {
         this.fileRepository = fileRepository;
         this.securityContextHelper = securityContextHelper;
+    }
+
+    /**
+     * Load a TrueType font that supports Cyrillic characters
+     * @param doc The PDF document
+     * @return PDFont instance or null if no suitable font found
+     */
+    private PDFont loadCyrillicFont(PDDocument doc) {
+        // Try multiple font locations in order of preference
+        String[] fontPaths = {
+            "/fonts/LiberationSans-Regular.ttf",  // Classpath resource
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",  // Debian/Ubuntu
+            "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",  // RedHat/CentOS
+            "/usr/share/fonts/liberation/LiberationSans-Regular.ttf"  // Alpine Linux
+        };
+        
+        for (String fontPath : fontPaths) {
+            try {
+                InputStream fontStream = null;
+                
+                // Try loading from classpath first
+                if (fontPath.startsWith("/fonts/")) {
+                    fontStream = getClass().getResourceAsStream(fontPath);
+                    if (fontStream != null) {
+                        logger.debug("Loading font from classpath: {}", fontPath);
+                        return PDType0Font.load(doc, fontStream);
+                    }
+                }
+                
+                // Try loading from file system
+                File fontFile = new File(fontPath);
+                if (fontFile.exists() && fontFile.canRead()) {
+                    logger.debug("Loading font from file system: {}", fontPath);
+                    return PDType0Font.load(doc, new FileInputStream(fontFile));
+                }
+            } catch (Exception e) {
+                logger.trace("Could not load font from {}: {}", fontPath, e.getMessage());
+            }
+        }
+        
+        logger.info("No custom Cyrillic font found, PDFBox will use built-in fallback fonts");
+        return null;
     }
 
     /**
@@ -137,6 +189,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public byte[] process(Long id, Map<String, Object> keyValues) {
+        logger.debug("Processing PDF file with id: {}", id);
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
         if (entity.getFileBody() == null) {
@@ -146,25 +199,48 @@ public class FileServiceImpl implements FileService {
         try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             if (form != null) {
-                //form.getFields().forEach(System.out::println);
-                for (PDField pdfield : form.getFields()) {
-                    
-                    String fName = pdfield.getPartialName();
-                    String fValue = keyValues.get(fName).toString();
+                // Configure font for Cyrillic support
+                PDFont font = loadCyrillicFont(doc);
+                if (font != null) {
                     try {
-                        pdfield.setValue(fValue);
-                    } catch (Exception ex) {
-                        System.out.println(ex.getMessage());
+                        // Set default appearance with the font that supports Cyrillic
+                        PDResources resources = form.getDefaultResources();
+                        if (resources == null) {
+                            resources = new PDResources();
+                        }
+                        resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), font);
+                        form.setDefaultResources(resources);
+                        
+                        logger.debug("Configured Liberation Sans font for Cyrillic support");
+                    } catch (Exception e) {
+                        logger.warn("Could not configure custom font: {}", e.getMessage());
                     }
-
+                }
+                
+                // Fill form fields
+                for (PDField pdfield : form.getFields()) {
+                    String fName = pdfield.getPartialName();
+                    Object fieldValue = keyValues.get(fName);
+                    if (fieldValue != null) {
+                        String fValue = fieldValue.toString();
+                        try {
+                            pdfield.setValue(fValue);
+                            logger.trace("Set field '{}' to value: {}", fName, fValue);
+                        } catch (Exception ex) {
+                            logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
+                        }
+                    }
                 }
 
                 form.flatten();
+                logger.debug("Form flattened successfully");
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);
+            logger.debug("PDF processed successfully, size: {} bytes", out.size());
             return out.toByteArray();
         } catch (IOException ex) {
+            logger.error("Failed to process PDF: {}", ex.getMessage(), ex);
             throw new InternalServerErrorException("Failed to process PDF", ex);
         }
     }

@@ -22,19 +22,19 @@ public class ComputedVars {
         }
         switch (key) {
             case "ph_isMale":
-                return "M".equals(ctx.getString(key)) ? "X" : "";            
+                return "M".equals(ctx.getString("ph_gender")) ? "X" : "";            
             case "ph_isFemale":
-                return "F".equals(ctx.getString(key)) ? "X" : "";
+                return "F".equals(ctx.getString("ph_gender")) ? "X" : "";
             case "ph_age_issue":
-                LocalDate birthDate = LocalDate.parse(ctx.getString(key));
+                LocalDate birthDate = LocalDate.parse(ctx.getString("ph_birthDate"));
                 LocalDate issueDate = LocalDate.parse(ctx.getString("pl_issueDate"));
                 return Integer.toString(Period.between(birthDate, issueDate).getYears());
             case "io_age_issue":
-                LocalDate birthDateIO = LocalDate.parse(ctx.getString(key));
+                LocalDate birthDateIO = LocalDate.parse(ctx.getString("io_birthDate"));
                 LocalDate issueDateIO = LocalDate.parse(ctx.getString("pl_issueDate"));
                 return Integer.toString(Period.between(birthDateIO, issueDateIO).getYears());
             case "io_age_end":
-                LocalDate birthDateIOEnd = LocalDate.parse(ctx.getString(key));
+                LocalDate birthDateIOEnd = LocalDate.parse(ctx.getString("ph_birthDate"));
                 LocalDate endDateIOEnd = LocalDate.parse(ctx.getString("pl_endDate"));
                 return Integer.toString(Period.between(birthDateIOEnd, endDateIOEnd).getYears());
             case "pl_TermMonths":

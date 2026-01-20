@@ -8,8 +8,8 @@ RUN gradle clean build --no-daemon -x test
 FROM --platform=linux/amd64 amazoncorretto:21-alpine
 WORKDIR /app
 
-# Устанавливаем curl для health checks
-RUN apk add --no-cache curl
+# Устанавливаем curl для health checks и Liberation fonts для поддержки кириллицы в PDF
+RUN apk add --no-cache curl ttf-liberation
 
 # Создаем пользователя без groupadd (Alpine way)
 RUN addgroup -S spring && adduser -S spring -G spring
