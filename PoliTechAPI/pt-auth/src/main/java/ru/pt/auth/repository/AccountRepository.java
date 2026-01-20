@@ -97,13 +97,11 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query(value = """
             WITH RECURSIVE ancestor_path AS (
                 SELECT id, parent_id
-                FROM accounts
+                FROM acc_accounts
                 WHERE id = :resourceAccountId
-
                 UNION ALL
-
                 SELECT a.id, a.parent_id
-                FROM accounts a
+                FROM acc_accounts a
                 INNER JOIN ancestor_path ap ON a.id = ap.parent_id
             )
             SELECT COUNT(*) > 0

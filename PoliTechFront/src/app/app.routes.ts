@@ -5,7 +5,6 @@ import { ProductsComponent } from './features/products/products.component';
 import { ProductComponent } from './features/product/product.component';
 import { CalculatorComponent } from './features/calculator/calculator.component';
 
-import { TestComponent } from './features/test/test.component';
 import { FormlyFormsComponent } from './features/formly-forms/formly-forms.component';
 import {authGuard} from './shared/guards/auth.guard';
 import {LoginComponent} from './features/login/login.component';
@@ -43,7 +42,6 @@ export const routes: Routes = [
   { path: 'products/:productId/versions/:versionNo/packages/:packageNo/calculator', component: CalculatorComponent, canActivate: [authGuard] },
   { path: 'lk/quotes', component: QuotesComponent, canActivate: [authGuard] },
   
-  { path: 'test', component: TestComponent, canActivate: [authGuard] },
   { path: 'admin/tenants', component: TenantsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients', component: ClientsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
