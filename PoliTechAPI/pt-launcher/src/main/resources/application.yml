@@ -103,8 +103,10 @@ security:
 
 logging:
   level:
-    ru.pt.process.service.FileProcessServiceImpl: DEBUG
-    ru.pt.process.service.ValidatorServiceImpl: DEBUG
-    ru.pt.auth.security.filter: DEBUG
-    org.springframework.security: DEBUG
+    ru.pt.process.service.FileProcessServiceImpl: TRACE
+    ru.pt.process.service.PreProcessServiceImpl: TRACE
+    ru.pt.process.service.ProcessOrchestratorService: TRACE
+    ru.pt.process.service.ValidatorServiceImpl: TRACE
+    ru.pt.auth.security.filter: TRACE
+    org.springframework.security: TRACE
     org.springframework.web.filter: TRACE

@@ -289,12 +289,21 @@ export class ProductComponent implements OnInit {
     }
   }
 
+  reloadProduct(productId: string, versionNo: string): void {
+    if (!productId) return;
+    if (!versionNo) return;
+
+    this.router.navigate(['/', this.authService.tenant, 'product', productId, 'version', versionNo]);
+  }
+
+
   createNewVersion(): void {
     
     this.productService.createVersion(this.product.id!, this.product.versionNo!).subscribe({
       next: (createdProduct: any) => {
         this.product = createdProduct;
         this.snackBar.open('Новая версия создана успешно', 'Закрыть', { duration: 3000 });
+        this.reloadProduct(createdProduct.id, createdProduct.versionNo);
       },
       error: (error: any) => {
         console.error('Error creating new version:', error);
@@ -308,6 +317,7 @@ export class ProductComponent implements OnInit {
       next: (publishedProduct: any) => {
         this.product = publishedProduct;
         this.snackBar.open('Продукт переведен в продакшн успешно', 'Закрыть', { duration: 3000 });
+        this.reloadProduct(publishedProduct.id, publishedProduct.versionNo);
       },
       error: (error: any) => {
         console.error('Error publishing product to production:', error);

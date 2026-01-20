@@ -18,6 +18,9 @@ public class PolicyIndexEntity {
     @Column(name = "id")
     private UUID policyId;
 
+    @Column(name = "tid")
+    private Long tid;
+
     @Column(name = "policy_nr", length = 30)
     private String policyNumber;
 
@@ -277,5 +280,13 @@ public class PolicyIndexEntity {
 
     public void setAgentKvAmount(java.math.BigDecimal agentKvAmount) {
         this.agentKvAmount = agentKvAmount;
+    }
+
+    public Long getTid() {
+        return this.tid;
+    } 
+
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 }

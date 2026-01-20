@@ -45,12 +45,15 @@ public class DbStorageService implements StorageService {
 
 
     public PolicyData save(PolicyDTO policy, UserDetails userData) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
 
         if (policy.getId() == null || policy.getId().isEmpty()) {
             policy.setId( UUID.randomUUID().toString() );
         }
         
         var entity = policyMapper.policyEntityFromDTO(policy, userData);
+        entity.setTid( userDetails.getTenantId());
+        entity.setCid( userDetails.getClientId());
         policyRepository.save(entity);
 
         var index = policyMapper.policyIndexFromDTO(policy, userData);
@@ -69,15 +72,19 @@ public class DbStorageService implements StorageService {
     @Transactional
     @Override
     public PolicyData save(String policy, UserDetails userData, Version version, UUID uuid) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+
         var entity = new PolicyEntity();
         entity.setId(uuid);
+        entity.setTid( userDetails.getTenantId());
+        entity.setCid( userDetails.getClientId());
         entity.setPolicy(policy);
         policyRepository.save(entity);
 
         var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
         index.setVersionNo(1);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+        index.setTid( userDetails.getTenantId());
         index.setClientAccountId(userDetails.getClientId());
         index.setUserAccountId(userDetails.getAccountId());
         

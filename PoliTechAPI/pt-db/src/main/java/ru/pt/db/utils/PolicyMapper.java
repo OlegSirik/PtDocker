@@ -119,6 +119,7 @@ public class PolicyMapper {
         index.setPaymentDate(null);
         index.setStartDate(policy.getStartDate());
         index.setEndDate(policy.getEndDate());
+        index.setTid( userDetails.getTenantId());
         index.setUserAccountId(  userDetails.getAccountId());
         index.setClientAccountId(userDetails.getClientId());
 //        index.setVersionStatus(policy.getVersionStatus());

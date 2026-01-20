@@ -23,12 +23,10 @@ import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
-import ru.pt.api.dto.process.CoverInfo;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
 //import ru.pt.api.dto.product.LobModel;
 //import ru.pt.api.dto.product.LobVar;
-import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.numbers.NumberGeneratorService;
@@ -58,16 +56,11 @@ import java.util.stream.Collectors;
 
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
-import ru.pt.api.dto.product.VarDataType;
 
 import java.math.BigDecimal;
 
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
-import ru.pt.api.dto.process.Deductible;
-
-import java.util.Map;
-import java.util.HashMap;
 
 import ru.pt.process.utils.VariablesService;
 @Component
@@ -96,6 +89,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     
 
     private PolicyDTO policyFromJson(String policy) {
+        logger.debug("Parsing policy from JSON");
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
             
@@ -103,12 +97,15 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         PolicyDTO policyDTO = null;
         try {
             policyDTO = objectMapper.readValue(policy, PolicyDTO.class);
+            logger.debug("Successfully parsed policy. productCode={}", policyDTO.getProductCode());
         } catch (JsonProcessingException e) {
+            logger.error("Failed to parse policy JSON: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
         return policyDTO;
     }
     private String policyToJson(PolicyDTO policyDTO) {
+        logger.debug("Serializing policy to JSON. policyNumber={}", policyDTO.getPolicyNumber());
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             objectMapper.registerModule(new JavaTimeModule());
@@ -117,7 +114,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
             objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
                         
-            return objectMapper.writeValueAsString(policyDTO);
+            String json = objectMapper.writeValueAsString(policyDTO);
+            logger.debug("Successfully serialized policy to JSON");
+            return json;
             
         } catch (JsonProcessingException e) {
             logger.error("Error serializing PolicyDTO to JSON: {}", e.getMessage(), e);
@@ -129,6 +128,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     }
 
     private void calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, VariableContext varCtx) {
+        logger.debug("Calculating premium. productCode={}, packageCode={}", 
+            product.getCode(), policyDTO.getInsuredObjects().get(0).getPackageCode());
 
         // Print all variable definitions
 /*
@@ -146,6 +147,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             policyDTO.getInsuredObjects().get(0).getPackageCode());
 
         if (calculatorModel != null) {
+            logger.debug("Running calculator for product {} version {} package {}", 
+                product.getId(), product.getVersionNo(), policyDTO.getInsuredObjects().get(0).getPackageCode());
             calculatorService.runCalculator(
                 product.getId(), 
                 product.getVersionNo(), 
@@ -155,12 +158,17 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
                 postProcessService.setCovers(policyDTO, varCtx);
 
+        } else {
+            logger.warn("No calculator found for product {} version {} package {}", 
+                product.getId(), product.getVersionNo(), policyDTO.getInsuredObjects().get(0).getPackageCode());
         }
 
         
         policyDTO.getProcessList().setVars(varCtx.getValues());
 
-        policyDTO.setPremium(calculateTotalPremium(policyDTO));
+        BigDecimal totalPremium = calculateTotalPremium(policyDTO);
+        policyDTO.setPremium(totalPremium);
+        logger.debug("Premium calculated. totalPremium={}", totalPremium);
 
 //        for ( PvVarDefinition var : varCtx.getDefinitions()) {
 //            logger.info("Var {} {}", var.getCode(),  varCtx.getString(var.getCode()));
@@ -183,12 +191,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public String calculate(String policy) {
+        logger.info("Starting calculate process");
 
         // 1. JSON → DTO contract
         PolicyDTO policyDTO;
         try {
             policyDTO = policyFromJson(policy);
         } catch (Exception e) {
+            logger.error("Invalid policy JSON in calculate: {}", e.getMessage(), e);
             throw new BadRequestException("Invalid policy JSON", e);
         }
         policyDTO.setProcessList(new ProcessList(ProcessList.QUOTE));
@@ -201,10 +211,13 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 3. Получить продукт
         ProductVersionModel product;
         String productCode = policyDTO.getProductCode();
+        logger.debug("Fetching product. productCode={}", productCode);
 
         try {
             product = productService.getProductByCode(productCode, false);
+            logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (Exception e) {
+            logger.warn("Invalid product code: {}", productCode);
             throw new UnprocessableEntityException(
                 new ErrorModel(422, "Invalid product code: " + productCode,
                     List.of(new ErrorModel.ErrorDetail("product", "invalid", e.getMessage(), "productCode"))));
@@ -213,6 +226,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         try {
             preProcessService.applyProductMetadata(policyDTO, product);
         } catch (Exception e) {
+            logger.error("Error applying product metadata for productCode={}: {}", productCode, e.getMessage(), e);
             throw new UnprocessableEntityException(
                 new ErrorModel(422, "Error applying product metadata: " + productCode));
         }
@@ -234,9 +248,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         //preProcessService.enrichVariables(ctx, product);
 
         // 9. Валидация (lazy!)
+        logger.debug("Validating policy for QUOTE");
         List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
 
         if (!errors.isEmpty()) {
+            logger.warn("Validation failed for QUOTE. errors={}", errors.size());
             // TODO нормальную структуру под ошибки
             throw new BadRequestException(errors.stream()
                     .map(ValidationError::getReason)
@@ -251,12 +267,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
 
         // 12. Ответ
+        logger.info("Calculate process completed. premium={}", policyDTO.getPremium());
         return policyToJson(policyDTO);
 
     }
 
     @Override
     public String save(String policy) {
+        logger.info("Starting save process");
 
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
@@ -271,7 +289,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         
         // 3. Продукт
         String productCode = policyDTO.getProductCode();
+        logger.debug("Fetching product for save. productCode={}", productCode);
         var product = productService.getProductByCode(productCode, false);
+        logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);
@@ -293,10 +313,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         //preProcessService.enrichVariables(ctx, product);
 
         // 9. Валидация (lazy!)
+        logger.debug("Validating policy for QUOTE and SAVE");
         List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
         errors.addAll(validatorService.validate(ValidatorType.SAVE, product, varCtx));
 
         if (!errors.isEmpty()) {
+            logger.warn("Validation failed for SAVE. errors={}", errors.size());
             // TODO нормальную структуру под ошибки
             throw new BadRequestException(errors.stream()
                     .map(ValidationError::getReason)
@@ -310,10 +332,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 11. Получить номер полиса
         String nextNumber = numberGeneratorService.getNextNumber(varCtx, productCode);
         policyDTO.setPolicyNumber(nextNumber);
+        logger.debug("Generated policy number: {}", nextNumber);
 
         // Доп атрибуты вычислить
         String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
         String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
+        logger.debug("Generated digests. phDigest={}, ioDigest={}", ph_digest, io_digest);
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
@@ -323,6 +347,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         // 12. Сохранить договор в хранилище
+        logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
         storageService.save(policyDTO, userData);
 
         // 13. Ответ, удалить помойку
@@ -331,6 +356,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // TODO async send KID + draft print form
 
+        logger.info("Save process completed. policyNumber={}, premium={}", nextNumber, policyDTO.getPremium());
         return newPolicyJson;
     }
 
@@ -386,9 +412,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public PolicyData createPolicy(String policy) {
+        logger.info("Creating new policy");
         var jsonProjection = new JsonProjection(policy);
 
         var productCode = jsonProjection.getProductCode();
+        logger.debug("Creating policy for productCode={}", productCode);
 
         var version = versionManager.getLatestVersionByProductCode(productCode);
 
@@ -397,18 +425,23 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         var uuid = UUID.randomUUID();
         MdcWrapper.putId(uuid.toString());
+        logger.debug("Generated policy UUID: {}", uuid);
 
-        return storageService.save(policy, userData, version, uuid);
+        PolicyData policyData = storageService.save(policy, userData, version, uuid);
+        logger.info("Policy created. policyId={}", uuid);
+        return policyData;
     }
 
     @Override
     public PolicyData updatePolicy(String policyNumber, String policy) {
+        logger.info("Updating policy. policyNumber={}", policyNumber);
 
         var userData = securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var policyData = storageService.getPolicyByNumber(policyNumber);
         if (policyData.getPolicyStatus() != PolicyStatus.NEW) {
+            logger.warn("Attempt to update policy with bad status. policyNumber={}, status={}", policyNumber, policyData.getPolicyStatus());
             throw new BadRequestException("Can't update policy, bad policy status");
         }
 
@@ -416,6 +449,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
+            logger.warn("Unauthorized attempt to update policy. policyNumber={}", policyNumber);
             // TODO 403
             throw new BadRequestException("Unable to update policy");
         }
@@ -423,14 +457,18 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         var jsonProjection = new JsonProjection(policy);
 
         var productCode = jsonProjection.getProductCode();
+        logger.debug("Updating policy with productCode={}", productCode);
 
         var version = versionManager.getLatestVersionByProductCode(productCode);
 
-        return storageService.update(policy, userData, version, policyNumber);
+        PolicyData updatedPolicy = storageService.update(policy, userData, version, policyNumber);
+        logger.info("Policy updated. policyNumber={}", policyNumber);
+        return updatedPolicy;
     }
 
     @Override
     public PolicyData getPolicyById(UUID id) {
+        logger.debug("Getting policy by ID. policyId={}", id);
         var userData = securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
@@ -440,15 +478,18 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
+            logger.warn("Unauthorized attempt to access policy. policyId={}", id);
             // TODO 403
             throw new BadRequestException("Unable to update policy");
         }
 
+        logger.debug("Policy retrieved. policyId={}, policyNumber={}", id, policyIndex.getPolicyNumber());
         return policyData;
     }
 
     @Override
     public PolicyData getPolicyByNumber(String policyNumber) {
+        logger.debug("Getting policy by number. policyNumber={}", policyNumber);
         var userData = securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
@@ -458,10 +499,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
+            logger.warn("Unauthorized attempt to access policy. policyNumber={}", policyNumber);
             // TODO 403
             throw new BadRequestException("Unable to update policy");
         }
 
+        logger.debug("Policy retrieved. policyNumber={}", policyNumber);
         return policyData;
     }
 

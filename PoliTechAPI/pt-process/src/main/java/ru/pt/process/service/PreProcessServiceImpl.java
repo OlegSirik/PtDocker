@@ -1,5 +1,7 @@
 package ru.pt.process.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -10,15 +12,7 @@ import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.process.PreProcessService;
-import ru.pt.api.utils.JsonProjection;
-import ru.pt.api.utils.JsonSetter;
 import ru.pt.process.utils.PeriodUtils;
-import ru.pt.process.utils.VariablesService;
-import ru.pt.api.dto.product.PvVar;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.math.BigDecimal;
 import java.time.Period;
@@ -31,17 +25,23 @@ import java.util.Objects;
 @Component
 public class PreProcessServiceImpl implements PreProcessService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PreProcessServiceImpl.class);
+
     public void normalizePolicyDates(PolicyDTO policy, ProductVersionModel productVersionModel) {
+        logger.debug("Normalizing policy dates. productCode={}", productVersionModel.getCode());
         
         if (policy.getIssueDate() == null) {
             policy.setIssueDate(ZonedDateTime.now());
+            logger.debug("Set issue date to now: {}", policy.getIssueDate());
         }
             setActivationDelay(policy, productVersionModel);
             setPolicyTerm(policy, productVersionModel);
+        logger.debug("Policy dates normalized. startDate={}, endDate={}", policy.getStartDate(), policy.getEndDate());
     }
 
     @Override
     public void applyProductMetadata(PolicyDTO policy, ProductVersionModel productVersionModel) {
+        logger.info("Applying product metadata. productCode={}", productVersionModel.getCode());
         
         normalizePolicyDates( policy,  productVersionModel);
 
@@ -67,12 +67,15 @@ public class PreProcessServiceImpl implements PreProcessService {
                 .orElse(null);
 
         if (pvPackage == null) {
+            logger.warn("Package not found: packageCode={}", inPackageNo);
             throw new NotFoundException("Package not found: " + inPackageNo);
         }
 
+        logger.debug("Resolved package: code={}, name={}", pvPackage.getCode(), pvPackage.getName());
         insuredObject.setPackageCode(pkgCode);
 
         List<PvCover> covers = pvPackage.getCovers();
+        logger.debug("Processing {} covers for package {}", covers.size(), pkgCode);
         for (PvCover pvCover : covers) {
             // Check if the cover.code exists in policy.covers
             List<Cover> policyCovers = insuredObject.getCovers();
@@ -138,7 +141,7 @@ public class PreProcessServiceImpl implements PreProcessService {
     }
 
     public PolicyDTO setActivationDelay(PolicyDTO policy, ProductVersionModel policyVersionModel) {
-
+        logger.debug("Setting activation delay. validatorType={}", policyVersionModel.getWaitingPeriod().getValidatorType());
 
         String validatorType = policyVersionModel.getWaitingPeriod().getValidatorType();
         String validatorValue = policyVersionModel.getWaitingPeriod().getValidatorValue();
@@ -148,6 +151,7 @@ public class PreProcessServiceImpl implements PreProcessService {
         String waitingPeriod = policy.getWaitingPeriod();
 
         if (issueDate == null) {
+            logger.warn("Issue date is required but not provided");
             throw new IllegalAccessError("Issue date is required");
         }
         if (validatorType != null) {
@@ -199,14 +203,17 @@ public class PreProcessServiceImpl implements PreProcessService {
                 case "NEXT_MONTH":
                     startDate = issueDate.plus(Period.parse("P1M")).withDayOfMonth(1);
                     policy.setStartDate(startDate);
+                    logger.debug("Set start date to next month: {}", startDate);
                     break;
             }
         }
 
+        logger.debug("Activation delay set. waitingPeriod={}, startDate={}", policy.getWaitingPeriod(), policy.getStartDate());
         return policy;
     }
 
     public PolicyDTO setPolicyTerm(PolicyDTO policy, ProductVersionModel policyVersionModel) {
+        logger.debug("Setting policy term. validatorType={}", policyVersionModel.getPolicyTerm().getValidatorType());
         // activationDelay - RANGE LIST NEXT_MONTH
         String validatorType = policyVersionModel.getPolicyTerm().getValidatorType();
         String validatorValue = policyVersionModel.getPolicyTerm().getValidatorValue();
@@ -216,6 +223,7 @@ public class PreProcessServiceImpl implements PreProcessService {
         String policyTerm = policy.getPolicyTerm();
 
         if (startDate == null) {
+            logger.warn("Start date is required but not provided");
             throw new BadRequestException("start date is required");
         }
         if (validatorType != null) {
@@ -263,36 +271,44 @@ public class PreProcessServiceImpl implements PreProcessService {
 
                     policy.setEndDate(endDate);
                     policy.setPolicyTerm(policyTerm);
+                    logger.debug("Set end date from policy term. policyTerm={}, endDate={}", policyTerm, endDate);
                     break;
             }
         }
 
+        logger.debug("Policy term set. policyTerm={}, endDate={}", policy.getPolicyTerm(), policy.getEndDate());
         return policy;
     }
 
 
     public static PvLimit getPvLimit(PvCover pvCover, BigDecimal sumInsured) {
+        logger.debug("Resolving limit. coverCode={}, requestedSumInsured={}", pvCover.getCode(), sumInsured);
 
         // если на покрытии только 1 лимит то он является единственно возможным
         // иначе проверяем, что переданная страховая сумма есть в списке возможных сумм
         if (pvCover.getLimits() != null && pvCover.getLimits().size() == 1) {
+            logger.debug("Single limit found for cover {}", pvCover.getCode());
             return pvCover.getLimits().get(0);
         }
 
         if (sumInsured == null) {
+            logger.debug("No sum insured provided, returning null");
             return null;
         }
 
 
         for (PvLimit pvLimit : pvCover.getLimits()) {
             if (Objects.equals(pvLimit.getSumInsured(), sumInsured)) {
+                logger.debug("Matched limit. sumInsured={}, premium={}", pvLimit.getSumInsured(), pvLimit.getPremium());
                 return pvLimit;
             }
         }
+        logger.warn("No matching limit found for sumInsured={}", sumInsured);
         return null;
     }
 
     public static PvDeductible getPvDeductible(PvCover pvCover, Cover policyCover) {
+        logger.debug("Resolving deductible. coverCode={}, isMandatory={}", pvCover.getCode(), pvCover.getIsDeductibleMandatory());
         // если франшиза обязательна и в списке только одно значение то берем его
         // если франшиза обязательна а щапросе не ередена ничего, то берем франшизу с минимальным номером
         // если чтото передано, то проверяем по списку что это значение есть
@@ -300,6 +316,7 @@ public class PreProcessServiceImpl implements PreProcessService {
 
         // В списке нет франшиз
         if (pvCover.getDeductibles() == null || pvCover.getDeductibles().isEmpty()) {
+            logger.debug("No deductibles available for cover {}", pvCover.getCode());
             return null;
         }
 

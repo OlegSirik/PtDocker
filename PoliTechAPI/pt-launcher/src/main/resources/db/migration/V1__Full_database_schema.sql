@@ -15,8 +15,6 @@ CREATE SEQUENCE IF NOT EXISTS pt_calculators_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS coefficient_data_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS policy_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS account_seq START WITH 100 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS acc_tenants_seq START WITH 100 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS acc_clients_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS acc_accounts_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS acc_product_roles_seq START WITH 100 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS acc_logins_seq START WITH 100 INCREMENT BY 1;
@@ -29,7 +27,7 @@ CREATE SEQUENCE IF NOT EXISTS acc_client_configuration_seq START WITH 100 INCREM
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS acc_tenants (
-    id BIGINT PRIMARY KEY DEFAULT nextval('acc_tenants_seq'),
+    id BIGINT PRIMARY KEY,
     name VARCHAR(250),
     code VARCHAR(50) NOT NULL,
     auth_type VARCHAR(20),
@@ -41,7 +39,7 @@ CREATE TABLE IF NOT EXISTS acc_tenants (
 
 CREATE TABLE IF NOT EXISTS acc_clients (
     tid BIGINT NOT NULL REFERENCES acc_tenants(id),
-    id BIGINT PRIMARY KEY DEFAULT nextval('acc_clients_seq'),
+    id BIGINT PRIMARY KEY,
     client_id VARCHAR(255) NOT NULL,
     default_account_id BIGINT,
     name VARCHAR(250),
@@ -50,7 +48,8 @@ CREATE TABLE IF NOT EXISTS acc_clients (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_acc_clients_client_configuration UNIQUE (client_configuration_entity_id)
+    CONSTRAINT uq_acc_clients_client_configuration UNIQUE (client_configuration_entity_id),
+    CONSTRAINT acc_client_auth_client_id UNIQUE (tid, client_id)
 );
 
 CREATE TABLE IF NOT EXISTS acc_client_configuration (
@@ -154,16 +153,17 @@ CREATE TABLE IF NOT EXISTS acc_account_tokens (
 
 CREATE TABLE IF NOT EXISTS pt_lobs (
     id BIGINT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     code VARCHAR(128) NOT NULL,
     name VARCHAR(512) NOT NULL,
     lob JSONB NOT NULL,
-    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT pt_lobs_uk UNIQUE (tid, code)
 );
 
 CREATE TABLE IF NOT EXISTS pt_products (
     id INT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     lob VARCHAR(30) NOT NULL,
     code VARCHAR(30) NOT NULL,
     name VARCHAR(250) NOT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS pt_products (
 
 CREATE TABLE IF NOT EXISTS pt_product_versions (
     id INT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     product_id INT NOT NULL,
     version_no INTEGER NOT NULL,
     product JSONB NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS pt_product_versions (
 
 CREATE TABLE IF NOT EXISTS pt_calculators (
     id INT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     product_id INT NOT NULL,
     product_code VARCHAR(30) NOT NULL,
     version_no INT NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS pt_calculators (
 
 CREATE TABLE IF NOT EXISTS coefficient_data (
     id INT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     calculator_id INT NOT NULL,
     coefficient_code VARCHAR(128) NOT NULL,
     col0 VARCHAR(255), col1 VARCHAR(255), col2 VARCHAR(255), col3 VARCHAR(255), col4 VARCHAR(255),
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS coefficient_data (
 
 CREATE TABLE IF NOT EXISTS pt_number_generators (
     id INT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     product_code VARCHAR(100) NOT NULL,
     mask VARCHAR(255) NOT NULL,
     reset_policy VARCHAR(20) NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS pt_number_generators (
 
 CREATE TABLE IF NOT EXISTS pt_files (
     id BIGINT PRIMARY KEY DEFAULT nextval('account_seq'),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     file_type VARCHAR(30),
     file_desc VARCHAR(300),
     product_code VARCHAR(30),
@@ -231,14 +231,14 @@ CREATE TABLE IF NOT EXISTS pt_files (
 
 CREATE TABLE IF NOT EXISTS policy_data (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     cid BIGINT NOT NULL DEFAULT 1,
     policy JSONB NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS policy_index (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tid BIGINT NOT NULL DEFAULT 1,
+    tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     draft_id VARCHAR(30),
     policy_nr VARCHAR(30),
     version_no INTEGER,
@@ -262,7 +262,8 @@ CREATE TABLE IF NOT EXISTS policy_index (
     premium NUMERIC(18, 2),
     agent_kv_percent NUMERIC(18, 2),
     agent_kv_amount NUMERIC(18, 2),
-    FOREIGN KEY (id) REFERENCES policy_data(id) ON DELETE CASCADE
+    FOREIGN KEY (id) REFERENCES policy_data(id) ON DELETE CASCADE,
+    CONSTRAINT policy_index_policy_nr UNIQUE (tid, policy_nr)
 );
 
 -- ============================================================================

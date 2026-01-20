@@ -17,6 +17,12 @@ public class PolicyEntity {
     @Id
     private UUID id;
 
+    @Column(name = "tid")
+    private Long tid;
+
+    @Column(name = "cid")
+    private Long cid;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "policy", columnDefinition = "jsonb", nullable = false)
     private String policy;
@@ -24,9 +30,10 @@ public class PolicyEntity {
     public PolicyEntity() {
     }
 
-    public PolicyEntity(UUID id, String policy) {
+    public PolicyEntity(UUID id, Long tid, String policy) {
         this.id = id;
         this.policy = policy;
+        this.tid = tid;
     }
 
     public UUID getId() {
@@ -35,6 +42,22 @@ public class PolicyEntity {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public Long getTid() {
+        return tid;
+    }
+
+    public void setTid(Long tid) {
+        this.tid = tid;
+    }
+
+    public Long getCid() {
+        return cid;
+    }
+
+    public void setCid(Long cid) {
+        this.cid = cid;
     }
 
     public String getPolicy() {

@@ -48,6 +48,4 @@ WHERE NOT EXISTS (
 );
 
 -- 6. Обновить последовательности, чтобы они начинались с правильных значений
-SELECT setval('acc_tenants_seq', (SELECT COALESCE(MAX(id), 2) FROM acc_tenants));
-SELECT setval('acc_clients_seq', (SELECT COALESCE(MAX(id), 2) FROM acc_clients));
-SELECT setval('acc_accounts_seq', (SELECT COALESCE(MAX(id), 2) FROM acc_accounts));
+SELECT setval('acc_accounts_seq', 100);
