@@ -332,6 +332,6 @@ public final class VariableContext implements Map<String, Object> {
     }
 
     public String getPackageNo() {
-        return (String) this.values.get("pl_packageNo");
+        return (String) this.get("io_packageCode");
     }
 }

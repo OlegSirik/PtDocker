@@ -154,12 +154,14 @@ public class FileProcessServiceImpl implements FileProcessService {
 
         List<PvVarDefinition> varDefinitions = 
                 productVersion.getVars().stream()
+                .peek(var -> logger.debug("Processing variable: code={}, name={}, path={}", var.getVarCode(), var.getVarName(), var.getVarPath()))
                 .map(this::toDefinition)
                 .toList();
 
+              
         //ToDo refactor
-        varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
-        varDefinitions.add(new PvVarDefinition("pl_package", "insuredObjects[0].packageCode", PvVarDefinition.Type.STRING, "IN"));
+        //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
+        //varDefinitions.add(new PvVarDefinition("pl_package", "insuredObjects[0].packageCode", PvVarDefinition.Type.STRING, "IN"));
         
         // 7. Runtime-контекст
         VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
@@ -167,7 +169,7 @@ public class FileProcessServiceImpl implements FileProcessService {
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
         Integer fileId = null;
 
-        for (PvPackage pvPackage : productVersion.getPackages()) {
+        for (PvPackage pvPackage : productVersion.getPackages()) { 
             if (pvPackage.getName().equals(packageNo)) {
                 for (PvFile pvFile : pvPackage.getFiles()) {
                     if (pvFile.getFileCode().equals(printFormType)) {

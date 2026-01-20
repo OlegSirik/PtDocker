@@ -90,6 +90,7 @@ export class VarsService {
     if (type === 'person') {
 
         return [
+        ...this.ioVars,
         ...this.getIoPersonVars(),
         ...this.getIoOrganizationVars(),
         ...this.getIoContactsVars(),
@@ -99,14 +100,21 @@ export class VarsService {
 
     }
     if (type === 'device') {
-        return this.ioDeviceVars;
+        return [
+          ...this.ioVars,
+          ...this.ioDeviceVars
+        ];
     }
   
     if (type === 'property') {
-        return this.ioPropertyVars;
+        return [
+          ...this.ioVars,
+          ...this.ioPropertyVars
+        ];
     }
     if (type === 'avia-ns') {
       return [
+        ...this.ioVars,
         ...this.getIoPersonVars(),
         ...this.getIoContactsVars(),
         ...this.ioTravelSegmentsVars
@@ -153,7 +161,7 @@ export class VarsService {
     return this.phPersonVars.map(v => ({
       ...v,
       varCode: v.varCode.replace('ph_', 'io_'),
-      varPath: v.varPath.replace('policyHolder.', 'insuredObject.'),
+      varPath: v.varPath.replace('policyHolder.', 'insuredObjects[0].'),
       varCdm: v.varCdm.replace('policyHolder.', 'insuredObject.'),
       varNr: v.varNr ? v.varNr + 5000 : 0 // Offset varNr to avoid conflicts
     }));
@@ -810,22 +818,22 @@ export class VarsService {
   {
     "varNr": 143,
     "varDataType": "STRING",
-    "varCode": "ph_fullName",
+    "varCode": "ph_orgFullName",
     "varName": "Страхователь.полное наименование юр.лица",
     "varPath": "policyHolder.organization.fullName",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.organization.fullName"
+    "varCdm": "policyHolder.organization.orgFullName"
   },
   {
     "varNr": 144,
     "varDataType": "STRING",
-    "varCode": "ph_fullNameEn",
+    "varCode": "ph_orgFullNameEn",
     "varName": "Страхователь.полное наименование  юр.лица англ",
     "varPath": "policyHolder.organization.fullNameEn",
     "varType": "IN",
     "varValue": "",
-    "varCdm": "policyHolder.organization.fullNameEn"
+    "varCdm": "policyHolder.organization.orgFullNameEn"
   },
   {
     "varNr": 145,
@@ -1033,23 +1041,36 @@ export class VarsService {
   ];
 
   /* io с varNr < 100 системные и не удаляются */ 
+  ioVars: LobVar[] = [
+    {
+      "varNr": 10,
+      "varDataType": "NUMBER",
+      "varCode": "io_sumInsured",
+      "varName": "Страховая сумма объекта страхования",
+      "varPath": "insuredObjects[0].sumInsured",
+      "varType": "IN",
+      "varValue": "100000",
+      "varCdm": "insuredObject.sumInsured"
+    },
+    {
+      "varNr": 11,
+      "varDataType": "STRING",
+      "varCode": "io_packageCode",
+      "varName": "Код пакета",
+      "varPath": "insuredObjects[0].packageCode",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.packageCode"
+    }
+  ]
+
   ioDeviceVars: LobVar[] = [
-        {
-          "varNr": 10,
-          "varDataType": "NUMBER",
-          "varCode": "sumInsured",
-          "varName": "Страховая сумма объекта страхования",
-          "varPath": "insuredObjects[0].sumInsured",
-          "varType": "IN",
-          "varValue": "100000",
-          "varCdm": "insuredObject.sumInsured"
-        },
         {
         "varNr": 1001,
         "varDataType": "STRING",
         "varCode": "io_device_name",
         "varName": "Застрахованное ус-во. название",
-        "varPath": "insuredObject.device.deviceName",
+        "varPath": "insuredObjects[0].device.deviceName",
         "varType": "IN",
         "varValue": "Телефон",
         "varCdm": "insuredObject.device.deviceName"
@@ -1059,7 +1080,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_typeCode",
         "varName": "Застрахованное ус-во. код типа",
-        "varPath": "insuredObject.device.deviceTypeCode",
+        "varPath": "insuredObjects[0].device.deviceTypeCode",
         "varType": "IN",
         "varValue": "PHONE",
         "varCdm": "insuredObject.device.deviceTypeCode"
@@ -1069,7 +1090,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_tradeMark",
         "varName": "Застрахованное ус-во. торговая марка",
-        "varPath": "insuredObject.device.tradeMark",
+        "varPath": "insuredObjects[0].device.tradeMark",
         "varType": "IN",
         "varValue": "Samsung",
         "varCdm": "insuredObject.device.tradeMark"
@@ -1079,7 +1100,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_model",
         "varName": "Застрахованное ус-во. модель",
-        "varPath": "insuredObject.device.model",
+        "varPath": "insuredObjects[0].device.model",
         "varType": "IN",
         "varValue": "Galaxy S21",
         "varCdm": "insuredObject.device.model"
@@ -1089,7 +1110,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_serialNr",
         "varName": "Застрахованное ус-во. серийный номер",
-        "varPath": "insuredObject.device.serialNr",
+        "varPath": "insuredObjects[0].device.serialNr",
         "varType": "IN",
         "varValue": "1234567890",
         "varCdm": "insuredObject.device.serialNr"
@@ -1099,7 +1120,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_licenseKey",
         "varName": "Застрахованное ус-во. ключ лицензии",
-        "varPath": "insuredObject.device.licenseKey",
+        "varPath": "insuredObjects[0].device.licenseKey",
         "varType": "IN",
         "varValue": "1234567890",
         "varCdm": "insuredObject.device.licenseKey"
@@ -1109,7 +1130,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_imei",
         "varName": "Застрахованное ус-во. IMEI",
-        "varPath": "insuredObject.device.imei",
+        "varPath": "insuredObjects[0].device.imei",
         "varType": "IN",
         "varValue": "1234567890",
         "varCdm": "insuredObject.device.imei"
@@ -1119,7 +1140,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_osName",
         "varName": "Застрахованное ус-во. название ОС",
-        "varPath": "insuredObject.device.osName",
+        "varPath": "insuredObjects[0].device.osName",
         "varType": "IN",
         "varValue": "Android",
         "varCdm": "insuredObject.device.osName"
@@ -1129,7 +1150,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_osVersion",
         "varName": "Застрахованное ус-во. версия ОС",
-        "varPath": "insuredObject.device.osVersion",
+        "varPath": "insuredObjects[0].device.osVersion",
         "varType": "IN",
         "varValue": "10",
         "varCdm": "insuredObject.device.osVersion"
@@ -1139,7 +1160,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_countryCode",
         "varName": "Застрахованное ус-во. код страны",
-        "varPath": "insuredObject.device.countryCode",
+        "varPath": "insuredObjects[0].device.countryCode",
         "varType": "IN",
         "varValue": "RU",
         "varCdm": "insuredObject.device.countryCode"
@@ -1149,7 +1170,7 @@ export class VarsService {
         "varDataType": "STRING",
         "varCode": "io_device_devicePrice",
         "varName": "Застрахованное ус-во. цена",
-        "varPath": "insuredObject.device.devicePrice",
+        "varPath": "insuredObjects[0].device.devicePrice",
         "varType": "IN",
         "varValue": "10000",
         "varCdm": "insuredObject.device.devicePrice"
@@ -1162,7 +1183,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_propertyType_code",
       "varName": "Имущество.тип имущества код",
-      "varPath": "insuredObject.property.propertyType.code",
+      "varPath": "insuredObjects[0].property.propertyType.code",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.propertyType.code"
@@ -1172,7 +1193,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_typeCode",
       "varName": "Имущество.адрес.тип адреса",
-      "varPath": "insuredObject.property.address.typeCode",
+      "varPath": "insuredObjects[0].property.address.typeCode",
       "varType": "IN",
       "varValue": "REGISTRATION",
       "varCdm": "insuredObject.property.address.typeCode"
@@ -1182,7 +1203,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_countryCode",
       "varName": "Имущество.адрес.код страны",
-      "varPath": "insuredObject.property.address.countryCode",
+      "varPath": "insuredObjects[0].property.address.countryCode",
       "varType": "IN",
       "varValue": "RU",
       "varCdm": "insuredObject.property.address.countryCode"
@@ -1192,7 +1213,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_region",
       "varName": "Имущество.адрес.регион",
-      "varPath": "insuredObject.property.address.region",
+      "varPath": "insuredObjects[0].property.address.region",
       "varType": "IN",
         "varValue": "г Москва",
       "varCdm": "insuredObject.property.address.region"
@@ -1202,7 +1223,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_city",
       "varName": "Имущество.адрес.город",
-      "varPath": "insuredObject.property.address.city",
+      "varPath": "insuredObjects[0].property.address.city",
       "varType": "IN",
       "varValue": "Москва",
       "varCdm": "insuredObject.property.address.city"
@@ -1212,7 +1233,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_street",
       "varName": "Имущество.адрес.улица",
-      "varPath": "insuredObject.property.address.street",
+      "varPath": "insuredObjects[0].property.address.street",
       "varType": "IN",
       "varValue": "Академика Королева",
       "varCdm": "insuredObject.property.address.street"
@@ -1222,7 +1243,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_house",
       "varName": "Имущество.адрес.дом",
-      "varPath": "insuredObject.property.address.house",
+      "varPath": "insuredObjects[0].property.address.house",
       "varType": "IN",
       "varValue": "3",
       "varCdm": "insuredObject.property.address.house"
@@ -1232,7 +1253,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_building",
       "varName": "Имущество.адрес.строение",
-      "varPath": "insuredObject.property.address.building",
+      "varPath": "insuredObjects[0].property.address.building",
       "varType": "IN",
       "varValue": "2",
       "varCdm": "insuredObject.property.address.building"
@@ -1242,7 +1263,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_flat",
       "varName": "Имущество.адрес.квартира",
-      "varPath": "insuredObject.property.address.flat",
+      "varPath": "insuredObjects[0].property.address.flat",
       "varType": "IN",
       "varValue": "25",
       "varCdm": "insuredObject.property.address.flat"
@@ -1252,7 +1273,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_room",
       "varName": "Имущество.адрес.комната",
-      "varPath": "insuredObject.property.address.room",
+      "varPath": "insuredObjects[0].property.address.room",
       "varType": "IN",
       "varValue": "2",
       "varCdm": "insuredObject.property.address.room"
@@ -1262,7 +1283,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_zipCode",
       "varName": "Имущество.адрес.индекс",
-      "varPath": "insuredObject.property.address.zipCode",
+      "varPath": "insuredObjects[0].property.address.zipCode",
       "varType": "IN",
       "varValue": "129515",
       "varCdm": "insuredObject.property.address.zipCode"
@@ -1272,7 +1293,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_kladrId",
       "varName": "Имущество.адрес.код КЛАДР",
-      "varPath": "insuredObject.property.address.kladrId",
+      "varPath": "insuredObjects[0].property.address.kladrId",
       "varType": "IN",
       "varValue": "7700000000015450062",
       "varCdm": "insuredObject.property.address.kladrId"
@@ -1282,7 +1303,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_fiasId",
       "varName": "Имущество.адрес.код ФИАС",
-      "varPath": "insuredObject.property.address.fiasId",
+      "varPath": "insuredObjects[0].property.address.fiasId",
       "varType": "IN",
       "varValue": "f64c75cd-a640-41ed-9893-c1aaef58e638",
       "varCdm": "insuredObject.property.address.fiasId"
@@ -1292,7 +1313,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_addressStr",
       "varName": "Имущество.адрес.адресная строка",
-      "varPath": "insuredObject.property.address.addressStr",
+      "varPath": "insuredObjects[0].property.address.addressStr",
       "varType": "IN",
       "varValue": "129515, г.Москва, ул.Академика Королева, д.2, к.3, кв.25",
       "varCdm": "insuredObject.property.address.addressStr"
@@ -1302,7 +1323,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_addressStrEn",
       "varName": "Имущество.адрес.адресная строка англ",
-      "varPath": "insuredObject.property.address.addressStrEn",
+      "varPath": "insuredObjects[0].property.address.addressStrEn",
       "varType": "IN",
       "varValue": "129515, г.Moscow",
       "varCdm": "insuredObject.property.address.addressStrEn"
@@ -1312,7 +1333,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_vsk_id",
       "varName": "Имущество.адрес.ID ВСК",
-      "varPath": "insuredObject.property.address.vsk_id",
+      "varPath": "insuredObjects[0].property.address.vsk_id",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.address.vsk_id"
@@ -1322,7 +1343,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_addr_ext_id",
       "varName": "Имущество.адрес.внешний ID",
-      "varPath": "insuredObject.property.address.ext_id",
+      "varPath": "insuredObjects[0].property.address.ext_id",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.address.ext_id"
@@ -1332,7 +1353,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_cadastrNr",
       "varName": "Имущество.кадастровый номер",
-      "varPath": "insuredObject.property.cadastrNr",
+      "varPath": "insuredObjects[0].property.cadastrNr",
       "varType": "IN",
       "varValue": "77:07:0018002:2590",
       "varCdm": "insuredObject.property.cadastrNr"
@@ -1342,7 +1363,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_wallsMaterial",
       "varName": "Имущество.материал стен",
-      "varPath": "insuredObject.property.wallsMaterial",
+      "varPath": "insuredObjects[0].property.wallsMaterial",
       "varType": "IN",
       "varValue": "Каменные, кирпичные",
       "varCdm": "insuredObject.property.wallsMaterial"
@@ -1352,7 +1373,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_wallsMaterialOther",
       "varName": "Имущество.материал стен другой",
-      "varPath": "insuredObject.property.wallsMaterialOther",
+      "varPath": "insuredObjects[0].property.wallsMaterialOther",
       "varType": "IN",
       "varValue": "Каменные, кирпичные",
       "varCdm": "insuredObject.property.wallsMaterialOther"
@@ -1362,7 +1383,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_ceilingMaterial",
       "varName": "Имущество.материал перекрытий",
-      "varPath": "insuredObject.property.ceilingMaterial",
+      "varPath": "insuredObjects[0].property.ceilingMaterial",
       "varType": "IN",
       "varValue": "Смешанные",
       "varCdm": "insuredObject.property.ceilingMaterial"
@@ -1372,7 +1393,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_ceilingMaterialOther",
       "varName": "Имущество.материал перекрытий другой",
-      "varPath": "insuredObject.property.ceilingMaterialOther",
+      "varPath": "insuredObjects[0].property.ceilingMaterialOther",
       "varType": "IN",
       "varValue": "Смешанные",
       "varCdm": "insuredObject.property.ceilingMaterialOther"
@@ -1382,7 +1403,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_constructionYear",
       "varName": "Имущество.год постройки",
-      "varPath": "insuredObject.property.constructionYear",
+      "varPath": "insuredObjects[0].property.constructionYear",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.constructionYear"
@@ -1392,7 +1413,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_repairYear",
       "varName": "Имущество.год ремонта",
-      "varPath": "insuredObject.property.repairYear",
+      "varPath": "insuredObjects[0].property.repairYear",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.repairYear"
@@ -1402,7 +1423,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_buildingArea",
       "varName": "Имущество.площадь здания",
-      "varPath": "insuredObject.property.buildingArea",
+      "varPath": "insuredObjects[0].property.buildingArea",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.buildingArea"
@@ -1412,7 +1433,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_landArea",
       "varName": "Имущество.площадь участка",
-      "varPath": "insuredObject.property.landArea",
+      "varPath": "insuredObjects[0].property.landArea",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.landArea"
@@ -1422,7 +1443,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_buildingValue",
       "varName": "Имущество.стоимость здания",
-      "varPath": "insuredObject.property.buildingValue",
+      "varPath": "insuredObjects[0].property.buildingValue",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.buildingValue"
@@ -1432,7 +1453,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_wearCoefficient",
       "varName": "Имущество.коэффициент износа",
-      "varPath": "insuredObject.property.wearCoefficient",
+      "varPath": "insuredObjects[0].property.wearCoefficient",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.wearCoefficient"
@@ -1442,7 +1463,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_numberOfFloors",
       "varName": "Имущество.количество этажей",
-      "varPath": "insuredObject.property.numberOfFloors",
+      "varPath": "insuredObjects[0].property.numberOfFloors",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.numberOfFloors"
@@ -1452,7 +1473,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_propertyLocation",
       "varName": "Имущество.расположение имущества",
-      "varPath": "insuredObject.property.propertyLocation",
+      "varPath": "insuredObjects[0].property.propertyLocation",
       "varType": "IN",
       "varValue": "В многоквартирном доме",
       "varCdm": "insuredObject.property.propertyLocation"
@@ -1462,7 +1483,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_isNewBuilding",
       "varName": "Имущество.новостройка",
-      "varPath": "insuredObject.property.isNewBuilding",
+      "varPath": "insuredObjects[0].property.isNewBuilding",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.isNewBuilding"
@@ -1472,7 +1493,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_propertyValue",
       "varName": "Имущество.стоимость имущества",
-      "varPath": "insuredObject.property.propertyValue",
+      "varPath": "insuredObjects[0].property.propertyValue",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.propertyValue"
@@ -1482,7 +1503,7 @@ export class VarsService {
       "varDataType": "STRING",
       "varCode": "io_commissioningDate",
       "varName": "Имущество.дата ввода в эксплуатацию",
-      "varPath": "insuredObject.property.commissioningDate",
+      "varPath": "insuredObjects[0].property.commissioningDate",
       "varType": "IN",
       "varValue": "",
       "varCdm": "insuredObject.property.commissioningDate"
@@ -1492,7 +1513,7 @@ export class VarsService {
       "varDataType": "NUMBER",
       "varCode": "io_floor",
       "varName": "Имущество.этаж",
-      "varPath": "insuredObject.property.floor",
+      "varPath": "insuredObjects[0].property.floor",
       "varType": "IN",
       "varValue": "0",
       "varCdm": "insuredObject.property.floor"
@@ -1522,7 +1543,70 @@ export class VarsService {
   }
   ];
 
-  policyVars: LobVar[] = [];
+  policyVars: LobVar[] = [
+    {
+      "varNr": 10,
+      "varDataType": "STRING",
+      "varCode": "pl_productCode",
+      "varName": "Код продукта",
+      "varPath": "productCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.productCode"
+    },
+    {
+      "varNr": 11,
+      "varDataType": "STRING",
+      "varCode": "pl_startDate",
+      "varName": "дата начала действия договора",
+      "varPath": "startDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.startDate"
+    },
+    {
+      "varNr": 12,
+      "varDataType": "STRING",
+      "varCode": "pl_endDate",
+      "varName": "дата окончания договора",
+      "varPath": "endDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.endDate"
+    },
+    {
+      "varNr": 13,
+      "varDataType": "STRING",
+      "varCode": "pl_policyNumber",
+      "varName": "номер договора",
+      "varPath": "policyNumber",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.policyNumber"
+    },
+    {
+      "varNr": 14,
+      "varDataType": "STRING",
+      "varCode": "pl_premium",
+      "varName": "премия по договору",
+      "varPath": "premium",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.premium"
+    },
+    {
+      "varNr": 15,
+      "varDataType": "STRING",
+      "varCode": "pl_issueDate",
+      "varName": "дата выпуска договора",
+      "varPath": "issueDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.issueDate"
+    }
+
+  ];
+
   policyMagicVars: LobVar[] = [
   {
     "varNr": 1201,

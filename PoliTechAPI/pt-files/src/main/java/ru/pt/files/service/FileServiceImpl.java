@@ -147,6 +147,40 @@ public class FileServiceImpl implements FileService {
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             if (form != null) {
                 //form.getFields().forEach(System.out::println);
+                for (PDField pdfield : form.getFields()) {
+                    
+                    String fName = pdfield.getPartialName();
+                    String fValue = keyValues.get(fName).toString();
+                    try {
+                        pdfield.setValue(fValue);
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }
+
+                }
+
+                form.flatten();
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return out.toByteArray();
+        } catch (IOException ex) {
+            throw new InternalServerErrorException("Failed to process PDF", ex);
+        }
+    }
+
+//    @Override
+    public byte[] process_old(Long id, Map<String, Object> keyValues) {
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        if (entity.getFileBody() == null) {
+            throw new IllegalArgumentException("File body is empty");
+        }
+
+        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            if (form != null) {
+                //form.getFields().forEach(System.out::println);
 
                 for (Map.Entry<String, Object> e : keyValues.entrySet()) {
                     //String key = e.getKey();
