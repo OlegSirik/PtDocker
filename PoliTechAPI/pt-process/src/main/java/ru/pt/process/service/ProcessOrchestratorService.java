@@ -169,8 +169,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     }
 
     private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
-        varDefinitions.add(new PvVarDefinition("Product", "$,productCode", PvVarDefinition.Type.STRING, "VAR"));
-        varDefinitions.add(new PvVarDefinition("Package", "$,packageCode", PvVarDefinition.Type.STRING, "VAR"));
+        varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
+        varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
         for (InsuredObject insuredObject : policyDTO.getInsuredObjects()) {
             for (Cover cover : insuredObject.getCovers()) {
                 String coverCode = cover.getCover().getCode();

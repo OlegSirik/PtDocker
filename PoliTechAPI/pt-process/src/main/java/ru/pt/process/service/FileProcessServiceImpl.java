@@ -157,6 +157,10 @@ public class FileProcessServiceImpl implements FileProcessService {
                 .map(this::toDefinition)
                 .toList();
 
+        //ToDo refactor
+        varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
+        varDefinitions.add(new PvVarDefinition("pl_package", "insuredObjects[0].packageCode", PvVarDefinition.Type.STRING, "IN"));
+        
         // 7. Runtime-контекст
         VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
         String packageNo = varCtx.getPackageNo();
