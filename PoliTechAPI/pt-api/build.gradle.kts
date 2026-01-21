@@ -16,6 +16,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
     implementation("com.jayway.jsonpath:json-path:2.9.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("org.slf4j:slf4j-api:2.0.9")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
