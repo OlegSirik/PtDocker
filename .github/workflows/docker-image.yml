@@ -92,8 +92,8 @@ jobs:
             cd ~/PtDocker || cd /root/PtDocker || cd /home/${{ secrets.SERVER_USER }}/PtDocker
             
             # Pull latest code
-            git pull origin master
-            echo "✅ Code updated"
+            #git pull origin master
+            #echo "✅ Code updated"
             
             # Pull latest images from Docker Hub
             docker pull ${{ env.BACKEND_IMAGE }}:latest
@@ -101,18 +101,18 @@ jobs:
             echo "✅ Images pulled from Docker Hub"
             
             # Stop existing containers
-            docker-compose -f docker-compose-published.yml --env-file docker-compose.env down
+            docker compose -f docker-compose-published.yml --env-file docker-compose.env down
             echo "✅ Containers stopped"
             
             # Start with published images
-            docker-compose -f docker-compose-published.yml --env-file docker-compose.env up -d
+            docker compose -f docker-compose-published.yml --env-file docker-compose.env up -d
             echo "✅ Services started"
             
             # Wait for services to start
             sleep 30
             
             # Show status
-            docker-compose -f docker-compose-published.yml --env-file docker-compose.env ps
+            docker compose -f docker-compose-published.yml --env-file docker-compose.env ps
             echo "✅ Deployment complete!"
             
             # Cleanup old images

@@ -144,16 +144,45 @@ public class HealthCheckController {
         int createdCalculators = 0;
         int createdCoefficients = 0;
         List<String> errors = new ArrayList<>();
+        boolean versionCreated = false;
         
         try {
-            // Note: Product version should already exist in DB
-            // This method only imports calculators and coefficients
             Integer productId = details.productVersion().getId();
             Integer versionNo = details.productVersion().getVersionNo();
             String productCode = details.productVersion().getCode();
             
             logger.debug("Importing for productId={}, productCode={}, versionNo={}", 
                 productId, productCode, versionNo);
+            
+            // Get current version from DB
+            ProductVersionModel currentVersion = productService.getVersion(productId, versionNo);
+            logger.debug("Current version status: {}", currentVersion.getVersionStatus());
+            
+            // Handle product version based on status
+            if ("PROD".equalsIgnoreCase(currentVersion.getVersionStatus())) {
+                // If PROD, create new dev version
+                logger.info("Version is PROD, creating new dev version from version {}", versionNo);
+                ProductVersionModel newDevVersion = productService.createVersionFrom(productId, versionNo);
+                versionCreated = true;
+                versionNo = newDevVersion.getVersionNo();
+                logger.info("Created new dev version: {}", versionNo);
+                
+                // Update the new dev version with imported data
+                productService.updateVersion(productId, versionNo, details.productVersion());
+                logger.debug("Updated new dev version with imported data");
+                
+            } else if ("DEV".equalsIgnoreCase(currentVersion.getVersionStatus())) {
+                // If DEV, update existing version
+                logger.info("Version is DEV, updating version {}", versionNo);
+                productService.updateVersion(productId, versionNo, details.productVersion());
+                logger.debug("Updated dev version with imported data");
+                
+            } else {
+                String error = "Version status must be PROD or DEV, found: " + currentVersion.getVersionStatus();
+                logger.error(error);
+                errors.add(error);
+                return new ImportResult(false, 0, 0, errors, false, null);
+            }
             
             // Process each package
             for (PackageDetails pkgDetails : details.packages()) {
@@ -226,14 +255,16 @@ public class HealthCheckController {
                 }
             }
             
-            logger.info("Import completed: {} calculators, {} coefficients created, {} errors",
-                createdCalculators, createdCoefficients, errors.size());
+            logger.info("Import completed: version created={}, version={}, {} calculators, {} coefficients created, {} errors",
+                versionCreated, versionNo, createdCalculators, createdCoefficients, errors.size());
             
             return new ImportResult(
                 true,
                 createdCalculators,
                 createdCoefficients,
-                errors.isEmpty() ? null : errors
+                errors.isEmpty() ? null : errors,
+                versionCreated,
+                versionNo
             );
             
         } catch (Exception e) {
@@ -243,7 +274,9 @@ public class HealthCheckController {
                 false,
                 createdCalculators,
                 createdCoefficients,
-                errors
+                errors,
+                versionCreated,
+                null
             );
         }
     }
@@ -290,6 +323,8 @@ public class HealthCheckController {
         boolean success,
         int calculatorsCreated,
         int coefficientsImported,
-        List<String> errors
+        List<String> errors,
+        boolean versionCreated,
+        Integer targetVersionNo
     ) {}
 }
