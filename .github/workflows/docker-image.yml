@@ -94,22 +94,25 @@ jobs:
             # Pull latest code
             git pull origin master
             echo "✅ Code updated"
-            git status
             
             # Pull latest images from Docker Hub
             docker pull ${{ env.BACKEND_IMAGE }}:latest
             docker pull ${{ env.FRONTEND_IMAGE }}:latest
             echo "✅ Images pulled from Docker Hub"
             
-            # Restart services with new images
-            docker-compose --env-file docker-compose.env down
-            docker-compose --env-file docker-compose.env up -d
+            # Stop existing containers
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env down
+            echo "✅ Containers stopped"
+            
+            # Start with published images
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env up -d
+            echo "✅ Services started"
             
             # Wait for services to start
-            sleep 10
+            sleep 30
             
             # Show status
-            docker-compose --env-file docker-compose.env ps
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env ps
             echo "✅ Deployment complete!"
             
             # Cleanup old images

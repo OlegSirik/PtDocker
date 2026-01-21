@@ -172,11 +172,20 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
             echo "✅ Images pulled"
             
-            # Restart services with new images
-            docker-compose --env-file docker-compose.env down
-            docker-compose --env-file docker-compose.env up -d
-            echo "✅ Services restarted"
+            # Stop existing containers
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env down
+            echo "✅ Containers stopped"
+            
+            # Start with published images
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env up -d
+            echo "✅ Services started"
+            
+            # Wait for services to initialize
+            sleep 30
             
             # Show status
-            docker-compose --env-file docker-compose.env ps
+            docker-compose -f docker-compose-published.yml --env-file docker-compose.env ps
             echo "✅ Deployment complete"
+            
+            # Optional: Check backend health
+            curl -f http://localhost:8080/actuator/health || echo "⚠️ Backend health check failed"
