@@ -16,9 +16,13 @@ import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
+import ru.pt.api.dto.errors.ErrorConstants;
 import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
+import ru.pt.api.dto.exception.InternalServerErrorException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
@@ -100,7 +104,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             logger.debug("Successfully parsed policy. productCode={}", policyDTO.getProductCode());
         } catch (JsonProcessingException e) {
             logger.error("Failed to parse policy JSON: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.invalidJsonFormat("policy"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_INVALID_FORMAT,
+                "policy"
+            );
+            throw new BadRequestException(errorModel);
         }
         return policyDTO;
     }
@@ -120,10 +131,24 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             
         } catch (JsonProcessingException e) {
             logger.error("Error serializing PolicyDTO to JSON: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                500,
+                "Failed to serialize policy to JSON: " + e.getMessage(),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_INTERNAL_ERROR,
+                "policy"
+            );
+            throw new InternalServerErrorException(errorModel);
         } catch (Exception e) {
             logger.error("Unexpected error serializing PolicyDTO to JSON: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                500,
+                "Unexpected error serializing policy: " + e.getMessage(),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_INTERNAL_ERROR,
+                "policy"
+            );
+            throw new InternalServerErrorException(errorModel);
         }
     }
 
@@ -197,9 +222,19 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         PolicyDTO policyDTO;
         try {
             policyDTO = policyFromJson(policy);
+        } catch (BadRequestException e) {
+            // Re-throw BadRequestException as-is
+            throw e;
         } catch (Exception e) {
             logger.error("Invalid policy JSON in calculate: {}", e.getMessage(), e);
-            throw new BadRequestException("Invalid policy JSON", e);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.invalidJsonFormat("calculate request body"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_INVALID_FORMAT,
+                "requestBody"
+            );
+            throw new BadRequestException(errorModel);
         }
         policyDTO.setProcessList(new ProcessList(ProcessList.QUOTE));
         /* Удалить возможный хлам */
@@ -216,19 +251,33 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         try {
             product = productService.getProductByCode(productCode, false);
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
+        } catch (NotFoundException e) {
+            // Re-throw NotFoundException as-is
+            throw e;
         } catch (Exception e) {
             logger.warn("Invalid product code: {}", productCode);
-            throw new UnprocessableEntityException(
-                new ErrorModel(422, "Invalid product code: " + productCode,
-                    List.of(new ErrorModel.ErrorDetail("product", "invalid", e.getMessage(), "productCode"))));
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                422,
+                ErrorConstants.productNotFound(productCode),
+                ErrorConstants.DOMAIN_PRODUCT,
+                ErrorConstants.REASON_NOT_FOUND,
+                "productCode"
+            );
+            throw new UnprocessableEntityException(errorModel);
         }
         // 4. Применение метаданных продукта
         try {
             preProcessService.applyProductMetadata(policyDTO, product);
         } catch (Exception e) {
             logger.error("Error applying product metadata for productCode={}: {}", productCode, e.getMessage(), e);
-            throw new UnprocessableEntityException(
-                new ErrorModel(422, "Error applying product metadata: " + productCode));
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                422,
+                String.format("Error applying product metadata for productCode '%s': %s", productCode, e.getMessage()),
+                ErrorConstants.DOMAIN_PRODUCT,
+                ErrorConstants.REASON_INTERNAL_ERROR,
+                "productCode"
+            );
+            throw new UnprocessableEntityException(errorModel);
         }
 
         // 5. DTO → JSON (эталонная модель)
@@ -253,11 +302,19 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         if (!errors.isEmpty()) {
             logger.warn("Validation failed for QUOTE. errors={}", errors.size());
-            // TODO нормальную структуру под ошибки
-            throw new BadRequestException(errors.stream()
+            List<ErrorModel.ErrorDetail> errorDetails = errors.stream()
+                    .map(err -> new ErrorModel.ErrorDetail(
+                        ErrorConstants.DOMAIN_VALIDATION,
+                        ErrorConstants.REASON_VALIDATION_FAILED,
+                        err.getReason(),
+                        err.getPath()
+                    ))
+                    .collect(Collectors.toList());
+            String errorMessage = "Validation failed: " + errors.stream()
                     .map(ValidationError::getReason)
-                    .collect(Collectors.joining(","))
-            );
+                    .collect(Collectors.joining(", "));
+            ErrorModel errorModel = new ErrorModel(400, errorMessage, errorDetails);
+            throw new BadRequestException(errorModel);
         }
 
         // 10. Расчёт премии (lazy!)
@@ -344,7 +401,16 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // Текущий пользователь
         var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        401,
+                        "Unable to get current user from security context",
+                        ErrorConstants.DOMAIN_AUTH,
+                        ErrorConstants.REASON_UNAUTHORIZED,
+                        "securityContext"
+                    );
+                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
+                });
 
         // 12. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
@@ -387,8 +453,44 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     @Override
     public void paymentCallback(String policyId) {
+        // Validate policyId
+        if (policyId == null || policyId.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("policyId"),
+                ErrorConstants.DOMAIN_PAYMENT,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "policyId"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
+        UUID policyUuid;
+        try {
+            policyUuid = UUID.fromString(policyId);
+        } catch (IllegalArgumentException e) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                String.format("Invalid UUID format for policyId: %s", policyId),
+                ErrorConstants.DOMAIN_PAYMENT,
+                ErrorConstants.REASON_INVALID_FORMAT,
+                "policyId"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         // set policy status
-        PolicyData policyData = storageService.getPolicyById(UUID.fromString(policyId));
+        PolicyData policyData = storageService.getPolicyById(policyUuid);
+        if (policyData == null) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.policyNotFoundById(policyId),
+                ErrorConstants.DOMAIN_PAYMENT,
+                ErrorConstants.REASON_NOT_FOUND,
+                "policyId"
+            );
+            throw new NotFoundException(errorModel);
+        }
         JsonSetter jsonSetter = new JsonSetter(policyData.getPolicy());
         jsonSetter.setRawValue("status", "PAID");
         policyData.setPolicy(jsonSetter.writeValue());
@@ -440,9 +542,28 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
 
         var policyData = storageService.getPolicyByNumber(policyNumber);
+        if (policyData == null) {
+            logger.warn("Policy not found for update. policyNumber={}", policyNumber);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.policyNotFound(policyNumber),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_NOT_FOUND,
+                "policyNumber"
+            );
+            throw new NotFoundException(errorModel);
+        }
+        
         if (policyData.getPolicyStatus() != PolicyStatus.NEW) {
             logger.warn("Attempt to update policy with bad status. policyNumber={}, status={}", policyNumber, policyData.getPolicyStatus());
-            throw new BadRequestException("Can't update policy, bad policy status");
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                422,
+                String.format("Cannot update policy with status '%s'. Only policies with status 'NEW' can be updated", policyData.getPolicyStatus()),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_INVALID,
+                "policyStatus"
+            );
+            throw new UnprocessableEntityException(errorModel);
         }
 
         var policyIndex = policyData.getPolicyIndex();
@@ -450,8 +571,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
             logger.warn("Unauthorized attempt to update policy. policyNumber={}", policyNumber);
-            // TODO 403
-            throw new BadRequestException("Unable to update policy");
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                403,
+                ErrorConstants.forbiddenAccess("policy", "User does not have access to this policy"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_FORBIDDEN,
+                "policyNumber"
+            );
+            throw new ForbiddenException(errorModel);
         }
 
         var jsonProjection = new JsonProjection(policy);
@@ -470,17 +597,43 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public PolicyData getPolicyById(UUID id) {
         logger.debug("Getting policy by ID. policyId={}", id);
         var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        401,
+                        "Unable to get current user from security context",
+                        ErrorConstants.DOMAIN_AUTH,
+                        ErrorConstants.REASON_UNAUTHORIZED,
+                        "securityContext"
+                    );
+                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
+                });
 
         var policyData = storageService.getPolicyById(id);
+        if (policyData == null) {
+            logger.warn("Policy not found by ID. policyId={}", id);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.policyNotFoundById(id.toString()),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_NOT_FOUND,
+                "policyId"
+            );
+            throw new NotFoundException(errorModel);
+        }
 
         var policyIndex = policyData.getPolicyIndex();
 
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
             logger.warn("Unauthorized attempt to access policy. policyId={}", id);
-            // TODO 403
-            throw new BadRequestException("Unable to update policy");
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                403,
+                ErrorConstants.forbiddenAccess("policy", "User does not have access to this policy"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_FORBIDDEN,
+                "policyId"
+            );
+            throw new ForbiddenException(errorModel);
         }
 
         logger.debug("Policy retrieved. policyId={}, policyNumber={}", id, policyIndex.getPolicyNumber());
@@ -491,17 +644,43 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public PolicyData getPolicyByNumber(String policyNumber) {
         logger.debug("Getting policy by number. policyNumber={}", policyNumber);
         var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        401,
+                        "Unable to get current user from security context",
+                        ErrorConstants.DOMAIN_AUTH,
+                        ErrorConstants.REASON_UNAUTHORIZED,
+                        "securityContext"
+                    );
+                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
+                });
 
         var policyData = storageService.getPolicyByNumber(policyNumber);
+        if (policyData == null) {
+            logger.warn("Policy not found by number. policyNumber={}", policyNumber);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.policyNotFound(policyNumber),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_NOT_FOUND,
+                "policyNumber"
+            );
+            throw new NotFoundException(errorModel);
+        }
 
         var policyIndex = policyData.getPolicyIndex();
 
         if (!policyIndex.getUserAccountId().equals(userData.getAccountId()) ||
                 !policyIndex.getClientAccountId().equals(userData.getClientId())) {
             logger.warn("Unauthorized attempt to access policy. policyNumber={}", policyNumber);
-            // TODO 403
-            throw new BadRequestException("Unable to update policy");
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                403,
+                ErrorConstants.forbiddenAccess("policy", "User does not have access to this policy"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_FORBIDDEN,
+                "policyNumber"
+            );
+            throw new ForbiddenException(errorModel);
         }
 
         logger.debug("Policy retrieved. policyNumber={}", policyNumber);

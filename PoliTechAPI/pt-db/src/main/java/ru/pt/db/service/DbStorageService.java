@@ -10,7 +10,11 @@ import org.springframework.stereotype.Component;
 
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.sales.QuoteDto;
+import ru.pt.api.dto.errors.ErrorConstants;
+import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.InternalServerErrorException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -119,20 +123,47 @@ public class DbStorageService implements StorageService {
                     policyIndexRepository.deleteById(uuid);
 
                     return save(policy, userData, version, uuid);
-                }).orElse(null);
+                }).orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFound(policyNumber),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyNumber"
+                    );
+                    return new NotFoundException(errorModel);
+                });
     }
 
     @Override
     public PolicyData getPolicyById(UUID policyId) {
         var policy = policyIndexRepository.findById(policyId)
-                .orElseThrow(() -> new IllegalStateException("No policy with id " + policyId));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFoundById(policyId.toString()),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyId"
+                    );
+                    return new NotFoundException(errorModel);
+                });
         return getPolicyData(policy);
     }
 
     @Override
     public PolicyData getPolicyByNumber(String policyNumber) {
         var policy = policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
-                .orElseThrow(() -> new IllegalStateException("No policy with number " + policyNumber));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFound(policyNumber),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyNumber"
+                    );
+                    return new NotFoundException(errorModel);
+                });
         return getPolicyData(policy);
     }
 
@@ -181,7 +212,16 @@ public class DbStorageService implements StorageService {
 
         var json = policyRepository.findById(policy.getPolicyId())
             .map(PolicyEntity::getPolicy)
-            .orElseThrow();
+            .orElseThrow(() -> {
+                ErrorModel errorModel = ErrorConstants.createErrorModel(
+                    500,
+                    String.format("Policy JSON not found in storage for policyId: %s", policy.getPolicyId()),
+                    ErrorConstants.DOMAIN_STORAGE,
+                    ErrorConstants.REASON_INTERNAL_ERROR,
+                    "policyId"
+                );
+                return new InternalServerErrorException(errorModel);
+            });
 
         policyData.setPolicy(json);
 
@@ -195,14 +235,30 @@ public class DbStorageService implements StorageService {
                     entity.setPaymentOrderId(paymentOrderId);
                     policyIndexRepository.save(entity);
                 }, () -> {
-                    throw new IllegalStateException("No policy with number " + policyNumber);
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFound(policyNumber),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyNumber"
+                    );
+                    throw new NotFoundException(errorModel);
                 });
     }
 
     @Override
     public PolicyData getPolicyByPaymentOrderId(String paymentOrderId) {
         var policy = policyIndexRepository.findByPaymentOrderId(paymentOrderId)
-                .orElseThrow(() -> new IllegalStateException("No policy with payment order id " + paymentOrderId));
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        String.format("Policy not found by payment order ID: %s", paymentOrderId),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "paymentOrderId"
+                    );
+                    return new NotFoundException(errorModel);
+                });
         var dto = policyMapper.toDto(policy);
 
         var policyData = new PolicyData();
@@ -213,7 +269,16 @@ public class DbStorageService implements StorageService {
 
         var json = policyRepository.findById(policy.getPolicyId())
                 .map(PolicyEntity::getPolicy)
-                .orElseThrow();
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        500,
+                        String.format("Policy JSON not found in storage for policyId: %s", policy.getPolicyId()),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_INTERNAL_ERROR,
+                        "policyId"
+                    );
+                    return new InternalServerErrorException(errorModel);
+                });
 
         policyData.setPolicy(json);
 

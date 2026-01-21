@@ -127,4 +127,5 @@ logging:
     ru.pt.api.admin.HealthCheckController: TRACE
     ru.pt.calculator.service.CalculatorServiceImpl: TRACE
     ru.pt.calculator.service.CoefficientServiceImpl: TRACE
+    ru.pt.domain.model.ComputedVars: TRACE
     org.apache.pdfbox.pdmodel.font: WARN  # Suppress PDFBox font warnings

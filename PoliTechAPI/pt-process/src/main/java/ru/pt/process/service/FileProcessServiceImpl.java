@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import ru.pt.api.dto.errors.ErrorConstants;
+import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
@@ -102,7 +104,14 @@ public class FileProcessServiceImpl implements FileProcessService {
             context = (ArrayNode) new ObjectMapper().readTree(json).get("vars");
         } catch (JsonProcessingException e) {
             logger.error("Unable to read json tree, see logs {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                500,
+                "Failed to parse product version JSON: " + e.getMessage(),
+                ErrorConstants.DOMAIN_PRODUCT,
+                ErrorConstants.REASON_INTERNAL_ERROR,
+                "productVersion.product"
+            );
+            throw new InternalServerErrorException(errorModel);
         }
 
         var lobModel = new LobModel();
@@ -141,13 +150,27 @@ public class FileProcessServiceImpl implements FileProcessService {
         logger.info("Generating print form. policyNumber={}, printFormType={}", policyNumber, printFormType);
         var policyIndex = policyIndexRepository
                 .findByPolicyNumber(policyNumber)
-                .orElseThrow(() ->
-                        new NotFoundException("Не удалось найти полис по номеру - %s".formatted(policyNumber))
-                );
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFound(policyNumber),
+                        ErrorConstants.DOMAIN_POLICY,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyNumber"
+                    );
+                    return new NotFoundException(errorModel);
+                });
         var policy = policyRepository.findById(policyIndex.getPolicyId())
-                .orElseThrow(() ->
-                        new NotFoundException("Не удалось найти полис по id - %s".formatted(policyIndex.getPolicyId()))
-                );
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                        404,
+                        ErrorConstants.policyNotFoundById(policyIndex.getPolicyId().toString()),
+                        ErrorConstants.DOMAIN_STORAGE,
+                        ErrorConstants.REASON_NOT_FOUND,
+                        "policyId"
+                    );
+                    return new NotFoundException(errorModel);
+                });
 
         var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getVersionNo());
         logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getVersionNo());
@@ -183,7 +206,14 @@ public class FileProcessServiceImpl implements FileProcessService {
         }
         if (fileId == null) {
             logger.warn("Print form file not found. policyNumber={}, packageNo={}, printFormType={}", policyNumber, packageNo, printFormType);
-            throw new NotFoundException("File id not found");
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.printFormNotFound(policyNumber, printFormType),
+                ErrorConstants.DOMAIN_FILE,
+                ErrorConstants.REASON_NOT_FOUND,
+                "printFormType"
+            );
+            throw new NotFoundException(errorModel);
         }
 
         logger.info("Print form resolved. policyNumber={}, fileId={}", policyNumber, fileId);

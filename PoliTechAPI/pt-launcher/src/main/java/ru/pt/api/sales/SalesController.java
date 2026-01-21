@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ru.pt.api.admin.dto.PaymentRequest;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.dto.errors.ErrorConstants;
+import ru.pt.api.dto.errors.ErrorModel;
+import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.process.FileProcessService;
@@ -68,6 +71,31 @@ public class SalesController extends SecuredController {
             @PathVariable("policyNumber") String policyNumber,
             @RequestBody String request) {
         requireAuthenticated(user);
+        
+        // Validate policyNumber
+        if (policyNumber == null || policyNumber.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("policyNumber"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "policyNumber"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
+        // Validate request body
+        if (request == null || request.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("request body"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "requestBody"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         // TODO: Извлечь productCode из существующей политики и проверить права
 //         requireProductWrite(user, productCode);
         PolicyData updated = processOrchestrator.updatePolicy(policyNumber, request);
@@ -96,7 +124,30 @@ public class SalesController extends SecuredController {
     public ResponseEntity<PolicyData> getPolicyByNumber(
             @PathVariable String tenantCode,
             @PathVariable("policyNumber") String policyNumber) {
+        
+        // Validate policyNumber
+        if (policyNumber == null || policyNumber.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("policyNumber"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "policyNumber"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         PolicyData policy = processOrchestrator.getPolicyByNumber(policyNumber);
+        if (policy == null) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                404,
+                ErrorConstants.policyNotFound(policyNumber),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_NOT_FOUND,
+                "policyNumber"
+            );
+            throw new NotFoundException(errorModel);
+        }
         return ResponseEntity.ok(policy);
     }
 
@@ -109,6 +160,31 @@ public class SalesController extends SecuredController {
             @PathVariable String tenantCode,
             @PathVariable("policyNumber") String policyNumber,
             @RequestBody PaymentRequest request) {
+        
+        // Validate policyNumber
+        if (policyNumber == null || policyNumber.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("policyNumber"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "policyNumber"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
+        // Validate request
+        if (request == null) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("request body"),
+                ErrorConstants.DOMAIN_PAYMENT,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "requestBody"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         ZonedDateTime paymentDate = request.getPaymentDate() != null
                 ? request.getPaymentDate()
                 : ZonedDateTime.now();
@@ -121,6 +197,19 @@ public class SalesController extends SecuredController {
     public ResponseEntity<String> quoteValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
+        
+        // Validate request body
+        if (requestBody == null || requestBody.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("request body"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "requestBody"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         String result = processOrchestrator.calculate(requestBody);
         return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
@@ -139,6 +228,19 @@ public class SalesController extends SecuredController {
     public ResponseEntity<String> saveValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
+        
+        // Validate request body
+        if (requestBody == null || requestBody.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("request body"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "requestBody"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         String result = processOrchestrator.save(requestBody);
         return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
@@ -148,6 +250,31 @@ public class SalesController extends SecuredController {
             @PathVariable("policy-nr") String policyNr,
             @PathVariable("pf-type") String pfType,
             @PathVariable("tenantCode") String tenantCode) {
+        
+        // Validate policy number
+        if (policyNr == null || policyNr.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("policy-nr"),
+                ErrorConstants.DOMAIN_POLICY,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "policy-nr"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
+        // Validate print form type
+        if (pfType == null || pfType.trim().isEmpty()) {
+            ErrorModel errorModel = ErrorConstants.createErrorModel(
+                400,
+                ErrorConstants.missingRequiredField("pf-type"),
+                ErrorConstants.DOMAIN_FILE,
+                ErrorConstants.REASON_MISSING_REQUIRED,
+                "pf-type"
+            );
+            throw new BadRequestException(errorModel);
+        }
+        
         return fileProcessService.generatePrintForm(policyNr, pfType);
     }
 
