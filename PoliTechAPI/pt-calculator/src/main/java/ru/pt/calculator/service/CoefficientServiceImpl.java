@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import java.util.Map;
 
 @Component
 public class CoefficientServiceImpl implements CoefficientService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CoefficientServiceImpl.class);
 
     private final CoefficientDataRepository repository;
     private final ObjectMapper objectMapper;
@@ -44,43 +48,56 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional
     public CoefficientDataEntity insert(Integer calculatorId, String code, JsonNode coefficientDataJson) {
+        logger.debug("Inserting coefficient data: calculatorId={}, code={}", calculatorId, code);
         CoefficientDataEntity entity = new CoefficientDataEntity();
         entity.setCalculatorId(calculatorId);
         entity.setCoefficientCode(code);
         entity.setTId(getCurrentTenantId());
         mapFromJson(entity, coefficientDataJson);
-        return repository.save(entity);
+        CoefficientDataEntity saved = repository.save(entity);
+        logger.info("Coefficient data inserted: id={}", saved.getId());
+        return saved;
     }
 
     @Transactional
     public CoefficientDataEntity update(Integer id, JsonNode coefficientDataJson) {
+        logger.debug("Updating coefficient data: id={}", id);
         CoefficientDataEntity entity = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Coefficient row not found: " + id));
         mapFromJson(entity, coefficientDataJson);
-        return repository.save(entity);
+        CoefficientDataEntity updated = repository.save(entity);
+        logger.info("Coefficient data updated: id={}", id);
+        return updated;
     }
 
     @Transactional
     public void delete(Integer id) {
+        logger.info("Deleting coefficient data: id={}", id);
         repository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     public ArrayNode getTable(Integer calculatorId, String code) {
+        logger.debug("Getting coefficient table: calculatorId={}, code={}", calculatorId, code);
         List<CoefficientDataEntity> rows = repository.findAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         ArrayNode data = objectMapper.createArrayNode();
         for (CoefficientDataEntity e : rows) {
             data.add(mapToJson(e));
         }
+        logger.trace("Retrieved {} coefficient rows", rows.size());
         return data;
     }
 
     @Transactional
     public ArrayNode replaceTable(Integer calculatorId, String code, ArrayNode tableJson) {
+        logger.info("Replacing coefficient table: calculatorId={}, code={}, rows={}", calculatorId, code, tableJson.size());
         repository.deleteAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
+        logger.debug("Deleted existing coefficient data");
+        
         //ArrayNode data = (tableJson.has("data") && tableJson.get("data").isArray()) ? (ArrayNode) tableJson.get("data") : objectMapper.createArrayNode();
         for (JsonNode row : tableJson) {
             insert(calculatorId, code, row);
         }
+        logger.info("Inserted {} new coefficient rows", tableJson.size());
         return getTable(calculatorId, code);
     }
 
@@ -89,7 +106,11 @@ public class CoefficientServiceImpl implements CoefficientService {
                                       String coefficientCode,
                                       Map<String, Object> values,
                                       List<CoefficientColumn> columns) {
+        logger.debug("Getting coefficient value: calculatorId={}, coefficientCode={}", calculatorId, coefficientCode);
+        
         if (calculatorId == null || coefficientCode == null || columns == null) {
+            logger.warn("Invalid parameters: calculatorId={}, coefficientCode={}, columns={}", 
+                    calculatorId, coefficientCode, columns != null ? "present" : "null");
             return null;
         }
 
@@ -143,11 +164,15 @@ public class CoefficientServiceImpl implements CoefficientService {
         if (orderBy.length() > 0) sql.append(orderBy);
         sql.append(" limit 1");
         String sqlS = sql.toString();
+        
+        logger.trace("Executing coefficient query: {}", sqlS);
 
         try {
             Double result = jdbcTemplate.query(sqlS, rs -> rs.next() ? rs.getDouble(1) : null);
+            logger.debug("Coefficient value retrieved: {}={}", coefficientCode, result);
             return result == null ? null : String.valueOf(result);
         } catch (Exception e) {
+            logger.error("Failed to query coefficient: {}", e.getMessage(), e);
             return null;
         }
     }

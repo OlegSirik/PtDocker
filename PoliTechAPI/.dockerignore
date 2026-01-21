@@ -1,20 +1,61 @@
-target
-build
-.gradle
-.git
-.idea
-.vscode
-node_modules
-*.log
+# Build outputs
+**/build/
+**/target/
+**/.gradle/
+**/bin/
+**/out/
+
+# IDE files
+**/.idea/
+**/.vscode/
+**/.settings/
+**/*.iml
+**/.classpath
+**/.project
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (except README if needed)
+**/docs/
+**/*.md
+!README.md
+
+# Tests (optional - uncomment to exclude tests from Docker context)
+# **/src/test/
+
+# Logs
+**/*.log
+**/logs/
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/*.swp
+**/*.bak
+
+# OS files
 **/.DS_Store
 **/Thumbs.db
-*.iml
-*.local
-*.env
-tmp
-temp
-*.md
-README*
+**/.directory
 
+# Node modules (if any frontend assets)
+**/node_modules/
 
+# Environment files (should use docker env vars instead)
+**/.env
+**/.env.local
+**/.env.*.local
 
+# Database files
+**/*.db
+**/*.sqlite
+
+# Coverage reports
+**/coverage/
+**/.nyc_output/
+
+# Local config
+**/local.properties

@@ -3,6 +3,8 @@ package ru.pt.calculator.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.calculator.CalculatorModel;
@@ -38,6 +40,8 @@ import static java.math.RoundingMode.HALF_UP;
 @RequiredArgsConstructor
 public class CalculatorServiceImpl implements CalculatorService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CalculatorServiceImpl.class);
+
     private final CalculatorRepository calculatorRepository;
     private final CoefficientService coefficientService;
     private final ProductService productService;
@@ -66,12 +70,15 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional(readOnly = true)
     public CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo) {
+        logger.debug("Getting calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
         return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
                 .map(CalculatorEntity::getCalculator)
                 .map(c -> {
                     try {
+                        logger.trace("Parsing calculator JSON for productId={}", productId);
                         return objectMapper.readValue(c, CalculatorModel.class);
                     } catch (JsonProcessingException e) {
+                        logger.error("Failed to parse calculator JSON: {}", e.getMessage(), e);
                         throw new RuntimeException(e);
                     }
                 })
@@ -80,16 +87,22 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional
     public CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo) {
+        logger.info("Creating calculator if missing: productId={}, productCode={}, versionNo={}, packageNo={}", 
+                productId, productCode, versionNo, packageNo);
         return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
                 .map(CalculatorEntity::getCalculator)
                 .map(c -> {
                     try {
+                        logger.debug("Calculator already exists, returning existing");
                         return objectMapper.readValue(c, CalculatorModel.class);
                     } catch (JsonProcessingException e) {
+                        logger.error("Failed to parse existing calculator: {}", e.getMessage(), e);
                         throw new RuntimeException(e);
                     }
                 })
                 .orElseGet(() -> {
+                    logger.info("Calculator not found, creating new one");
+
                     // get product, product version and line of business from services
                     // Example:
                     ru.pt.api.dto.product.ProductVersionModel productVersionModel = productService.getProduct(productId, true);
@@ -115,11 +128,14 @@ public class CalculatorServiceImpl implements CalculatorService {
 //                            .forEach(var -> calculatorModel.getVars().add(var));
 
                     productVersionModel.getVars().forEach(var -> calculatorModel.getVars().add(var));
+                    logger.debug("Added {} variables from product version", productVersionModel.getVars().size());
+                    
                     // INSERT_YOUR_CODE
                     // Find the package in productVersion.packages with code == packageNo
                     productVersionModel.getPackages().forEach(pkg -> {
 
                         if (pkg.getCode().equals(packageNo)) {
+                            logger.debug("Found matching package: {}, adding cover variables", packageNo);
                             pkg.getCovers().forEach(cover -> {
                                 PvVar varSumInsured = new PvVar();
                                 varSumInsured.setVarCode("co_" + cover.getCode() + "_sumInsured");
@@ -182,10 +198,13 @@ public class CalculatorServiceImpl implements CalculatorService {
 
                     try {
                         CalculatorModel model = objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
+                        logger.info("Calculator created successfully: id={}, productId={}", saved.getId(), productId);
                         return model;               
                     } catch (JsonProcessingException ex) {
+                        logger.error("Failed to parse saved calculator JSON: {}", ex.getMessage(), ex);
                         throw new RuntimeException(ex);
                     } catch (Exception ex) {
+                        logger.error("Unexpected error creating calculator: {}", ex.getMessage(), ex);
                         throw new RuntimeException(ex);
                     }
                 });
@@ -272,14 +291,20 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Transactional
     @Override
     public void copyCalculator(Integer productId, Integer versionNo, Integer packageNo, Integer versionNoTo) {
+        logger.info("Copying calculator: productId={}, from version={} to version={}, packageNo={}", 
+                productId, versionNo, versionNoTo, packageNo);
 
         CalculatorModel calc = getCalculator(productId, versionNo, packageNo);
-        if ( calc == null ) return;
+        if ( calc == null ) {
+            logger.warn("Source calculator not found, skipping copy");
+            return;
+        }
 
         calc.setVersionNo(versionNoTo);
         calc.setId(null);
 
-        saveCalculator(calc, false);        
+        saveCalculator(calc, false);
+        logger.info("Calculator copied successfully to version {}", versionNoTo);
 
     }
 
@@ -338,11 +363,17 @@ public class CalculatorServiceImpl implements CalculatorService {
         Integer packageNo,
         VariableContext ctx
     ) {
+        logger.info("Running calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
+        
         // Получить описание калькулятора
         CalculatorModel model = getCalculator(productId, versionNo, packageNo);
         if (model == null || model.getFormulas() == null || model.getFormulas().isEmpty()) {
+            logger.warn("Calculator not found or has no formulas, skipping");
             return;
         }
+        
+        logger.debug("Calculator loaded: {} variables, {} formulas, {} coefficients", 
+                model.getVars().size(), model.getFormulas().size(), model.getCoefficients().size());
 
         // Добавить переменные калькулятора в контекст.
         model.getVars().forEach(v -> {
@@ -370,11 +401,15 @@ public class CalculatorServiceImpl implements CalculatorService {
 */
         // Получить формулу калькулятора. Она у пакета одна
         FormulaDef formula = model.getFormulas().getFirst();
+        logger.debug("Executing formula: {}", formula.getVarCode());
 
         List<FormulaLine> lines = new ArrayList<>(formula.getLines());
         lines.sort(Comparator.comparing(FormulaLine::getNr, Comparator.nullsLast(Integer::compareTo)));
+        logger.trace("Sorted {} formula lines", lines.size());
 
         for (FormulaLine line : lines) {
+            logger.trace("Processing line {}: {} {} {}", line.getNr(), 
+                    line.getExpressionLeft(), line.getExpressionOperator(), line.getExpressionRight());
 
         // ---------- CONDITION ----------
         if (line.hasCondition()) {
@@ -385,12 +420,14 @@ public class CalculatorServiceImpl implements CalculatorService {
                 null,
                 line.getConditionOperator()
             );
+            logger.trace("Condition evaluated: {}", ok);
             if (!ok) continue;
         }
 
         // ---------- LEFT / RIGHT ----------
         BigDecimal left = resolveValue(ctx, model, line.getExpressionLeft());
         BigDecimal right = resolveValue(ctx, model, line.getExpressionRight());
+        logger.trace("Resolved values: left={}, right={}", left, right);
 
         // ---------- COMPUTE ----------
         BigDecimal result = compute( left, line.getExpressionOperator(), right );
@@ -400,36 +437,53 @@ public class CalculatorServiceImpl implements CalculatorService {
         String rgt = right != null ? right.toString() : "";
         String opr = line.getExpressionOperator();
 
-        //logger.info("Calculator result: {} {} {} {} {}", rslt, lft, opr, rgt);
+        logger.debug("Calculator operation: {} {} {} = {}", lft, opr, rgt, rslt);
 
         if (line.getPostProcessor() != null) {
+            BigDecimal original = result;
             result = postProcess(result, line.getPostProcessor());
+            logger.trace("Post-processed {} -> {} using {}", original, result, line.getPostProcessor());
         }
 
         // ---------- WRITE RESULT ----------
         if (line.getExpressionResult() != null && !line.getExpressionResult().isBlank()) {
             ctx.put(line.getExpressionResult(), result);
+            logger.trace("Stored result: {}={}", line.getExpressionResult(), result);
         }
     }
+    logger.info("Calculator execution completed");
 }
 
 
     protected BigDecimal resolveValue(VariableContext ctx, CalculatorModel model, String varCode)
     {
+        logger.trace("Resolving value for varCode: {}", varCode);
         PvVarDefinition varDef = ctx.getDefinition(varCode);
         if (varDef == null) {
+            logger.trace("Variable definition not found for: {}", varCode);
             return null;
         }
 
         if (varDef.getSourceType() == PvVarDefinition.VarSourceType.COEFFICIENT) {
+            logger.debug("Resolving coefficient: {}", varCode);
             CoefficientDef cd = model.getCoefficients().stream().filter(c -> c.getVarCode().equals(varCode)).findFirst().orElse(null);
             if (cd == null) {
+                logger.warn("Coefficient definition not found for varCode: {}", varCode);
                 return null;
             }
             String s = coefficientService.getCoefficientValue(model.getId(), varCode, ctx, cd.getColumns());
-            ctx.put(varCode, new BigDecimal(s));
+            logger.debug("Coefficient value resolved: {}={}", varCode, s);
+            try {
+                ctx.put(varCode, new BigDecimal(s));
+            } catch (Exception e) {
+                logger.warn("Failed to parse coefficient value '{}' for {}, using ZERO", s, varCode);
+                ctx.put(varCode, BigDecimal.ZERO);
+            }
+        
         }
-        return ctx.getDecimal(varCode);
+        BigDecimal value = ctx.getDecimal(varCode);
+        logger.trace("Resolved value: {}={}", varCode, value);
+        return value;
     }
 
     private BigDecimal compute(BigDecimal left, String operator, BigDecimal right) {

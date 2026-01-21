@@ -6,7 +6,11 @@ services:
     build:
       context: ./PoliTechAPI
       dockerfile: DockerfileMacLocal
-      # Removed no_cache: true to enable Docker layer caching for faster rebuilds
+      # Enable build arguments for BuildKit
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+      # Allocate more memory for build process
+      shm_size: '2gb'
     # image: fant560/papi:2.0
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/pt-db
@@ -14,6 +18,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: spring
       SERVER_PORT: 8080
       DEBUG: true
+      # JWT and Keycloak config
+      JWT_SECRET: ${JWT_SECRET}
+      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - "8080:8080"
       - "5005:5005"
@@ -21,6 +29,9 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - app-network
+    # Memory limits for runtime (not build)
+    mem_limit: 2g
+    memswap_limit: 2g
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
