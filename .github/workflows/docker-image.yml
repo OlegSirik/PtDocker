@@ -31,13 +31,13 @@ jobs:
       - name: Build and test with Docker Compose
         run: |
           # Собираем образы
-          docker compose -f docker-compose-mac-local.yml build
+          docker compose --env-file docker-compose.env -f docker-compose.env build
 
           echo "=== Built images ==="
           docker compose images
           
           # Запускаем сервисы
-          docker compose -f docker-compose-mac-local.yml up -d
+          docker compose --env-file docker-compose.env -f docker-compose.yml up -d
           
           # Ждем готовности
           sleep 30
@@ -65,7 +65,7 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker compose -f docker-compose-mac-local.yml down
+          docker compose --env-file docker-compose.env down
           docker system prune -f
 
   
