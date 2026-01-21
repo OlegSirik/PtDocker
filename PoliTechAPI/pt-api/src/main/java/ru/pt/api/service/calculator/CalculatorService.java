@@ -31,13 +31,13 @@ public interface CalculatorService {
     CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo);
 
     /**
-     * Получить модель калькулятора, выбрасывая исключение при отсутствии
+     * копирует калькулятор в другой продукт версию
      * @param productId айди продукта
      * @param versionNo номер версии
      * @param packageNo номер пакета
      * @return модель калькулятора
      */
-    CalculatorModel getCalculatorModel(Integer productId, Integer versionNo, Integer packageNo);
+    public void copyCalculator(Integer productId, Integer versionNo, Integer packageNo, Integer versionNoTo) ;
 
     /**
      * Выполнить калькулятор и вернуть рассчитанные переменные

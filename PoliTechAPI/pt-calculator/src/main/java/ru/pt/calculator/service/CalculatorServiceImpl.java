@@ -191,29 +191,6 @@ public class CalculatorServiceImpl implements CalculatorService {
                 });
     }
 
-    @Transactional(readOnly = true)
-    public CalculatorModel getCalculatorModel(Integer productId, Integer versionNo, Integer packageNo) {
-        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo).orElse(null);
-        if (entity == null) {
-            return null;
-        }
-        String calculatorJson = entity.getCalculator();
-        CalculatorModel calculatorModel = null;
-        try {
-            calculatorModel = objectMapper.readValue(calculatorJson, CalculatorModel.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        if (calculatorModel == null) {
-            throw new IllegalStateException("Calculator JSON is null for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo);
-        }
-        try {
-            return calculatorModel;
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to parse calculator JSON for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo, e);
-        }
-    }
-
     public CalculatorModel replaceCalculator(Integer productId, String productCode, Integer versionNo,
                                              Integer packageNo, CalculatorModel newJson) {
         CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
@@ -240,6 +217,70 @@ public class CalculatorServiceImpl implements CalculatorService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Transactional
+    public CalculatorModel saveCalculator(CalculatorModel calculator, boolean isUpdate) {
+
+        Integer id = calculator.getId();
+        Integer productId = calculator.getProductId();
+        String productCode = calculator.getProductCode();
+        Integer versionNo = calculator.getVersionNo();
+        Integer packageNo = calculator.getPackageNo();
+    
+        CalculatorModel calcExists = getCalculator(productId, versionNo, packageNo); 
+        if (calcExists != null) {
+            if (!isUpdate) {
+                throw new RuntimeException();
+            } else {
+                id = calcExists.getId();
+            }
+        }
+
+        CalculatorEntity e = new CalculatorEntity();
+        e.setId(id);
+        e.setTId(getCurrentTenantId());
+        e.setProductId(productId);
+        e.setProductCode(productCode);
+        e.setVersionNo(versionNo);
+        e.setPackageNo(packageNo);
+        e.setCalculator("{}");
+        CalculatorEntity saved = calculatorRepository.save(e);
+
+        calculator.setId(saved.getId());
+        String calculatorJson;
+        try {
+            calculatorJson = objectMapper.writeValueAsString(calculator);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        saved.setCalculator(calculatorJson);
+        saved = calculatorRepository.save(saved);
+
+        String savedCalculatorJson = saved.getCalculator();
+
+        try {
+            CalculatorModel model = objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
+            return model;               
+        } catch (JsonProcessingException ex) {
+            throw new RuntimeException(ex);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void copyCalculator(Integer productId, Integer versionNo, Integer packageNo, Integer versionNoTo) {
+
+        CalculatorModel calc = getCalculator(productId, versionNo, packageNo);
+        if ( calc == null ) return;
+
+        calc.setVersionNo(versionNoTo);
+        calc.setId(null);
+
+        saveCalculator(calc, false);        
+
     }
 
     public void syncVars(Integer calculatorId) {
@@ -298,7 +339,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         VariableContext ctx
     ) {
         // Получить описание калькулятора
-        CalculatorModel model = getCalculatorModel(productId, versionNo, packageNo);
+        CalculatorModel model = getCalculator(productId, versionNo, packageNo);
         if (model == null || model.getFormulas() == null || model.getFormulas().isEmpty()) {
             return;
         }

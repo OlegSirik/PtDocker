@@ -95,7 +95,8 @@ export class VarsService {
         ...this.getIoOrganizationVars(),
         ...this.getIoContactsVars(),
         ...this.getIoPersonIdentifiersVars(),
-        ...this.getIoAddressVars()
+        ...this.getIoAddressVars(),
+        ...this.ioPersonMagicVars
       ];
 
     }
@@ -363,13 +364,22 @@ export class VarsService {
       "varNr": 1115,
       "varDataType": "NUMBER",
       "varCode": "ph_age_issue",
-      "varName": "Страхователь.возраст на дату выпуска",
+      "varName": "Страхователь.возраст на дату выпуска договора",
       "varPath": "",
       "varType": "MAGIC",
       "varValue": "",
       "varCdm": "policyHolder.person.age_issue"
     },
-
+    {
+      "varNr": 1115,
+      "varDataType": "NUMBER",
+      "varCode": "ph_age_end",
+      "varName": "Страхователь.возраст на дату окончания договора",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.age_end"
+    }
   ];
 
   phContactsVars: LobVar[] = [
@@ -1181,7 +1191,7 @@ export class VarsService {
     {
       "varNr": 1001,
       "varDataType": "STRING",
-      "varCode": "io_propertyType_code",
+      "varCode": "io_propertyTypeCode",
       "varName": "Имущество.тип имущества код",
       "varPath": "insuredObjects[0].property.propertyType.code",
       "varType": "IN",
@@ -1191,7 +1201,7 @@ export class VarsService {
     {
       "varNr": 1002,
       "varDataType": "STRING",
-      "varCode": "io_addr_typeCode",
+      "varCode": "io_addrTypeCode",
       "varName": "Имущество.адрес.тип адреса",
       "varPath": "insuredObjects[0].property.address.typeCode",
       "varType": "IN",
@@ -1201,7 +1211,7 @@ export class VarsService {
     {
       "varNr": 1003,
       "varDataType": "STRING",
-      "varCode": "io_addr_countryCode",
+      "varCode": "io_addrCountryCode",
       "varName": "Имущество.адрес.код страны",
       "varPath": "insuredObjects[0].property.address.countryCode",
       "varType": "IN",
@@ -1211,7 +1221,7 @@ export class VarsService {
     {
       "varNr": 1004,
       "varDataType": "STRING",
-      "varCode": "io_addr_region",
+      "varCode": "io_addrRegion",
       "varName": "Имущество.адрес.регион",
       "varPath": "insuredObjects[0].property.address.region",
       "varType": "IN",
@@ -1221,7 +1231,7 @@ export class VarsService {
     {
       "varNr": 1005,
       "varDataType": "STRING",
-      "varCode": "io_addr_city",
+      "varCode": "io_addrCity",
       "varName": "Имущество.адрес.город",
       "varPath": "insuredObjects[0].property.address.city",
       "varType": "IN",
@@ -1231,7 +1241,7 @@ export class VarsService {
     {
       "varNr": 1006,
       "varDataType": "STRING",
-      "varCode": "io_addr_street",
+      "varCode": "io_addrStreet",
       "varName": "Имущество.адрес.улица",
       "varPath": "insuredObjects[0].property.address.street",
       "varType": "IN",
@@ -1241,7 +1251,7 @@ export class VarsService {
     {
       "varNr": 1007,
       "varDataType": "STRING",
-      "varCode": "io_addr_house",
+      "varCode": "io_addrHouse",
       "varName": "Имущество.адрес.дом",
       "varPath": "insuredObjects[0].property.address.house",
       "varType": "IN",
@@ -1251,7 +1261,7 @@ export class VarsService {
     {
       "varNr": 1008,
       "varDataType": "STRING",
-      "varCode": "io_addr_building",
+      "varCode": "io_addrBuilding",
       "varName": "Имущество.адрес.строение",
       "varPath": "insuredObjects[0].property.address.building",
       "varType": "IN",
@@ -1261,7 +1271,7 @@ export class VarsService {
     {
       "varNr": 1009,
       "varDataType": "STRING",
-      "varCode": "io_addr_flat",
+      "varCode": "io_addrFlat",
       "varName": "Имущество.адрес.квартира",
       "varPath": "insuredObjects[0].property.address.flat",
       "varType": "IN",
@@ -1271,7 +1281,7 @@ export class VarsService {
     {
       "varNr": 1010,
       "varDataType": "STRING",
-      "varCode": "io_addr_room",
+      "varCode": "io_addrRoom",
       "varName": "Имущество.адрес.комната",
       "varPath": "insuredObjects[0].property.address.room",
       "varType": "IN",
@@ -1281,7 +1291,7 @@ export class VarsService {
     {
       "varNr": 1011,
       "varDataType": "STRING",
-      "varCode": "io_addr_zipCode",
+      "varCode": "io_addrZipCode",
       "varName": "Имущество.адрес.индекс",
       "varPath": "insuredObjects[0].property.address.zipCode",
       "varType": "IN",
@@ -1291,7 +1301,7 @@ export class VarsService {
     {
       "varNr": 1012,
       "varDataType": "STRING",
-      "varCode": "io_addr_kladrId",
+      "varCode": "io_addrKladrId",
       "varName": "Имущество.адрес.код КЛАДР",
       "varPath": "insuredObjects[0].property.address.kladrId",
       "varType": "IN",
@@ -1301,7 +1311,7 @@ export class VarsService {
     {
       "varNr": 1013,
       "varDataType": "STRING",
-      "varCode": "io_addr_fiasId",
+      "varCode": "io_addrFiasId",
       "varName": "Имущество.адрес.код ФИАС",
       "varPath": "insuredObjects[0].property.address.fiasId",
       "varType": "IN",
@@ -1311,7 +1321,7 @@ export class VarsService {
     {
       "varNr": 1014,
       "varDataType": "STRING",
-      "varCode": "io_addr_addressStr",
+      "varCode": "io_addrAddressStr",
       "varName": "Имущество.адрес.адресная строка",
       "varPath": "insuredObjects[0].property.address.addressStr",
       "varType": "IN",
@@ -1321,7 +1331,7 @@ export class VarsService {
     {
       "varNr": 1015,
       "varDataType": "STRING",
-      "varCode": "io_addr_addressStrEn",
+      "varCode": "io_addrAddressStrEn",
       "varName": "Имущество.адрес.адресная строка англ",
       "varPath": "insuredObjects[0].property.address.addressStrEn",
       "varType": "IN",
@@ -1329,19 +1339,9 @@ export class VarsService {
       "varCdm": "insuredObject.property.address.addressStrEn"
     },
     {
-      "varNr": 1016,
-      "varDataType": "STRING",
-      "varCode": "io_addr_vsk_id",
-      "varName": "Имущество.адрес.ID ВСК",
-      "varPath": "insuredObjects[0].property.address.vsk_id",
-      "varType": "IN",
-      "varValue": "",
-      "varCdm": "insuredObject.property.address.vsk_id"
-    },
-    {
       "varNr": 1017,
       "varDataType": "STRING",
-      "varCode": "io_addr_ext_id",
+      "varCode": "io_addrExtId",
       "varName": "Имущество.адрес.внешний ID",
       "varPath": "insuredObjects[0].property.address.ext_id",
       "varType": "IN",
@@ -1654,7 +1654,7 @@ export class VarsService {
         {
     "varNr": 1001,
     "varDataType": "STRING",
-    "varCode": "io_ticket_nr",
+    "varCode": "io_ticketNr",
     "varName": "номер билета",
     "varPath": "insuredObjects[0].travelSegments[*].ticketNr",
     "varType": "IN",
@@ -1664,7 +1664,7 @@ export class VarsService {
     {
     "varNr": 1002,
     "varDataType": "STRING",
-    "varCode": "io_departure_date",
+    "varCode": "io_departureDate",
     "varName": "дата вылета",
     "varPath": "insuredObjects[0].travelSegments[*].departureDate",
     "varType": "IN",
@@ -1674,7 +1674,7 @@ export class VarsService {
     {
     "varNr": 1003,
     "varDataType": "STRING",
-    "varCode": "io_departure_time",
+    "varCode": "io_departureTime",
     "varName": "время вылета",
     "varPath": "insuredObjects[0].travelSegments[*].departureTime",
     "varType": "IN",
@@ -1684,7 +1684,7 @@ export class VarsService {
     {
     "varNr": 1004,
     "varDataType": "STRING",
-    "varCode": "io_departure_city",
+    "varCode": "io_departureCity",
     "varName": "город вылета",
     "varPath": "insuredObjects[0].travelSegments[*].departureCity",
     "varType": "IN",
@@ -1694,7 +1694,7 @@ export class VarsService {
     {
     "varNr": 1005,
     "varDataType": "STRING",
-    "varCode": "io_arrival_city",
+    "varCode": "io_arrivalCity",
     "varName": "город прилета",
     "varPath": "insuredObjects[0].travelSegments[*].arrivalCity",
     "varType": "IN",

@@ -32,6 +32,7 @@ public final class AuthZ {
         CREATE,
         UPDATE,
         DELETE,
+        GO2PROD,
         SELL,
         ISSUE,
         CANCEL,

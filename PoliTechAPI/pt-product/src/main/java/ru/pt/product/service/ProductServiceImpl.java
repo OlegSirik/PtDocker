@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,11 +36,11 @@ import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.security.permitions.AuthZ.ResourceType;
 import ru.pt.auth.security.permitions.AuthZ.Action;
+import org.springframework.context.annotation.Lazy;
 
-
+import ru.pt.api.service.calculator.CalculatorService;
 
 @Component
-@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
@@ -55,6 +53,30 @@ public class ProductServiceImpl implements ProductService {
     private final NumberGeneratorService numberGeneratorService;
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationService authService;
+    private final CalculatorService calculatorService;
+
+    // Constructor with @Lazy to break circular dependency with CalculatorService
+    public ProductServiceImpl(
+            ProductRepository productRepository,
+            ProductMapper productMapper,
+            LobService lobService,
+            ObjectMapper objectMapper,
+            ProductVersionRepository productVersionRepository,
+            NumberGeneratorService numberGeneratorService,
+            SecurityContextHelper securityContextHelper,
+            AuthorizationService authService,
+            @Lazy CalculatorService calculatorService) {
+        this.productRepository = productRepository;
+        this.productMapper = productMapper;
+        this.lobService = lobService;
+        this.objectMapper = objectMapper;
+        this.productVersionRepository = productVersionRepository;
+        this.numberGeneratorService = numberGeneratorService;
+        this.securityContextHelper = securityContextHelper;
+        this.authService = authService;
+        this.calculatorService = calculatorService;
+    }
+
     /**
      * Get current authenticated user from security context
      * @return UserDetailsImpl representing the current user
@@ -201,7 +223,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
-        checkProductAccess(Action.ALL, String.valueOf(productId));
+        checkProductAccess(Action.GO2PROD, String.valueOf(productId));
+
         ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null) {
@@ -229,7 +252,7 @@ public class ProductServiceImpl implements ProductService {
         product.setDevVersionNo(null);
         productRepository.save(product);
 
-        return getVersion(productId, product.getDevVersionNo());
+        return getVersion(productId, product.getProdVersionNo());
     }
 
     @Override
@@ -247,13 +270,15 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
-        checkProductAccess(Action.ALL, String.valueOf(id));
+        checkProductAccess(Action.CREATE, String.valueOf(id));
+
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (product.getDevVersionNo() != null) {
             throw new UnprocessableEntityException("only one version can be in dev status");
         }
+
         int newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
 
         String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
@@ -285,6 +310,12 @@ public class ProductServiceImpl implements ProductService {
 
         product.setDevVersionNo(newVersion);
         productRepository.save(product);
+
+        // Copy calculators for each package from old version to new version
+        productVersionModel.getPackages().forEach(pkg -> 
+            calculatorService.copyCalculator(id, versionNo, pkg.getCode(), newVersion)
+        );
+
         return productVersionModel;
     }
 

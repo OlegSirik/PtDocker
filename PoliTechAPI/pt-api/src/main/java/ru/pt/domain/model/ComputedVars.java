@@ -29,12 +29,16 @@ public class ComputedVars {
                 LocalDate birthDate = LocalDate.parse(ctx.getString("ph_birthDate"));
                 LocalDate issueDate = LocalDate.parse(ctx.getString("pl_issueDate"));
                 return Integer.toString(Period.between(birthDate, issueDate).getYears());
+            case "ph_age_end":
+                LocalDate birthDatePhEnd = LocalDate.parse(ctx.getString("ph_birthDate"));
+                LocalDate endDatePhEnd = LocalDate.parse(ctx.getString("pl_endDate"));
+                return Integer.toString(Period.between(birthDatePhEnd, endDatePhEnd).getYears());
             case "io_age_issue":
                 LocalDate birthDateIO = LocalDate.parse(ctx.getString("io_birthDate"));
                 LocalDate issueDateIO = LocalDate.parse(ctx.getString("pl_issueDate"));
                 return Integer.toString(Period.between(birthDateIO, issueDateIO).getYears());
             case "io_age_end":
-                LocalDate birthDateIOEnd = LocalDate.parse(ctx.getString("ph_birthDate"));
+                LocalDate birthDateIOEnd = LocalDate.parse(ctx.getString("io_birthDate"));
                 LocalDate endDateIOEnd = LocalDate.parse(ctx.getString("pl_endDate"));
                 return Integer.toString(Period.between(birthDateIOEnd, endDateIOEnd).getYears());
             case "pl_TermMonths":
@@ -49,7 +53,7 @@ public class ComputedVars {
                 long days = ChronoUnit.DAYS.between(startDate, endDate);
                 return Long.toString(days);
             case "io_legs":
-                Object io = ctx.get("io_ticket_nr");
+                Object io = ctx.get("io_ticketNr");
                 if (io instanceof Collection) {
                     return Integer.toString(((Collection<?>) io).size());
                 }

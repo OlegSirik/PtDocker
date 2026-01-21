@@ -55,6 +55,19 @@ jwt:
   secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
 
+# Keycloak Configuration
+# ⚠️ IMPORTANT: Set these via environment variables in production!
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8000}
+    realm: ${KEYCLOAK_ADMIN_REALM:master}
+    username: ${KEYCLOAK_ADMIN_USER:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT:admin-cli}
+    default-realm: ${KEYCLOAK_DEFAULT_REALM:politech}
+    connection-timeout: ${KEYCLOAK_CONN_TIMEOUT:10000}
+    read-timeout: ${KEYCLOAK_READ_TIMEOUT:10000}
+
 payments:
   vsk:
     #  TODO поправить для прода
