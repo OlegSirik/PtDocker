@@ -4,7 +4,7 @@ name: Build, Push and Deploy with Compose
 on:
   push:
     branches: [ "master" ]
-  
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
@@ -12,7 +12,8 @@ env:
   FRONTEND_IMAGE: olegsirik/papi-f
 
 jobs:
-  build-and-test: 
+  build-and-push: 
+    name: Build and Push Images
     runs-on: ubuntu-latest
     
     steps:
@@ -28,49 +29,53 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and test with Docker Compose
+      - name: Set up Gradle caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./PoliTechAPI
+          file: ./PoliTechAPI/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:master
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./PoliTechFront
+          file: ./PoliTechFront/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:master
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Summary
         run: |
-          # Собираем образы
-          docker compose -f docker-compose-mac-local.yml build
+          echo "✅ Images built and pushed successfully!"
+          echo "Backend: ${{ env.BACKEND_IMAGE }}:latest"
+          echo "Frontend: ${{ env.FRONTEND_IMAGE }}:latest"
 
-          echo "=== Built images ==="
-          docker compose images
-          
-          # Запускаем сервисы
-          docker compose -f docker-compose-mac-local.yml up -d
-          
-          # Ждем готовности
-          sleep 30
-        
-          
-          # Проверяем здоровье сервисов
-          # curl -f http://localhost:80/health || exit 1
-          # curl -f http://localhost:8080/health || exit 1
-
-      - name: Push images to Docker Hub
-        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          # Тегируем и пушим backend
-          docker tag papi-b:latest ${{ env.BACKEND_IMAGE }}:latest
-          #docker tag backend:latest ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.BACKEND_IMAGE }}:latest 
-          #docker push ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          
-          # Тегируем и пушим frontend
-          docker tag papi-f:latest ${{ env.FRONTEND_IMAGE }}:latest
-          #docker tag frontend:latest ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.FRONTEND_IMAGE }}:latest
-          #docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker compose -f docker-compose-mac-local.yml down
-          docker system prune -f
-
-  
   deploy:
+    name: Deploy to Production
     runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     
     steps:
       - name: Checkout code
@@ -83,15 +88,29 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |          
+            # Navigate to project directory
+            cd ~/PtDocker || cd /root/PtDocker || cd /home/${{ secrets.SERVER_USER }}/PtDocker
+            
             # Pull latest code
-            cd PtDocker
             git pull origin master
-            echo "Текущий статус репозитория:"
+            echo "✅ Code updated"
             git status
             
-            # Deploy
-            docker compose down
-            docker compose --env-file docker-compose.env up -d --build
+            # Pull latest images from Docker Hub
+            docker pull ${{ env.BACKEND_IMAGE }}:latest
+            docker pull ${{ env.FRONTEND_IMAGE }}:latest
+            echo "✅ Images pulled from Docker Hub"
             
+            # Restart services with new images
+            docker-compose --env-file docker-compose.env down
+            docker-compose --env-file docker-compose.env up -d
             
-              
+            # Wait for services to start
+            sleep 10
+            
+            # Show status
+            docker-compose --env-file docker-compose.env ps
+            echo "✅ Deployment complete!"
+            
+            # Cleanup old images
+            docker image prune -f
