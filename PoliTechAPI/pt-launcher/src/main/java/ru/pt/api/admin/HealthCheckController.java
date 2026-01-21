@@ -1,17 +1,22 @@
 package ru.pt.api.admin;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.service.calculator.CalculatorService;
+import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.VariableContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +31,8 @@ public class HealthCheckController {
     
     private final StorageService storageService;
     private final ProductService productService;
+    private final CalculatorService calculatorService;
+    private final CoefficientService coefficientService;
 
     @GetMapping("/policy/{policyNumber}")
     public Map<String, Object> checkPolicy(@PathVariable String policyNumber) {
@@ -71,6 +78,176 @@ public class HealthCheckController {
         return result;
     }
     
+    @GetMapping("/product/{productId}/version/{versionNo}")
+    public ProductVersionDetails getProductVersionDetails(
+            @PathVariable Integer productId,
+            @PathVariable Integer versionNo) {
+        
+        logger.info("Getting product version details: productId={}, versionNo={}", productId, versionNo);
+        
+        // Get product version from DB
+        ProductVersionModel productVersion = productService.getVersion(productId, versionNo);
+        logger.debug("Product version retrieved: {} packages", productVersion.getPackages().size());
+        
+        // Collect calculators and coefficients for each package
+        List<PackageDetails> packageDetailsList = new ArrayList<>();
+        
+        for (var pkg : productVersion.getPackages()) {
+            logger.debug("Processing package: {}", pkg.getCode());
+            
+            // Get calculator for this package
+            CalculatorModel calculator = calculatorService.getCalculator(productId, versionNo, pkg.getCode());
+            logger.debug("Calculator retrieved for package: {}", pkg.getCode());
+            
+            // Get coefficients for this calculator
+            List<CoefficientData> coefficients = new ArrayList<>();
+            if (calculator != null && calculator.getCoefficients() != null) {
+                for (var coef : calculator.getCoefficients()) {
+                    logger.debug("Getting coefficient table: {}", coef.getVarCode());
+                    ArrayNode coefficientTable = coefficientService.getTable(
+                        calculator.getId(),
+                        coef.getVarCode()
+                    );
+                    if (coefficientTable != null) {
+                        coefficients.add(new CoefficientData(
+                            coef.getVarCode(),
+                            coef.getVarName(),
+                            coefficientTable
+                        ));
+                    }
+                }
+            }
+            logger.debug("Retrieved {} coefficient tables for package: {}", coefficients.size(), pkg.getCode());
+            
+            packageDetailsList.add(new PackageDetails(
+                pkg.getCode(),
+                pkg.getName(),
+                calculator,
+                coefficients
+            ));
+        }
+        
+        logger.info("Product version details completed: {} packages processed", packageDetailsList.size());
+        
+        return new ProductVersionDetails(
+            productVersion,
+            packageDetailsList
+        );
+    }
+    
+    @PostMapping("/product/version/import")
+    public ImportResult importProductVersionDetails(@RequestBody ProductVersionDetails details) {
+        
+        logger.info("Importing product version details for product: {}", 
+            details.productVersion().getCode());
+        
+        int createdCalculators = 0;
+        int createdCoefficients = 0;
+        List<String> errors = new ArrayList<>();
+        
+        try {
+            // Note: Product version should already exist in DB
+            // This method only imports calculators and coefficients
+            Integer productId = details.productVersion().getId();
+            Integer versionNo = details.productVersion().getVersionNo();
+            String productCode = details.productVersion().getCode();
+            
+            logger.debug("Importing for productId={}, productCode={}, versionNo={}", 
+                productId, productCode, versionNo);
+            
+            // Process each package
+            for (PackageDetails pkgDetails : details.packages()) {
+                logger.debug("Processing package: {}", pkgDetails.packageCode());
+                
+                try {
+                    // Create or update calculator for this package
+                    if (pkgDetails.calculator() != null) {
+                        // Check if calculator exists
+                        CalculatorModel existingCalculator = calculatorService.getCalculator(
+                            productId, 
+                            versionNo, 
+                            pkgDetails.packageCode()
+                        );
+                        
+                        if (existingCalculator == null) {
+                            // Create new calculator
+                            calculatorService.createCalculatorIfMissing(
+                                productId,
+                                productCode,
+                                versionNo, 
+                                pkgDetails.packageCode()
+                            );
+                            createdCalculators++;
+                            logger.debug("Created calculator for package: {}", pkgDetails.packageCode());
+                            
+                            // Get the newly created calculator to get its ID
+                            existingCalculator = calculatorService.getCalculator(
+                                productId, 
+                                versionNo, 
+                                pkgDetails.packageCode()
+                            );
+                        }
+                        
+                        // Import coefficients for this calculator
+                        if (pkgDetails.coefficients() != null && existingCalculator != null) {
+                            for (CoefficientData coefData : pkgDetails.coefficients()) {
+                                try {
+                                    logger.debug("Importing coefficient: {} for calculator: {}", 
+                                        coefData.code(), existingCalculator.getId());
+                                    
+                                    // Replace coefficient table data
+                                    coefficientService.replaceTable(
+                                        existingCalculator.getId(),
+                                        coefData.code(),
+                                        coefData.data()
+                                    );
+                                    createdCoefficients++;
+                                    logger.debug("Imported coefficient table: {}", coefData.code());
+                                    
+                                } catch (Exception e) {
+                                    String error = String.format(
+                                        "Failed to import coefficient %s for package %s: %s",
+                                        coefData.code(), pkgDetails.packageCode(), e.getMessage()
+                                    );
+                                    logger.error(error, e);
+                                    errors.add(error);
+                                }
+                            }
+                        }
+                    }
+                    
+                } catch (Exception e) {
+                    String error = String.format(
+                        "Failed to process package %s: %s",
+                        pkgDetails.packageCode(), e.getMessage()
+                    );
+                    logger.error(error, e);
+                    errors.add(error);
+                }
+            }
+            
+            logger.info("Import completed: {} calculators, {} coefficients created, {} errors",
+                createdCalculators, createdCoefficients, errors.size());
+            
+            return new ImportResult(
+                true,
+                createdCalculators,
+                createdCoefficients,
+                errors.isEmpty() ? null : errors
+            );
+            
+        } catch (Exception e) {
+            logger.error("Import failed: {}", e.getMessage(), e);
+            errors.add("Import failed: " + e.getMessage());
+            return new ImportResult(
+                false,
+                createdCalculators,
+                createdCoefficients,
+                errors
+            );
+        }
+    }
+    
     private PvVarDefinition toDefinition(ru.pt.api.dto.product.PvVar var) {
         PvVarDefinition.Type type;
         switch (var.getVarDataType()) {
@@ -89,4 +266,30 @@ public class HealthCheckController {
             var.getVarType()
         );
     }
+    
+    // Response DTOs
+    public record ProductVersionDetails(
+        ProductVersionModel productVersion,
+        List<PackageDetails> packages
+    ) {}
+    
+    public record PackageDetails(
+        Integer packageCode,
+        String packageName,
+        CalculatorModel calculator,
+        List<CoefficientData> coefficients
+    ) {}
+    
+    public record CoefficientData(
+        String code,
+        String name,
+        ArrayNode data
+    ) {}
+    
+    public record ImportResult(
+        boolean success,
+        int calculatorsCreated,
+        int coefficientsImported,
+        List<String> errors
+    ) {}
 }
