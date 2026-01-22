@@ -337,6 +337,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 12. Ответ
         logger.info("Calculate process completed. premium={}", policyDTO.getPremium());
+
+        if (policyDTO.getPremium() == null || policyDTO.getPremium().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new UnprocessableEntityException("Запрос не соответствует условиям тарифа");
+        }
         return policyToJson(policyDTO);
 
     }

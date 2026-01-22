@@ -677,15 +677,15 @@ export class VarEditDialog {
     template: `
   <h2 mat-dialog-title>Покрытие</h2>
   <div mat-dialog-content>
-    <mat-form-field appearance="outline" style="min-width: 200px;">
+    <mat-form-field appearance="outline" style="min-width: 400px;">
       <mat-label>coverCode</mat-label>
       <input matInput [(ngModel)]="model.coverCode">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 200px;">
+    <mat-form-field appearance="outline" style="min-width: 400px;">
       <mat-label>coverName</mat-label>
       <input matInput [(ngModel)]="model.coverName">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 200px;">
+    <mat-form-field appearance="outline" style="min-width: 400px;">
       <mat-label>risks</mat-label>
       <input matInput [(ngModel)]="model.risks">
     </mat-form-field>
