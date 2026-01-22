@@ -137,28 +137,37 @@ public class CalculatorServiceImpl implements CalculatorService {
                         if (pkg.getCode().equals(packageNo)) {
                             logger.debug("Found matching package: {}, adding cover variables", packageNo);
                             pkg.getCovers().forEach(cover -> {
-                                PvVar varSumInsured = new PvVar();
-                                varSumInsured.setVarCode("co_" + cover.getCode() + "_sumInsured");
-                                varSumInsured.setVarName(cover.getCode() + " Страховая сумма");
-                                varSumInsured.setVarType("VAR");
+                                PvVar varSumInsured = PvVar.varSumInsured(cover.getCode());
+//                                varSumInsured.setVarCode("co_" + cover.getCode() + "_sumInsured");
+//                                varSumInsured.setVarName(cover.getCode() + " Страховая сумма");
+//                                varSumInsured.setVarType("VAR");
                                 if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
                                     calculatorModel.getVars().add(varSumInsured);
                                 }
 
-                                PvVar varPremium = new PvVar();
-                                varPremium.setVarCode("co_" + cover.getCode() + "_premium");
-                                varPremium.setVarName(cover.getCode() + " Премия");
-                                varPremium.setVarType("VAR");
+                                PvVar varPremium = PvVar.varPremium(cover.getCode());
+//                                varPremium.setVarCode("co_" + cover.getCode() + "_premium");
+//                                varPremium.setVarName(cover.getCode() + " Премия");
+//                                varPremium.setVarType("VAR");
                                 if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
                                     calculatorModel.getVars().add(varPremium);
                                 }
 
-                                PvVar varDeductibleNr = new PvVar();
-                                varDeductibleNr.setVarCode("co_" + cover.getCode() + "_deductibleNr");
-                                varDeductibleNr.setVarName(cover.getCode() + " Номер франшизы");
-                                varDeductibleNr.setVarType("VAR");
+                                PvVar varDeductibleNr = PvVar.varDeductibleNr(cover.getCode());
+//                                varDeductibleNr.setVarCode("co_" + cover.getCode() + "_deductibleNr");
+//                                varDeductibleNr.setVarName(cover.getCode() + " Номер франшизы");
+//                                varDeductibleNr.setVarType("VAR");
                                 if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
                                     calculatorModel.getVars().add(varDeductibleNr);
+                                }
+
+                                PvVar varLimitMin = PvVar.varLimitMin(cover.getCode());
+                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMin.getVarCode()))) {
+                                    calculatorModel.getVars().add(varLimitMin);
+                                }
+                                PvVar varLimitMax = PvVar.varLimitMax(cover.getCode());
+                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMax.getVarCode()))) {
+                                    calculatorModel.getVars().add(varLimitMax);
                                 }
 
                             });

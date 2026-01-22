@@ -14,8 +14,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import ru.pt.api.dto.product.PvVar;
 
 import com.jayway.jsonpath.JsonPath;
+
 
 public final class VariableContext implements Map<String, Object> {
 
@@ -286,14 +288,14 @@ public final class VariableContext implements Map<String, Object> {
         if (cover == null) {
             return;
         }
-        String sumInsuredVarCode = "co_" + cover + "_sumInsured";
+        String sumInsuredVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_sumInsured";
         this.values.put(sumInsuredVarCode, value);
     }
     public BigDecimal getCoverSumInsured(String cover) {
         if (cover == null) {
             return null;
         }
-        String sumInsuredVarCode = "co_" + cover + "_sumInsured";
+        String sumInsuredVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_sumInsured";
         return (BigDecimal) this.values.get(sumInsuredVarCode);
     }
 
@@ -301,14 +303,14 @@ public final class VariableContext implements Map<String, Object> {
         if (cover == null) {
             return;
         }
-        String premiumVarCode = "co_" + cover + "_premium";
+        String premiumVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_premium";
         this.values.put(premiumVarCode, value);
     }
     public BigDecimal getCoverPremium(String cover) {
         if (cover == null) {
             return null;
         }
-        String premiumVarCode = "co_" + cover + "_premium";
+        String premiumVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_premium";
         return (BigDecimal) this.values.get(premiumVarCode);
     }
 
@@ -316,15 +318,30 @@ public final class VariableContext implements Map<String, Object> {
         if (cover == null) {
             return;
         }
-        String deductibleNrVarCode = "co_" + cover + "_deductibleNr";
+        String deductibleNrVarCode = PvVar.varDeductibleNr(cover).getVarCode(); //"co_" + cover + "_deductibleNr";
         this.values.put(deductibleNrVarCode, value.toString());
     }
     public Integer getCoverDeductibleNr(String cover) {
         if (cover == null) {
             return null;
         }
-        String deductibleNrVarCode = "co_" + cover + "_deductibleNr";
+        String deductibleNrVarCode = PvVar.varDeductibleNr(cover).getVarCode(); //"co_" + cover + "_deductibleNr";
         return (Integer) this.values.get(deductibleNrVarCode);
+    }
+
+    public BigDecimal getCoverLimitMin(String cover) {
+        if (cover == null) {
+            return null;
+        }
+        String limitMinVarCode = PvVar.varLimitMin(cover).getVarCode(); //"co_" + cover + "_limitMin";
+        return (BigDecimal) this.values.get(limitMinVarCode);
+    }
+    public BigDecimal getCoverLimitMax(String cover) {
+        if (cover == null) {
+            return null;
+        }
+        String limitMaxVarCode = PvVar.varLimitMax(cover).getVarCode(); //"co_" + cover + "_limitMin";
+        return (BigDecimal)this.values.get(limitMaxVarCode);
     }
 
     public String getPackageNo() {

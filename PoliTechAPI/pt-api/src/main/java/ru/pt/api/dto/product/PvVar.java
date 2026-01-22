@@ -126,12 +126,35 @@ public class PvVar {
     }
 
     public static PvVar varSumInsured(String coverCode) {
-        return new PvVar("co_" + coverCode + "_sumInsured", "Страховая сумма по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+        return new PvVar("co_" + coverCode + "_sumInsured"
+        , "Страховая сумма по  " + coverCode
+        , ""
+        , "VAR"
+        , ""
+        , VarDataType.NUMBER
+        , "coverage.co_" + coverCode + "_sumInsured"
+        , "1001");
     }
     public static PvVar varPremium(String coverCode) {
-        return new PvVar("co_" + coverCode + "_premium", "Премия по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+        return new PvVar("co_" + coverCode + "_premium", "Премия по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_premium", "1001");
     }
     public static PvVar varDeductibleNr(String coverCode) {
-        return new PvVar("co_" + coverCode + "_deductibleNr", "Id франшизы по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.code", "1001");
+        return new PvVar("co_" + coverCode + "_deductibleNr", "Id франшизы по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_deductibleNr", "1001");
     }
+    public static PvVar varLimitMin(String coverCode) {
+        return new PvVar("co_" + coverCode + "_limitMin", "Лимит ответственности (min) по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMin", "1001");
+    }
+    public static PvVar varLimitMax(String coverCode) {
+        return new PvVar("co_" + coverCode + "_limitMax", "Лимит ответственности (max) по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMax", "1001");
+    }
+
+    // Policy
+    public static final String POLICY_NUMBER = "pl_policy_nr";
+    public static final String POLICY_STATUS = "pl_status";
+    public static final String POLICY_VERSION = "pl_version";
+
+    // Product
+    public static final String PRODUCT_CODE = "pl_product_code";
+    public static final String PRODUCT_VERSION = "pl_product_version";
+
 }

@@ -95,7 +95,7 @@ public class ComputedVars {
                     String endDateStr = ctx.getString("pl_endDate");
                     logger.trace("Computing pl_TermMonths: startDate={}, endDate={}", startDateStr, endDateStr);
                     LocalDate st = getDate(startDateStr);
-                    LocalDate ed = getDate(endDateStr);
+                    LocalDate ed = getDate(endDateStr).plusDays(1);
                     Period p = Period.between(st, ed);
                     int m = p.getYears() * 12 + p.getMonths();
                     result = Integer.toString(m);

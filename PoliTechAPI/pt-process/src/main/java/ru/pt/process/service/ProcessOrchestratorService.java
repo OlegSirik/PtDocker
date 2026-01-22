@@ -191,9 +191,16 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         
         policyDTO.getProcessList().setVars(varCtx.getValues());
 
-        BigDecimal totalPremium = calculateTotalPremium(policyDTO);
-        policyDTO.setPremium(totalPremium);
-        logger.debug("Premium calculated. totalPremium={}", totalPremium);
+        // Если расчет велся по договору без покрытий то можно записать премию в pl_premium
+        BigDecimal policyPremium = varCtx.getDecimal("pl_premium");
+        if (policyPremium != null && policyPremium.compareTo(BigDecimal.ZERO) > 0) {
+            policyDTO.setPremium(policyPremium);    
+            logger.debug("Premium calculated. policyPremium={}", policyPremium);
+        } else {
+            BigDecimal totalPremium = calculateTotalPremium(policyDTO);
+            policyDTO.setPremium(totalPremium);
+            logger.debug("Premium calculated. totalPremium={}", totalPremium);
+        }
 
 //        for ( PvVarDefinition var : varCtx.getDefinitions()) {
 //            logger.info("Var {} {}", var.getCode(),  varCtx.getString(var.getCode()));
@@ -201,6 +208,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     }
 
+    private PvVarDefinition fromPvVar(PvVar pvVar) {
+        return new PvVarDefinition( pvVar.getVarCode(), pvVar.getVarPath(), PvVarDefinition.Type.NUMBER, pvVar.getVarType());
+    }
     private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
         //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
         //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
@@ -210,6 +220,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_sumInsured", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_premium", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_deductibleNr", "", PvVarDefinition.Type.NUMBER, "VAR"));
+                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMin", "", PvVarDefinition.Type.NUMBER, "VAR"));
+                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMax", "", PvVarDefinition.Type.NUMBER, "VAR"));
             }
         }
     }
