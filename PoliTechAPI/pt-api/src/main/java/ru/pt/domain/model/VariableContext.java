@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.jayway.jsonpath.JsonPath;
@@ -20,7 +21,7 @@ public final class VariableContext implements Map<String, Object> {
 
     private final Object jsonDocument; // parsed once
     private final Map<String, PvVarDefinition> definitions;
-    private final Map<String, Object> values = new HashMap<>();
+    private final Map<String, Object> values = new ConcurrentHashMap<>();
 
     public VariableContext(String json, List<PvVarDefinition> vars) {
         this.jsonDocument = JsonPath.parse(json).json();
@@ -104,16 +105,11 @@ public final class VariableContext implements Map<String, Object> {
     @Override
     public Object get(Object key) {
         if (!(key instanceof String code)) return null;
-
-        Object object = new String("Error evaluating variable: " + code);
         try {
-            object = values.computeIfAbsent(code, this::evaluate);
+            return values.computeIfAbsent(code, this::evaluate);
         } catch (Exception e) {
-            //logger.error("Error evaluating variable: " + code, e);
-            //return "Error evaluating variable: " + code;
-            object = "Error evaluating variable: " + code + " " + e.getMessage();
+            return "Error evaluating variable: " + code + " " + e.getMessage();
         }
-        return object;
     }
 
     private Object evaluate(String code) {

@@ -138,11 +138,17 @@ public class ComputedVars {
     }
 
     public static LocalDate getDate(String isoDateTime) {
-        // Парсим как ZonedDateTime
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(isoDateTime);
+        if (isoDateTime == null) {
+            return null;
+        }
         
-        // Получаем LocalDate
-        return zonedDateTime.toLocalDate();
+        try {
+            // Пробуем как ZonedDateTime (с часовым поясом)
+            return ZonedDateTime.parse(isoDateTime).toLocalDate();
+        } catch (Exception e) {
+            // Если не получилось, пробуем как LocalDate (просто дата)
+            return LocalDate.parse(isoDateTime);
+        }
     }
 }
 
