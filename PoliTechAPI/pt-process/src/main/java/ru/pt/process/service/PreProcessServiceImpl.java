@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.CoverInfo;
 import ru.pt.api.dto.process.Deductible;
@@ -15,12 +16,14 @@ import ru.pt.api.service.process.PreProcessService;
 import ru.pt.process.utils.PeriodUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.time.ZoneId;
 
 @Component
 public class PreProcessServiceImpl implements PreProcessService {
@@ -43,6 +46,8 @@ public class PreProcessServiceImpl implements PreProcessService {
     public void applyProductMetadata(PolicyDTO policy, ProductVersionModel productVersionModel) {
         logger.info("Applying product metadata. productCode={}", productVersionModel.getCode());
         
+        policy.setProductVersion(productVersionModel.getVersionNo());
+
         normalizePolicyDates( policy,  productVersionModel);
 
         var insuredObject = policy.getInsuredObjects().get(0);
@@ -147,39 +152,45 @@ public class PreProcessServiceImpl implements PreProcessService {
         String validatorValue = policyVersionModel.getWaitingPeriod().getValidatorValue();
 
         ZonedDateTime issueDate = policy.getIssueDate();
+        ZoneId issueZone = issueDate != null ? issueDate.getZone() : ZoneId.systemDefault();
+        logger.debug("Issue date is {}, timeZone is {}", issueDate, issueZone);
+
         ZonedDateTime startDate = policy.getStartDate();
         String waitingPeriod = policy.getWaitingPeriod();
 
         if (issueDate == null) {
             logger.warn("Issue date is required but not provided");
-            throw new IllegalAccessError("Issue date is required");
+            throw new BadRequestException("Issue date is required");
         }
         if (validatorType != null) {
             // TODO добавить даты в зависимости от указанного waitingPeriod
             switch (validatorType) {
-                case "RANGE":
+                case "RANGE": // Дата startDate должна попадать в период из настроек
                     if (startDate == null) {
-                        throw new IllegalAccessError("Start date is required");
+                        throw new BadRequestException("Start date is required");
                     }
 
+                    // Конвертируем startDate в эту временную зону
+                    startDate = startDate.withZoneSameInstant(issueZone);
+                    
                     if (!PeriodUtils.isDateInRange(issueDate, startDate, validatorValue)) {
-                        throw new IllegalArgumentException("Activation delay is not in range");
+                        throw new BadRequestException("Activation delay is not in range");
                     }
                     Period prd = Period.between(issueDate.toLocalDate(), startDate.toLocalDate());
                     policy.setWaitingPeriod(prd.toString());
                     break;
                 case "LIST":
                     // список доступных значений из модели полиса
-                    // взять из договора policyTerm, проверить что это значение есть в списке. вычислить дату2
+                    // взять из договора policyTerm, проdерить что это значение есть в списке. вычислить дату2
                     String[] list = validatorValue.split(",");
                     // если только одно значение, то только оно и возможно
                     if (list.length == 0) {
-                        throw new IllegalAccessError("validatorValue is invalid");
+                        throw new UnprocessableEntityException("Ошибка настройки продукта. ActivalionDelay validatorValue is invalid");
                     } else if (list.length == 1) {
                         waitingPeriod = list[0];
                     } else {
                         if (waitingPeriod == null) {
-                            throw new IllegalAccessError("Waiting period is required");
+                            throw new BadRequestException("Waiting period is required");
                         }
 
                         boolean found = false;
@@ -191,7 +202,7 @@ public class PreProcessServiceImpl implements PreProcessService {
                             }
                         }
                         if (!found) {
-                            throw new IllegalAccessError("Waiting period is not in list");
+                            throw new BadRequestException("Waiting period is not in list");
                         }
                     }
 
@@ -206,17 +217,40 @@ public class PreProcessServiceImpl implements PreProcessService {
                     logger.debug("Set start date to next month: {}", startDate);
                     break;
             }
+        } else {
+            throw new UnprocessableEntityException("Не заданана настройка для activationPeriod");
+        }
+
+        // Проверить что startDate >= issueDate, привести в одну таймзону, если startDate не сегодня, то установить время 00:00:00
+        startDate = policy.getStartDate();
+        if (startDate != null && issueDate != null) {
+            startDate = startDate.withZoneSameInstant(issueZone);
+            
+            if (startDate.isBefore(issueDate)) {
+                logger.warn("Start date must be >= issue date. issueDate={}, startDate={}", issueDate, startDate);
+                throw new BadRequestException("Start date must be >= issue date");
+            }
+            LocalDate todayInZone = ZonedDateTime.now(issueZone).toLocalDate();
+            if (!startDate.toLocalDate().equals(todayInZone)) {
+                startDate = startDate.toLocalDate().atStartOfDay(issueZone);
+                logger.debug("Normalized startDate to 00:00:00 (not today). startDate={}", startDate);
+            }
+            policy.setStartDate(startDate);
         }
 
         logger.debug("Activation delay set. waitingPeriod={}, startDate={}", policy.getWaitingPeriod(), policy.getStartDate());
         return policy;
     }
 
+    
     public PolicyDTO setPolicyTerm(PolicyDTO policy, ProductVersionModel policyVersionModel) {
         logger.debug("Setting policy term. validatorType={}", policyVersionModel.getPolicyTerm().getValidatorType());
         // activationDelay - RANGE LIST NEXT_MONTH
         String validatorType = policyVersionModel.getPolicyTerm().getValidatorType();
         String validatorValue = policyVersionModel.getPolicyTerm().getValidatorValue();
+
+        ZonedDateTime issueDate = policy.getIssueDate();
+        ZoneId issueZone = issueDate != null ? issueDate.getZone() : ZoneId.systemDefault();
 
         ZonedDateTime startDate = policy.getStartDate();
         ZonedDateTime endDate = policy.getEndDate();
@@ -232,6 +266,9 @@ public class PreProcessServiceImpl implements PreProcessService {
                     if (endDate == null) {
                         throw new BadRequestException("End date is required");
                     }
+
+                    // Конвертируем endDate в эту временную зону
+                    endDate = endDate.withZoneSameInstant(issueZone);
 
                     if (!PeriodUtils.isDateInRange(startDate, endDate, validatorValue)) {
                         throw new BadRequestException("Activation delay is not in range");
@@ -274,6 +311,21 @@ public class PreProcessServiceImpl implements PreProcessService {
                     logger.debug("Set end date from policy term. policyTerm={}, endDate={}", policyTerm, endDate);
                     break;
             }
+        } else {
+            throw new UnprocessableEntityException("Не заданана настройка для policyTerm");
+        }
+
+        endDate = policy.getEndDate();
+        startDate = policy.getStartDate();
+        if (endDate != null && startDate != null) {
+            endDate = endDate.withZoneSameInstant(issueZone);
+            endDate = endDate.toLocalDate().atStartOfDay(issueZone).minusSeconds(1);
+            if (!endDate.isAfter(startDate)) {
+                logger.warn("End date must be after start date. startDate={}, endDate={}", startDate, endDate);
+                throw new BadRequestException("End date must be after start date");
+            }
+            policy.setEndDate(endDate);
+            logger.debug("Normalized endDate to 00:00:00 minus 1 second. endDate={}", endDate);
         }
 
         logger.debug("Policy term set. policyTerm={}, endDate={}", policy.getPolicyTerm(), policy.getEndDate());

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.time.ZonedDateTime;
 
 public class ComputedVars {
 
@@ -49,8 +50,8 @@ public class ComputedVars {
                     String birthDateStr = ctx.getString("ph_birthDate");
                     String issueDateStr = ctx.getString("pl_issueDate");
                     logger.trace("Computing ph_age_issue: birthDate={}, issueDate={}", birthDateStr, issueDateStr);
-                    LocalDate birthDate = LocalDate.parse(birthDateStr);
-                    LocalDate issueDate = LocalDate.parse(issueDateStr);
+                    LocalDate birthDate = getDate(birthDateStr);
+                    LocalDate issueDate = getDate(issueDateStr);
                     int age = Period.between(birthDate, issueDate).getYears();
                     result = Integer.toString(age);
                     logger.trace("ph_age_issue result: {} years", age);
@@ -60,8 +61,8 @@ public class ComputedVars {
                     String birthDatePhEndStr = ctx.getString("ph_birthDate");
                     String endDatePhEndStr = ctx.getString("pl_endDate");
                     logger.trace("Computing ph_age_end: birthDate={}, endDate={}", birthDatePhEndStr, endDatePhEndStr);
-                    LocalDate birthDatePhEnd = LocalDate.parse(birthDatePhEndStr);
-                    LocalDate endDatePhEnd = LocalDate.parse(endDatePhEndStr);
+                    LocalDate birthDatePhEnd = getDate(birthDatePhEndStr);
+                    LocalDate endDatePhEnd = getDate(endDatePhEndStr);
                     int ageEnd = Period.between(birthDatePhEnd, endDatePhEnd).getYears();
                     result = Integer.toString(ageEnd);
                     logger.trace("ph_age_end result: {} years", ageEnd);
@@ -71,8 +72,8 @@ public class ComputedVars {
                     String birthDateIOStr = ctx.getString("io_birthDate");
                     String issueDateIOStr = ctx.getString("pl_issueDate");
                     logger.trace("Computing io_age_issue: birthDate={}, issueDate={}", birthDateIOStr, issueDateIOStr);
-                    LocalDate birthDateIO = LocalDate.parse(birthDateIOStr);
-                    LocalDate issueDateIO = LocalDate.parse(issueDateIOStr);
+                    LocalDate birthDateIO = getDate(birthDateIOStr);
+                    LocalDate issueDateIO = getDate(issueDateIOStr);
                     int ageIO = Period.between(birthDateIO, issueDateIO).getYears();
                     result = Integer.toString(ageIO);
                     logger.trace("io_age_issue result: {} years", ageIO);
@@ -82,8 +83,8 @@ public class ComputedVars {
                     String birthDateIOEndStr = ctx.getString("io_birthDate");
                     String endDateIOEndStr = ctx.getString("pl_endDate");
                     logger.trace("Computing io_age_end: birthDate={}, endDate={}", birthDateIOEndStr, endDateIOEndStr);
-                    LocalDate birthDateIOEnd = LocalDate.parse(birthDateIOEndStr);
-                    LocalDate endDateIOEnd = LocalDate.parse(endDateIOEndStr);
+                    LocalDate birthDateIOEnd = getDate(birthDateIOEndStr);
+                    LocalDate endDateIOEnd = getDate(endDateIOEndStr);
                     int ageIOEnd = Period.between(birthDateIOEnd, endDateIOEnd).getYears();
                     result = Integer.toString(ageIOEnd);
                     logger.trace("io_age_end result: {} years", ageIOEnd);
@@ -93,8 +94,8 @@ public class ComputedVars {
                     String startDateStr = ctx.getString("pl_startDate");
                     String endDateStr = ctx.getString("pl_endDate");
                     logger.trace("Computing pl_TermMonths: startDate={}, endDate={}", startDateStr, endDateStr);
-                    LocalDate st = LocalDate.parse(startDateStr);
-                    LocalDate ed = LocalDate.parse(endDateStr);
+                    LocalDate st = getDate(startDateStr);
+                    LocalDate ed = getDate(endDateStr);
                     Period p = Period.between(st, ed);
                     int m = p.getYears() * 12 + p.getMonths();
                     result = Integer.toString(m);
@@ -105,13 +106,13 @@ public class ComputedVars {
                     String startDateDaysStr = ctx.getString("pl_startDate");
                     String endDateDaysStr = ctx.getString("pl_endDate");
                     logger.trace("Computing pl_TermDays: startDate={}, endDate={}", startDateDaysStr, endDateDaysStr);
-                    LocalDate startDate = LocalDate.parse(startDateDaysStr);
-                    LocalDate endDate = LocalDate.parse(endDateDaysStr);
+                    LocalDate startDate = getDate(startDateDaysStr);
+                    LocalDate endDate = getDate(endDateDaysStr);
                     long days = ChronoUnit.DAYS.between(startDate, endDate);
                     result = Long.toString(days);
                     logger.trace("pl_TermDays result: {} days", days);
                     return result;
-                    
+                /*     
                 case "io_legs":
                     Object io = ctx.get("io_ticketNr");
                     logger.trace("Computing io_legs: io_ticketNr type={}, value={}", 
@@ -124,7 +125,7 @@ public class ComputedVars {
                     }
                     logger.trace("io_legs result: 0 (not a collection)");
                     return "0";
-                    
+                */    
                 default:
                     logger.warn("Unknown computed variable key: '{}', returning 'Not Found' message", key);
                     return key + " Not Found";
@@ -134,6 +135,14 @@ public class ComputedVars {
             logger.trace("Exception details for key '{}'", key, e);
             return "";
         }
+    }
+
+    public static LocalDate getDate(String isoDateTime) {
+        // Парсим как ZonedDateTime
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(isoDateTime);
+        
+        // Получаем LocalDate
+        return zonedDateTime.toLocalDate();
     }
 }
 
