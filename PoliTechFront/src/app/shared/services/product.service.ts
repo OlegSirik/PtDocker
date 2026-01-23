@@ -51,7 +51,7 @@ export interface QuoteValidator {
   ruleType: string;
   keyRight?: string;
   valueRight?: string;
-  dataType: 'NUMBER' | 'STRING' | 'DATE' | 'DURATION';
+  dataType: string;
   errorText: string;
 }
 

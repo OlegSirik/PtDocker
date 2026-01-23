@@ -950,17 +950,14 @@ export interface PolicyVar {
         console.log(v);
         if (!this.calculator.vars.some(v2 => v2.varCode === v.varCode)) {
           // Map backend varDataType (including 'DURATION') to frontend literal union type
-          const mappedVarDataType: 'NUMBER' | 'STRING' | 'DATE' | 'PERIOD' =
-            v.varDataType === 'DURATION'
-              ? 'PERIOD'
-              : v.varDataType as 'NUMBER' | 'STRING' | 'DATE' | 'PERIOD';
+          
 
           this.calculator.vars.push({
             varCode: v.varCode,
             varName: v.varName,
             varPath: v.varPath,
             varType: 'VAR', // v.varType,
-            varDataType: mappedVarDataType,
+            varDataType: v.varDataType === 'NUMBER' ? 'NUMBER' : 'STRING',
             varValue: v.varValue
           });
         }

@@ -306,14 +306,14 @@ public final class VariableContext implements Map<String, Object> {
         if (cover == null) {
             return;
         }
-        String premiumVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_premium";
+        String premiumVarCode = PvVar.varPremium(cover).getVarCode(); //"co_" + cover + "_premium";
         this.values.put(premiumVarCode, value);
     }
     public BigDecimal getCoverPremium(String cover) {
         if (cover == null) {
             return null;
         }
-        String premiumVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_premium";
+        String premiumVarCode = PvVar.varPremium(cover).getVarCode(); //"co_" + cover + "_premium";
         return (BigDecimal) this.values.get(premiumVarCode);
     }
 
