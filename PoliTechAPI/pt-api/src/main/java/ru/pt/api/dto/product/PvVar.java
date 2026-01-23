@@ -128,7 +128,7 @@ public class PvVar {
     public static PvVar varSumInsured(String coverCode) {
         return new PvVar("co_" + coverCode + "_sumInsured"
         , "Страховая сумма по  " + coverCode
-        , ""
+        , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].sumInsured"
         , "VAR"
         , ""
         , VarDataType.NUMBER
@@ -136,16 +136,28 @@ public class PvVar {
         , "1001");
     }
     public static PvVar varPremium(String coverCode) {
-        return new PvVar("co_" + coverCode + "_premium", "Премия по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_premium", "1001");
+        return new PvVar("co_" + coverCode + "_premium"
+        , "Премия по  " + coverCode
+        , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].premium"
+        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_premium", "1001");
     }
     public static PvVar varDeductibleNr(String coverCode) {
-        return new PvVar("co_" + coverCode + "_deductibleNr", "Id франшизы по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_deductibleNr", "1001");
+        return new PvVar("co_" + coverCode + "_deductibleNr"
+        , "Id франшизы по  " + coverCode
+        , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].deductibleNr"
+        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_deductibleNr", "1001");
     }
     public static PvVar varLimitMin(String coverCode) {
-        return new PvVar("co_" + coverCode + "_limitMin", "Лимит ответственности (min) по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMin", "1001");
+        return new PvVar("co_" + coverCode + "_limitMin"
+        , "Лимит ответственности (min) по  " + coverCode
+        , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].limitMin"
+        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMin", "1001");
     }
     public static PvVar varLimitMax(String coverCode) {
-        return new PvVar("co_" + coverCode + "_limitMax", "Лимит ответственности (max) по  " + coverCode, "", "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMax", "1001");
+        return new PvVar("co_" + coverCode + "_limitMax"
+        , "Лимит ответственности (max) по  " + coverCode
+        , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].limitMax"
+        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMax", "1001");
     }
 
     // Policy

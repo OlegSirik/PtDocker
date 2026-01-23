@@ -182,6 +182,9 @@ public final class VariableContext implements Map<String, Object> {
                         .max(BigDecimal::compareTo);
                     yield max.orElse(BigDecimal.ZERO);
                 }
+                case FIRST -> {
+                    yield list.isEmpty() ? null : list.get(0);
+                }
                 case HZ -> {
                     yield switch (type) {
                         case STRING -> list.stream()

@@ -211,17 +211,25 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private PvVarDefinition fromPvVar(PvVar pvVar) {
         return new PvVarDefinition( pvVar.getVarCode(), pvVar.getVarPath(), PvVarDefinition.Type.NUMBER, pvVar.getVarType());
     }
+
     private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
         //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
         //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
         for (InsuredObject insuredObject : policyDTO.getInsuredObjects()) {
             for (Cover cover : insuredObject.getCovers()) {
                 String coverCode = cover.getCover().getCode();
+/* 
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_sumInsured", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_premium", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_deductibleNr", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMin", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMax", "", PvVarDefinition.Type.NUMBER, "VAR"));
+*/
+                varDefinitions.add(fromPvVar(PvVar.varSumInsured(coverCode)));
+                varDefinitions.add(fromPvVar(PvVar.varPremium(coverCode)));
+                varDefinitions.add(fromPvVar(PvVar.varDeductibleNr(coverCode)));
+                varDefinitions.add(fromPvVar(PvVar.varLimitMin(coverCode)));
+                varDefinitions.add(fromPvVar(PvVar.varLimitMax(coverCode)));
             }
         }
     }

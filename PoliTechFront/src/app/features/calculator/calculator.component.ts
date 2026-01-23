@@ -949,12 +949,18 @@ export interface PolicyVar {
       product.vars.forEach(v => {
         console.log(v);
         if (!this.calculator.vars.some(v2 => v2.varCode === v.varCode)) {
+          // Map backend varDataType (including 'DURATION') to frontend literal union type
+          const mappedVarDataType: 'NUMBER' | 'STRING' | 'DATE' | 'PERIOD' =
+            v.varDataType === 'DURATION'
+              ? 'PERIOD'
+              : v.varDataType as 'NUMBER' | 'STRING' | 'DATE' | 'PERIOD';
+
           this.calculator.vars.push({
             varCode: v.varCode,
             varName: v.varName,
             varPath: v.varPath,
-            varType: 'VAR', //v.varType,
-            varDataType: 'STRING',  //v.varDataType,
+            varType: 'VAR', // v.varType,
+            varDataType: mappedVarDataType,
             varValue: v.varValue
           });
         }

@@ -12,7 +12,8 @@ public final class PvVarDefinition {
         AVG("avg"),
         MIN("min"),
         MAX("max"),
-        COUNT("count");
+        COUNT("count"),
+        FIRST("first");
 
         private final String value;
         
