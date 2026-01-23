@@ -34,6 +34,8 @@ import { Cover } from '../../../shared/services/product.service';
             }
           </mat-select>
         </mat-form-field>
+      </div>
+      <div class="form-row">
         <mat-checkbox [(ngModel)]="cover.isMandatory" class="checkbox-field">
           Обязательное
         </mat-checkbox>
@@ -41,11 +43,13 @@ import { Cover } from '../../../shared/services/product.service';
       <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Период ожидания</mat-label>
-          <input matInput [(ngModel)]="cover.waitingPeriod"  placeholder="P0D">
+          <input matInput [(ngModel)]="cover.waitingPeriod">
         </mat-form-field>
+      </div>
+      <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Срок покрытия</mat-label>
-          <input matInput [(ngModel)]="cover.coverageTerm"  placeholder="P1Y">
+          <input matInput [(ngModel)]="cover.coverageTerm">
         </mat-form-field>
       </div>
       <div class="form-row">
@@ -64,13 +68,15 @@ import { Cover } from '../../../shared/services/product.service';
     styles: [`
     .form-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 16px;
       margin-bottom: 16px;
       align-items: center;
+      width: 100%;
+      justify-items: start;
     }
     .checkbox-field {
-      grid-column: 2;
+      width: 100%;
     }
     .form-field {
       width: 100%;
@@ -94,8 +100,8 @@ export class CoverDialogComponent {
     this.cover = data.cover ? { ...data.cover } : {
       code: '',
       isMandatory: true,
-      waitingPeriod: 'P0D',
-      coverageTerm: 'P1Y',
+      waitingPeriod: '',
+      coverageTerm: '',
       isDeductibleMandatory: false,
       deductibles: [],
       limits: []

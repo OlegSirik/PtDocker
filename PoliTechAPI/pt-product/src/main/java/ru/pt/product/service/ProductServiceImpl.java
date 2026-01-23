@@ -637,6 +637,8 @@ public class ProductServiceImpl implements ProductService {
                             vars.add(PvVar.varSumInsured(cover.getCode()));
                             vars.add(PvVar.varPremium(cover.getCode()));
                             vars.add(PvVar.varDeductibleNr(cover.getCode()));
+                            vars.add(PvVar.varLimitMin(cover.getCode()));
+                            vars.add(PvVar.varLimitMax(cover.getCode()));
                         }
                     }
                 }

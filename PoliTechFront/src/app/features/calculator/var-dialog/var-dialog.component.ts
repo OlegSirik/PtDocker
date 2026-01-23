@@ -99,7 +99,9 @@ export class VarDialogComponent {
       varPath: '',
       varType: 'VAR',
       varValue: '',
-      varDataType: 'STRING'
+      varDataType: 'STRING',
+      varCdm: '',
+      varNr: 10000
     };
   }
 

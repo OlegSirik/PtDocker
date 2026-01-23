@@ -21,10 +21,14 @@ export interface CalculatorVar {
   varCode: string;
   varName: string;
   varPath: string;
-  varType: 'VAR' | 'CONST'|'COEFFICIENT'|'IN';
+  varType: string;
   varValue: string;
-  varDataType: 'NUMBER'|'STRING'|'DATE'|'PERIOD';
+  varDataType: string;
+  varCdm: string;
+  varNr: number;
 }
+
+
 
 export interface CalculatorFormula {
   varCode: string;

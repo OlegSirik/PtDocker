@@ -593,7 +593,9 @@ export class CalculatorComponent implements OnInit {
           varPath: '',
           varType: 'COEFFICIENT',
           varValue: '',
-          varDataType: 'NUMBER'
+          varDataType: 'NUMBER',
+          varCdm: '',
+          varNr: 10000
         }
         this.newCalculatorVar(varItem);
 
@@ -958,7 +960,9 @@ export interface PolicyVar {
             varPath: v.varPath,
             varType: 'VAR', // v.varType,
             varDataType: v.varDataType === 'NUMBER' ? 'NUMBER' : 'STRING',
-            varValue: v.varValue
+            varValue: v.varValue,
+            varCdm: v.varCdm,
+            varNr: v.varNr
           });
         }
       });
