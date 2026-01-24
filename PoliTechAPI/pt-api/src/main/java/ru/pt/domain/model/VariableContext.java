@@ -121,7 +121,7 @@ public final class VariableContext implements Map<String, Object> {
         }
 
         if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
-            return new ComputedVars(this).getMagicValue(code);
+            ComputedVars.getMagicValue(this, code);
         }
 
         if (def.getJsonPath() == null) {

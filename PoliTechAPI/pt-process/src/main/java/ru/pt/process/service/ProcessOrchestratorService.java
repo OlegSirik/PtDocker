@@ -256,6 +256,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             );
             throw new BadRequestException(errorModel);
         }
+
         policyDTO.setProcessList(new ProcessList(ProcessList.QUOTE));
         /* Удалить возможный хлам */
         policyDTO.setPremium(null);
@@ -300,6 +301,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             throw new UnprocessableEntityException(errorModel);
         }
 
+        
         // 5. DTO → JSON (эталонная модель)
         String policyJSON = policyToJson(policyDTO);
         
@@ -314,7 +316,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
-        //preProcessService.enrichVariables(ctx, product);
+        preProcessService.enrichVariables(varCtx);
 
         // 9. Валидация (lazy!)
         logger.debug("Validating policy for QUOTE");
@@ -391,7 +393,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
-        //preProcessService.enrichVariables(ctx, product);
+        preProcessService.enrichVariables(varCtx);
 
         // 9. Валидация (lazy!)
         logger.debug("Validating policy for QUOTE and SAVE");

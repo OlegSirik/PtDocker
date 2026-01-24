@@ -6,6 +6,8 @@ import java.util.List;
 public class CoefficientDef {
     private String varCode;
     private String varName;
+    private String altVarCode;
+
     private List<CoefficientColumn> columns = new ArrayList<>();
 
     public String getVarCode() {
@@ -30,5 +32,13 @@ public class CoefficientDef {
 
     public void setColumns(List<CoefficientColumn> columns) {
         this.columns = columns;
+    }
+
+    public void setAltVarCode(String altVarCode) {
+        this.altVarCode = altVarCode;
+    }
+
+    public String getAltVarCode() {
+        return altVarCode;
     }
 }

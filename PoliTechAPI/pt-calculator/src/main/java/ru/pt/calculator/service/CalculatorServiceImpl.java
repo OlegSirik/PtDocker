@@ -473,6 +473,12 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
             String s = coefficientService.getCoefficientValue(model.getId(), varCode, ctx, cd.getColumns());
             logger.debug("Coefficient value resolved: {}={}", varCode, s);
+            
+            // Если вернулся null то ничего не найдено или еще какаято ошибка. 
+            // Можно задать алтернативный var на этот случай, например другой коэффициент или константу и т.д.
+            if (s == null && !(cd.getAltVarCode() == null || cd.getAltVarCode().isBlank())) {
+                s = (ctx.getDecimal(cd.getAltVarCode())).toString();
+            }
             try {
                 ctx.put(varCode, new BigDecimal(s));
             } catch (Exception e) {

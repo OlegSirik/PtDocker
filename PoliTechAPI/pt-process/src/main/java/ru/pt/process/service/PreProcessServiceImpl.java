@@ -14,6 +14,8 @@ import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.process.PreProcessService;
 import ru.pt.process.utils.PeriodUtils;
+import ru.pt.domain.model.ComputedVars;
+import ru.pt.domain.model.VariableContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -393,5 +395,13 @@ public class PreProcessServiceImpl implements PreProcessService {
         return null;
     }
 
+    public void enrichVariables(VariableContext ctx) {
+        ComputedVars.getMagicValue(ctx, "ph_age_issue");
+        ComputedVars.getMagicValue(ctx, "ph_age_end" );
+        ComputedVars.getMagicValue(ctx, "io_age_issue" );
+        ComputedVars.getMagicValue(ctx, "io_age_end" );
+        ComputedVars.getMagicValue(ctx, "pl_TermMonths" );
+        ComputedVars.getMagicValue(ctx, "pl_TermDays" );
 
+    }
 }

@@ -3,24 +3,18 @@ package ru.pt.domain.model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.time.ZonedDateTime;
 
 public class ComputedVars {
 
     private static final Logger logger = LoggerFactory.getLogger(ComputedVars.class);
-    private final VariableContext ctx;
 
-    public ComputedVars(VariableContext ctx) {
-        logger.trace("Creating ComputedVars instance");
-        this.ctx = ctx;
-    }
+    private ComputedVars() {}
 
-    public String getMagicValue(String key) {
+    public static String getMagicValue(VariableContext ctx, String key) {
         logger.trace("getMagicValue called with key: {}", key);
         try {
             PvVarDefinition varDef = ctx.getDefinition(key);

@@ -1,5 +1,6 @@
 package ru.pt.api.service.process;
 
+import ru.pt.domain.model.VariableContext;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.product.ProductVersionModel;
@@ -36,7 +37,7 @@ public interface PreProcessService {
      * @param insObject объект с рисками и покрытиями
      * @param lobVars   переменные от продукта
      */
-    //void enrichVariablesBeforeCalculation(InsuredObject insObject, List<PvVar> pvVars);
+    void enrichVariables(VariableContext ctx);
 
     /**
      * Дозаполнить риски и покрытия в страхуемом объекте
