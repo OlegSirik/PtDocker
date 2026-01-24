@@ -121,15 +121,15 @@ public final class VariableContext implements Map<String, Object> {
         }
 
         if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
-            ComputedVars.getMagicValue(this, code);
+            return ComputedVars.getMagicValue(this, code);
         }
 
         if (def.getJsonPath() == null) {
             return null; // calc-only variable
         }
 
-        String path = def.getJsonPath();
-        String grp = def.getGroupFunctionName().getValue();
+        //String path = def.getJsonPath();
+        //String grp = def.getGroupFunctionName().getValue();
         Object raw = JsonPath.read(jsonDocument, def.getJsonPath());
         Object ret =  convert(raw, def.getType(), def.getGroupFunctionName());
         return ret;

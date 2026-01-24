@@ -122,12 +122,12 @@ public class ComputedVars {
                 */    
                 default:
                     logger.warn("Unknown computed variable key: '{}', returning 'Not Found' message", key);
-                    return key + " Not Found";
+                    return null;
             }
         } catch (Exception e) {
             logger.error("Error computing magic value for key '{}': {}", key, e.getMessage(), e);
             logger.trace("Exception details for key '{}'", key, e);
-            return "";
+            return null;
         }
     }
 
