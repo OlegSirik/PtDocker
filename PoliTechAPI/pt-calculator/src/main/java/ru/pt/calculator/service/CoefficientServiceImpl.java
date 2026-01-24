@@ -157,7 +157,7 @@ public class CoefficientServiceImpl implements CoefficientService {
                 } else {
                     orderBy.append("col").append(nr).append(" ");
                 }
-                //orderBy.append("col").append(nr).append(" ").append(ord);
+                orderBy.append(" ").append(ord);
             }
         }
 
