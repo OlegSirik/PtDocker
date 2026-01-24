@@ -147,6 +147,22 @@
                 showFirstLastButtons>
               </mat-paginator>
               -->
+              <div class="text-processor-section">
+                <div class="text-processor-buttons">
+                  <button mat-raised-button color="primary" (click)="toText()">
+                    to_text
+                  </button>
+                  <button mat-raised-button color="primary" (click)="fromText()">
+                    from_text
+                  </button>
+                </div>
+                <textarea 
+                  class="text-processor-textarea" 
+                  [(ngModel)]="textProcessorContent"
+                  rows="10"
+                  style="width: 100%;">
+                </textarea>
+              </div>
             </mat-card-content>
           </mat-card>
         

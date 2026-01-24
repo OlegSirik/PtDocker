@@ -5,7 +5,7 @@ export const BASE_URL = new InjectionToken<string>('BASE_URL', {
   factory: () => {
     const w = (globalThis as any) as { __env?: { BASE_URL?: string } };
     const fromWindow = w && w.__env && typeof w.__env.BASE_URL === 'string' ? w.__env.BASE_URL : undefined;
-    return fromWindow || window.location.origin;
+    return 'http://localhost:8080';
   }
 });
 

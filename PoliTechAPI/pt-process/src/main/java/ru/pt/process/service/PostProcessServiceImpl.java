@@ -7,8 +7,6 @@ import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.service.process.PostProcessService;
 import ru.pt.domain.model.VariableContext;
 
-
-
 @Component
 public class PostProcessServiceImpl implements PostProcessService {
     
@@ -22,9 +20,12 @@ public class PostProcessServiceImpl implements PostProcessService {
                     if (cover == null || cover.getCover() == null) {
                         continue;
                     }
-                    cover.setSumInsured( ctx.getCoverSumInsured(cover.getCover().getCode()));
-                    cover.setPremium( ctx.getCoverPremium(cover.getCover().getCode()));
-                    cover.setDeductibleId( ctx.getCoverDeductibleNr(cover.getCover().getCode()));
+                    String coverCode = cover.getCover().getCode();
+                    cover.setSumInsured(ctx.getCoverSumInsured(coverCode));
+                    cover.setPremium(ctx.getCoverPremium(coverCode));
+                    cover.setDeductibleId(ctx.getCoverDeductibleNr(coverCode));
+                    cover.setLimitMin(ctx.getCoverLimitMin(coverCode));
+                    cover.setLimitMax(ctx.getCoverLimitMax(coverCode));
                 }
             }
         }

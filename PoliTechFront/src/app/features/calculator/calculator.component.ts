@@ -22,6 +22,7 @@ import { LineDialogComponent } from './line-dialog/line-dialog.component';
 import { CoefficientDialogComponent } from './coefficient-dialog/coefficient-dialog.component';
 import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
 import { ProductService } from '../../shared/services/product.service';
+import { TextProcessorService } from './text-processor';
 
 import * as XLSX from 'xlsx';
 
@@ -94,6 +95,9 @@ export class CalculatorComponent implements OnInit {
   filteredLines: FormulaLine[] = [];
   paginatedLines: FormulaLine[] = [];
 
+  // Text processor
+  textProcessorContent: string = '';
+
   // Coefficients table
   coefficientsDisplayedColumns = ['varCode', 'varName', 'actions'];
   coefficientsSearchText = '';
@@ -131,7 +135,8 @@ export class CalculatorComponent implements OnInit {
     private calculatorService: CalculatorService,
     private productService: ProductService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private textProcessorService: TextProcessorService
   ) {}
 
   ngOnInit(): void {
@@ -502,6 +507,40 @@ export class CalculatorComponent implements OnInit {
       this.calculator.formulas[this.selectedFormulaIndex].lines.splice(index, 1);
       this.updateLinesTable();
       this.updateChanges();
+    }
+  }
+
+  toText(): void {
+    if (this.selectedFormulaIndex === -1 || !this.calculator.formulas[this.selectedFormulaIndex]) {
+      this.snackBar.open('Пожалуйста, выберите формулу', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const lines = this.calculator.formulas[this.selectedFormulaIndex].lines;
+    this.textProcessorContent = this.textProcessorService.toText(lines, this.calculator.vars);
+  }
+
+  fromText(): void {
+    if (this.selectedFormulaIndex === -1 || !this.calculator.formulas[this.selectedFormulaIndex]) {
+      this.snackBar.open('Пожалуйста, выберите формулу', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    try {
+      const lines = this.textProcessorService.fromText(
+        this.textProcessorContent, 
+        this.calculator.vars,
+        this.conditionOperatorOptions,
+        this.expressionOperatorOptions,
+        this.postProcessorOptions
+      );
+      if (lines === null) {
+        return;
+      }
+      this.calculator.formulas[this.selectedFormulaIndex].lines = lines;
+      this.updateLinesTable();
+      this.updateChanges();
+      this.snackBar.open('Строки успешно импортированы', 'Закрыть', { duration: 3000 });
+    } catch (error) {
+      this.snackBar.open('Ошибка при импорте текста: ' + (error as Error).message, 'Закрыть', { duration: 5000 });
     }
   }
 

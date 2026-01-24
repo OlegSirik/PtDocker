@@ -33,6 +33,9 @@ public class Cover {
 
     private Deductible deductible;
 
+    private BigDecimal LimitMin;
+    private BigDecimal LimitMax;
+
     // Constructors
     public Cover() {}
 
@@ -126,4 +129,22 @@ public class Cover {
         this.deductible.setId(deductibleId);
         this.deductible.setText(deductibleText);
     }
+
+    public BigDecimal getLimitMin() {
+        return LimitMin;
+    }
+
+    public void setLimitMin(BigDecimal limitMin) {
+        LimitMin = limitMin;
+    }
+
+    public BigDecimal getLimitMax() {
+        return LimitMax;
+    }
+
+    public void setLimitMax(BigDecimal limitMax) {
+        LimitMax = limitMax;
+    }
+
+    
 }
