@@ -1,9 +1,8 @@
 package ru.pt.api.service.process;
 
-import ru.pt.api.dto.process.InsuredObject;
+
 import ru.pt.api.dto.process.PolicyDTO;
-import ru.pt.api.dto.product.PvVar;
-import ru.pt.domain.model.VariableContext;
+import ru.pt.api.service.projection.PolicyCoreViewInterface;
 
 
 /**
@@ -18,6 +17,6 @@ public interface PostProcessService {
      * @param calculatedValues переменные после расчета
      * @return заполненный объект
      */
-    void setCovers(PolicyDTO policyDTO, VariableContext ctx);
+    void setCovers(PolicyDTO policyDTO, PolicyCoreViewInterface policyView);
 
 }

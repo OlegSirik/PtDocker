@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Deductible {
 
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @JsonProperty("text")
     private String text;
@@ -20,16 +20,16 @@ public class Deductible {
         this.text = null;
     }
 
-    public Deductible(Integer id, String text) {
+    public Deductible(Long id, String text) {
         this.id = id;
         this.text = text;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -1,11 +1,13 @@
 package ru.pt.domain.model;
 
+import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.product.VarDataType;
+
 public final class PvVarDefinition {
 
     public enum Type { STRING, NUMBER }
-
     public enum VarScope { DOMAIN, CALCULATOR }
-    public enum VarSourceType { IN, MAGIC,CONST, COEFFICIENT, VAR, CALC }
+    public enum VarSourceType { IN, MAGIC,CONST, COEFFICIENT, VAR, CALC, TEXT }
     public enum GroupFunctionName {
         HZ("hz"),
         SUM("sum"),
@@ -42,51 +44,32 @@ public final class PvVarDefinition {
     private final VarScope scope;
     private final VarSourceType sourceType;
     private final GroupFunctionName groupFunctionName;
+    private String textTemplate = "";
 
-    public PvVarDefinition(String code, String jsonPath, Type type, String strSourceType) {
-        //this.code = code;
-        /*
-        Функции к массивам не поддерживаются. Поэтому если jsonpath заканчивается на () - это функция.
-        Тогда берем функцию из jsonpath и убираем ее из jsonpath.
-        Например:
-        jsonpath = "$.person[].count()"
-        funcName = "count"
-        jsonpath = "$.person"
-        groupFunctionName = GroupFunctionName.COUNT
-        */
-/*  
-        this.type = type;
-        this.scope = VarScope.DOMAIN;
-        this.sourceType = VarSourceType.valueOf(strSourceType);
-        if (jsonPath != null && jsonPath.endsWith("()")) {
-            String funcName = jsonPath.substring(jsonPath.lastIndexOf('.') + 1, jsonPath.length() - 2);
-            GroupFunctionName parsed = GroupFunctionName.fromString(funcName);
-            this.groupFunctionName = parsed != null ? parsed : GroupFunctionName.HZ;
-            this.jsonPath = jsonPath.substring(0, jsonPath.lastIndexOf('.'));
-        } else {
-            this.groupFunctionName = GroupFunctionName.HZ;
-            this.jsonPath = jsonPath;
-        }
-*/
-        this(code, jsonPath, type, VarScope.DOMAIN, VarSourceType.valueOf(strSourceType));
-    }
+//    public PvVarDefinition(String code, String jsonPath, Type type, String strSourceType) {
+//        this(code, jsonPath, type, VarScope.DOMAIN, VarSourceType.valueOf(strSourceType));
+//    }
 
     // Используется в калькуляторе для доп атрибутов
-    public PvVarDefinition(String code, String jsonPath, Type type, VarScope scope, VarSourceType sourceType) {
+    public PvVarDefinition(String code, String jsonPath, Type type, VarScope scope, VarSourceType sourceType, String varValue ) {
         this.code = code;
         this.type = type;
         this.scope = scope;
         this.sourceType = sourceType;
+
         if (jsonPath != null && jsonPath.endsWith("()")) {
             String funcName = jsonPath.substring(jsonPath.lastIndexOf('.') + 1, jsonPath.length() - 2);
             GroupFunctionName parsed = GroupFunctionName.fromString(funcName);
             this.groupFunctionName = parsed != null ? parsed : GroupFunctionName.HZ;
             this.jsonPath = jsonPath.substring(0, jsonPath.lastIndexOf('.'));
         } else {
-            this.groupFunctionName = GroupFunctionName.HZ;
+            this.groupFunctionName = null; //GroupFunctionName.HZ;
             this.jsonPath = jsonPath;
         }
         
+        if ( sourceType == VarSourceType.TEXT ) {
+            this.textTemplate = varValue;
+        }
     }
 
     // getters only
@@ -99,4 +82,31 @@ public final class PvVarDefinition {
     public String getGroupFunctionNameString() { 
         return groupFunctionName != null ? groupFunctionName.getValue() : null; 
     }
+    public String getTemplate() { return this.textTemplate; }
+    /**
+     * Factory method to create PvVarDefinition from PvVar
+     * @param pvVar the PvVar to convert
+     * @return a new PvVarDefinition instance
+     */
+    public static PvVarDefinition fromPvVar(PvVar pvVar) {
+        Type type;
+        switch (pvVar.getVarDataType()) {
+            case NUMBER:
+                type = Type.NUMBER;
+                break;
+            case STRING:
+            default:
+                type = Type.STRING;
+                break;
+        }
+        return new PvVarDefinition(
+            pvVar.getVarCode(),
+            pvVar.getVarPath(),
+            type,
+            VarScope.DOMAIN,
+            VarSourceType.valueOf(pvVar.getVarType()),
+            pvVar.getVarValue()
+        );
+    }
+    
 }

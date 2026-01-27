@@ -46,7 +46,7 @@ public class DbStorageService implements StorageService {
     private final PolicyIndexRepository policyIndexRepository;
     private final PolicyProjectionService policyProjectionService;
     private final PolicyMapper policyMapper;
-
+    private final PolicyReport policyReport;
 
     public PolicyData save(PolicyDTO policy, UserDetails userData) {
         UserDetailsImpl userDetails = (UserDetailsImpl) userData;
@@ -293,6 +293,9 @@ public class DbStorageService implements StorageService {
         var userData = securityContextHelper.getCurrentUser()
             .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
         Long accountId = userData.getAccountId();
+
+        return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
+
 /*
 
     String id, // uuid
@@ -330,17 +333,21 @@ public class DbStorageService implements StorageService {
             p.product_code,
             p.create_date,
             p.issue_date,
-            p.issue_timezone,
             p.payment_date,
             p.start_date,
             p.end_date,
-            p.policy_status,  10
+            p.policy_status, 
             p.user_account_id,
             p.client_account_id,
             p.version_status,
-            p.payment_order_id
+            p.payment_order_id,
+            p.ph_digest,
+            p.io_digest,
+            p.premium::text,
+            p.agent_kv_percent::text,
+            p.agent_kv_amount::text
         FROM policy_index p
-*/        
+      
         List<QuoteDto> quotes = policyIndexRepository.findPoliciesByAccountIdRecursive(accountId, qstr).stream().map(quote -> {
             // Helper method to convert Object to ZonedDateTime
             Function<Object, ZonedDateTime> toZonedDateTime = obj -> {
@@ -388,6 +395,7 @@ public class DbStorageService implements StorageService {
             );
         }).collect(Collectors.toList());
         return quotes;
+        */
     }
 
 }

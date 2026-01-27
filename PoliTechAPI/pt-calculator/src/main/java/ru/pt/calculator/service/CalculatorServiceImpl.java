@@ -377,15 +377,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         // Добавить переменные калькулятора в контекст.
         model.getVars().forEach(v -> {
-            
-            PvVarDefinition varDef = new PvVarDefinition(
-                v.getVarCode(), 
-                v.getVarPath(),
-                v.getVarDataType() == VarDataType.NUMBER ? PvVarDefinition.Type.NUMBER : PvVarDefinition.Type.STRING,
-                PvVarDefinition.VarScope.CALCULATOR,
-                PvVarDefinition.VarSourceType.valueOf(v.getVarType())
-            );
-
+            PvVarDefinition varDef = PvVarDefinition.fromPvVar(v);
             ctx.putDefinition(varDef);
 
             if (v.getVarType().equals("CONST")) {

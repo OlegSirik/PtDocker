@@ -26,3 +26,14 @@ K_period ( периодСтрахования в месяцах )
 Тариф НСиБ
 
 
+1 co_COMPLEX_DISEASE_limitMax = K_COMPLEX_DISEASE_limitMax
+11 co_COMPLEX_ACCIDENT_sumInsured = CONST.0
+12 co_COMPLEX_DISEASE_sumInsured = io_sumInsured
+21 if co_COMPLEX_DISEASE_sumInsured > co_COMPLEX_DISEASE_limitMax then co_COMPLEX_DISEASE_sumInsured = co_COMPLEX_DISEASE_limitMax
+22 if co_COMPLEX_DISEASE_sumInsured > co_COMPLEX_DISEASE_limitMax then co_COMPLEX_ACCIDENT_sumInsured = io_sumInsured - co_COMPLEX_DISEASE_limitMax
+101 co_COMPLEX_ACCIDENT_premium = co_COMPLEX_ACCIDENT_sumInsured * K_Age
+102 co_COMPLEX_ACCIDENT_premium = co_COMPLEX_ACCIDENT_premium * K_Period >>round2_up
+121 co_COMPLEX_DISEASE_premium = co_COMPLEX_DISEASE_sumInsured * NSiB_Tariff
+122 co_COMPLEX_DISEASE_premium = co_COMPLEX_DISEASE_premium * K_Period >>round2_up
+
+

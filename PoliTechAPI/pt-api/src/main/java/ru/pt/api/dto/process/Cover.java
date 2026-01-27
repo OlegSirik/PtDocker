@@ -33,7 +33,10 @@ public class Cover {
 
     private Deductible deductible;
 
+    @JsonProperty("LimitMin")
     private BigDecimal LimitMin;
+
+    @JsonProperty("LimitMax")
     private BigDecimal LimitMax;
 
     // Constructors
@@ -108,7 +111,7 @@ public class Cover {
         this.deductible = deductible;
     }
 
-    public void setDeductibleId(Integer deductibleId) {
+    public void setDeductibleId(Long deductibleId) {
         if (this.deductible == null) {
             this.deductible = new Deductible();
         }
@@ -122,7 +125,7 @@ public class Cover {
         this.deductible.setText(deductibleText);
     }   
 
-    public void setDeductible(Integer deductibleId, String deductibleText) {
+    public void setDeductible(Long deductibleId, String deductibleText) {
         if (this.deductible == null) {
             this.deductible = new Deductible();
         }

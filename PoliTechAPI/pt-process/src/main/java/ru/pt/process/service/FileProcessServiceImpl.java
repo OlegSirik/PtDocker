@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
 import ru.pt.api.dto.errors.ErrorConstants;
 import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.InternalServerErrorException;
@@ -21,15 +23,19 @@ import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.PreProcessService;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
+import ru.pt.domain.model.PolicyCoreView;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.api.service.product.ProductService;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import ru.pt.api.service.projection.PolicyCoreViewInterface;
 import ru.pt.process.utils.VariablesService;
 
 @Component
@@ -188,7 +194,9 @@ public class FileProcessServiceImpl implements FileProcessService {
         
         // 7. Runtime-контекст
         VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
-        String packageNo = varCtx.getPackageNo();
+        PolicyCoreViewInterface policyView = new PolicyCoreView(varCtx);
+
+        String packageNo = policyView.getPackageNo();
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
         Integer fileId = null;
 
@@ -232,11 +240,14 @@ public class FileProcessServiceImpl implements FileProcessService {
                 type = PvVarDefinition.Type.STRING;
                 break;
         }
+        /* 
         return new PvVarDefinition(
             var.getVarCode(),
             var.getVarPath(),
             type,
             var.getVarType()
         );
+        */
+        return PvVarDefinition.fromPvVar(var);
     }    
 }

@@ -14,6 +14,7 @@ import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 
 import java.util.ArrayList;
@@ -34,8 +35,10 @@ public class HealthCheckController {
     private final CalculatorService calculatorService;
     private final CoefficientService coefficientService;
 
-    @GetMapping("/policy/{policyNumber}")
-    public Map<String, Object> checkPolicy(@PathVariable String policyNumber) {
+    @PostMapping("/policy/{policyNumber}")
+    public Map<String, Object> checkPolicy(
+            @PathVariable String policyNumber,
+            @RequestBody(required = false) String body) {
         logger.info("Health check for policy: {}", policyNumber);
         // Get policy by number from DB
         PolicyData policyData = storageService.getPolicyByNumber(policyNumber);
@@ -73,6 +76,16 @@ public class HealthCheckController {
         Map<String, Object> result = new HashMap<>();
         result.put("policyData", policyData);
         result.put("vars", vars);
+        
+        // Process text if provided in body
+        if (body != null) {
+            String text = body;
+            logger.debug("Text provided in body, processing with TextDocumentView");
+            TextDocumentView textDocumentView = new TextDocumentView(varContext);
+            //String testResult = textDocumentView.Testget(text);
+            //result.put("TEXT TEST RESULT", testResult);
+            //logger.debug("Text processing completed, result length: {}", testResult != null ? testResult.length() : 0);
+        }
         
         logger.info("Health check completed for policy: {}", policyNumber);
         return result;
@@ -281,6 +294,8 @@ public class HealthCheckController {
         }
     }
     
+
+
     private PvVarDefinition toDefinition(ru.pt.api.dto.product.PvVar var) {
         PvVarDefinition.Type type;
         switch (var.getVarDataType()) {
@@ -292,12 +307,7 @@ public class HealthCheckController {
                 type = PvVarDefinition.Type.STRING;
                 break;
         }
-        return new PvVarDefinition(
-            var.getVarCode(),
-            var.getVarPath(),
-            type,
-            var.getVarType()
-        );
+        return PvVarDefinition.fromPvVar(var); 
     }
     
     // Response DTOs

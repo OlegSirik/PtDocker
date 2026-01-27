@@ -387,7 +387,7 @@ public class PreProcessServiceImpl implements PreProcessService {
         if (pvCover.getIsDeductibleMandatory()) {
             List<PvDeductible> deductibles = pvCover.getDeductibles();
             if (deductibles != null && !deductibles.isEmpty()) {
-                deductibles.sort(Comparator.comparingInt(d -> d.getId()));
+                deductibles.sort(Comparator.comparingLong(d -> d.getId()));
                 return deductibles.get(0);
             }
         }

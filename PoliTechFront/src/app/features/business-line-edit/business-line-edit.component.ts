@@ -56,6 +56,7 @@ export class BusinessLineEditComponent implements OnInit {
   fileDisplayedColumns: string[] = ['fileCode', 'fileName', 'fileActions'];
   policyHolderDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   policyInsObjectDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
+  textVarDisplayedColumns: string[] = ['varCode', 'varName', 'varValue', 'textVarActions'];
 
 //  varSearchText = '';
 //  coverSearchText = '';
@@ -121,10 +122,10 @@ export class BusinessLineEditComponent implements OnInit {
     let result: any[] = [];
     let prevCategory = '';
     
-    console.log('this.businessLine.mpVars', this.businessLine.mpVars);
+    //console.log('this.businessLine.mpVars', this.businessLine.mpVars);
 
     for (const category of categories) {
-      console.log('categories', category);
+      //console.log('categories', category);
       // Only keep variables whose varCdm fits category
       const matchedVars = this.businessLine.mpVars
         .filter(v => v.varCdm && v.varCdm.startsWith(`insuredObject.${category}.`))
@@ -561,6 +562,12 @@ export class BusinessLineEditComponent implements OnInit {
     return this.businessLine.mpFiles || [];
   }
 
+  get textVars(): BusinessLineVar[] {
+    return (this.businessLine.mpVars || [])
+      .filter(v => v.varType === 'TEXT')
+      .sort((a, b) => (a.varCdm || '').localeCompare(b.varCdm || ''));
+  }
+
   addFile(): void {
     this.openFileDialog({ fileCode: '', fileName: '' }, (res) => {
       if (!res) return;
@@ -618,6 +625,84 @@ export class BusinessLineEditComponent implements OnInit {
 
   openFileDialog(data: any, cb: (res?: any)=>void) {
     const ref = this.dialog.open(FileEditDialog, { data });
+    ref.afterClosed().subscribe(cb);
+  }
+
+  addTextVar(): void {
+    this.openTextVarDialog({ code: '', name: '', value: '' }, (res) => {
+      if (!res) return;
+      
+      // Check unique varCode
+      const existingCodes = this.businessLine.mpVars.map(v => v.varCode);
+      if (existingCodes.includes(res.code)) {
+        this.snack.open('varCode должен быть уникальным', 'OK', { duration: 2500 });
+        return;
+      }
+      
+      const newVar: BusinessLineVar = {
+        varDataType: 'STRING',
+        varCode: res.code,
+        varName: res.name,
+        varPath: '',
+        varType: 'TEXT',
+        varValue: res.value,
+        varCdm: 'strings.' + res.code,
+        varNr: (this.businessLine.mpVars.length || 0) + 1000
+      };
+      
+      this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
+      this.updateChanges();
+    });
+  }
+
+  editTextVar(v: BusinessLineVar): void {
+    this.openTextVarDialog({ 
+      code: v.varCode, 
+      name: v.varName, 
+      value: v.varValue || '',
+      isEdit: true,
+      originalVarCode: v.varCode
+    }, (res) => {
+      if (!res) return;
+      
+      // Check unique varCode (excluding current)
+      if (res.code !== res.originalVarCode) {
+        const existingCodes = this.businessLine.mpVars
+          .filter(v => v.varCode !== res.originalVarCode)
+          .map(v => v.varCode);
+        if (existingCodes.includes(res.code)) {
+          this.snack.open('varCode должен быть уникальным', 'OK', { duration: 2500 });
+          return;
+        }
+      }
+      
+      const index = this.businessLine.mpVars.findIndex(x => x.varCode === res.originalVarCode);
+      if (index !== -1) {
+        this.businessLine.mpVars = [
+          ...this.businessLine.mpVars.slice(0, index),
+          {
+            ...v,
+            varCode: res.code,
+            varName: res.name,
+            varValue: res.value,
+            varCdm: 'strings.' + res.code
+          },
+          ...this.businessLine.mpVars.slice(index + 1)
+        ];
+        this.updateChanges();
+      }
+    });
+  }
+
+  deleteTextVar(v: BusinessLineVar): void {
+    this.openConfirm('Удалить строку?', () => {
+      this.businessLine.mpVars = this.businessLine.mpVars.filter(x => x.varCode !== v.varCode);
+      this.updateChanges();
+    });
+  }
+
+  openTextVarDialog(data: any, cb: (res?: any)=>void) {
+    const ref = this.dialog.open(TextVarEditDialog, { data });
     ref.afterClosed().subscribe(cb);
   }
 
@@ -885,5 +970,44 @@ export class FileEditDialog {
     // Check if fileCode contains only lowercase letters, numbers, and underscores
     const lowerCasePattern = /^[a-z0-9_]+$/;
     return lowerCasePattern.test(this.model.fileCode);
+  }
+}
+
+@Component({
+    selector: 'app-text-var-edit-dialog',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+    template: `
+  <h2 mat-dialog-title>{{ isEdit ? 'Редактировать строку' : 'Добавить строку' }}</h2>
+  <div mat-dialog-content>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>code</mat-label>
+      <input matInput [(ngModel)]="model.code" [readonly]="isEdit">
+    </mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>name</mat-label>
+      <input matInput [(ngModel)]="model.name">
+    </mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>value</mat-label>
+      <textarea matInput [(ngModel)]="model.value" rows="3"></textarea>
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Отмена</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
+  </div>
+  `
+})
+export class TextVarEditDialog {
+  model: any;
+  isEdit: boolean = false;
+
+  constructor(@Inject(MAT_DIALOG_DATA) data: any) { 
+    this.isEdit = data.isEdit || false;
+    this.model = { ...data };
+  }
+
+  isValid(): boolean {
+    return !!(this.model.code && this.model.name);
   }
 }

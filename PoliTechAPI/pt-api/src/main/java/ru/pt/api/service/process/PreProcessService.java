@@ -1,12 +1,9 @@
 package ru.pt.api.service.process;
 
 import ru.pt.domain.model.VariableContext;
-import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.product.ProductVersionModel;
-import ru.pt.api.dto.product.PvVar;
 
-import java.util.List;
 
 /**
  * Действия до выполнения операций с договором

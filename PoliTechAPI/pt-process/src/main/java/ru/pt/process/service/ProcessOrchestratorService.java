@@ -46,7 +46,9 @@ import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.ClientService;
+import ru.pt.domain.model.PolicyCoreView;
 import ru.pt.domain.model.PvVarDefinition;
+import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.files.service.email.EmailGateService;
 import ru.pt.payments.service.PaymentClientSwitch;
@@ -67,6 +69,8 @@ import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 
 import ru.pt.process.utils.VariablesService;
+import ru.pt.api.service.projection.PolicyCoreViewInterface;
+
 @Component
 @RequiredArgsConstructor
 public class ProcessOrchestratorService implements ProcessOrchestrator {
@@ -180,8 +184,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 policyDTO.getInsuredObjects().get(0).getPackageCode(), 
                 varCtx );
 
-
-                postProcessService.setCovers(policyDTO, varCtx);
+                PolicyCoreViewInterface policyView = new PolicyCoreView(varCtx);
+                postProcessService.setCovers(policyDTO, policyView);
 
         } else {
             logger.warn("No calculator found for product {} version {} package {}", 
@@ -208,10 +212,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     }
 
-    private PvVarDefinition fromPvVar(PvVar pvVar) {
-        return new PvVarDefinition( pvVar.getVarCode(), pvVar.getVarPath(), PvVarDefinition.Type.NUMBER, pvVar.getVarType());
-    }
-
     private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
         //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
         //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
@@ -225,11 +225,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMin", "", PvVarDefinition.Type.NUMBER, "VAR"));
                 varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMax", "", PvVarDefinition.Type.NUMBER, "VAR"));
 */
-                varDefinitions.add(fromPvVar(PvVar.varSumInsured(coverCode)));
-                varDefinitions.add(fromPvVar(PvVar.varPremium(coverCode)));
-                varDefinitions.add(fromPvVar(PvVar.varDeductibleNr(coverCode)));
-                varDefinitions.add(fromPvVar(PvVar.varLimitMin(coverCode)));
-                varDefinitions.add(fromPvVar(PvVar.varLimitMax(coverCode)));
+                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode)));
+                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode)));
+                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode)));
+                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varLimitMin(coverCode)));
+                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varLimitMax(coverCode)));
             }
         }
     }
@@ -344,6 +344,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 11. Перенос результатов в DTO
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
+        TextDocumentView textDocumentView = new TextDocumentView(varCtx);
+        String ph_digest = textDocumentView.get("ph_digest");
+        String io_digest = textDocumentView.get("io_digest");
+        policyDTO.getProcessList().setPhDigest(ph_digest);
+        policyDTO.getProcessList().setIoDigest(io_digest);
 
         // 12. Ответ
         logger.info("Calculate process completed. premium={}", policyDTO.getPremium());
@@ -418,8 +423,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.debug("Generated policy number: {}", nextNumber);
 
         // Доп атрибуты вычислить
-        String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
-        String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
+        TextDocumentView textDocumentView = new TextDocumentView(varCtx);
+
+        //String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
+        //String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
+
+        String ph_digest = textDocumentView.get("ph_digest");
+        String io_digest = textDocumentView.get("io_digest");
+
         logger.debug("Generated digests. phDigest={}, ioDigest={}", ph_digest, io_digest);
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
@@ -726,21 +737,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     }
 
     private PvVarDefinition toDefinition(PvVar var) {
-        PvVarDefinition.Type type;
-        switch (var.getVarDataType()) {
-            case NUMBER:
-                type = PvVarDefinition.Type.NUMBER;
-                break;
-            case STRING:
-            default:
-                type = PvVarDefinition.Type.STRING;
-                break;
-        }
-        return new PvVarDefinition(
-            var.getVarCode(),
-            var.getVarPath(),
-            type,
-            var.getVarType()
-        );
+        return PvVarDefinition.fromPvVar(var); 
     }
 }
