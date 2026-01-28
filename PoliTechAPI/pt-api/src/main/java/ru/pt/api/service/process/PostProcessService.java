@@ -2,7 +2,7 @@ package ru.pt.api.service.process;
 
 
 import ru.pt.api.dto.process.PolicyDTO;
-import ru.pt.api.service.projection.PolicyCoreViewInterface;
+import ru.pt.domain.model.VariableContext;
 
 
 /**
@@ -17,6 +17,6 @@ public interface PostProcessService {
      * @param calculatedValues переменные после расчета
      * @return заполненный объект
      */
-    void setCovers(PolicyDTO policyDTO, PolicyCoreViewInterface policyView);
+    void setCovers(PolicyDTO policyDTO, VariableContext ctx);
 
 }

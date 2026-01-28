@@ -46,7 +46,7 @@ import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.ClientService;
-import ru.pt.domain.model.PolicyCoreView;
+
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
@@ -69,8 +69,7 @@ import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 
 //import ru.pt.process.utils.VariablesService;
-import ru.pt.api.service.projection.PolicyCoreViewInterface;
-import ru.pt.domain.model.TextDocumentView;
+
 
 @Component
 @RequiredArgsConstructor
@@ -95,7 +94,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final ClientService clientService;
     private final EmailGateService emailGateService;
     private final TextDocumentView textDocumentView;
-
+    
     
 
     private PolicyDTO policyFromJson(String policy) {
@@ -186,8 +185,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 policyDTO.getInsuredObjects().get(0).getPackageCode(), 
                 varCtx );
 
-                PolicyCoreViewInterface policyView = new PolicyCoreView(varCtx);
-                postProcessService.setCovers(policyDTO, policyView);
+                postProcessService.setCovers(policyDTO, varCtx);
 
         } else {
             logger.warn("No calculator found for product {} version {} package {}", 

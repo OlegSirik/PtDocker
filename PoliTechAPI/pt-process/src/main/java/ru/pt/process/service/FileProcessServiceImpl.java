@@ -49,6 +49,7 @@ public class FileProcessServiceImpl implements FileProcessService {
     private final ProductVersionRepository productVersionRepository;
     private final FileService fileService;
     private final PreProcessService preProcessService;
+    
 
     private final ProductService productService;
 
@@ -194,9 +195,10 @@ public class FileProcessServiceImpl implements FileProcessService {
         
         // 7. Runtime-контекст
         VariableContext varCtx = new VariableContext(policy.getPolicy(), varDefinitions);
-        PolicyCoreViewInterface policyView = new PolicyCoreView(varCtx);
 
-        String packageNo = policyView.getPackageNo();
+        PolicyCoreViewInterface policyView = new PolicyCoreView();
+
+        String packageNo = policyView.getPackageNo(varCtx);
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
         Integer fileId = null;
 

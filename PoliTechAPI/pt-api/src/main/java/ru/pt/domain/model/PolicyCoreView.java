@@ -7,52 +7,74 @@ import java.math.BigDecimal;
 
 public final class PolicyCoreView implements PolicyCoreViewInterface {
 
-    private final VariableContext ctx;
 
-    public PolicyCoreView(VariableContext ctx) {
-        this.ctx = ctx;
-    }
-
-    public BigDecimal getCoverSumInsured(String cover) {
+    public BigDecimal getCoverSumInsured(VariableContext ctx, String cover) {
         if (cover == null) {
             return null;
         }
-        String sumInsuredVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_sumInsured";
-        return (BigDecimal) this.ctx.get(sumInsuredVarCode);
+        try {
+            String sumInsuredVarCode = PvVar.varSumInsured(cover).getVarCode(); //"co_" + cover + "_sumInsured";
+            return (BigDecimal) ctx.get(sumInsuredVarCode);
+        } catch ( Exception e) {
+            return null;
+        }
     }
 
-    public BigDecimal getCoverPremium(String cover) {
+    public BigDecimal getCoverPremium(VariableContext ctx, String cover) {
         if (cover == null) {
             return null;
         }
+try {
         String premiumVarCode = PvVar.varPremium(cover).getVarCode(); //"co_" + cover + "_premium";
-        return (BigDecimal) this.ctx.get(premiumVarCode);
+        return (BigDecimal) ctx.get(premiumVarCode);
+    } catch ( Exception e) {
+        return null;
     }
+}
 
-    public Long getCoverDeductibleNr(String cover) {
+    public Long getCoverDeductibleNr(VariableContext ctx, String cover) {
         if (cover == null) {
             return null;
         }
+try {
         String deductibleNrVarCode = PvVar.varDeductibleNr(cover).getVarCode(); //"co_" + cover + "_deductibleNr";
-        return Long.parseLong( this.ctx.getString(deductibleNrVarCode));
+        return Long.parseLong( ctx.getString(deductibleNrVarCode));
+    } catch ( Exception e) {
+        return null;
     }
 
-    public BigDecimal getCoverLimitMin(String cover) {
+    }
+
+    public BigDecimal getCoverLimitMin(VariableContext ctx, String cover) {
         if (cover == null) {
             return null;
         }
+        try {
         String limitMinVarCode = PvVar.varLimitMin(cover).getVarCode(); //"co_" + cover + "_limitMin";
-        return (BigDecimal) this.ctx.get(limitMinVarCode);
+        return (BigDecimal) ctx.get(limitMinVarCode);
+    } catch ( Exception e) {
+        return null;
     }
-    public BigDecimal getCoverLimitMax(String cover) {
+
+    }
+    public BigDecimal getCoverLimitMax(VariableContext ctx, String cover) {
         if (cover == null) {
             return null;
         }
+        try {
         String limitMaxVarCode = PvVar.varLimitMax(cover).getVarCode(); //"co_" + cover + "_limitMin";
-        return (BigDecimal)this.ctx.get(limitMaxVarCode);
+        return (BigDecimal)ctx.get(limitMaxVarCode);
+    } catch ( Exception e) {
+        return null;
     }
 
-    public String getPackageNo() {
-        return  (String) this.ctx.get("io_packageCode");
+    }
+
+    public String getPackageNo(VariableContext ctx) {
+        try {
+        return  (String) ctx.get("io_packageCode");
+    } catch ( Exception e) {
+        return null;
+    }
     }    
 }
