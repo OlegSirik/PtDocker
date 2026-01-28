@@ -1,14 +1,20 @@
 package ru.pt.api.admin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.db.PolicyData;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.db.StorageService;
@@ -17,6 +23,8 @@ import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +42,9 @@ public class HealthCheckController {
     private final ProductService productService;
     private final CalculatorService calculatorService;
     private final CoefficientService coefficientService;
+    private final TextDocumentView textDocumentView;
+    private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/policy/{policyNumber}")
     public Map<String, Object> checkPolicy(
@@ -81,8 +92,7 @@ public class HealthCheckController {
         if (body != null) {
             String text = body;
             logger.debug("Text provided in body, processing with TextDocumentView");
-            TextDocumentView textDocumentView = new TextDocumentView(varContext);
-            //String testResult = textDocumentView.Testget(text);
+            //String testResult = textDocumentView.get(varContext, text);
             //result.put("TEXT TEST RESULT", testResult);
             //logger.debug("Text processing completed, result length: {}", testResult != null ? testResult.length() : 0);
         }
@@ -296,6 +306,61 @@ public class HealthCheckController {
     
 
 
+    @PostMapping("/dumpmetadata")
+    public Map<String, Object> dumpMetadata(@RequestBody Map<String, Object> policyJson) {
+        logger.info("Dumping metadata for policy JSON");
+        
+        // 1. Select all from pt_metadata using JdbcTemplate
+        String sql = "SELECT var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type FROM pt_metadata";
+        List<PvVar> pvVars = jdbcTemplate.query(sql, new PvVarRowMapper());
+        logger.debug("Retrieved {} variables from pt_metadata", pvVars.size());
+        
+        // 2. Convert to List<PvVarDefinition>
+        List<PvVarDefinition> varDefinitions = pvVars.stream()
+                .map(PvVarDefinition::fromPvVar)
+                .toList();
+        logger.debug("Converted {} variables to PvVarDefinition", varDefinitions.size());
+        
+        // 3. Convert policy JSON map to JSON string and create VariableContext
+        String policyJsonString;
+        try {
+            policyJsonString = objectMapper.writeValueAsString(policyJson);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to serialize policy JSON: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to serialize policy JSON", e);
+        }
+        VariableContext varCtx = new VariableContext(policyJsonString, varDefinitions);
+        logger.debug("Created VariableContext with {} definitions", varDefinitions.size());
+        
+        // 4. For all vars, call varCtx.getString(varCode) and put into map1
+        Map<String, String> map1 = new HashMap<>();
+        for (PvVarDefinition varDef : varDefinitions) {
+            String varCode = varDef.getCode();
+            String value = varCtx.getString(varCode);
+            map1.put(varCode, value);
+            logger.trace("Context value for {}: {}", varCode, value);
+        }
+        logger.debug("Retrieved {} context values", map1.size());
+        
+        // 5. For all vars, call textDocumentView.get(varCtx, varCode) and put into map2
+        Map<String, String> map2 = new HashMap<>();
+        for (PvVarDefinition varDef : varDefinitions) {
+            String varCode = varDef.getCode();
+            String value = textDocumentView.get(varCtx, varCode);
+            map2.put(varCode, value);
+            logger.trace("Text value for {}: {}", varCode, value);
+        }
+        logger.debug("Retrieved {} text values", map2.size());
+        
+        // 6. Return JSON with context and text maps
+        Map<String, Object> result = new HashMap<>();
+        result.put("context", map1);
+        result.put("text", map2);
+        
+        logger.info("Metadata dump completed. context entries: {}, text entries: {}", map1.size(), map2.size());
+        return result;
+    }
+
     private PvVarDefinition toDefinition(ru.pt.api.dto.product.PvVar var) {
         PvVarDefinition.Type type;
         switch (var.getVarDataType()) {
@@ -308,6 +373,38 @@ public class HealthCheckController {
                 break;
         }
         return PvVarDefinition.fromPvVar(var); 
+    }
+    
+    /**
+     * RowMapper for mapping pt_metadata table rows to PvVar objects
+     */
+    private static class PvVarRowMapper implements RowMapper<PvVar> {
+        @Override
+        public PvVar mapRow(ResultSet rs, int rowNum) throws SQLException {
+            PvVar pvVar = new PvVar();
+            pvVar.setVarCode(rs.getString("var_code"));
+            pvVar.setVarName(rs.getString("var_name"));
+            pvVar.setVarPath(rs.getString("var_path"));
+            pvVar.setVarType(rs.getString("var_type"));
+            pvVar.setVarValue(rs.getString("var_value"));
+            pvVar.setVarCdm(rs.getString("var_cdm"));
+            pvVar.setVarNr(rs.getString("nr"));
+            
+            // Convert var_data_type string to VarDataType enum
+            String varDataTypeStr = rs.getString("var_data_type");
+            if (varDataTypeStr != null) {
+                try {
+                    pvVar.setVarDataType(VarDataType.valueOf(varDataTypeStr.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    // Default to STRING if enum value not found
+                    pvVar.setVarDataType(VarDataType.STRING);
+                }
+            } else {
+                pvVar.setVarDataType(VarDataType.STRING);
+            }
+            
+            return pvVar;
+        }
     }
     
     // Response DTOs

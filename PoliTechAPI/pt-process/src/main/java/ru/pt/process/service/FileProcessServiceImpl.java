@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import ru.pt.api.service.projection.PolicyCoreViewInterface;
-import ru.pt.process.utils.VariablesService;
+//import ru.pt.process.utils.VariablesService;
 
 @Component
 public class FileProcessServiceImpl implements FileProcessService {

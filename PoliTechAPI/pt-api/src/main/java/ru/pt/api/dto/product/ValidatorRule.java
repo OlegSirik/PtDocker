@@ -54,14 +54,6 @@ public class ValidatorRule {
         this.keyLeft = keyLeft;
     }
 
-    public String getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(String dataType) {
-        this.dataType = dataType;
-    }
-
     public String getRuleType() {
         return ruleType;
     }

@@ -68,8 +68,9 @@ import java.math.BigDecimal;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 
-import ru.pt.process.utils.VariablesService;
+//import ru.pt.process.utils.VariablesService;
 import ru.pt.api.service.projection.PolicyCoreViewInterface;
+import ru.pt.domain.model.TextDocumentView;
 
 @Component
 @RequiredArgsConstructor
@@ -93,6 +94,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final PaymentClientSwitch paymentClient;
     private final ClientService clientService;
     private final EmailGateService emailGateService;
+    private final TextDocumentView textDocumentView;
 
     
 
@@ -344,9 +346,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 11. Перенос результатов в DTO
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
-        TextDocumentView textDocumentView = new TextDocumentView(varCtx);
-        String ph_digest = textDocumentView.get("ph_digest");
-        String io_digest = textDocumentView.get("io_digest");
+        String ph_digest = textDocumentView.get(varCtx, "ph_digest");
+        String io_digest = textDocumentView.get(varCtx, "io_digest");
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
 
@@ -423,13 +424,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.debug("Generated policy number: {}", nextNumber);
 
         // Доп атрибуты вычислить
-        TextDocumentView textDocumentView = new TextDocumentView(varCtx);
-
         //String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
         //String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
 
-        String ph_digest = textDocumentView.get("ph_digest");
-        String io_digest = textDocumentView.get("io_digest");
+        String ph_digest = textDocumentView.get(varCtx, "ph_digest");
+        String io_digest = textDocumentView.get(varCtx, "io_digest");
 
         logger.debug("Generated digests. phDigest={}, ioDigest={}", ph_digest, io_digest);
 

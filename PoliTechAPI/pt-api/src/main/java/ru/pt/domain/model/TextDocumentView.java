@@ -6,32 +6,44 @@ import java.util.function.Function;
 import java.util.regex.*;
 //import ru.pt.domain.model.VariableContext;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Service;
 
-public final class TextDocumentView {
+import ru.pt.api.service.db.ReferenceDataService;
 
-    
+@Service
+@RequiredArgsConstructor
+public final class TextDocumentView implements InitializingBean {
+
+    private final ReferenceDataService referenceDataService;
     //private final Map<String, Object> context = new HashMap<>();
-    private Map<String, Function<Object, String>> filters = new HashMap<>();
-    private final VariableContext ctx;
+    private final Map<String, Function<Object, String>> filters = new HashMap<>();
 
-    public TextDocumentView (VariableContext ctx) {
-        this.ctx = ctx;
+    /**
+     * Initialize filters after ReferenceDataService is injected.
+     * Called by Spring after bean construction.
+     */
+    @Override
+    public void afterPropertiesSet() {
         registerDefaultFilters();
+        List<String> list = referenceDataService.getAllRefs();
+        list.forEach(ref -> addRefFilter(ref));
     }
 
-    public String get(String key){
+    public String get(VariableContext ctx, String key){
         PvVarDefinition def = ctx.getDefinition(key);
         if ( def == null ) { return key + " Not Found"; }
         if ( def.getSourceType() != PvVarDefinition.VarSourceType.TEXT ) { return ctx.getString(key); }
 
         String template = def.getTemplate();
-        String result = this.render(template);
+        String result = this.render(ctx, template);
         return result;
     }
 
-    public String getOrDefault(String key, String ifNull){
+    public String getOrDefault(VariableContext ctx, String key, String ifNull){
         PvVarDefinition def = ctx.getDefinition(key);
-        if ( def == null ) { return this.render(ifNull);}
+        if ( def == null ) { return this.render(ctx, ifNull);}
         
         if ( def.getSourceType() != PvVarDefinition.VarSourceType.TEXT ) { return ctx.getString(key); }
         
@@ -63,6 +75,19 @@ public final class TextDocumentView {
         });
     }
         
+    private void addRefFilter(String attributeCode) {
+        List<String> list = referenceDataService.getAllRefs();
+        if (!list.contains(attributeCode)) { return;}
+
+        filters.put( attributeCode, obj -> {
+            return iAmRefFilter(attributeCode, obj.toString());
+        });
+    }
+
+    private String iAmRefFilter(String attributeCode, String code) {
+        return referenceDataService.getName(attributeCode, code);
+    }
+    
     /**
      * Добавление фильтра
      */
@@ -73,17 +98,17 @@ public final class TextDocumentView {
     /**
      * Рендеринг шаблона
      */
-    public String render(String template) {
+    public String render(VariableContext ctx, String template) {
         String result = template;
         
         // 1. Обработка условий
-        result = processConditions(result);
+        result = processConditions(ctx, result);
         
         // 2. Обработка циклов
-        //result = processLoops(result);
+        //result = processLoops(ctx, result);
         
         // 3. Замена переменных
-        result = processVariables(result);
+        result = processVariables(ctx, result);
         
         return result;
     }
@@ -91,7 +116,7 @@ public final class TextDocumentView {
     /**
      * Обработка условий: {{#if var}}...{{/if}}
      */
-    private String processConditions(String input) {
+    private String processConditions(VariableContext ctx, String input) {
         Pattern pattern = Pattern.compile("\\{\\{#if\\s+([^}]+)\\}\\}(.*?)\\{\\{/if\\}\\}", 
             Pattern.DOTALL);
         Matcher matcher = pattern.matcher(input);
@@ -101,7 +126,7 @@ public final class TextDocumentView {
             String condition = matcher.group(1).trim();
             String content = matcher.group(2);
             
-            boolean shouldInclude = evaluateCondition(condition);
+            boolean shouldInclude = evaluateCondition(ctx, condition);
             
             if (shouldInclude) {
                 matcher.appendReplacement(result, content);
@@ -161,7 +186,7 @@ public final class TextDocumentView {
     /**
      * Обработка переменных: {{var}} или {{var|filter}}
      */
-    private String processVariables(String input) {
+    private String processVariables(VariableContext ctx, String input) {
         Pattern pattern = Pattern.compile("\\{\\{([^|{}]+)(?:\\|([^}]+))?\\}\\}");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
@@ -170,7 +195,7 @@ public final class TextDocumentView {
             String varName = matcher.group(1).trim();
             String filterName = matcher.group(2);
             
-            Object value = getValueFromContext(varName);
+            Object value = getValueFromContext(ctx, varName);
             String replacement = value != null ? value.toString() : "";
             
             // Применяем фильтр если есть
@@ -191,7 +216,7 @@ public final class TextDocumentView {
     /**
      * Получение значения из контекста (поддержка вложенных свойств)
      */
-    private Object getValueFromContext(String path) {
+    private Object getValueFromContext(VariableContext ctx, String path) {
         String[] parts = path.split("\\.");
         Object current = ctx;
         
@@ -210,12 +235,12 @@ public final class TextDocumentView {
     /**
      * Вычисление условия
      */
-    private boolean evaluateCondition(String condition) {
+    private boolean evaluateCondition(VariableContext ctx, String condition) {
         if (condition.startsWith("!")) {
-            return !evaluateCondition(condition.substring(1));
+            return !evaluateCondition(ctx, condition.substring(1));
         }
         
-        Object value = getValueFromContext(condition);
+        Object value = getValueFromContext(ctx, condition);
         
         if (value == null) {
             return false;

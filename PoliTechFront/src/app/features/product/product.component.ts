@@ -92,7 +92,7 @@ export class ProductComponent implements OnInit {
   resetPolicyOptions: string[] = [];
 
   // Quote Validator table
-  quoteValidatorDisplayedColumns = ['lineNr', 'keyLeft', 'ruleType', 'keyRight', 'valueRight', 'dataType', 'errorText', 'actions'];
+  quoteValidatorDisplayedColumns = ['lineNr', 'errorText', 'expression', 'actions'];
   quoteValidatorSearchText = '';
   quoteValidatorPageSize = 10;
   quoteValidatorPageIndex = 0;
@@ -100,7 +100,7 @@ export class ProductComponent implements OnInit {
   paginatedQuoteValidators: QuoteValidator[] = [];
 
   // Save Validator table
-  saveValidatorDisplayedColumns = ['lineNr', 'keyLeft', 'ruleType', 'keyRight', 'valueRight', 'dataType', 'errorText', 'actions'];
+  saveValidatorDisplayedColumns = ['lineNr', 'errorText', 'expression', 'actions'];
   saveValidatorSearchText = '';
   saveValidatorPageSize = 10;
   saveValidatorPageIndex = 0;
@@ -195,6 +195,7 @@ export class ProductComponent implements OnInit {
     this.businessLineService.getLobCodes().subscribe(options => this.lobOptions = options);
     //this.productService.getKeyLeftOptions().subscribe(options => this.keyLeftOptions = options);
     this.businessLineEditService.getLobVars(this.product.lob).subscribe(options => this.keyLeftOptions = options);
+
 
     this.productService.getRuleTypeOptions().subscribe(options => this.ruleTypeOptions = options);
     this.productService.getValidatorTypeOptions().subscribe(options => this.validatorTypeOptions = options);
@@ -359,13 +360,15 @@ export class ProductComponent implements OnInit {
 
   // Quote Validator methods
   addQuoteValidator(): void {
+    
+
     this.loadDropdownOptions()
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
       width: '600px',
       minWidth: '900px',
       data: {
         isNew: true,
-        keyLeftOptions: this.keyLeftOptions,
+        keyLeftOptions: this.product.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         ruleTypeOptions: this.ruleTypeOptions
       }
     });
@@ -387,7 +390,7 @@ export class ProductComponent implements OnInit {
       data: {
         validator: validator,
         isNew: false,
-        keyLeftOptions: this.keyLeftOptions,
+        keyLeftOptions: this.product.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         ruleTypeOptions: this.ruleTypeOptions
       }
     });
@@ -437,7 +440,7 @@ export class ProductComponent implements OnInit {
       minWidth: '900px',
       data: {
         isNew: true,
-        keyLeftOptions: this.keyLeftOptions,
+        keyLeftOptions: this.product.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         ruleTypeOptions: this.ruleTypeOptions
       }
     });
@@ -461,7 +464,7 @@ export class ProductComponent implements OnInit {
       data: {
         validator: validator,
         isNew: false,
-        keyLeftOptions: this.keyLeftOptions,
+        keyLeftOptions: this.product.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         ruleTypeOptions: this.ruleTypeOptions
       }
     });
