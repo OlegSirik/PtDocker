@@ -73,13 +73,14 @@ public class ValidatorImpl {
         }
     }
 
+    /* 
     public static boolean validate(
             Map<String, PvVar> dataMap,
             ValidatorRule validatorRule
     ) {
         String leftKey = validatorRule.getKeyLeft();
         String rightKey = validatorRule.getKeyRight();
-        String rightValue = validatorRule.getValueRight();
+        String rightValue = ""; //validatorRule.getValueRight();
         String ruleType = validatorRule.getRuleType();
         try {
             // TODO медленно
@@ -110,7 +111,7 @@ public class ValidatorImpl {
         }
     }
 
-
+*/
 
     private static boolean checkBigD(String type, BigDecimal s1, BigDecimal s2) {
     
@@ -141,9 +142,13 @@ public class ValidatorImpl {
     public static boolean validate(VariableContext ctx, ValidatorRule rule) {
         String leftKey = rule.getKeyLeft();
         String rightKey = rule.getKeyRight();
-        String rightValue = rule.getValueRight();
+        String rightValue = ""; //rule.getValueRight();
         String ruleType = rule.getRuleType();
-    
+        boolean b = rule.isKeyRightCustomValue();
+        if (b) {
+            rightValue = rightKey;
+        }
+
         try {
             PvVarDefinition leftDef = ctx.getDefinition(leftKey);
             String tp = leftDef.getType().toString();

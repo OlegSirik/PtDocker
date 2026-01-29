@@ -68,8 +68,8 @@ public class ValidatorServiceImpl implements ValidatorService {
                     ruleIndex, 
                     validatorRule.getKeyLeft(),
                     validatorRule.getRuleType(),
-                    validatorRule.getKeyRight(),
-                    validatorRule.getValueRight(),
+                    validatorRule.getKeyRight(),"",
+                    //validatorRule.getValueRight(),
                     validatorRule.getLineNr());
 
             boolean isValid = false;
@@ -90,8 +90,8 @@ public class ValidatorServiceImpl implements ValidatorService {
                     if (!isValid) {
                         String errorMessage = String.format("%s %s %s %s", 
                                 validatorRule.getKeyLeft(),
-                                validatorRule.getKeyRight(),
-                                validatorRule.getValueRight(),
+                                validatorRule.getKeyRight(),"",
+                                //validatorRule.getValueRight(),
                                 validatorRule.getRuleType());
                         
                         ValidationError error = new ValidationError(

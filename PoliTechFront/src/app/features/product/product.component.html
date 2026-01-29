@@ -25,20 +25,22 @@
         <mat-card class="action-card">
           <mat-card-content>
             <div class="button-section">
+              @if (product.versionStatus === 'PROD') {
               <button mat-raised-button color="primary" class="action-button" (click)="createNewVersion()">
                 <mat-icon>add</mat-icon>
-                Create new version
+                Создать новую версию продукта
               </button>
+              }
+              @if (product.versionStatus === 'DEV') {
               <button mat-raised-button color="accent" class="action-button" (click)="goToProduction()">
                 <mat-icon>publish</mat-icon>
-                Go to production
+                Вывести в прод
               </button>
-              <!--- @if (product.versionStatus === 'DEV') { -->
-                <button mat-raised-button color="warn" class="action-button" (click)="deleteProductVersion()">
+              <button mat-raised-button color="warn" class="action-button" (click)="deleteProductVersion()">
                   <mat-icon>delete</mat-icon>
-                  Delete
+                  Удалить версию
                 </button>
-              <!--- } -->
+              }
               <button mat-raised-button color="warn" class="action-button" (click)="openForm()">
                 <mat-icon>description</mat-icon>
                 Open Form
@@ -67,17 +69,17 @@
             </div>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Код</mat-label>
+                <mat-label>Кодировка</mat-label>
                 <input matInput [(ngModel)]="product.code" (ngModelChange)="updateChanges()" required>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Название</mat-label>
+                <mat-label>Наименование продукта</mat-label>
                 <input matInput [(ngModel)]="product.name" (ngModelChange)="updateChanges()" required>
               </mat-form-field>
             </div>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Версия</mat-label>
+                <mat-label>Номер версии</mat-label>
                 <input matInput [value]="product.versionNo" readonly>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
@@ -91,50 +93,54 @@
         <!-- Activation Delay Card -->
         <mat-card class="data-card">
           <mat-card-header>
-            <mat-card-title>Период ожидания</mat-card-title>
+            <mat-card-title>Период до начала действия договора</mat-card-title>
+            <mat-card-subtitle>Период между выпуском договора и датой начала его действия.</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Тип валидатора</mat-label>
+                <mat-label>Способ задания срока</mat-label>
                 <mat-select [(ngModel)]="product.waitingPeriod.validatorType" (ngModelChange)="updateChanges()">
                   @for (option of validatorTypeOptions; track option) {
                     <mat-option [value]="option">
-                      {{ option }}
+                      {{ getValidatorTypeLabel(option) }}
                     </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Значение валидатора</mat-label>
+                <mat-label>Допустимые значения срока</mat-label>
                 <input matInput [(ngModel)]="product.waitingPeriod.validatorValue" (ngModelChange)="updateChanges()" placeholder="P1D-P30D">
               </mat-form-field>
             </div>
+            <p class="validator-help-text">{{ getValidatorTypeHelp(product.waitingPeriod.validatorType) }}</p>
           </mat-card-content>
         </mat-card>
 
         <!-- Policy Term Card -->
         <mat-card class="data-card">
           <mat-card-header>
-            <mat-card-title>Срок действия полиса</mat-card-title>
+            <mat-card-title>Срок действия договора</mat-card-title>
+            <mat-card-subtitle>Период времени, в течение которого договор страхования является действующим и страховое покрытие предоставляется.</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Тип валидатора</mat-label>
+                <mat-label>Способ задания срока</mat-label>
                 <mat-select [(ngModel)]="product.policyTerm.validatorType" (ngModelChange)="updateChanges()">
-                  @for (option of validatorTypeOptions; track option) {
+                  @for (option of validatorTypeOptions2; track option) {
                     <mat-option [value]="option">
-                      {{ option }}
+                      {{ getValidatorTypeLabel(option) }}
                     </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Значение валидатора</mat-label>
+                <mat-label>Допустимые значения срока</mat-label>
                 <input matInput [(ngModel)]="product.policyTerm.validatorValue" (ngModelChange)="updateChanges()" placeholder="P1M,P3M,P6M,P1Y">
               </mat-form-field>
             </div>
+            <p class="validator-help-text">{{ getValidatorTypeHelp2(product.policyTerm.validatorType) }}</p>
           </mat-card-content>
         </mat-card>
 
@@ -142,21 +148,22 @@
         <mat-card class="data-card">
           <mat-card-header>
             <mat-card-title>Генератор номеров</mat-card-title>
+            <mat-card-subtitle>Правила для формирования номера договора.</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Маска</mat-label>
+                <mat-label>Маска номера договора</mat-label>
                 <input matInput [(ngModel)]="product.numberGenerator.mask" (ngModelChange)="updateChanges()" placeholder="POL-{YYYY}-{MM}-{NNNN}">
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Максимальное значение</mat-label>
+                <mat-label>Максимальное значение номера</mat-label>
                 <input matInput type="number" [(ngModel)]="product.numberGenerator.maxValue" (ngModelChange)="updateChanges()" placeholder="9999">
               </mat-form-field>
             </div>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Политика сброса</mat-label>
+                <mat-label>Период нумерации</mat-label>
                 <mat-select [(ngModel)]="product.numberGenerator.resetPolicy" (ngModelChange)="updateChanges()">
                   @for (option of resetPolicyOptions; track option) {
                     <mat-option [value]="option">
@@ -166,7 +173,7 @@
                 </mat-select>
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
-                <mat-label>XOR Маска</mat-label>
+                <mat-label>Перемешивание порядкового номера (XOR)</mat-label>
                 <input matInput [(ngModel)]="product.numberGenerator.xorMask" (ngModelChange)="updateChanges()" placeholder="0xABCD">
               </mat-form-field>
             </div>
@@ -186,20 +193,13 @@
     add button "copy to clipboard"
     add button "close"
     -->
-    <mat-tab label="Проверки предрасчета">
+    <mat-tab label="Проверка предрасчета">
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
 
             <div class="table-header">
-              <h3>Проверки предрасчета</h3>
-              <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="quoteValidatorSearchText" (ngModelChange)="updateQuoteValidatorTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-              -->
+              <h3>Правила предрасчета</h3>
               <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
                 <button mat-raised-button color="accent" class="action-button" (click)="getTestRequest()">
                   <mat-icon>science</mat-icon>

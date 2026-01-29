@@ -51,6 +51,7 @@ export interface QuoteValidator {
   ruleType: string;
   keyRight?: string;
   valueRight?: string;
+  isKeyRightCustomValue?: boolean;
   dataType: string;
   errorText: string;
 }

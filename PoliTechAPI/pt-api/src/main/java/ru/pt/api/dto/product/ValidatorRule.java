@@ -30,6 +30,9 @@ public class ValidatorRule {
     @JsonProperty("valueRight")
     private String valueRight;
 
+    @JsonProperty("isKeyRightCustomValue")
+    private boolean isKeyRightCustomValue;
+
     public Integer getLineNr() {
         return lineNr;
     }
@@ -70,11 +73,29 @@ public class ValidatorRule {
         this.errorText = errorText;
     }
 
-    public String getValueRight() {
-        return valueRight;
-    }
+//    public String getValueRight() {
+//        return valueRight;
+//    }
 
     public void setValueRight(String valueRight) {
         this.valueRight = valueRight;
     }
+
+    public String getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
+
+    public boolean isKeyRightCustomValue() {
+        return isKeyRightCustomValue;
+    }
+
+    public void setKeyRightCustomValue(boolean isKeyRightCustomValue) {
+        this.isKeyRightCustomValue = isKeyRightCustomValue;
+    }
+
+    // function to calculate sum
 }

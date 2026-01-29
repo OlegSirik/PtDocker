@@ -132,14 +132,14 @@ export class FormlyFormsComponent implements OnInit {
     this.loadProduct(parseInt(productId || '0'), parseInt(versionNo || '1'));
 
     //this.policy = this.policyService. .getMockPolicy();
-    this.productService.getTestRequestQuote(parseInt(productId || '0'), parseInt(versionNo || '1')).subscribe({
+    this.productService.getTestRequestSave(parseInt(productId || '0'), parseInt(versionNo || '1')).subscribe({
       next: (json: string) => {
         // Convert to string primitive if needed (handle both string and String wrapper)
         const jsonString: string = typeof json === 'string' ? json : String(json);
         
         // Print JSON to console
-        console.log('Received JSON:', jsonString);
-        console.log('JSON length:', jsonString.length);
+        //console.log('Received JSON:', jsonString);
+        //console.log('JSON length:', jsonString.length);
         
         try {
           // Parse JSON

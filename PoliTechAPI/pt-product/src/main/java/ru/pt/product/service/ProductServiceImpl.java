@@ -470,8 +470,17 @@ public class ProductServiceImpl implements ProductService {
         List<String> jsonPaths = new ArrayList<>();
         Map<String, String> jsonValues = new HashMap<>();
 
-        jsonPaths.add("draftId");
-        jsonValues.put("draftId", "");
+        productVersionModel.getVars().forEach(mpVar -> {
+            if (mpVar.getVarType().equals("IN")) {
+                String path = mpVar.getVarCdm();
+                path = path.replace("policy.policy.", "");
+                jsonPaths.add( path);
+                jsonValues.put(path, mpVar.getVarValue());
+            }
+        });
+
+//        jsonPaths.add("draftId");
+//        jsonValues.put("draftId", "");
 
         jsonPaths.add("productCode");
         jsonValues.put("productCode", productVersionModel.getCode());
@@ -485,11 +494,11 @@ public class ProductServiceImpl implements ProductService {
 //        jsonPaths.add("insuredObjects.ioType");
 //        jsonValues.put("insuredObjects.ioType", "Person");
 
-        jsonPaths.add("insuredObjects[0].sumInsured");
-        jsonValues.put("insuredObjects[0].sumInsured", "");
+        jsonPaths.add("insuredObject.sumInsured");
+        jsonValues.put("insuredObject.sumInsured", "");
 
-        jsonPaths.add("insuredObjects[0].packageCode");
-        jsonValues.put("insuredObjects[0].packageCode", "0");
+        jsonPaths.add("insuredObject.packageCode");
+        jsonValues.put("insuredObject.packageCode", "0");
 
         try {
         if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
@@ -517,24 +526,10 @@ public class ProductServiceImpl implements ProductService {
         }
         } catch (Exception e) {}
 
-        Set<String> validatorKeys = new HashSet<>();
+        
 
-        productVersionModel.getSaveValidator().forEach(validator -> {
-            validatorKeys.add(validator.getKeyLeft());
-            validatorKeys.add(validator.getKeyRight());
-        });
-// добавляем все переменные из productVersionModel.getVars() в validatorKeys
-        productVersionModel.getVars().forEach(var -> {
-            validatorKeys.add(var.getVarCode());
-        });
-        // for each validatorKeys get path by key from lob.mpVars
-        lob.getMpVars().forEach(mpVar -> {
-            if (mpVar.getVarType().equals("IN")) {
-               if (validatorKeys.contains(mpVar.getVarCode())) {
-                    jsonPaths.add(mpVar.getVarPath());
-                }
-            }
-        });
+
+
 
         try {
             return JsonExampleBuilder.buildJsonExampleProduct(jsonPaths, jsonValues);

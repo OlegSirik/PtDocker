@@ -88,8 +88,20 @@ export class ProductComponent implements OnInit {
   lobOptions: string[] = [];
   keyLeftOptions: string[] = [];
   ruleTypeOptions: string[] = [];
-  validatorTypeOptions: string[] = [];
+  validatorTypeOptions: string[] = ['RANGE', 'LIST', 'NEXT_MONTH'];
+  validatorTypeOptions2: string[] = ['RANGE', 'LIST'];
   resetPolicyOptions: string[] = [];
+
+  // Validator type labels mapping
+  validatorTypeLabels: { [key: string]: string } = {
+    'RANGE': 'Допустимый диапазон',
+    'LIST': 'Список возможных значений',
+    'NEXT_MONTH': '1 число следующего месяца'
+  };
+
+  getValidatorTypeLabel(code: string): string {
+    return this.validatorTypeLabels[code] || code;
+  }
 
   // Quote Validator table
   quoteValidatorDisplayedColumns = ['lineNr', 'errorText', 'expression', 'actions'];
@@ -198,7 +210,7 @@ export class ProductComponent implements OnInit {
 
 
     this.productService.getRuleTypeOptions().subscribe(options => this.ruleTypeOptions = options);
-    this.productService.getValidatorTypeOptions().subscribe(options => this.validatorTypeOptions = options);
+    //this.productService.getValidatorTypeOptions().subscribe(options => this.validatorTypeOptions = options);
     this.productService.getResetPolicyOptions().subscribe(options => this.resetPolicyOptions = options);
 
     // Get cover codes from existing product covers
@@ -1293,6 +1305,20 @@ console.log(pkg)
     return index !== -1 ? index : 0;
   }
 
+  getValidatorTypeHelp(code: string|undefined): string {
+    if (code == 'LIST') return 'Список возможных значений через запятую. Формат ISO 8601, например P14D - 14 дней, P2M - 2 месяца, P1Y - 1 год.';
+    if (code == 'RANGE') return 'Минимальное и максимальное количество дней, между датой выпуска договора и датой начала действия договора. Формат ISO 8601, например P5D-P365D диапазон от 5 дней до 365.';
+    if (code == 'NEXT_MONTH') return 'Договор начнет действовать с 1 числа следующего месяца';
+    return '';
+  }
+  
+  getValidatorTypeHelp2(code: string|undefined): string {
+    if (code == 'LIST') return 'Список возможных значений через запятую. Формат ISO 8601, например P14D - 14 дней, P2M - 2 месяца, P1Y - 1 год.';
+    if (code == 'RANGE') return 'Минимальный и максимальный срок действия договора в днях. ' +
+      ' Срок рассчитывается как период между датой начала и датой окончания действия договора. ' +
+      ' Пример: P5D–P365D — договор может действовать от 5 до 365 дней.';
+    return '';
+  }
 }
 
 @Component({
@@ -1369,3 +1395,4 @@ export class TestRequestDialog {
 export class PolicyVarDetailsDialog {
   constructor(@Inject(MAT_DIALOG_DATA) public data: { variable: PolicyVar }) {}
 }
+

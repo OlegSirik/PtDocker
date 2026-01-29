@@ -11,70 +11,79 @@
 
   <!-- Policy Card -->
   <mat-card class="form-card">
+<!---
     <mat-card-header>
       <mat-card-title>Policy</mat-card-title>
     </mat-card-header>
+  -->
     <mat-card-content>
-      <h3>Policy Header</h3>
-      <!-- First Line: id, product, status (readonly) -->
-      <div class="display-flex" style="gap: 12px;">
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>ID</mat-label>
-          <input matInput [(ngModel)]="policy.id" name="id" readonly>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-2">
-          <mat-label>Product</mat-label>
-          <input matInput [(ngModel)]="policy.productCode" name="productCode" readonly>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Status</mat-label>
-          <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
-        </mat-form-field>
-      </div>
-      <!-- Second Line: startDate, endDate, waitingPeriod, policyTerm -->
-      <div class="display-flex" style="gap: 12px;">
-        @if (policy.startDate) {
-          <mat-form-field appearance="outline" class="form-field flex-1">
-            <mat-label>Start Date</mat-label>
-            <input matInput [(ngModel)]="policy.startDate" name="startDate" type="date">
-          </mat-form-field>
-        }
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>End Date</mat-label>
-          <input matInput [(ngModel)]="policy.endDate" name="endDate" type="date">
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Waiting Period</mat-label>
-          <input matInput [(ngModel)]="policy.waitingPeriod" name="waitingPeriod">
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Policy Term</mat-label>
-          <input matInput [(ngModel)]="policy.policyTerm" name="policyTerm">
-        </mat-form-field>
-      </div>
-      <!-- Third Line: issueDate, issueTimeZone, createDate (readonly) -->
-      <div class="display-flex" style="gap: 12px;">
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Issue Date</mat-label>
-          <input matInput [(ngModel)]="policy.issueDate" name="issueDate" readonly>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Issue Time Zone</mat-label>
-          <input matInput [(ngModel)]="policy.issueTimeZone" name="issueTimeZone" readonly>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="form-field flex-1">
-          <mat-label>Create Date</mat-label>
-          <input matInput [(ngModel)]="policy.createDate" name="createDate" readonly>
-        </mat-form-field>
-      </div>
-
-      <h3>Итоговая премия</h3>
-      <div class="display-flex">
-        <div style="display: flex; justify-content: flex-end;">
-          <mat-form-field class="form-field" appearance="outline" style="max-width: 300px; width: 100%;">
-            <mat-label>Premium</mat-label>
-            <input matInput [(ngModel)]="policy.premium" name="premium" readonly>
-          </mat-form-field>
+      <div style="display: flex; gap: 12px; height: 100%;">
+        <!-- Left Column: 60% width -->
+        <div style="width: 60%; height: 100%; background-color: white; padding-left: 20px;padding-right: 20px;">
+          <h3>Договор страхования {{ policy.policyNumber }}</h3>
+          <!-- First Line: id, product -->
+          <div class="display-flex" style="gap: 12px;">
+            <mat-form-field appearance="outline" class="form-field flex-1">
+              <mat-label>ID</mat-label>
+              <input matInput [(ngModel)]="policy.id" name="id" readonly>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="form-field flex-2">
+              <mat-label>Product</mat-label>
+              <input matInput [(ngModel)]="policy.productCode" name="productCode" readonly>
+            </mat-form-field>
+          </div>
+          <!-- Second Line: startDate, endDate, waitingPeriod, policyTerm -->
+          <div class="display-flex" style="gap: 12px;">
+            @if (policy.startDate) {
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Дата начала договора</mat-label>
+                <input matInput [(ngModel)]="policy.startDate" name="startDate" type="date">
+              </mat-form-field>
+            } @else {
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Период охлаждения</mat-label>
+                <input matInput [(ngModel)]="policy.waitingPeriod" name="waitingPeriod">
+              </mat-form-field>  
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Дата начала договора</mat-label>
+                <input matInput [(ngModel)]="policy.startDate" name="startDate" type="date" readonly>
+              </mat-form-field>
+            }
+          </div>
+          <div class="display-flex" style="gap: 12px;">
+            @if (policy.endDate) {
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Дата окончания договора</mat-label>
+                <input matInput [(ngModel)]="policy.endDate" name="endDate" type="date">
+              </mat-form-field>
+            } @else {
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Период страхования</mat-label>
+                <input matInput [(ngModel)]="policy.policyTerm" name="policyTerm">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="form-field flex-1">
+                <mat-label>Дата окончания договора</mat-label>
+                <input matInput [(ngModel)]="policy.endDate" name="endDate" type="date" readonly>
+              </mat-form-field>
+            }
+          </div>
+        </div>
+        
+        <!-- Right Column: 40% width -->
+        <div style="width: 40%; height: 100%; background-color: white; padding-left: 20px;padding-right: 20px;">
+          <h3>Премия и статус договора</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <mat-form-field appearance="outline" class="form-field ">
+              <mat-label>Status</mat-label>
+              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
+            </mat-form-field>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">  
+            <mat-form-field appearance="outline" class="form-field ">
+              <mat-label>Premium</mat-label>
+              <input matInput [(ngModel)]="policy.premium" name="premium" readonly>
+            </mat-form-field>
+          </div>
         </div>
       </div>
     </mat-card-content>
@@ -83,10 +92,10 @@
   <!-- PolicyHolder Card -->
   <mat-card class="form-card">
     <mat-card-header>
-      <mat-card-title>Policy Holder</mat-card-title>
+      <mat-card-title>Страхователь</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <h3>Person</h3>
+      <h3>Физ.лицо</h3>
       <div class="display-flex">
         @if (getFieldVisible('ph_firstName')) {
           <mat-form-field class="form-field flex-2" appearance="outline">
@@ -160,7 +169,7 @@
         }
       </div>
 
-      <h3>Passport</h3>
+      <h3>Документ</h3>
       <div class="display-flex">
         @if (getFieldVisible('ph_doc_typeCode')) {
           <mat-form-field class="form-field flex-2" appearance="outline">
@@ -229,22 +238,6 @@
         }
       </div>
 
-      <h3>Phone</h3>
-      <div class="display-flex">
-        @if (getFieldVisible('ph_phone')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_phone') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.contacts.phone" name="ph_phone">
-          </mat-form-field>
-        }
-
-        @if (getFieldVisible('ph_email')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_email') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.contacts.email" name="ph_email">
-          </mat-form-field>
-        }
-      </div>
       <div class="display-flex">
         @if (getFieldVisible('ph_ext_id')) {
           <mat-form-field class="form-field flex-3" appearance="outline">
@@ -268,7 +261,24 @@
         }
       </div>
 
-      <h3>Address</h3>
+      <h3>Контакты</h3>
+      <div class="display-flex">
+        @if (getFieldVisible('ph_phone')) {
+          <mat-form-field class="form-field flex-3" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_phone') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.contacts.phone" name="ph_phone">
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_email')) {
+          <mat-form-field class="form-field flex-3" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_email') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.contacts.email" name="ph_email">
+          </mat-form-field>
+        }
+      </div>
+
+      <h3>Адрес</h3>
       <div class="display-flex">
         @if (getFieldVisible('ph_addr_typeCode')) {
           <mat-form-field class="form-field flex-3" appearance="outline">
@@ -378,7 +388,7 @@
       </div>
 
       @if (getShowOrganization()) {
-        <h3>Organization</h3>
+        <h3>Юр.лицо</h3>
         <div class="display-flex">
           @if (getFieldVisible('ph_ext_id')) {
             <mat-form-field class="form-field flex-3" appearance="outline">
@@ -496,11 +506,11 @@
   <!-- InsuredObject Card -->
   <mat-card class="form-card">
     <mat-card-header>
-      <mat-card-title>Insured Object</mat-card-title>
+      <mat-card-title>Объект страхования</mat-card-title>
     </mat-card-header>
     <mat-card-content>
     @if (getShowIoDevice()) {  
-      <h3>Device</h3>
+      <h3>Бытовая электроника</h3>
       <div class="display-flex">
         @if (getFieldVisible('io_device_typeCode')) {
           <mat-form-field class="form-field flex-3" appearance="outline">
@@ -653,7 +663,7 @@
   <!-- Coverage Card -->
   <mat-card class="form-card">
     <mat-card-header>
-      <mat-card-title>Coverage</mat-card-title>
+      <mat-card-title>Покрытия и риски по договору</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <table mat-table [dataSource]="coverageDataSource" class="coverage-table">
@@ -678,12 +688,12 @@
         </ng-container>
 
         <ng-container matColumnDef="sumInsured">
-          <th mat-header-cell *matHeaderCellDef>Sum Insured</th>
+          <th mat-header-cell *matHeaderCellDef>Страховая сумма</th>
           <td mat-cell *matCellDef="let element">{{ element.sumInsured?.toString() || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="premium">
-          <th mat-header-cell *matHeaderCellDef>Premium</th>
+          <th mat-header-cell *matHeaderCellDef>Премия</th>
           <td mat-cell *matCellDef="let element">{{ element.premium?.toString() || '' }}</td>
         </ng-container>
 
