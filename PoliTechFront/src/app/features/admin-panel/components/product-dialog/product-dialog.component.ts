@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { Product } from '../../../../shared/services/tenant.service';
+import { Product } from '../../../../shared/services/account.service';
 
 @Component({
   selector: 'app-product-dialog',
@@ -24,16 +24,19 @@ import { Product } from '../../../../shared/services/tenant.service';
     <h2 mat-dialog-title>{{ data.product ? 'Редактировать продукт' : 'Добавить продукт' }}</h2>
     <mat-dialog-content>
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>ID продукта</mat-label>
-        <input matInput [(ngModel)]="productId" type="number" required>
+        <mat-label>Продукт  {{product.roleProductId}} </mat-label>
+        <input matInput [(ngModel)]="product.roleProductName" type="string" required>
       </mat-form-field>
-      <mat-checkbox [(ngModel)]="canRead">Может читать</mat-checkbox>
-      <mat-checkbox [(ngModel)]="canQuote">Может создавать котировки</mat-checkbox>
-      <mat-checkbox [(ngModel)]="canPolicy">Может создавать полисы</mat-checkbox>
+      <mat-checkbox [(ngModel)]="product.isDeleted">Продукт недоступен для account</mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="product.canRead">Может читать</mat-checkbox>
+      <mat-checkbox [(ngModel)]="product.canQuote">Может создавать котировки</mat-checkbox>
+      <mat-checkbox [(ngModel)]="product.canPolicy">Может создавать полисы</mat-checkbox>
+
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="getResult()" [disabled]="!productId">
+      <button mat-raised-button color="primary" [mat-dialog-close]="getResult()">
         {{ data.product ? 'Сохранить' : 'Добавить' }}
       </button>
     </mat-dialog-actions>
@@ -54,30 +57,35 @@ import { Product } from '../../../../shared/services/tenant.service';
   `]
 })
 export class ProductDialogComponent {
-  productId: number | null = null;
-  canRead: boolean = false;
-  canQuote: boolean = false;
-  canPolicy: boolean = false;
+  product: Product;
 
   constructor(
     public dialogRef: MatDialogRef<ProductDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { product: Product | null; tid: number }
+    @Inject(MAT_DIALOG_DATA) public data: { product: Product | null; accountId?: number }
   ) {
     if (data.product) {
-      this.productId = data.product.id;
-      this.canRead = data.product.can_read || false;
-      this.canQuote = data.product.can_quote || false;
-      this.canPolicy = data.product.can_policy || false;
+      // Edit mode - use existing product
+      this.product = { ...data.product };
+    } else {
+      // Create mode - initialize new product
+      this.product = {
+        accountId: data.accountId || 0,
+        roleProductId: 0,
+        roleProductName: '',
+        roleAccountId: data.accountId || 0,
+        isDeleted: false,
+        canRead: false,
+        canQuote: false,
+        canPolicy: false,
+        canAddendum: false,
+        canCancel: false,
+        canProlongate: false
+      };
     }
   }
 
-  getResult(): Partial<Product> {
-    return {
-      id: this.productId!,
-      can_read: this.canRead,
-      can_quote: this.canQuote,
-      can_policy: this.canPolicy
-    };
+  getResult(): Product {
+    return this.product;
   }
 }
 

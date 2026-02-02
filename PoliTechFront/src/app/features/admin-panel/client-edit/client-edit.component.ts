@@ -76,7 +76,7 @@ export class ClientEditComponent implements OnInit {
 
   clientProducts: ClientProduct[] = [];
   productsList: ProductList[] = [];
-  productColumns: string[] = ['lobCode', 'productCode', 'productName', 'status', 'actions'];
+  productColumns: string[] = ['id', 'productName', 'status', 'actions'];
 
   ngOnInit(): void {
 
@@ -306,6 +306,25 @@ export class ClientEditComponent implements OnInit {
         });
       }
     });
+  }
+
+  deleteProduct(product: ClientProduct): void {
+    if (!this.client.id || !product.id) return;
+    
+    if (confirm(`Удалить продукт "${product.productName}"?`)) {
+      this.loadingProducts = true;
+      this.clientsService.revokeProduct(this.client.id, product.id).subscribe({
+        next: () => {
+          this.clientProducts = this.clientProducts.filter(p => p.id !== product.id);
+          this.snack.open('Продукт удалён', 'OK', { duration: 2000 });
+          this.loadingProducts = false;
+        },
+        error: () => {
+          this.snack.open('Ошибка при удалении продукта', 'OK', { duration: 2000 });
+          this.loadingProducts = false;
+        }
+      });
+    }
   }
 
   getProductStatusLabel(product: ClientProduct): string {

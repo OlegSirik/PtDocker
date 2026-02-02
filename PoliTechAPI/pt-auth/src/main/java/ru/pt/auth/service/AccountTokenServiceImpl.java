@@ -1,139 +1,109 @@
 package ru.pt.auth.service;
 
-import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.pt.api.dto.auth.AccountToken;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.service.auth.AccountTokenService;
-import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountTokenEntity;
-import ru.pt.auth.repository.AccountLoginRepository;
+import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.AccountTokenRepository;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.security.permitions.AuthZ;
+import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.utils.AccountTokenMapper;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Component
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AccountTokenServiceImpl implements AccountTokenService {
 
     private final AccountTokenRepository accountTokenRepository;
-    private final AccountLoginRepository accountLoginRepository;
+    private final AccountRepository accountRepository;
     private final AccountTokenMapper accountTokenMapper;
-
-    public AccountTokenServiceImpl(AccountTokenRepository accountTokenRepository,
-                                   AccountLoginRepository accountLoginRepository,
-                                   AccountTokenMapper accountTokenMapper) {
-        this.accountTokenRepository = accountTokenRepository;
-        this.accountLoginRepository = accountLoginRepository;
-        this.accountTokenMapper = accountTokenMapper;
-    }
+    private final AuthorizationService authService;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional
-    public AccountToken createToken(String userLogin, Long clientId, String token) {
-        if (userLogin == null || userLogin.trim().isEmpty()) {
-            throw new BadRequestException("User login cannot be null or empty");
-        }
-        if (clientId == null) {
-            throw new BadRequestException("Client ID cannot be null");
-        }
+    public AccountToken createToken(Long accountId, String token) {
         if (token == null || token.trim().isEmpty()) {
             throw new BadRequestException("Token cannot be null or empty");
         }
 
-        // Проверить, существует ли уже токен для этого пользователя и клиента
-        Optional<AccountTokenEntity> existingToken = accountTokenRepository
-                .findByUserLoginAndClientId(userLogin, clientId);
 
-        if (existingToken.isPresent()) {
-            throw new BadRequestException("Token already exists for user '" + userLogin +
-                                        "' and client ID " + clientId + ". Use update instead.");
-        }
+        authService.check(
+            getCurrentUser(),
+            AuthZ.ResourceType.TOKEN,
+            token,
+            accountId,
+            AuthZ.Action.CREATE
+        );
 
-        // Найти AccountLogin для получения связанных данных
-        List<AccountLoginEntity> accountLogins = accountLoginRepository.findByUserLogin(userLogin);
+        AccountEntity clientAccount = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account not found: " + accountId));
 
-        if (accountLogins.isEmpty()) {
-            throw new NotFoundException("User login '" + userLogin + "' not found");
-        }
-
-        // Найти соответствующий AccountLogin с нужным clientId
-        AccountLoginEntity accountLogin = accountLogins.stream()
-                .filter(al -> al.getClient() != null && al.getClient().getId().equals(clientId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("User '" + userLogin +
-                                                        "' not associated with client ID " + clientId));
-
-        // Создать новый токен
+        if (tokenExists(clientAccount.getClient().getId(), token)) {
+                    throw new BadRequestException("Нарушение уникальности. Такой Token уже есть");
+                }
+        
         AccountTokenEntity tokenEntity = new AccountTokenEntity();
         tokenEntity.setToken(token);
-        tokenEntity.setTenant(accountLogin.getTenant());
-        tokenEntity.setClient(accountLogin.getClient());
-        tokenEntity.setAccount(accountLogin.getAccount());
+        tokenEntity.setTenant(clientAccount.getTenant());
+        tokenEntity.setClient(clientAccount.getClient());
+        tokenEntity.setAccount(clientAccount);
 
         AccountTokenEntity savedToken = accountTokenRepository.save(tokenEntity);
         return accountTokenMapper.toDto(savedToken);
     }
 
     @Override
-    @Transactional
-    public AccountToken updateToken(String userLogin, Long clientId, String newToken) {
-        if (userLogin == null || userLogin.trim().isEmpty()) {
-            throw new BadRequestException("User login cannot be null or empty");
-        }
-        if (clientId == null) {
-            throw new BadRequestException("Client ID cannot be null");
-        }
-        if (newToken == null || newToken.trim().isEmpty()) {
-            throw new BadRequestException("Token cannot be null or empty");
-        }
+    public List<AccountToken> getTokens(Long accountId) {
+        authService.check(
+            getCurrentUser(),
+            AuthZ.ResourceType.TOKEN,
+            null,
+            accountId,
+            AuthZ.Action.LIST
+        );
 
-        // Найти существующий токен
-        AccountTokenEntity tokenEntity = accountTokenRepository
-                .findByUserLoginAndClientId(userLogin, clientId)
-                .orElseThrow(() -> new NotFoundException("Token not found for user '" + userLogin +
-                                                        "' and client ID " + clientId));
-
-        // Обновить токен
-        tokenEntity.setToken(newToken);
-        AccountTokenEntity updatedToken = accountTokenRepository.save(tokenEntity);
-
-        return accountTokenMapper.toDto(updatedToken);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<AccountToken> getToken(String userLogin, Long clientId) {
-        return accountTokenRepository.findByUserLoginAndClientId(userLogin, clientId)
-                .map(accountTokenMapper::toDto);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<AccountToken> getTokensByUserLogin(String userLogin) {
-        return accountTokenRepository.findByUserLogin(userLogin)
-                .stream()
+        return accountTokenRepository.findByAccountId(accountId)
                 .map(accountTokenMapper::toDto)
-                .collect(Collectors.toList());
+                .orElse(List.of());
     }
 
     @Override
     @Transactional
-    public void deleteToken(String userLogin, Long clientId) {
-        AccountTokenEntity tokenEntity = accountTokenRepository
-                .findByUserLoginAndClientId(userLogin, clientId)
-                .orElseThrow(() -> new NotFoundException("Token not found for user '" + userLogin +
-                                                        "' and client ID " + clientId));
+    public void deleteToken(Long accountId, String token) {
+        authService.check(
+            getCurrentUser(),
+            AuthZ.ResourceType.TOKEN,
+            token,
+            accountId,
+            AuthZ.Action.DELETE
+        );
+
+        AccountTokenEntity tokenEntity = accountTokenRepository.findByTokenAndAccountId(token, accountId)
+                .orElseThrow(() -> new NotFoundException("Token not found"));
 
         accountTokenRepository.delete(tokenEntity);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean tokenExists(String token, Long clientId) {
+    public boolean tokenExists(Long clientId, String token) {
         return accountTokenRepository.findByTokenAndClientId(token, clientId).isPresent();
+    }
+
+    private UserDetailsImpl getCurrentUser() {
+        return securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
     }
 }

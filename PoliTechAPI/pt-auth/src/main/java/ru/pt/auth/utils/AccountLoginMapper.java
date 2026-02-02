@@ -59,10 +59,20 @@ public class AccountLoginMapper {
         dto.setAccountId(entity.getAccount() != null ? entity.getAccount().getId() : null);
         dto.setUserLogin(entity.getUserLogin());
         dto.setIsDefault(entity.getDefault());
+        dto.setUserRole(entity.getAccount() != null && entity.getAccount().getNodeType() != null 
+                ? entity.getAccount().getNodeType().name() : null);
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
         return dto;
     }
 
+    public java.util.List<AccountLogin> toDto(java.util.List<AccountLoginEntity> entities) {
+        if (entities == null) {
+            return java.util.List.of();
+        }
+        return entities.stream()
+                .map(this::toDto)
+                .toList();
+    }
 }

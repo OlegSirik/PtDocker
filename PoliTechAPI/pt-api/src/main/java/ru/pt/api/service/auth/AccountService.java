@@ -1,26 +1,21 @@
 package ru.pt.api.service.auth;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
-
 import java.util.List;
-import java.util.Set;
 
+/**
+ * Account management service interface.
+ * All methods include authorization checks.
+ */
 public interface AccountService {
+
     /**
      * Получить учетную запись по идентификатору
      * @param id идентификатор аккаунта
      * @return учетная запись
      */
     Account getAccountById(Long id);
-
-    /**
-     * Создать клиентскую запись верхнего уровня
-     * @param name имя клиента
-     * @return созданная запись
-     */
-    //Account createClient(String name);
 
     /**
      * Создать группу внутри клиента
@@ -30,6 +25,8 @@ public interface AccountService {
      */
     Account createGroup(String name, Long parentId);
 
+    List<Account> getGroups(Long parentId);
+
     /**
      * Создать рабочий аккаунт
      * @param name имя аккаунта
@@ -37,6 +34,8 @@ public interface AccountService {
      * @return созданная запись
      */
     Account createAccount(String name, Long parentId);
+
+    List<Account> getAccounts(Long parentId);
 
     /**
      * Создать субаккаунт
@@ -46,53 +45,51 @@ public interface AccountService {
      */
     Account createSubaccount(String name, Long parentId);
 
+    List<Account> getSubaccounts(Long parentId);
+
     /**
-     * Назначить роли продукта аккаунту
+     * Получить все аккаунты для текущего пользователя
+     * @param tenantCode код тенанта
+     * @param clientId код клиента
+     * @param userLogin логин пользователя
+     * @return список аккаунтов
+     */
+    List<Account> getAllMyAccounts(String tenantCode, Long clientId, String userLogin);
+
+    /**
+     * Получить роль продукта для аккаунта
+     * @param accountId идентификатор аккаунта
+     * @param productId идентификатор продукта
+     * @return роль продукта
+     */
+    ProductRole getProductRole(Long accountId, Long productId);
+
+    /**
+     * Назначить/обновить роли продукта аккаунту
      * @param accountId идентификатор аккаунта
      * @param productRole описание прав по продукту
      * @return обновленная запись роли
      */
-    Account grantProduct(Long accountId, ProductRole productRole);
+    ProductRole grantProduct(Long accountId, ProductRole productRole);
 
     /**
-     * Назначить роли продукта аккаунту
+     * Отозвать роль продукта у аккаунта
      * @param accountId идентификатор аккаунта
-     * @param productRole описание прав по продукту
-     * @return обновленная запись роли
+     * @param productId идентификатор продукта
      */
-    Account revokeProduct(Long accountId, ProductRole productRole);
+    void revokeProduct(Long accountId, Long productId);
 
     /**
-     * Получить роли продукта в полном описании
+     * Получить все продуктовые роли для аккаунта
      * @param accountId идентификатор аккаунта
      * @return список ролей продукта
      */
     List<ProductRole> getProductRolesByAccountId(Long accountId);
 
     /**
-     * Получить набор кодов ролей продукта
+     * Получить путь от acting account до указанного аккаунта
      * @param accountId идентификатор аккаунта
-     * @return множество ролей
+     * @return список аккаунтов от acting account до указанного
      */
-    Set<String> getProductRoles(Long accountId);
-
-    /**
-     * Вернуть данные для логина аккаунта
-     * @param login логин пользователя
-     * @param client код клиента
-     * @param accountId идентификатор аккаунта
-     * @return json с данными логина
-     */
-    ObjectNode getAccountLogin(String login, String client, Long accountId);
-
-    List<Account> getAccountsByParentId(Long parentId);
-
-    /**
-     * Получить все аккаунты для текущего пользователя
-     * @param tenantCode код тенанта
-     * @param authClientId код клиента
-     * @param userLogin логин пользователя
-     * @return список аккаунтов
-     */
-    List<Account> getAllMyAccounts(String tenantCode, Long clientId, String userLogin);
+    List<Account> getPathToRoot(Long accountId);
 }

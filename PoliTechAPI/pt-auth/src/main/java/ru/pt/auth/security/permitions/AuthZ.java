@@ -22,7 +22,10 @@ public final class AuthZ {
         CLIENT_PRODUCTS,
         TENANT_ADMIN,
         LOB,
-        PRODUCT
+        PRODUCT,
+        ACCOUNT,
+        TOKEN,
+        LOGIN
     }
 
     /** Действия */
@@ -32,8 +35,10 @@ public final class AuthZ {
         CREATE,
         UPDATE,
         DELETE,
+        LIST,   // получить список
+        PERMISSION,  // изменять права  
         GO2PROD,
-        SELL,
+        QUOTE,
         ISSUE,
         CANCEL,
         PAY,
@@ -70,6 +75,8 @@ public final class AuthZ {
             new EnumMap<>(Role.class);
 
     static {
+
+
         // ======================
         // Action applicability
         // ======================
@@ -79,7 +86,15 @@ public final class AuthZ {
         MATRIX.put(ResourceType.TENANT_ADMIN, EnumSet.of(Action.ALL));
 
         MATRIX.put(ResourceType.LOB, EnumSet.of(Action.VIEW, Action.ALL));
-        MATRIX.put(ResourceType.PRODUCT, EnumSet.of(Action.VIEW, Action.ALL));
+        
+        //  
+        MATRIX.put(ResourceType.PRODUCT, EnumSet.of(Action.VIEW, Action.LIST, Action.ALL));
+
+        MATRIX.put(ResourceType.ACCOUNT, EnumSet.of(Action.CREATE, Action.UPDATE, Action.VIEW, Action.PERMISSION));
+
+        MATRIX.put(ResourceType.TOKEN, EnumSet.of(Action.CREATE, Action.DELETE, Action.LIST));
+        MATRIX.put(ResourceType.LOGIN, EnumSet.of(Action.CREATE, Action.DELETE, Action.LIST));
+
 
         // ======================
         // Role -> permissions
@@ -91,14 +106,40 @@ public final class AuthZ {
             formatPermission(ResourceType.CLIENT, Action.VIEW),
             formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW)
     ));
+    ROLE_PERMISSIONS.put(Role.TNT_ADMIN, Set.of(
+        formatPermission(ResourceType.TENANT, Action.ALL),
+        formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
+        formatPermission(ResourceType.PRODUCT, Action.CREATE),
+        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
+        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.UPDATE),
+        formatPermission(ResourceType.PRODUCT, Action.LIST),
+// ToDo - delete it just to test
+        formatPermission(ResourceType.ACCOUNT, Action.CREATE),
+        formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
+        formatPermission(ResourceType.ACCOUNT, Action.UPDATE),
+        formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
+
+        formatPermission(ResourceType.TOKEN, Action.ALL),
+        formatPermission(ResourceType.LOGIN, Action.ALL)
+
+    ));
 
         // PRODUCT_ADMIN может SELL и VIEW продуктов
         ROLE_PERMISSIONS.put(Role.PRODUCT_ADMIN, Set.of(
                 formatPermission(ResourceType.TENANT, Action.ALL),
                 formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
-                formatPermission(ResourceType.PRODUCT, Action.SELL),
+                formatPermission(ResourceType.PRODUCT, Action.CREATE),
                 formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
-                formatPermission(ResourceType.CLIENT_PRODUCTS, Action.UPDATE)
+                formatPermission(ResourceType.CLIENT_PRODUCTS, Action.UPDATE),
+// ToDo - delete it just to test
+                formatPermission(ResourceType.ACCOUNT, Action.CREATE),
+                formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
+                formatPermission(ResourceType.ACCOUNT, Action.UPDATE),
+                formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
+
+                formatPermission(ResourceType.TOKEN, Action.ALL),
+                formatPermission(ResourceType.LOGIN, Action.ALL)
+
         ));
 
         // AGENT — только VIEW продукта и POLICY

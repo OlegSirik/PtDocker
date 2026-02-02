@@ -96,6 +96,7 @@ public class AuthenticationController {
     /**
      * Проверка прав доступа к продукту
      */
+    /* 
     @GetMapping("/check-product-access")
     public ResponseEntity<Map<String, Object>> checkProductAccess(
             @PathVariable String tenantCode,
@@ -110,7 +111,7 @@ public class AuthenticationController {
 
         return ResponseEntity.ok(response);
     }
-
+    */
     /**
      * Простая аутентификация с логином и паролем (без Keycloak)
      * POST /api/v1/{tenantCode}/auth/login

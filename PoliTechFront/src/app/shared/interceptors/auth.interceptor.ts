@@ -6,11 +6,13 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { ErrorHandlerService } from '../services/error-handler.service';
 import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const errorHandler = inject(ErrorHandlerService);
   const router = inject(Router);
   const token = authService.getToken();
   const accountId = authService.getAccountId();
@@ -39,18 +41,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       
       if (error.status === HttpStatusCode.Unauthorized) {
         // 401: User is not authenticated → redirect to login
-        if (tenantCode) {
-          router.navigate(['/', tenantCode, 'login']);
-        } else {
-          router.navigate(['/login']);
-        }
+        const loginTenant = tenantCode || 'demo';
+        router.navigate(['/', loginTenant, 'login']);
       } else if (error.status === HttpStatusCode.Forbidden) {
-        // 403: User is authenticated but lacks permission → redirect to forbidden page
-        if (tenantCode) {
-          router.navigate(['/', tenantCode, 'forbidden']);
+        // 403: User is authenticated but lacks permission
+        const method = req.method.toUpperCase();
+        
+        if (method === 'GET') {
+          // For GET requests: don't redirect, let component handle empty state
+          // Just pass error through
         } else {
-          router.navigate(['/forbidden']);
+          // For POST, PUT, DELETE: show error message from API response
+          errorHandler.handleError(error, 'Доступ запрещён');
         }
+        // Don't redirect to forbidden page anymore
       }
       
       return throwError(() => error);

@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.AccountToken;
 import ru.pt.auth.entity.AccountTokenEntity;
 
+import java.util.List;
+
 @Component
 public class AccountTokenMapper {
 
@@ -22,6 +24,15 @@ public class AccountTokenMapper {
         dto.setUpdatedAt(entity.getUpdatedAt());
 
         return dto;
+    }
+
+    public List<AccountToken> toDto(List<AccountTokenEntity> entities) {
+        if (entities == null) {
+            return List.of();
+        }
+        return entities.stream()
+                .map(this::toDto)
+                .toList();
     }
 
     public AccountTokenEntity toEntity(AccountToken dto) {

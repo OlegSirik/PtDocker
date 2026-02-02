@@ -9,6 +9,8 @@ import ru.pt.auth.entity.TenantEntity;
 
 @Component
 public class ProductRoleMapper {
+    
+    //private final ProductService productService;
 
     public ProductRoleEntity toEntity(ProductRole dto) {
         if (dto == null) {
@@ -47,18 +49,23 @@ public class ProductRoleMapper {
         }
 
         entity.setRoleProductId(dto.roleProductId());
-        entity.setDeleted(dto.isDeleted());
-        entity.setCanRead(dto.canRead());
-        entity.setCanQuote(dto.canQuote());
-        entity.setCanPolicy(dto.canPolicy());
-        entity.setCanAddendum(dto.canAddendum());
-        entity.setCanCancel(dto.canCancel());
-        entity.setCanProlongate(dto.canProlongate());
+
+        entity.setDeleted(Boolean.TRUE.equals(dto.isDeleted()));
+        entity.setCanRead(Boolean.TRUE.equals(dto.canRead()));
+        entity.setCanQuote(Boolean.TRUE.equals(dto.canQuote()));
+        entity.setCanPolicy(Boolean.TRUE.equals(dto.canPolicy()));
+        entity.setCanAddendum(Boolean.TRUE.equals(dto.canAddendum()));
+        entity.setCanCancel(Boolean.TRUE.equals(dto.canCancel()));
+        entity.setCanProlongate(Boolean.TRUE.equals(dto.canProlongate()));
 
         return entity;
     }
 
     public ProductRole toDto(ProductRoleEntity entity) {
+        return toDto(entity, null);
+    }
+
+    public ProductRole toDto(ProductRoleEntity entity, String productName) {
         if (entity == null) {
             return null;
         }
@@ -69,10 +76,8 @@ public class ProductRoleMapper {
             entity.getClient() != null ? entity.getClient().getId() : null,
             entity.getAccount() != null ? entity.getAccount().getId() : null,
             entity.getRoleProductId(),
+            productName,
             entity.getRoleAccount() != null ? entity.getRoleAccount().getId() : null,
-            null,
-            null,
-            null,
             entity.getDeleted(),
             entity.getCanRead(),
             entity.getCanQuote(),

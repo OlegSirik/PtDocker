@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -104,7 +106,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> listSummaries() {
-        checkProductAccess(Action.VIEW, "products");
+
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            null,   // resourceId - list all
+            null,   // resourceAccountId - list all
+            Action.LIST);
+
         return productRepository.listActiveSummaries(getCurrentTenantId()).stream()
                 .map(r -> {
                     Product product = new Product();

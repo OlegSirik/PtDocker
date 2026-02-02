@@ -1,20 +1,23 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import ru.pt.api.dto.auth.Account;
+import ru.pt.api.dto.auth.AccountLogin;
+import ru.pt.api.dto.auth.AccountToken;
+import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.security.SecuredController;
+import ru.pt.api.service.auth.AccountLoginService;
+import ru.pt.api.service.auth.AccountService;
+import ru.pt.api.service.auth.AccountTokenService;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.AccountServiceImpl;
 import ru.pt.auth.service.AdminUserManagementService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Контроллер для управления аккаунтами
@@ -22,6 +25,14 @@ import java.util.Set;
  *
  * URL Pattern: /api/v1/{tenantCode}/admin/accounts
  * tenantCode: pt, vsk, msg
+ * 
+ * Get /v1/{tenantCode}/admin/accounts/{accuntId}
+ * Get /v1/{tenantCode}/admin/accounts/{accuntId}/accounts
+ * Post /v1/{tenantCode}/admin/accounts/{accuntId}/accounts
+ * Get /v1/{tenantCode}/admin/accounts/{accuntId}/subs
+ * Post /v1/{tenantCode}/admin/accounts/{accuntId}/subs
+ * Get /v1/{tenantCode}/admin/accounts/{accuntId}/groups
+ * Post /v1/{tenantCode}/admin/accounts/{accuntId}/groups
  */
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -29,171 +40,239 @@ import java.util.Set;
 public class AccountManagementController extends SecuredController {
 
     private final AdminUserManagementService adminUserManagementService;
-    private final AccountServiceImpl accountService;
+    private final AccountService accountService;
+    private final AccountTokenService accountTokenService;
+    private final AccountLoginService accountLoginService;
 
     public AccountManagementController(SecurityContextHelper securityContextHelper,
-                                      AccountServiceImpl accountService,
+                                      AccountService accountService,
+                                      AccountTokenService accountTokenService,
+                                      AccountLoginService accountLoginService,
                                       AdminUserManagementService adminUserManagementService) {
         super(securityContextHelper);
         this.accountService = accountService;
+        this.accountTokenService = accountTokenService;
+        this.accountLoginService = accountLoginService;
         this.adminUserManagementService = adminUserManagementService;
     }
 
-    /**
-     * GROUP_ADMIN / PRODUCT_ADMIN: Создание аккаунта
-     * POST /api/v1/{tenantCode}/admin/accounts
-     */
-    @PostMapping
-    @PreAuthorize("hasAnyRole('GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createAccount(
-            @RequestBody CreateAccountRequest request) {
-        try {
-            requireAnyRole("GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            //Map<String, Object> result = adminUserManagementService.createAccount(
-            //        request.getParentAccountId(),
-            //        request.getName(),
-            //        request.getNodeType()
-            //);
-
-            //Map<String, Object> response = new HashMap<>();
-            //response.put("id", result.get("id"));
-            //response.put("name", result.get("name"));
-            //response.put("nodeType", result.get("nodeType"));
-            //response.put("parentId", result.get("parentId"));
-
-            return buildCreatedResponse(null, "Account created successfully");
-        } catch (Exception e) {
-            return handleException(e);
-        }
-    }
-
-    /** Get /api/v1/{tenantCode}/admin/accounts/{accuntId}
+    /** Get /v1/{tenantCode}/admin/accounts/{accuntId}
     */
     @GetMapping("/{accountId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> getAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        try {
-            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-            //Map<String, Object> account = adminUserManagementService.getAccount(accountId);
-            //return ResponseEntity.ok(account);
-            return ResponseEntity.ok(null);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+    public ResponseEntity<Account> getAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        Account account = accountService.getAccountById(accountId);
+        return ResponseEntity.ok(account);
     }
 
-    /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
+    /* 
+     * Get /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
     */
     @GetMapping("/{accountId}/accounts")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<?> getAccountAccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        try {
-            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-            //List<Map<String, Object>> accounts = adminUserManagementService.getAccountAccounts(accountId);
-            //return ResponseEntity.ok(accounts);
-            return ResponseEntity.ok(null);
-        } catch (Exception e) {
-            return handleException(e);
-        }
+    public ResponseEntity<List<Account>> getAccountAccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        List<Account> accounts = accountService.getAccounts(accountId);
+        return ResponseEntity.ok(accounts);
     }
 
-    /**
-     * GROUP_ADMIN / PRODUCT_ADMIN: Создание аккаунта
-     * POST /api/v1/{tenantCode}/admin/accounts
+    /*
+     * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
      */
     @PostMapping("/{accountId}/accounts")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<Map<String, Object>> createAccountAccount(
+    public ResponseEntity<Account> createAccountAccount(
             @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
-        try {
-            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            //Map<String, Object> result = adminUserManagementService.createAccount(
-            //        accountId,
-            //        request.getName(),
-            //        request.getNodeType()
-            //);
+        Account account = accountService.createAccount(request.getName(), accountId);
+        return new ResponseEntity<>(account, HttpStatus.CREATED);
+    }
 
-            //Map<String, Object> response = new HashMap<>();
-            //response.put("id", result.get("id"));
-            //response.put("name", result.get("name"));
-            //response.put("nodeType", result.get("nodeType"));
-            //response.put("parentId", result.get("parentId"));
+    /*
+     * Get /api/v1/{tenantCode}/admin/accounts/{accountId}/groups
+    */
+    @GetMapping("/{accountId}/groups")
+    public ResponseEntity<List<Account>> getAccountGroups(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        List<Account> groups = accountService.getGroups(accountId);
+        return ResponseEntity.ok(groups);
+    }
 
-            return buildCreatedResponse(null, "Account created successfully");
-        } catch (Exception e) {
-            return handleException(e);
-        }
+    @PostMapping("/{accountId}/groups")
+    public ResponseEntity<Account> createGroups(
+        @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
+
+        Account account = accountService.createGroup(request.getName(), accountId);
+        return new ResponseEntity<>(account, HttpStatus.CREATED);
+    }
+
+    /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/subaccounts
+     * Get subaccounts under the specified account
+    */
+    @GetMapping("/{accountId}/subaccounts")
+    public ResponseEntity<List<Account>> getAccountSubaccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        List<Account> subaccounts = accountService.getSubaccounts(accountId);
+        return ResponseEntity.ok(subaccounts);
+    }
+
+    @PostMapping("/{accountId}/subaccounts")
+    public ResponseEntity<Account> createSubaccount(
+        @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
+
+        Account account = accountService.createSubaccount(request.getName(), accountId);
+        return new ResponseEntity<>(account, HttpStatus.CREATED);
+    }
+
+    /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/tokens
+     * Get subaccounts under the specified account
+    */
+    @GetMapping("/{accountId}/tokens")
+    public ResponseEntity<List<AccountToken>> getAccountTokens(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        List<AccountToken> tokens = accountTokenService.getTokens(accountId);
+        return ResponseEntity.ok(tokens);
+    }
+
+    @PostMapping("/{accountId}/tokens")
+    public ResponseEntity<AccountToken> createToken(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @RequestBody CreateTokenRequest request) {
+        AccountToken token = accountTokenService.createToken(accountId, request.getToken());
+        return new ResponseEntity<>(token, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{accountId}/tokens/{token}")
+    public ResponseEntity<Void> deleteToken(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @PathVariable String token) {
+        accountTokenService.deleteToken(accountId, token);
+        return ResponseEntity.noContent().build();
     }
 
     /**
-     * GROUP_ADMIN / PRODUCT_ADMIN: Получить иерархию аккаунтов
-     * GET /api/v1/{tenantCode}/admin/accounts/hierarchy
+     * Get all logins for the account
+     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/logins
      */
-    @GetMapping("/hierarchy")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getAccountsHierarchy(@PathVariable String tenantCode) {
-        try {
-            requireAnyRole("SYS_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
-
-            //List<Map<String, Object>> hierarchy = adminUserManagementService.getAccountsHierarchy();
-            //return ResponseEntity.ok(hierarchy);
-            return ResponseEntity.ok(null);
-            //return ResponseEntity.ok(hierarchy);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+    @GetMapping("/{accountId}/logins")
+    public ResponseEntity<List<AccountLogin>> getAccountLogins(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId) {
+        List<AccountLogin> logins = accountLoginService.getLoginsByAccountId(accountId);
+        return ResponseEntity.ok(logins);
     }
 
-    @PostMapping("/createSubaccount")
-    public ResponseEntity<Account> createSubaccount(
-            @PathVariable("tenantCode") String tenantCode,
-            @RequestBody Account account) {
-        Account result = accountService.createSubaccount(account.name(), account.parentId());
-        return ResponseEntity.ok(result);
+    /**
+     * Create login binding for the account
+     * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/logins
+     */
+    @PostMapping("/{accountId}/logins")
+    public ResponseEntity<AccountLogin> createLogin(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @RequestBody AccountLogin login) {
+        AccountLogin createdLogin = accountLoginService.createLogin(accountId, login);
+        return new ResponseEntity<>(createdLogin, HttpStatus.CREATED);
     }
 
-    @GetMapping("/getProductRoles/{accountId}")
-    public ResponseEntity<Object> getProductRoles(
-            @PathVariable("tenantCode") String tenantCode,
-            @PathVariable("accountId") long accountId) {
-        Set<String> result = accountService.getProductRoles(accountId);
-        return ResponseEntity.ok(result.toArray());
+    /**
+     * Delete login binding from the account
+     * DELETE /api/v1/{tenantCode}/admin/accounts/{accountId}/logins/{userLogin}
+     */
+    @DeleteMapping("/{accountId}/logins/{userLogin}")
+    public ResponseEntity<Void> deleteLogin(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @PathVariable String userLogin) {
+        accountLoginService.deleteLogin(accountId, userLogin);
+        return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Get path from acting account to specified account
+     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/path
+     */
+    @GetMapping("/{accountId}/path")    
+    public ResponseEntity<List<Account>> getAccountsHierarchy(
+        @PathVariable String tenantCode, @PathVariable Long accountId) {
+            List<Account> list = accountService.getPathToRoot(accountId);
+            return ResponseEntity.ok(list);
+    }
+
+    /**
+     * Get all product roles for the account
+     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/products
+     */
+    @GetMapping("/{accountId}/products")
+    public ResponseEntity<List<ProductRole>> getAccountProducts(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId) {
+        List<ProductRole> productRoles = accountService.getProductRolesByAccountId(accountId);
+        return ResponseEntity.ok(productRoles);
+    }
+
+    /**
+     * Get specific product role for the account
+     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/products/{productId}
+     */
+    @GetMapping("/{accountId}/products/{productId}")
+    public ResponseEntity<ProductRole> getAccountProduct(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId,
+            @PathVariable Long productId) {
+        ProductRole productRole = accountService.getProductRole(accountId, productId); 
+        return ResponseEntity.ok(productRole);
+    }
+
+    /**
+     * Grant or update product permissions for the account
+     * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/products
+     */
+    @PostMapping("/{accountId}/products")
+    public ResponseEntity<ProductRole> postAccountProduct(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId,
+            @RequestBody ProductRole productRole) {
+        ProductRole savedRole = accountService.grantProduct(accountId, productRole);
+        return ResponseEntity.ok(savedRole);
+    }
+
+    @PutMapping("/{accountId}/products")
+    public ResponseEntity<ProductRole> putAccountProduct(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId,
+            @RequestBody ProductRole productRole) {
+        ProductRole savedRole = accountService.grantProduct(accountId, productRole);
+        return ResponseEntity.ok(savedRole);
+    }
+    /**
+     * Revoke product permissions from the account
+     * DELETE /api/v1/{tenantCode}/admin/accounts/{accountId}/products/{productId}
+     */
+    @DeleteMapping("/{accountId}/products/{productId}")
+    public ResponseEntity<Void> deleteAccountProduct(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId,
+            @PathVariable Long productId) {
+        accountService.revokeProduct(accountId, productId);
+        return ResponseEntity.noContent().build();
+    }
 
     // DTO Classes
     public static class CreateAccountRequest {
-
-    
         private Long parentAccountId;
         private String name;
         private String nodeType;
 
-        public Long getParentAccountId() {
-            return parentAccountId;
-        }
+        public Long getParentAccountId() { return parentAccountId; }
+        public void setParentAccountId(Long parentAccountId) { this.parentAccountId = parentAccountId; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getNodeType() { return nodeType; }
+        public void setNodeType(String nodeType) { this.nodeType = nodeType; }
+    }
 
-        public void setParentAccountId(Long parentAccountId) {
-            this.parentAccountId = parentAccountId;
-        }
+    public static class CreateTokenRequest {
+        private String token;
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getNodeType() {
-            return nodeType;
-        }
-
-        public void setNodeType(String nodeType) {
-            this.nodeType = nodeType;
-        }
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
     }
 }
 

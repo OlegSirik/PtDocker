@@ -2,6 +2,7 @@ package ru.pt.auth.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientAuthType;
 import ru.pt.api.dto.auth.ClientConfiguration;
@@ -27,7 +28,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
-
 
     private final ClientRepository clientRepository;
     private final AccountLoginRepository accountLoginRepository;
@@ -291,10 +291,8 @@ public class ClientService {
             clientId,
             account.getId(),
             productRole.roleProductId(),
+            productRole.roleProductName(),
             account.getId(),
-            productRole.lob(),
-            productRole.productCode(),
-            productRole.productName(),
             false,
             true,
             true,
@@ -310,6 +308,7 @@ public class ClientService {
     // add revoke method as soft delete
     @Transactional
     public void revokeProduct(Long clientId, Long id) {
+
         UserDetailsImpl currentUser = getCurrentUser();
         AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
@@ -319,8 +318,9 @@ public class ClientService {
             .findFirst()
             .orElseThrow(() -> new NotFoundException("Product role not found for id: " + id));
 
-        accountService.revokeProduct(account.getId(), productRole);
-    }
+        accountService.revokeProduct(account.getId(), productRole.id());
+
+        }
 
     
 }

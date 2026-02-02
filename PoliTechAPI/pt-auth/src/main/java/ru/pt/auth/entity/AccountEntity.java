@@ -202,9 +202,10 @@ public class AccountEntity {
     * Создаёт группу под клиентом
     */
     public static AccountEntity groupAccount(AccountEntity parentAccount, String name) {
-    if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+    if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
+            parentAccount.getNodeType() != AccountNodeType.GROUP) {
             throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
+                "Parent account must be of type CLIENT or GROUP, but was " + parentAccount.getNodeType()
             );
         }
         return new AccountEntity(
@@ -218,6 +219,45 @@ public class AccountEntity {
     }
 
     /**
+    * Создаёт группу под клиентом
+    */
+    public static AccountEntity accountAccount(AccountEntity parentAccount, String name) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
+                parentAccount.getNodeType() != AccountNodeType.GROUP) {
+                throw new IllegalArgumentException(
+                    "Parent account must be of type CLIENT or GROUP, but was " + parentAccount.getNodeType()
+                );
+            }
+            return new AccountEntity(
+                null,
+                parentAccount.getTenant(),
+                parentAccount.getClient(),  // копируем клиента с родителя
+                parentAccount,
+                AccountNodeType.ACCOUNT,
+                name
+            );
+        }
+    
+    /**
+    * Создаёт группу под клиентом
+    */
+    public static AccountEntity subaccountAccount(AccountEntity parentAccount, String name) {
+        if (parentAccount.getNodeType() != AccountNodeType.ACCOUNT) {
+                throw new IllegalArgumentException(
+                    "Parent account must be of type ACCOUNT, but was " + parentAccount.getNodeType()
+                );
+            }
+            return new AccountEntity(
+                null,
+                parentAccount.getTenant(),
+                parentAccount.getClient(),  // копируем клиента с родителя
+                parentAccount,
+                AccountNodeType.SUB,
+                name
+            );
+        }
+
+        /**
     * Создаёт стандартный аккаунт под клиентом (например, default)
     */
     public static AccountEntity defaultClientAccount(AccountEntity parentAccount) {

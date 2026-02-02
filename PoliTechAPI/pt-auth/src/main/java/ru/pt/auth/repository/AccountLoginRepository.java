@@ -139,4 +139,10 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
     " LEFT JOIN FETCH al.loginEntity l " +
     " WHERE al.id = :accountLoginId")
     Optional<AccountLoginEntity> findById( @Param("accountLoginId") Long accountLoginId);
+
+    @Query("SELECT al FROM AccountLoginEntity al " +
+           "LEFT JOIN FETCH al.loginEntity l " +
+           "WHERE al.accountEntity.id = :accountId " +
+           "AND (l IS NULL OR l.isDeleted = false)")
+    List<AccountLoginEntity> findByAccountEntityId(@Param("accountId") Long accountId);
 }

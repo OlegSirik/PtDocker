@@ -7,11 +7,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TenantService, Account, Product, LoginAccount } from '../../../shared/services/tenant.service';
+import { AccountService, Account, SubAccount, AccountGroup, Product, LoginAccount, AccountToken } from '../../../shared/services/account.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { MatChipListbox, MatChipOption } from "@angular/material/chips";
 import { MatTabsModule } from '@angular/material/tabs';
-import { EMPTY, Subject } from 'rxjs';
+import { EMPTY, Subject, forkJoin } from 'rxjs';
 import { filter, map, switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { AddGroupDialogComponent } from '../components/add-group-dialog/add-group-dialog.component';
 import { AddAccountDialogComponent } from '../components/add-account-dialog/add-account-dialog.component';
@@ -37,29 +37,30 @@ import { TextDialogComponent } from '../components/text-dialog/text-dialog.compo
 export class AccountDetailPageComponent implements OnInit, OnDestroy {
   accountId: number = 0;
   account: Account | null = null;
-  groups: Account[] = [];
+  path: Account[] = [];
+  groups: AccountGroup[] = [];
   accounts: Account[] = [];
-  subs: Account[] = [];
+  subs: SubAccount[] = [];
   loading = false;
   private destroy$ = new Subject<void>();
 
-  groupsColumns: string[] = ['name', 'path'];
-  accountsColumns: string[] = ['name', 'path'];
+  groupsColumns: string[] = ['name', 'actions'];
+  accountsColumns: string[] = ['name', 'actions'];
   subColumns: string[] = ['name', 'actions'];
-  productsColumns: string[] = ['name', 'can_read', 'can_quote', 'can_policy', 'actions'];
+  productsColumns: string[] = ['roleProductId', 'roleProductName', 'canRead', 'canQuote', 'canPolicy', 'actions'];
   loginsColumns: string[] = ['login', 'actions'];
   tokensColumns: string[] = ['token', 'actions'];
   adminsColumns: string[] = ['admin', 'actions'];
 
   products: Product[] = [];
-  logins: string[] = [];
-  tokens: string[] = [];
+  logins: LoginAccount[] = [];
+  tokens: AccountToken[] = [];
   admins: LoginAccount[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private tenantService: TenantService,
+    private accountService: AccountService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private authService: AuthService
@@ -85,37 +86,53 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   loadAccount() {
     this.loading = true;
-    this.tenantService.getAccount(this.accountId).subscribe({
+    this.accountService.getAccount(this.accountId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (account: Account) => {
-        this.account = account;        
-    
-        this.loading = false;
+        this.account = account;
+        this.loadChildAccounts();
       },
       error: (error: unknown) => {
         console.error('Error loading account:', error);
         this.loading = false;
       }
     });
-    this.loadChildAccounts();
   }
 
-  goToAccount(id: string) {
-    this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', id]);
-  }
-    
   loadChildAccounts() {
     if (!this.accountId) return;
-    
-    this.tenantService.getChildAccounts(this.accountId).subscribe({
-      next: (childAccounts: Account[]) => {
-        this.groups = childAccounts.filter((a: Account) => a.nodeType === 'GROUP');
-        this.accounts = childAccounts.filter((a: Account) => a.nodeType === 'ACCOUNT');
-        this.subs = childAccounts.filter((a: Account) => a.nodeType === 'SUB');
+
+    forkJoin({
+      path: this.accountService.getPath(this.accountId),
+      groups: this.accountService.getGroups(this.accountId),
+      accounts: this.accountService.getAccounts(this.accountId),
+      subs: this.accountService.getSubs(this.accountId),
+      products: this.accountService.getProducts(this.accountId),
+      logins: this.accountService.getLogins(this.accountId),
+      tokens: this.accountService.getTokens(this.accountId)
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ({ path, groups, accounts, subs, products, logins, tokens }) => {
+        this.path = path;
+        this.groups = groups;
+        this.accounts = accounts;
+        this.subs = subs;
+        this.products = products;
+        this.logins = logins;
+        this.tokens = tokens;
+        this.loading = false;
       },
       error: (error: unknown) => {
-        console.error('Error loading child accounts:', error);
+        console.error('Error loading account data:', error);
+        this.loading = false;
       }
     });
+  }
+
+  goToAccount(id: number) {
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', id]);
   }
 
   goUp() {
@@ -141,7 +158,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
           //path: ''
         };
 
-        this.tenantService.createAccount(newAccount).subscribe({
+        this.accountService.createAccount(newAccount).subscribe({
           next: () => {
             this.loadChildAccounts();
           },
@@ -153,9 +170,24 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  editGroup(group: Account) {
+  editGroup(group: AccountGroup) {
     if (group.id) {
       this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', group.id]);
+    }
+  }
+
+  deleteGroup(group: AccountGroup) {
+    if (confirm(`Удалить группу "${group.name}"?`)) {
+      this.accountService.deleteAccount(group.id).subscribe({
+        next: () => {
+          this.groups = this.groups.filter(g => g.id !== group.id);
+          this.snackBar.open('Группа удалена', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting group:', error);
+          this.snackBar.open('Ошибка при удалении группы', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 
@@ -176,7 +208,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 //          path: ''
         };
 
-        this.tenantService.createAccount(newAccount).subscribe({
+        this.accountService.createAccount(newAccount).subscribe({
           next: () => {
             this.loadChildAccounts();
           },
@@ -194,6 +226,21 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  deleteAccount(account: Account) {
+    if (confirm(`Удалить аккаунт "${account.name}"?`)) {
+      this.accountService.deleteAccount(account.id).subscribe({
+        next: () => {
+          this.accounts = this.accounts.filter(a => a.id !== account.id);
+          this.snackBar.open('Аккаунт удалён', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting account:', error);
+          this.snackBar.open('Ошибка при удалении аккаунта', 'OK', { duration: 3000 });
+        }
+      });
+    }
+  }
+
   addSub() {
     const dialogRef = this.dialog.open(AddAccountDialogComponent, {
       width: '400px'
@@ -201,7 +248,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && this.account) {
-        const newAccount: Account = {
+        const newSub: SubAccount = {
           id: 0,
           tid: this.account.tid,
           clientId: this.account.clientId,
@@ -210,7 +257,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
           name: result
         };
 
-        this.tenantService.createAccount(newAccount).subscribe({
+        this.accountService.createSub(newSub).subscribe({
           next: () => {
             this.loadChildAccounts();
           },
@@ -222,9 +269,24 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  viewAccount(account: Account) {
+  viewAccount(account: Account | SubAccount) {
     if (account.id) {
       this.router.navigate(['/', this.authService.tenant, 'admin', 'accounts', account.id]);
+    }
+  }
+
+  deleteSub(sub: SubAccount) {
+    if (confirm(`Удалить субаккаунт "${sub.name}"?`)) {
+      this.accountService.deleteAccount(sub.id).subscribe({
+        next: () => {
+          this.subs = this.subs.filter(s => s.id !== sub.id);
+          this.snackBar.open('Субаккаунт удалён', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting sub account:', error);
+          this.snackBar.open('Ошибка при удалении субаккаунта', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 
@@ -233,21 +295,21 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     if (!this.account) return;
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '400px',
-      data: { product: null, tid: this.account.tid }
+      data: { product: null, accountId: this.accountId }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (!this.account) return;
-        this.tenantService.addProduct(this.account.tid, this.account.clientId, this.account.id, result).subscribe({
+      if (result && this.account) {
+        this.accountService.addProduct(this.accountId, result).subscribe({
           next: (product: Product) => {
             this.products = [...this.products, product];
+            this.snackBar.open('Продукт добавлен', 'OK', { duration: 2000 });
           },
           error: (error: unknown) => {
             console.error('Error adding product:', error);
+            this.snackBar.open('Ошибка при добавлении продукта', 'OK', { duration: 3000 });
           }
         });
-        this.persistAccountExtras();
       }
     });
   }
@@ -256,97 +318,127 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     if (!this.account) return;
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '400px',
-      data: { product, tid: this.account.tid }
+      data: { product, accountId: this.accountId }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.products = this.products.map(p => p.id === product.id ? { ...p, ...result } : p);
-        this.persistAccountExtras();
+        this.accountService.updateProduct(this.accountId, result).subscribe({
+          next: (saved: Product) => {
+            this.products = this.products.map(p => p.id === product.id ? saved : p);
+            this.snackBar.open('Продукт обновлён', 'OK', { duration: 2000 });
+          },
+          error: (error: unknown) => {
+            console.error('Error updating product:', error);
+            this.snackBar.open('Ошибка при обновлении продукта', 'OK', { duration: 3000 });
+          }
+        });
       }
     });
   }
 
   deleteProduct(product: Product) {
-    if (confirm('Delete product?')) {
-      this.products = this.products.filter(p => p.id !== product.id);
-      this.persistAccountExtras();
+    if (!product.id) return;
+    if (confirm('Удалить продукт?')) {
+      this.accountService.deleteProduct(this.accountId, product.id).subscribe({
+        next: () => {
+          this.products = this.products.filter(p => p.id !== product.id);
+          this.snackBar.open('Продукт удалён', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting product:', error);
+          this.snackBar.open('Ошибка при удалении продукта', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 
   // Logins
   addLogin() {
+    if (!this.account) return;
     const dialogRef = this.dialog.open(TextDialogComponent, {
       width: '400px',
       data: { title: 'Add Login', label: 'Login' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.logins = [...this.logins, result];
-        this.persistAccountExtras();
+      if (result && this.account) {
+        const login: LoginAccount = { userLogin: result.trim() };
+        this.accountService.addLogin(this.accountId, login).subscribe({
+          next: (created: LoginAccount) => {
+            this.logins = [...this.logins, created];
+            this.snackBar.open('Login added', 'OK', { duration: 2000 });
+          },
+          error: (error: unknown) => {
+            console.error('Error adding login:', error);
+            this.snackBar.open('Error adding login', 'OK', { duration: 3000 });
+          }
+        });
       }
     });
   }
 
-  editLogin(login: string, index: number) {
-    const dialogRef = this.dialog.open(TextDialogComponent, {
-      width: '400px',
-      data: { title: 'Edit Login', label: 'Login', value: login }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.logins[index] = result;
-        this.logins = [...this.logins];
-        this.persistAccountExtras();
-      }
-    });
+  editLogin(login: LoginAccount, index: number) {
+    // Logins are not editable - navigate or just view
   }
 
-  deleteLogin(index: number) {
-    if (confirm('Delete login?')) {
-      this.logins.splice(index, 1);
-      this.logins = [...this.logins];
-      this.persistAccountExtras();
+  deleteLogin(login: LoginAccount) {
+    if (!login.userLogin) return;
+    if (confirm(`Delete login "${login.userLogin}"?`)) {
+      this.accountService.deleteLogin(this.accountId, login.userLogin).subscribe({
+        next: () => {
+          this.logins = this.logins.filter(l => l.userLogin !== login.userLogin);
+          this.snackBar.open('Login deleted', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting login:', error);
+          this.snackBar.open('Error deleting login', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 
   // Tokens
   addToken() {
+    if (!this.account) return;
     const dialogRef = this.dialog.open(TextDialogComponent, {
       width: '400px',
       data: { title: 'Add Token', label: 'Token' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tokens = [...this.tokens, result];
-        this.persistAccountExtras();
+      if (result && this.account) {
+        this.accountService.addToken(this.accountId, result.trim()).subscribe({
+          next: (created: AccountToken) => {
+            this.tokens = [...this.tokens, created];
+            this.snackBar.open('Token added', 'OK', { duration: 2000 });
+          },
+          error: (error: unknown) => {
+            console.error('Error adding token:', error);
+            this.snackBar.open('Error adding token', 'OK', { duration: 3000 });
+          }
+        });
       }
     });
   }
 
-  editToken(token: string, index: number) {
-    const dialogRef = this.dialog.open(TextDialogComponent, {
-      width: '400px',
-      data: { title: 'Edit Token', label: 'Token', value: token }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tokens[index] = result;
-        this.tokens = [...this.tokens];
-        this.persistAccountExtras();
-      }
-    });
+  editToken(token: AccountToken, index: number) {
+    // Tokens are not editable - just view
   }
 
-  deleteToken(index: number) {
-    if (confirm('Delete token?')) {
-      this.tokens.splice(index, 1);
-      this.tokens = [...this.tokens];
-      this.persistAccountExtras();
+  deleteToken(token: AccountToken) {
+    if (!token.token) return;
+    if (confirm(`Delete token "${token.token}"?`)) {
+      this.accountService.deleteToken(this.accountId, token.token).subscribe({
+        next: () => {
+          this.tokens = this.tokens.filter(t => t.token !== token.token);
+          this.snackBar.open('Token deleted', 'OK', { duration: 2000 });
+        },
+        error: (error: unknown) => {
+          console.error('Error deleting token:', error);
+          this.snackBar.open('Error deleting token', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 
@@ -370,10 +462,10 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
           isDefault: false
         };
 
-        this.tenantService.addLogin(this.account.id, login).subscribe({
+        this.accountService.addLogin(this.account.id, login).subscribe({
           next: () => {
             if (!this.account) return;
-            this.tenantService.getLogins(this.account.id, 10, 0).subscribe({
+            this.accountService.getLogins(this.account.id).subscribe({
               next: (logins: LoginAccount[]) => {
                 this.admins = logins;
               },
@@ -414,12 +506,12 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
     if (!this.account) return;
     const updated: Account = {
       ...this.account,
-      products: this.products,
-      logins: this.logins,
-      tokens: this.tokens,
-      admins: this.admins
+      //products: this.products,
+      //logins: this.logins,
+      //tokens: this.tokens,
+      //admins: this.admins
     };
-    this.tenantService.updateAccount(updated).subscribe({
+    this.accountService.updateAccount(updated).subscribe({
       next: (acc: Account) => { this.account = acc; },
       error: (e: unknown) => console.error('Error saving account extras', e)
     });

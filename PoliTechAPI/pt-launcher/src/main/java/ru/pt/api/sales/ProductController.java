@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/products")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN') or hasRole('PRODUCT_ADMIN')")
+//@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN') or hasRole('PRODUCT_ADMIN')")
 public class ProductController extends SecuredController {
 
     private final ProductService productService;
