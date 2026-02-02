@@ -66,7 +66,7 @@ public class AccountServiceImpl implements AccountService {
             AuthZ.ResourceType.ACCOUNT, 
             parentId.toString(),
             parentId,
-            AuthZ.Action.CREATE);
+            AuthZ.Action.MANAGE);
 
         AccountEntity parentAccount = accountRepository.findById(parentId)
                 .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
@@ -98,7 +98,7 @@ public class AccountServiceImpl implements AccountService {
             AuthZ.ResourceType.ACCOUNT, 
             parentId.toString(),
             parentId,
-            AuthZ.Action.CREATE);
+            AuthZ.Action.MANAGE);
 
         AccountEntity parentAccount = accountRepository.findById(parentId)
                 .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
@@ -117,7 +117,7 @@ public class AccountServiceImpl implements AccountService {
             AuthZ.ResourceType.ACCOUNT, 
             parentId.toString(),
             parentId,
-            AuthZ.Action.VIEW);
+            AuthZ.Action.LIST);
 
         return accountDataService.getAccounts(parentId);
     } 
@@ -130,7 +130,7 @@ public class AccountServiceImpl implements AccountService {
             AuthZ.ResourceType.ACCOUNT, 
             parentId.toString(),
             parentId,
-            AuthZ.Action.CREATE);
+            AuthZ.Action.MANAGE);
 
         AccountEntity parentAccount = accountRepository.findById(parentId)
                 .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
@@ -159,10 +159,10 @@ public class AccountServiceImpl implements AccountService {
     public ProductRole getProductRole(Long accountId, Long productId) {
         authService.check(
             getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
+            AuthZ.ResourceType.ACCOUNT_PRODUCT, 
             accountId.toString(),
             accountId,
-            AuthZ.Action.PERMISSION);
+            AuthZ.Action.VIEW);
 
         return accountDataService.getProductRole(accountId, productId);
     }
@@ -174,10 +174,10 @@ public class AccountServiceImpl implements AccountService {
         // проверить доступ к account
         authService.check(
             getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
+            AuthZ.ResourceType.ACCOUNT_PRODUCT, 
             accountId.toString(),
             accountId,
-            AuthZ.Action.PERMISSION);
+            AuthZ.Action.MANAGE);
 
         AccountEntity account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Account not found: " + accountId));
@@ -218,10 +218,10 @@ public class AccountServiceImpl implements AccountService {
         // проверить доступ к account
         authService.check(
             getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
+            AuthZ.ResourceType.ACCOUNT_PRODUCT, 
             accountId.toString(),
             accountId,
-            AuthZ.Action.PERMISSION);
+            AuthZ.Action.MANAGE);
 
         // Find and delete the product role directly
         ProductRoleEntity roleToRemove = productRoleRepository.findByAccountIdAndProductId(accountId, productId);
@@ -236,10 +236,10 @@ public class AccountServiceImpl implements AccountService {
         // проверить доступ к account
         authService.check(
             getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
+            AuthZ.ResourceType.ACCOUNT_PRODUCT, 
             accountId.toString(),
             accountId,
-            AuthZ.Action.PERMISSION);
+            AuthZ.Action.LIST);
 
         return accountDataService.getProductRolesByAccountIdRaw(accountId);
     }

@@ -3,8 +3,8 @@ package ru.pt.auth.security;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.entity.AccountLoginEntity;
-import ru.pt.auth.entity.LoginEntity;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Реализация UserDetails для Spring Security.
+ * Реализация UserDetails для Spring Security и AuthenticatedUser для бизнес-логики.
  * Содержит информацию о пользователе, его аккаунте и ролях продуктов.
  */
-public class UserDetailsImpl implements UserDetails {
+public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
     /*
     principal (accountId) — WHO
     acting account — WHERE
@@ -151,47 +151,75 @@ public class UserDetailsImpl implements UserDetails {
         return enabled;
     }
 
-    // Дополнительные геттеры для бизнес-логики
+    // ===== AuthenticatedUser interface implementation =====
 
+    @Override
     public Long getId() {
         return id;
     }
 
+    @Override
     public String getTenantCode() {
         return tenantCode;
     }
 
+    @Override
     public Long getTenantId() {
         return tenantId;
     }
 
+    @Override
     public Long getAccountId() {
         return accountId;
     }
 
+    @Override
     public String getAccountName() {
         return accountName;
     }
 
+    @Override
     public Long getClientId() {
         return clientId;
     }
 
+    @Override
     public String getClientName() {
         return clientName;
     }
 
+    @Override
     public String getUserRole() {
         return userRole;
     }
 
+    @Override
     public Set<String> getProductRoles() {
         return productRoles;
     }
 
+    @Override
     public boolean isDefault() {
         return isDefault;
     }
+
+    @Override
+    public Long getActingAccountId() {
+        return this.actingAccountId;
+    }
+
+    @Override
+    public boolean hasProductRole(String productRole) {
+        return productRoles.stream()
+                .anyMatch(role -> role.contains(productRole));
+    }
+
+    @Override
+    public boolean canPerformAction(String productCode, String action) {
+        return productRoles.contains(productCode + "_" + action);
+    }
+
+    // ===== Additional methods (not in AuthenticatedUser) =====
 
     public String getImpersonatedTenantCode() {
         return impersonatedTenantCode;
@@ -199,25 +227,6 @@ public class UserDetailsImpl implements UserDetails {
 
     public void setImpersonatedTenantCode(String impersonatedTenantCode) {
         this.impersonatedTenantCode = impersonatedTenantCode;
-    }
-
-    public Long getActingAccountId() {
-        return this.actingAccountId;
-    }
-
-    /**
-     * Проверяет, есть ли у пользователя определенная роль продукта
-     */
-    public boolean hasProductRole(String productRole) {
-        return productRoles.stream()
-                .anyMatch(role -> role.contains(productRole));
-    }
-
-    /**
-     * Проверяет, может ли пользователь выполнять операцию над продуктом
-     */
-    public boolean canPerformAction(String productCode, String action) {
-        return productRoles.contains(productCode + "_" + action);
     }
 }
 

@@ -17,8 +17,8 @@ import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.db.StorageService;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.db.entity.PolicyEntity;
 import ru.pt.db.entity.PolicyIndexEntity;
 import ru.pt.db.repository.PolicyIndexRepository;
@@ -48,16 +48,14 @@ public class DbStorageService implements StorageService {
     private final PolicyMapper policyMapper;
     private final PolicyReport policyReport;
 
-    public PolicyData save(PolicyDTO policy, UserDetails userData) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
-
+    public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
         if (policy.getId() == null || policy.getId().isEmpty()) {
             policy.setId( UUID.randomUUID().toString() );
         }
         
         var entity = policyMapper.policyEntityFromDTO(policy, userData);
-        entity.setTid( userDetails.getTenantId());
-        entity.setCid( userDetails.getClientId());
+        entity.setTid(userData.getTenantId());
+        entity.setCid(userData.getClientId());
         policyRepository.save(entity);
 
         var index = policyMapper.policyIndexFromDTO(policy, userData);
@@ -75,22 +73,21 @@ public class DbStorageService implements StorageService {
 
     @Transactional
     @Override
-    public PolicyData save(String policy, UserDetails userData, Version version, UUID uuid) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+    public PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid) {
 
         var entity = new PolicyEntity();
         entity.setId(uuid);
-        entity.setTid( userDetails.getTenantId());
-        entity.setCid( userDetails.getClientId());
+        entity.setTid(userData.getTenantId());
+        entity.setCid(userData.getClientId());
         entity.setPolicy(policy);
         policyRepository.save(entity);
 
         var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
         index.setVersionNo(1);
 
-        index.setTid( userDetails.getTenantId());
-        index.setClientAccountId(userDetails.getClientId());
-        index.setUserAccountId(userDetails.getAccountId());
+        index.setTid(userData.getTenantId());
+        index.setClientAccountId(userData.getClientId());
+        index.setUserAccountId(userData.getAccountId());
         
         policyIndexRepository.save(index);
 
@@ -115,7 +112,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     @Transactional
-    public PolicyData update(String policy, UserDetails userData, Version version, String policyNumber) {
+    public PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber) {
         return policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
                 .map(idx -> {
                     var uuid = idx.getPolicyId();

@@ -47,7 +47,7 @@ public abstract class SecuredController extends ApiExceptionHandler {
      */
     protected UserDetailsImpl getCurrentUser() {
         return securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new ForbiddenException("User not authenticated"));
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
     }
 
     /**

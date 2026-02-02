@@ -26,8 +26,8 @@ import ru.pt.api.dto.payment.PolicyPurchaseCallbackRequest;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.payment.PaymentClient;
 import ru.pt.api.service.payment.PolicyPurchaseCallbackApi;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.ClientService;
 
 import java.math.BigDecimal;
@@ -155,7 +155,7 @@ public class YoukassaPaymentClient implements PaymentClient {
     }
 
     private ClientConfiguration resolveClientConfiguration() {
-        UserDetailsImpl currentUser = securityContextHelper.getCurrentUser()
+        AuthenticatedUser currentUser = securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new IllegalStateException("User is not authenticated"));
 
         if (currentUser.getClientId() == null) {

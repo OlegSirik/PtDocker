@@ -20,8 +20,8 @@ import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.calculator.entity.CalculatorEntity;
 import ru.pt.calculator.repository.CalculatorRepository;
 import ru.pt.calculator.utils.ValidatorImpl;
@@ -51,11 +51,11 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     /**
      * Get current authenticated user from security context
-     * @return UserDetailsImpl representing the current user
+     * @return AuthenticatedUser representing the current user
      * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
      */
-    protected UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
     }
 

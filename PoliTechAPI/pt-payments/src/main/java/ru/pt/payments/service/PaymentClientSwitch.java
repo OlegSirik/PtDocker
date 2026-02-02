@@ -3,8 +3,8 @@ package ru.pt.payments.service;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.service.payment.PaymentClient;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.ClientService;
 
 import java.util.Map;
@@ -24,12 +24,12 @@ public class PaymentClientSwitch {
         this.securityContextHelper = securityContextHelper;
     }
 
-    public PaymentClient getPaymentClient(UserDetailsImpl userDetails) {
+    public PaymentClient getPaymentClient(AuthenticatedUser userDetails) {
         return resolveClient(userDetails.getClientId());
     }
 
     public PaymentClient getCurrentPaymentClient() {
-        UserDetailsImpl currentUser = securityContextHelper.getCurrentUser()
+        AuthenticatedUser currentUser = securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new IllegalStateException("User is not authenticated"));
         return resolveClient(currentUser.getClientId());
     }

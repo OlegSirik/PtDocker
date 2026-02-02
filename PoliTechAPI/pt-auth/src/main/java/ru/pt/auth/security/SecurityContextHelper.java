@@ -3,6 +3,7 @@ package ru.pt.auth.security;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import ru.pt.api.security.AuthenticatedUser;
 
 import java.util.Optional;
 
@@ -13,7 +14,28 @@ import java.util.Optional;
 public class SecurityContextHelper {
 
     /**
-     * Получает текущего аутентифицированного пользователя
+     * Получает текущего аутентифицированного пользователя как AuthenticatedUser интерфейс.
+     * Используйте этот метод в бизнес-сервисах для уменьшения связанности.
+     */
+    public Optional<AuthenticatedUser> getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof AuthenticatedUser) {
+            return Optional.of((AuthenticatedUser) principal);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Получает текущего аутентифицированного пользователя как UserDetailsImpl.
+     * Используйте этот метод только в pt-auth модуле где нужен доступ к Spring Security.
      */
     public Optional<UserDetailsImpl> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.ForbiddenException;
-import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.service.AccountDataService;
 
 /**
@@ -18,21 +18,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     private final AccountDataService accountDataService;
 
+    @Override
     public void check(
-            UserDetailsImpl user,
+            AuthenticatedUser user,
             AuthZ.ResourceType resourceType,
             String resourceId,
-            Long resoureAccountId,
+            Long resourceAccountId,
             AuthZ.Action action
     ) {
         
-        Long myAccountId = user.getAccountId();
         Long actingAccountId = user.getActingAccountId();
-        String myRoleName = user.getUserRole();
 
         // Account hierarchy check (SQL)
-        if (resoureAccountId != null) {
-            if (!accountDataService.isParent(actingAccountId, resoureAccountId)) {
+        if (resourceAccountId != null) {
+            if (!accountDataService.isParent(actingAccountId, resourceAccountId)) {
                 throw new ForbiddenException("Нет доступа к ресурсу");
             }
         }

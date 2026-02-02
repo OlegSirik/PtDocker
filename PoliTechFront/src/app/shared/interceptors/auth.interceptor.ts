@@ -52,7 +52,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           // Just pass error through
         } else {
           // For POST, PUT, DELETE: show error message from API response
-          errorHandler.handleError(error, 'Доступ запрещён');
+          // Combine Russian text with API message
+          const apiMessage = error.error?.message || '';
+          const combinedMessage = apiMessage 
+            ? `Доступ запрещён: ${apiMessage}` 
+            : 'Доступ запрещён';
+          
+          // Create modified error with combined message for display
+          const displayError = {
+            ...error,
+            error: {
+              ...error.error,
+              code: error.error?.code || 403,
+              message: combinedMessage
+            }
+          };
+          errorHandler.handleError(displayError, combinedMessage);
         }
         // Don't redirect to forbidden page anymore
       }

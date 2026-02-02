@@ -53,7 +53,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
             AuthZ.ResourceType.LOGIN,
             userLogin,
             accountId,
-            AuthZ.Action.CREATE
+            AuthZ.Action.MANAGE
         );
 
         // Check if login already exists for this account
@@ -122,7 +122,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
             AuthZ.ResourceType.LOGIN,
             userLogin,
             accountId,
-            AuthZ.Action.DELETE
+            AuthZ.Action.MANAGE
         );
 
         AccountLoginEntity accountLoginEntity = accountLoginRepository

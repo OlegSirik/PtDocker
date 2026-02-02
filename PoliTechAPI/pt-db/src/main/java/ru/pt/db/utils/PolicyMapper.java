@@ -17,10 +17,9 @@ import java.util.UUID;
 import static java.time.ZonedDateTime.ofInstant;
 import static java.util.Optional.ofNullable;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
-import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.api.security.AuthenticatedUser;
 
 @Component
 public class PolicyMapper {
@@ -83,7 +82,7 @@ public class PolicyMapper {
         }
     }
 
-    public PolicyEntity policyEntityFromDTO(PolicyDTO policy, UserDetails userData) {
+    public PolicyEntity policyEntityFromDTO(PolicyDTO policy, AuthenticatedUser userData) {
 
         ProcessList processList = policy.getProcessList();
         policy.setProcessList(null);
@@ -97,10 +96,7 @@ public class PolicyMapper {
         return entity;
     }
 
-    public PolicyIndexEntity policyIndexFromDTO(PolicyDTO policy, UserDetails userData) {
-
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) userData;
+    public PolicyIndexEntity policyIndexFromDTO(PolicyDTO policy, AuthenticatedUser userData) {
         
         ProcessList processList = policy.getProcessList();
         String phDigest = processList.getPhDigest();
@@ -119,9 +115,9 @@ public class PolicyMapper {
         index.setPaymentDate(null);
         index.setStartDate(policy.getStartDate());
         index.setEndDate(policy.getEndDate());
-        index.setTid( userDetails.getTenantId());
-        index.setUserAccountId(  userDetails.getAccountId());
-        index.setClientAccountId(userDetails.getClientId());
+        index.setTid(userData.getTenantId());
+        index.setUserAccountId(userData.getAccountId());
+        index.setClientAccountId(userData.getClientId());
 //        index.setVersionStatus(policy.getVersionStatus());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());

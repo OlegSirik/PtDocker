@@ -1,8 +1,8 @@
 package ru.pt.api.service.db;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.versioning.Version;
+import ru.pt.api.security.AuthenticatedUser;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,17 +21,15 @@ public interface StorageService {
      * @param uuid идентификатор договора/процесса
      * @return сохраненный договор
      */
-    PolicyData save(String policy, UserDetails userData, Version version, UUID uuid);
+    PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid);
 
     /**
      * Сохранить полис
      * @param policy договор
      * @param userData данные о пользователе
-     * @param version версия под которой создан договор
-     * @param uuid идентификатор договора/процесса
      * @return сохраненный договор
      */
-    PolicyData save(PolicyDTO policy, UserDetails userData);
+    PolicyData save(PolicyDTO policy, AuthenticatedUser userData);
     /**
      * Обновить договор целиком
      * @param policyData данные договора для сохранения
@@ -47,7 +45,7 @@ public interface StorageService {
      * @param policyNumber номер полиса для обновления
      * @return обновленный договор
      */
-    PolicyData update(String policy, UserDetails userData, Version version, String policyNumber);
+    PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber);
 
     /**
      * Получить данные по айди договора

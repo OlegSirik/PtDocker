@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.product.LobService;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.product.entity.LobEntity;
 import ru.pt.product.repository.LobRepository;
 
@@ -39,11 +39,11 @@ public class LobServiceImpl implements LobService {
 
     /**
      * Get current authenticated user from security context
-     * @return UserDetailsImpl representing the current user
+     * @return AuthenticatedUser representing the current user
      * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
-    protected UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 

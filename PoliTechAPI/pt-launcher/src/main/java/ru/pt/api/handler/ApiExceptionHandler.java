@@ -46,10 +46,10 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<String> handleForbiddenException(ForbiddenException ex) {
+    public ResponseEntity<ErrorModel> handleForbiddenException(ForbiddenException ex) {
         log.error("Error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ex.getMessage());
+                .body(ex.getErrorModel());
     }
 
     @ExceptionHandler(UnauthorizedException.class)

@@ -5,8 +5,8 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.service.numbers.NumberGeneratorService;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.numbers.entity.NumberGeneratorEntity;
 import ru.pt.numbers.repository.NumberGeneratorRepository;
 import ru.pt.numbers.utils.NumberGeneratorMapper;
@@ -37,11 +37,11 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
     /**
      * Get current authenticated user from security context
-     * @return UserDetailsImpl representing the current user
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
+     * @return AuthenticatedUser representing the current user
+     * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
-    protected UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 

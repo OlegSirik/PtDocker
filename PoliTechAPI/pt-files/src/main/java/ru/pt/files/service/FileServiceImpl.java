@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.file.FileModel;
 import ru.pt.api.service.file.FileService;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
 
@@ -91,11 +91,11 @@ public class FileServiceImpl implements FileService {
 
     /**
      * Get current authenticated user from security context
-     * @return UserDetailsImpl representing the current user
+     * @return AuthenticatedUser representing the current user
      * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
      */
-    protected UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
     }
 

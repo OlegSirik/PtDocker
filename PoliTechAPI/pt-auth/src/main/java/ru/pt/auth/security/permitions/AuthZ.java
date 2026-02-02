@@ -24,6 +24,7 @@ public final class AuthZ {
         LOB,
         PRODUCT,
         ACCOUNT,
+        ACCOUNT_PRODUCT,
         TOKEN,
         LOGIN
     }
@@ -31,13 +32,17 @@ public final class AuthZ {
     /** Действия */
     public enum Action {
         ALL, // любые дефствия с объектом
-        VIEW,
-        CREATE,
+        VIEW, // просматривать весь объект
+        LIST, // видеть краткий список всех объектов
+        MANAGE, // = CRUD
+
+        GO2PROD,  // только для договора - вывод версии в прод
+        CREATE // создание новой записи 
+/*         
+        
         UPDATE,
         DELETE,
-        LIST,   // получить список
         PERMISSION,  // изменять права  
-        GO2PROD,
         QUOTE,
         ISSUE,
         CANCEL,
@@ -45,7 +50,8 @@ public final class AuthZ {
         ASSIGN,
         CLOSE,
         PRINT
-    }
+*/
+        }
 
     /** Роли пользователей */
     public enum Role {
@@ -53,7 +59,8 @@ public final class AuthZ {
         TNT_ADMIN("TNT_ADMIN"),
         GROUP_ADMIN("GROUP_ADMIN"),
         PRODUCT_ADMIN("PRODUCT_ADMIN"),
-        SALE("SALE");
+        ACCOUNT("ACCOUNT"),
+        SUB("SUB");
 
         private final String value;
 
@@ -80,20 +87,21 @@ public final class AuthZ {
         // ======================
         // Action applicability
         // ======================
-        MATRIX.put(ResourceType.TENANT, EnumSet.of(Action.ALL));
-        MATRIX.put(ResourceType.CLIENT, EnumSet.of(Action.ALL));
-        MATRIX.put(ResourceType.CLIENT_PRODUCTS, EnumSet.of(Action.ALL));
-        MATRIX.put(ResourceType.TENANT_ADMIN, EnumSet.of(Action.ALL));
+        MATRIX.put(ResourceType.TENANT, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
+        MATRIX.put(ResourceType.CLIENT, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
+        MATRIX.put(ResourceType.CLIENT_PRODUCTS, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
+        MATRIX.put(ResourceType.TENANT_ADMIN, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
 
-        MATRIX.put(ResourceType.LOB, EnumSet.of(Action.VIEW, Action.ALL));
+        MATRIX.put(ResourceType.LOB, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
         
         //  
-        MATRIX.put(ResourceType.PRODUCT, EnumSet.of(Action.VIEW, Action.LIST, Action.ALL));
+        MATRIX.put(ResourceType.PRODUCT, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
 
-        MATRIX.put(ResourceType.ACCOUNT, EnumSet.of(Action.CREATE, Action.UPDATE, Action.VIEW, Action.PERMISSION));
+        MATRIX.put(ResourceType.ACCOUNT, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
+        MATRIX.put(ResourceType.ACCOUNT_PRODUCT, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
 
-        MATRIX.put(ResourceType.TOKEN, EnumSet.of(Action.CREATE, Action.DELETE, Action.LIST));
-        MATRIX.put(ResourceType.LOGIN, EnumSet.of(Action.CREATE, Action.DELETE, Action.LIST));
+        MATRIX.put(ResourceType.TOKEN, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
+        MATRIX.put(ResourceType.LOGIN, EnumSet.of(Action.MANAGE, Action.LIST, Action.VIEW));
 
 
         // ======================
@@ -109,15 +117,13 @@ public final class AuthZ {
     ROLE_PERMISSIONS.put(Role.TNT_ADMIN, Set.of(
         formatPermission(ResourceType.TENANT, Action.ALL),
         formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
-        formatPermission(ResourceType.PRODUCT, Action.CREATE),
+        formatPermission(ResourceType.PRODUCT, Action.MANAGE),
         formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
-        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.UPDATE),
+        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.MANAGE),
         formatPermission(ResourceType.PRODUCT, Action.LIST),
 // ToDo - delete it just to test
-        formatPermission(ResourceType.ACCOUNT, Action.CREATE),
+        formatPermission(ResourceType.ACCOUNT, Action.MANAGE),
         formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
-        formatPermission(ResourceType.ACCOUNT, Action.UPDATE),
-        formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
 
         formatPermission(ResourceType.TOKEN, Action.ALL),
         formatPermission(ResourceType.LOGIN, Action.ALL)
@@ -128,14 +134,11 @@ public final class AuthZ {
         ROLE_PERMISSIONS.put(Role.PRODUCT_ADMIN, Set.of(
                 formatPermission(ResourceType.TENANT, Action.ALL),
                 formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
-                formatPermission(ResourceType.PRODUCT, Action.CREATE),
-                formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
-                formatPermission(ResourceType.CLIENT_PRODUCTS, Action.UPDATE),
+                formatPermission(ResourceType.PRODUCT, Action.ALL),
+                formatPermission(ResourceType.CLIENT_PRODUCTS, Action.ALL),
 // ToDo - delete it just to test
-                formatPermission(ResourceType.ACCOUNT, Action.CREATE),
-                formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
-                formatPermission(ResourceType.ACCOUNT, Action.UPDATE),
-                formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
+                formatPermission(ResourceType.ACCOUNT, Action.MANAGE),
+//                formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
 
                 formatPermission(ResourceType.TOKEN, Action.ALL),
                 formatPermission(ResourceType.LOGIN, Action.ALL)

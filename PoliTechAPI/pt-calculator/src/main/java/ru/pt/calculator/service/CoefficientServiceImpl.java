@@ -13,8 +13,8 @@ import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.calculator.entity.CoefficientDataEntity;
 import ru.pt.calculator.repository.CoefficientDataRepository;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.api.dto.exception.BadRequestException;
 
 import java.util.List;
@@ -37,8 +37,8 @@ public class CoefficientServiceImpl implements CoefficientService {
         this.securityContextHelper = securityContextHelper;
         }
 
-    protected UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
     }
 

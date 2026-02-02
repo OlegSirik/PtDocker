@@ -45,7 +45,7 @@ public class AccountTokenServiceImpl implements AccountTokenService {
             AuthZ.ResourceType.TOKEN,
             token,
             accountId,
-            AuthZ.Action.CREATE
+            AuthZ.Action.MANAGE
         );
 
         AccountEntity clientAccount = accountRepository.findById(accountId)
@@ -88,7 +88,7 @@ public class AccountTokenServiceImpl implements AccountTokenService {
             AuthZ.ResourceType.TOKEN,
             token,
             accountId,
-            AuthZ.Action.DELETE
+            AuthZ.Action.MANAGE
         );
 
         AccountTokenEntity tokenEntity = accountTokenRepository.findByTokenAndAccountId(token, accountId)

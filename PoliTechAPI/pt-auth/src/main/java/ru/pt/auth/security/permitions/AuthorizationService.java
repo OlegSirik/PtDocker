@@ -1,7 +1,8 @@
 package ru.pt.auth.security.permitions;
 
-import ru.pt.auth.security.UserDetailsImpl;
-    /**
+import ru.pt.api.security.AuthenticatedUser;
+
+/**
  * Centralized authorization service.
  *
  * Usage:
@@ -14,13 +15,18 @@ public interface AuthorizationService {
     /**
      * Generic authorization check.
      *
+     * @param user the authenticated user
+     * @param resourceType the type of resource being accessed
+     * @param resourceId the ID of the specific resource (can be null for list operations)
+     * @param resourceAccountId the account ID that owns the resource
+     * @param action the action being performed
      * @throws ForbiddenException if access is denied
      */
-    public void check(
-        UserDetailsImpl user,
+    void check(
+        AuthenticatedUser user,
         AuthZ.ResourceType resourceType,
         String resourceId,
-        Long resoureAccountId,
-        AuthZ.Action action );
+        Long resourceAccountId,
+        AuthZ.Action action);
 
 }
