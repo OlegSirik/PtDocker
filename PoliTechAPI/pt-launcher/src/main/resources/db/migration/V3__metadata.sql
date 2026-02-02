@@ -162,8 +162,10 @@ insert into pt_metadata (var_code, var_name, var_path, var_type, var_value, var_
 ('io_isNewBuilding', 'Имущество.новостройка', 'insuredObjects[0].property.isNewBuilding', 'IN', '', 'insuredObject.property.isNewBuilding', 1031, 'STRING'),
 ('io_propertyValue', 'Имущество.стоимость имущества', 'insuredObjects[0].property.propertyValue', 'IN', '0', 'insuredObject.property.propertyValue', 1032, 'NUMBER'),
 ('io_commissioningDate', 'Имущество.дата ввода в эксплуатацию', 'insuredObjects[0].property.commissioningDate', 'IN', '', 'insuredObject.property.commissioningDate', 1033, 'STRING'),
-('io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 'IN', '0', 'insuredObject.property.floor', 1034, 'NUMBER');
-
+('io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 'IN', '0', 'insuredObject.property.floor', 1034, 'NUMBER'),
+('io_rfSport1', 'Доп.риск спорт #1', 'insuredObjects[0].riskFactors.sport1', 'IN', '0', 'insuredObject.riskFactors.sport1', 2034, 'STRING'),
+('io_rfSport2', 'Доп.риск спорт #2', 'insuredObjects[0].riskFactors.sport2', 'IN', '0', 'insuredObject.riskFactors.sport2', 2035, 'STRING'),
+('io_rfSport3', 'Доп.риск спорт #3', 'insuredObjects[0].riskFactors.sport3', 'IN', '0', 'insuredObject.riskFactors.sport3', 2036, 'STRING');
 
 insert into pt_refdata values
 ('fns-dul','1','Паспорт гражданина СССР'),

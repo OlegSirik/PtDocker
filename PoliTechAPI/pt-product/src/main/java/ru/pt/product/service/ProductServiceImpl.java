@@ -20,8 +20,10 @@ import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.product.entity.MetadataEntity;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
+import ru.pt.product.repository.MetadataRepository;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
@@ -56,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationService authService;
     private final CalculatorService calculatorService;
+    private final MetadataRepository metadataRepository;
 
     // Constructor with @Lazy to break circular dependency with CalculatorService
     public ProductServiceImpl(
@@ -67,7 +70,8 @@ public class ProductServiceImpl implements ProductService {
             NumberGeneratorService numberGeneratorService,
             SecurityContextHelper securityContextHelper,
             AuthorizationService authService,
-            @Lazy CalculatorService calculatorService) {
+            @Lazy CalculatorService calculatorService,
+            MetadataRepository metadataRepository) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.lobService = lobService;
@@ -77,6 +81,7 @@ public class ProductServiceImpl implements ProductService {
         this.securityContextHelper = securityContextHelper;
         this.authService = authService;
         this.calculatorService = calculatorService;
+        this.metadataRepository = metadataRepository;
     }
 
     /**
@@ -612,6 +617,40 @@ public class ProductServiceImpl implements ProductService {
         var productId = productRepository.findProductIdEntityByAccountId(Long.parseLong(accountId));
         return productRepository.findAllById(productId).stream()
                 .map(productMapper::toDto).toList();
+    }
+
+    @Override
+    public List<PvVar> getPvVars() {
+        // Only check that user is authenticated, no authorization check
+        getCurrentUser();
+        
+        return metadataRepository.findAllOrderByNr().stream()
+                .map(this::mapMetadataToVar)
+                .collect(Collectors.toList());
+    }
+
+    private PvVar mapMetadataToVar(MetadataEntity entity) {
+        PvVar pvVar = new PvVar();
+        pvVar.setVarCode(entity.getVarCode());
+        pvVar.setVarName(entity.getVarName());
+        pvVar.setVarPath(entity.getVarPath());
+        pvVar.setVarType(entity.getVarType());
+        pvVar.setVarValue(entity.getVarValue());
+        pvVar.setVarCdm(entity.getVarCdm());
+        pvVar.setVarNr(entity.getNr().toString());
+        
+        // Map varDataType string to enum
+        if (entity.getVarDataType() != null) {
+            try {
+                pvVar.setVarDataType(VarDataType.valueOf(entity.getVarDataType().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                pvVar.setVarDataType(VarDataType.STRING);
+            }
+        } else {
+            pvVar.setVarDataType(VarDataType.STRING);
+        }
+        
+        return pvVar;
     }
 
     private ProductVersionModel syncCoversVars(ProductVersionModel productVersionModel) {

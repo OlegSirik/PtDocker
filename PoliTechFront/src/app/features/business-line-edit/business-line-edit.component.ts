@@ -152,6 +152,7 @@ export class BusinessLineEditComponent implements OnInit {
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('mpCode');
+    this.varService.getAllVars();
     
     if (code) {
       this.isNewRecord = false;
@@ -180,7 +181,7 @@ export class BusinessLineEditComponent implements OnInit {
       });
     } else {
       this.isNewRecord = true;
-      this.businessLine.mpVars = this.varService.policyVars.concat(this.varService.policyMagicVars);
+      this.businessLine.mpVars = this.varService.getAllVars();
       this.updateChanges();
     }
   }

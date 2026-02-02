@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -138,6 +139,16 @@ public class ProductController extends SecuredController {
             @PathVariable("versionNo") Integer versionNo) {
         //requireAdmin(user);
         return ResponseEntity.ok(productService.getJsonExampleSave(productId, versionNo));
+    }
+
+    /**
+     * Get all PvVars from pt_metadata table
+     */
+    @GetMapping("/vars")
+    public ResponseEntity<List<PvVar>> getPvVars(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user) {
+        return ResponseEntity.ok(productService.getPvVars());
     }
 }
 

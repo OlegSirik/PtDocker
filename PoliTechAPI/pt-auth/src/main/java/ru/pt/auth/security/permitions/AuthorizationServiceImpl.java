@@ -37,12 +37,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
 
         // Applicability check
-        if (!AuthZ.isApplicable(resourceType, action)) {
-            throw new IllegalArgumentException(
-                    "Action %s not applicable to %s"
-                            .formatted(action, resourceType)
-            );
-        }
+//        if (!AuthZ.isApplicable(resourceType, action)) {
+//            throw new IllegalArgumentException(
+//                    "Action %s not applicable to %s"
+//                            .formatted(action, resourceType)
+//            );
+//        }
 
         // Permission check
         if (!AuthZ.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
@@ -64,7 +64,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @param resourceAccountId account ID NA
      * @param action action to check
      * @return list of product role data from hierarchy
-     */
+     *
     public void checkProduct(
             Long productId,
             Long accountId,
@@ -91,5 +91,5 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         // Check specific product action permissions
         
     }
-
+*/
 }

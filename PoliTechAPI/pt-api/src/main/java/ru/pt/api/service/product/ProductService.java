@@ -2,6 +2,7 @@ package ru.pt.api.service.product;
 
 import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvVar;
 
 import java.util.List;
 import java.util.Map;
@@ -114,4 +115,10 @@ public interface ProductService {
      * @return список продуктов
      */
     List<Product> getProductByAccountId(String accountId);
+
+    /**
+     * Получить все переменные из метаданных (pt_metadata)
+     * @return список PvVar
+     */
+    List<PvVar> getPvVars();
 }
