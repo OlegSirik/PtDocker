@@ -13,6 +13,8 @@ import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.product.LobService;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.permitions.AuthZ;
+import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.product.entity.LobEntity;
 import ru.pt.product.repository.LobRepository;
 
@@ -20,6 +22,7 @@ import ru.pt.product.repository.LobRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import ru.pt.api.dto.exception.UnauthorizedException;
 @Component
 public class LobServiceImpl implements LobService {
@@ -29,12 +32,14 @@ public class LobServiceImpl implements LobService {
     private final LobRepository lobRepository;
     private final ObjectMapper objectMapper;
     private final SecurityContextHelper securityContextHelper;
-    //private final DataSource dataSource;
+    private final AuthorizationService authService;
 
-    public LobServiceImpl(LobRepository lobRepository, ObjectMapper objectMapper, SecurityContextHelper securityContextHelper) {
+    public LobServiceImpl(LobRepository lobRepository, ObjectMapper objectMapper,
+                          SecurityContextHelper securityContextHelper, AuthorizationService authService) {
         this.lobRepository = lobRepository;
         this.objectMapper = objectMapper;
         this.securityContextHelper = securityContextHelper;
+        this.authService = authService;
     }
 
     /**
@@ -52,12 +57,24 @@ public class LobServiceImpl implements LobService {
     }
 
     @Override
-    public List<Object[]> listActiveSummaries() {
-        return lobRepository.listActiveSummaries(getCurrentTenantId());
+    public List<LobModel> listActiveSummaries() {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, null, null, AuthZ.Action.LIST);
+
+        return lobRepository.listActiveSummaries(getCurrentTenantId()).stream()
+                .map(row -> {
+                    LobModel m = new LobModel();
+                    m.setId(((Number) row[0]).longValue());
+                    m.setMpCode((String) row[1]);
+                    m.setMpName((String) row[2]);
+                    return m;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public LobModel getByCode(String code) {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, code, null, AuthZ.Action.VIEW);
+
         LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElse(null);
         if (lob == null) {
             return null;
@@ -69,9 +86,10 @@ public class LobServiceImpl implements LobService {
         }
     }
 
-    // get by id
     @Override
     public LobModel getById(Integer id) {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, String.valueOf(id), null, AuthZ.Action.VIEW);
+
         LobEntity lob = lobRepository.findById(getCurrentTenantId(), id).orElse(null);
         if (lob == null) {
             return null;
@@ -86,6 +104,7 @@ public class LobServiceImpl implements LobService {
     @Transactional
     @Override
     public LobModel create(LobModel payload) {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, null, null, AuthZ.Action.MANAGE);
 
         String mpCode = payload.getMpCode();
         if (getByCode(mpCode) != null) {
@@ -146,16 +165,9 @@ public class LobServiceImpl implements LobService {
 
     @Transactional
     @Override
-    public boolean softDeleteByCode(String code) {
-        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElseThrow(() -> new NotFoundException("Lob not found"));
-        lob.setDeleted(true);
-        lobRepository.save(lob);
-        return true;
-    }
-
-    @Transactional
-    @Override
     public boolean softDeleteById(Integer id) {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, String.valueOf(id), null, AuthZ.Action.MANAGE);
+
         LobEntity lob = lobRepository.findById(getCurrentTenantId(), id).orElseThrow(() -> new NotFoundException("Lob not found"));
         lob.setDeleted(true);
         lobRepository.save(lob);
@@ -167,21 +179,20 @@ public class LobServiceImpl implements LobService {
     // update lob with payload. return updated lob.
     @Transactional
     @Override
-    public LobModel updateByCode(String code, LobModel payload) {
-        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElseThrow(() -> new NotFoundException("Lob not found"));
-        if (!lob.getCode().equals(payload.getMpCode())) {
-            throw new BadRequestException("Code cannot be changed");
-        }
+    public LobModel update(LobModel lobModel) {
+        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, lobModel.getMpCode(), null, AuthZ.Action.MANAGE);
+
+        LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), lobModel.getMpCode()).orElseThrow(() -> new NotFoundException("Lob not found"));
 
         String payloadJson;
         try {
-            payloadJson = objectMapper.writeValueAsString(payload);
+            payloadJson = objectMapper.writeValueAsString(lobModel);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
         lob.setLob(payloadJson);
-        lob.setName(payload.getMpName());
+        lob.setName(lobModel.getMpName());
         try {
             return objectMapper.readValue(lobRepository.save(lob).getLob(), LobModel.class);
         } catch (JsonProcessingException e) {

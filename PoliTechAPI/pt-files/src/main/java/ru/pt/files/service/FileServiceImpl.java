@@ -1,6 +1,7 @@
 package ru.pt.files.service;
 
 import jakarta.transaction.Transactional;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDResources;
@@ -11,6 +12,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.file.FileModel;
 import ru.pt.api.service.file.FileService;
@@ -33,6 +35,7 @@ import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
+import ru.pt.domain.model.VariableContext;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -188,7 +191,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public byte[] process(Long id, Map<String, Object> keyValues) {
+    public byte[] process(Long id, VariableContext keyValues) {
         logger.debug("Processing PDF file with id: {}", id);
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
@@ -245,8 +248,8 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-//    @Override
-    public byte[] process_old(Long id, Map<String, Object> keyValues) {
+/*     @Override
+    public byte[] process_old(Long id, VariableContext keyValues) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
         if (entity.getFileBody() == null) {
@@ -281,9 +284,10 @@ public class FileServiceImpl implements FileService {
             throw new InternalServerErrorException("Failed to process PDF", ex);
         }
     }
+    */
 
     @Override
-    public byte[] getFile(Integer fileId, Map<String, Object> keyValues) {
+    public byte[] getFile(Integer fileId, VariableContext keyValues) {
 
         //String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
         //String packageCode = keyValues.get("packageCode");

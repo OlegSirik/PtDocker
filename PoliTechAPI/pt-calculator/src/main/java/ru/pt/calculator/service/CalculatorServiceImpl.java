@@ -468,8 +468,12 @@ public class CalculatorServiceImpl implements CalculatorService {
             
             // Если вернулся null то ничего не найдено или еще какаято ошибка. 
             // Можно задать алтернативный var на этот случай, например другой коэффициент или константу и т.д.
-            if (s == null && !(cd.getAltVarCode() == null || cd.getAltVarCode().isBlank())) {
-                s = (ctx.getDecimal(cd.getAltVarCode())).toString();
+            if (s == null) {
+                if (cd.getAltVarValue() != null ) {
+                    s = cd.getAltVarValue().toString();
+                } else if (cd.getAltVarCode() != null && !cd.getAltVarCode().isBlank()) {
+                    s = (ctx.getDecimal(cd.getAltVarCode())).toString();
+                }
             }
             try {
                 ctx.put(varCode, new BigDecimal(s));

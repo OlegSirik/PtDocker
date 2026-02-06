@@ -20,7 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import com.jayway.jsonpath.JsonPath;
 
-public final class VariableContext implements Map<String, Object> {
+public final class VariableContext 
+//implements Map<String, Object> 
+{
 
     private static final Logger logger = LoggerFactory.getLogger(VariableContext.class);
 
@@ -130,12 +132,16 @@ public final class VariableContext implements Map<String, Object> {
     }
     // ---------- Lazy evaluation ----------
 
-    @Override
+    //@Override
     public Object get(Object key) {
         if (!(key instanceof String code)) return null;
         logger.trace("get: code='{}'", code);
         try {
-            Object value = values.computeIfAbsent(code, this::evaluate);
+            Object value = values.get(code);
+            if (value == null) { 
+                value = evaluate(code);
+                values.put(code, value);
+            }
             logger.trace("get: code='{}', resolvedValue='{}'", code, value);
             return value;
         } catch (Exception e) {
@@ -250,7 +256,7 @@ public final class VariableContext implements Map<String, Object> {
 
     // ---------- Runtime mutation ----------
 
-    @Override
+    //@Override
     public Object put(String key, Object value) {
         PvVarDefinition def = definitions.get(key);
         if (def == null) {
@@ -292,7 +298,7 @@ public final class VariableContext implements Map<String, Object> {
     }
 
     // ---------- Map view (delegated) ----------
-
+/* 
     @Override public int size() { return definitions.size(); }
     @Override public boolean isEmpty() { return definitions.isEmpty(); }
     @Override public boolean containsKey(Object key) { return definitions.containsKey(key); }
@@ -341,4 +347,5 @@ public final class VariableContext implements Map<String, Object> {
         return Collections.unmodifiableSet(set);
     }
 
+    */
 }

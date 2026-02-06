@@ -26,7 +26,8 @@ public final class AuthZ {
         ACCOUNT,
         ACCOUNT_PRODUCT,
         TOKEN,
-        LOGIN
+        LOGIN,
+        POLICY
     }
 
     /** Действия */
@@ -37,7 +38,11 @@ public final class AuthZ {
         MANAGE, // = CRUD
 
         GO2PROD,  // только для договора - вывод версии в прод
-        CREATE // создание новой записи 
+        CREATE, // создание новой записи
+        // Для договора
+        QUOTE,
+        ISSUE,
+        TEST, // если есть этот Action то расчет по версии в статусе DEV иначе только прод PROD
 /*         
         
         UPDATE,
@@ -111,23 +116,30 @@ public final class AuthZ {
         ROLE_PERMISSIONS.put(Role.SYS_ADMIN, Set.of(
             formatPermission(ResourceType.TENANT, Action.ALL),
             formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
-            formatPermission(ResourceType.CLIENT, Action.VIEW),
+            formatPermission(ResourceType.CLIENT, Action.ALL),
             formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW)
     ));
     ROLE_PERMISSIONS.put(Role.TNT_ADMIN, Set.of(
         formatPermission(ResourceType.TENANT, Action.ALL),
         formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
+        formatPermission(ResourceType.CLIENT, Action.MANAGE),
+        formatPermission(ResourceType.CLIENT, Action.LIST),
+        formatPermission(ResourceType.CLIENT, Action.VIEW),
         formatPermission(ResourceType.PRODUCT, Action.MANAGE),
         formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
         formatPermission(ResourceType.CLIENT_PRODUCTS, Action.MANAGE),
         formatPermission(ResourceType.PRODUCT, Action.LIST),
-// ToDo - delete it just to test
+        formatPermission(ResourceType.LOB, Action.LIST),
+        formatPermission(ResourceType.LOB, Action.VIEW),
+
+        // ToDo - delete it just to test
         formatPermission(ResourceType.ACCOUNT, Action.MANAGE),
         formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
 
         formatPermission(ResourceType.TOKEN, Action.ALL),
-        formatPermission(ResourceType.LOGIN, Action.ALL)
+        formatPermission(ResourceType.LOGIN, Action.ALL),
 
+        formatPermission(ResourceType.POLICY, Action.TEST)
     ));
 
         // PRODUCT_ADMIN может SELL и VIEW продуктов
@@ -136,13 +148,24 @@ public final class AuthZ {
                 formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
                 formatPermission(ResourceType.PRODUCT, Action.ALL),
                 formatPermission(ResourceType.CLIENT_PRODUCTS, Action.ALL),
+                formatPermission(ResourceType.CLIENT, Action.LIST),
+                formatPermission(ResourceType.CLIENT, Action.VIEW),
 // ToDo - delete it just to test
                 formatPermission(ResourceType.ACCOUNT, Action.MANAGE),
+                formatPermission(ResourceType.ACCOUNT_PRODUCT, Action.ALL),
 //                formatPermission(ResourceType.ACCOUNT, Action.PERMISSION),
+                formatPermission(ResourceType.LOB, Action.ALL),
 
                 formatPermission(ResourceType.TOKEN, Action.ALL),
-                formatPermission(ResourceType.LOGIN, Action.ALL)
+                formatPermission(ResourceType.LOGIN, Action.ALL),
 
+                formatPermission(ResourceType.POLICY, Action.TEST)
+
+        ));
+
+        ROLE_PERMISSIONS.put(Role.ACCOUNT, Set.of(
+            formatPermission(ResourceType.POLICY, Action.ISSUE),
+            formatPermission(ResourceType.POLICY, Action.QUOTE)
         ));
 
         // AGENT — только VIEW продукта и POLICY

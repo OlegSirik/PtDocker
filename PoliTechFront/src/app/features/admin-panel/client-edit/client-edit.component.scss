@@ -116,6 +116,27 @@
     color: #666;
   }
 
+  .products-table .clickable-row {
+    cursor: pointer;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    &.row-selected {
+      background-color: rgba(25, 118, 210, 0.12);
+    }
+  }
+
+  .commissions-card {
+    margin-top: 20px;
+  }
+
+  .commissions-card .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
   .data-card {
     margin-bottom: 24px;
     border-radius: 8px;

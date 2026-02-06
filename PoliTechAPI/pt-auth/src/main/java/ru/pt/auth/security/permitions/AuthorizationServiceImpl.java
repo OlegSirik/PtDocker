@@ -54,7 +54,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         
     }
 
-    /**
+    public boolean userHasPermition(AuthenticatedUser user,
+        AuthZ.ResourceType resourceType,
+        AuthZ.Action action) {
+        return AuthZ.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
+    }
+
+
+        /**
      * Check product access permissions
      * create, quote, save,
      * 

@@ -9,11 +9,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.errors.ErrorConstants;
@@ -23,6 +24,7 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
@@ -32,6 +34,7 @@ import ru.pt.api.dto.process.ValidatorType;
 //import ru.pt.api.dto.product.LobModel;
 //import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.service.calculator.CalculatorService;
+import ru.pt.api.service.commission.CommissionService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.numbers.NumberGeneratorService;
 import ru.pt.api.service.process.PostProcessService;
@@ -43,8 +46,10 @@ import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.VersionManager;
 import ru.pt.api.utils.JsonProjection;
 
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.service.ClientService;
 
 import ru.pt.domain.model.PvVarDefinition;
@@ -68,10 +73,11 @@ import java.math.BigDecimal;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 
+import ru.pt.auth.security.permitions.AuthZ;
 //import ru.pt.process.utils.VariablesService;
 
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
@@ -94,8 +100,27 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final ClientService clientService;
     private final EmailGateService emailGateService;
     private final TextDocumentView textDocumentView;
+    private final AuthorizationService authorizationService;
+    private final CommissionService commissionService;
     
-    
+    /**
+     * Get current authenticated user from security context.
+     * @return AuthenticatedUser representing the current user
+     * @throws UnauthorizedException if user is not authenticated
+     */
+    protected AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
+                .orElseThrow(() -> {
+                    ErrorModel errorModel = ErrorConstants.createErrorModel(
+                            401,
+                            "Unable to get current user from security context",
+                            ErrorConstants.DOMAIN_AUTH,
+                            ErrorConstants.REASON_UNAUTHORIZED,
+                            "securityContext"
+                    );
+                    return new UnauthorizedException(errorModel);
+                });
+    }
 
     private PolicyDTO policyFromJson(String policy) {
         logger.debug("Parsing policy from JSON");
@@ -238,6 +263,17 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public String calculate(String policy) {
         logger.info("Starting calculate process");
 
+        AuthenticatedUser user = getCurrentUser();
+        // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
+        // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
+        boolean amTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+
+        if (!amTester) {
+            authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.QUOTE);
+        }
+
+        // ToDO проверить что юзер может продавать этот продукт
+
         // 1. JSON → DTO contract
         PolicyDTO policyDTO;
         try {
@@ -270,7 +306,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.debug("Fetching product. productCode={}", productCode);
 
         try {
-            product = productService.getProductByCode(productCode, false);
+            product = productService.getProductByCode(productCode, amTester);
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (NotFoundException e) {
             // Re-throw NotFoundException as-is
@@ -301,6 +337,20 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             throw new UnprocessableEntityException(errorModel);
         }
 
+
+        // 4.5 Проверить желаемую комиссию агента
+        CommissionDto commissionDTO = new CommissionDto();
+        if (policyDTO.getCommission()!=null) { commissionDTO = policyDTO.getCommission(); };
+        // задана %
+        if ( commissionDTO != null && commissionDTO.getRequestedCommissionRate() != null ) {
+            commissionService.checkRequestedCommissionRate(
+                commissionDTO.getRequestedCommissionRate(), 
+                user.getAccountId(), 
+                product.getId(), 
+                "SAVE");
+        // Если норм то меняет % на запрашиваемый
+            policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
+        }
         
         // 5. DTO → JSON (эталонная модель)
         String policyJSON = policyToJson(policyDTO);
@@ -349,11 +399,23 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
 
+        // 11. Рассчет КВ
+        commissionDTO = commissionService.calculateCommission(
+            commissionDTO.getRequestedCommissionRate(), 
+            user.getAccountId(), 
+            product.getId(), 
+            "SAVE",
+            policyDTO.getPremium()
+        );
+
+        policyDTO.setCommission(commissionDTO);
+        //    requestedCommissionRate, accountId, productId, policy, premium)
+
         // 12. Ответ
         logger.info("Calculate process completed. premium={}", policyDTO.getPremium());
 
         if (policyDTO.getPremium() == null || policyDTO.getPremium().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new UnprocessableEntityException("Запрос не соответствует условиям тарифа");
+            throw new UnprocessableEntityException(new ErrorModel(0, "Запрос не соответствует условиям тарифа.", "Calculator", "premium=0", "premium")); 
         }
         return policyToJson(policyDTO);
 
@@ -433,22 +495,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
 
-        // Текущий пользователь
-        var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> {
-                    ErrorModel errorModel = ErrorConstants.createErrorModel(
-                        401,
-                        "Unable to get current user from security context",
-                        ErrorConstants.DOMAIN_AUTH,
-                        ErrorConstants.REASON_UNAUTHORIZED,
-                        "securityContext"
-                    );
-                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
-                });
-
         // 12. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
-        storageService.save(policyDTO, userData);
+        storageService.save(policyDTO, getCurrentUser());
 
         // 13. Ответ, удалить помойку
         policyDTO.setProcessList(null);
@@ -556,14 +605,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         var version = versionManager.getLatestVersionByProductCode(productCode);
 
-        var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
-
         var uuid = UUID.randomUUID();
         MdcWrapper.putId(uuid.toString());
         logger.debug("Generated policy UUID: {}", uuid);
 
-        PolicyData policyData = storageService.save(policy, userData, version, uuid);
+        PolicyData policyData = storageService.save(policy, getCurrentUser(), version, uuid);
         logger.info("Policy created. policyId={}", uuid);
         return policyData;
     }
@@ -572,9 +618,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public PolicyData updatePolicy(String policyNumber, String policy) {
         logger.info("Updating policy. policyNumber={}", policyNumber);
 
-        var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
-
+        var userData = getCurrentUser();
         var policyData = storageService.getPolicyByNumber(policyNumber);
         if (policyData == null) {
             logger.warn("Policy not found for update. policyNumber={}", policyNumber);
@@ -630,18 +674,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     @Override
     public PolicyData getPolicyById(UUID id) {
         logger.debug("Getting policy by ID. policyId={}", id);
-        var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> {
-                    ErrorModel errorModel = ErrorConstants.createErrorModel(
-                        401,
-                        "Unable to get current user from security context",
-                        ErrorConstants.DOMAIN_AUTH,
-                        ErrorConstants.REASON_UNAUTHORIZED,
-                        "securityContext"
-                    );
-                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
-                });
-
+        var userData = getCurrentUser();
         var policyData = storageService.getPolicyById(id);
         if (policyData == null) {
             logger.warn("Policy not found by ID. policyId={}", id);
@@ -677,18 +710,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     @Override
     public PolicyData getPolicyByNumber(String policyNumber) {
         logger.debug("Getting policy by number. policyNumber={}", policyNumber);
-        var userData = securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> {
-                    ErrorModel errorModel = ErrorConstants.createErrorModel(
-                        401,
-                        "Unable to get current user from security context",
-                        ErrorConstants.DOMAIN_AUTH,
-                        ErrorConstants.REASON_UNAUTHORIZED,
-                        "securityContext"
-                    );
-                    return new ru.pt.api.dto.exception.UnauthorizedException(errorModel);
-                });
-
+        var userData = getCurrentUser();
         var policyData = storageService.getPolicyByNumber(policyNumber);
         if (policyData == null) {
             logger.warn("Policy not found by number. policyNumber={}", policyNumber);

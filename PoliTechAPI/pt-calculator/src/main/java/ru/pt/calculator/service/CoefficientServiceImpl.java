@@ -13,6 +13,7 @@ import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.calculator.entity.CoefficientDataEntity;
 import ru.pt.calculator.repository.CoefficientDataRepository;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.api.dto.exception.BadRequestException;
@@ -104,7 +105,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     @Transactional(readOnly = true)
     public String getCoefficientValue(Integer calculatorId,
                                       String coefficientCode,
-                                      Map<String, Object> values,
+                                      VariableContext values,
                                       List<CoefficientColumn> columns) {
         logger.debug("Getting coefficient value: calculatorId={}, coefficientCode={}", calculatorId, coefficientCode);
         

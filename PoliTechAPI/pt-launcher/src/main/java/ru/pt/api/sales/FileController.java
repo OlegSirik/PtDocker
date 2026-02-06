@@ -132,6 +132,7 @@ public class FileController extends SecuredController {
 
     // POST /api/v1/{tenantCode}/admin/files/{fileId}/cmd/process
     //@PostMapping("/{fileId}/cmd/process")
+    /* 
     public ResponseEntity<byte[]> process(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -149,6 +150,7 @@ public class FileController extends SecuredController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(bytes);
     }
+                */
 }
 
 

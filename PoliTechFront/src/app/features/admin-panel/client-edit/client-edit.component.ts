@@ -16,10 +16,12 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { ClientsService, Client, ClientConfiguration, ClientProduct } from '../../../shared/services/api/clients.service';
+import { CommissionService, Commission } from '../../../shared/services/api/commission.service';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ProductService } from '../../../shared/services/product.service';
 import { ProductList } from '../../../shared/services/products.service';
+import { CommissionEditComponent, ACTION_OPTIONS } from '../components/commission-edit/commission-edit.component';
 
 @Component({
   selector: 'app-client-edit',
@@ -53,6 +55,7 @@ export class ClientEditComponent implements OnInit {
   private authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private productService = inject(ProductService);
+  private commissionService = inject(CommissionService);
 
   client: Client = {
     tid: 0,
@@ -77,6 +80,10 @@ export class ClientEditComponent implements OnInit {
   clientProducts: ClientProduct[] = [];
   productsList: ProductList[] = [];
   productColumns: string[] = ['id', 'productName', 'status', 'actions'];
+  selectedProduct: ClientProduct | null = null;
+  commissions: Commission[] = [];
+  loadingCommissions = false;
+  commissionColumns: string[] = ['agdNumber', 'action', 'rateValue', 'commissionMinRate', 'commissionMaxRate', 'minAmount', 'maxAmount', 'fixedAmount', 'actions'];
 
   ngOnInit(): void {
 
@@ -265,6 +272,7 @@ export class ClientEditComponent implements OnInit {
       roleProductId: productId,
       productCode: product.code,
       productName: product.name,
+      roleProductName: product.name,
       isDeleted: false
     };
 
@@ -288,7 +296,7 @@ export class ClientEditComponent implements OnInit {
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: { message: `Удалить продукт "${product.productName}"?` }
+      data: { message: `Удалить продукт "${product.productName || product.roleProductName || ''}"?` }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -311,7 +319,7 @@ export class ClientEditComponent implements OnInit {
   deleteProduct(product: ClientProduct): void {
     if (!this.client.id || !product.id) return;
     
-    if (confirm(`Удалить продукт "${product.productName}"?`)) {
+    if (confirm(`Удалить продукт "${product.productName || product.roleProductName || ''}"?`)) {
       this.loadingProducts = true;
       this.clientsService.revokeProduct(this.client.id, product.id).subscribe({
         next: () => {
@@ -329,6 +337,98 @@ export class ClientEditComponent implements OnInit {
 
   getProductStatusLabel(product: ClientProduct): string {
     return product.isDeleted ? 'Suspend' : 'active';
+  }
+
+  selectProduct(product: ClientProduct): void {
+    this.selectedProduct = this.selectedProduct?.id === product.id ? null : product;
+    this.loadCommissions();
+  }
+
+  loadCommissions(): void {
+    if (!this.selectedProduct || !this.client.clientAccountId) {
+      this.commissions = [];
+      return;
+    }
+    const accountId = this.selectedProduct.accountId ?? this.client.clientAccountId;
+    this.loadingCommissions = true;
+    this.commissionService.getConfigurations(accountId, this.selectedProduct.roleProductId).subscribe({
+      next: (list) => {
+        this.commissions = list;
+        this.loadingCommissions = false;
+      },
+      error: () => {
+        this.snack.open('Ошибка при загрузке комиссий', 'OK', { duration: 2000 });
+        this.loadingCommissions = false;
+      }
+    });
+  }
+
+  openAddCommissionDialog(): void {
+    if (!this.selectedProduct || !this.client.clientAccountId) return;
+    const accountId = this.selectedProduct.accountId ?? this.client.clientAccountId;
+    const dialogRef = this.dialog.open(CommissionEditComponent, {
+      minWidth: '900px',
+      data: {
+        productName: this.selectedProduct.productName || this.selectedProduct.roleProductName || '',
+        accountId,
+        productId: this.selectedProduct.roleProductId,
+        commission: null
+      }
+    });
+    dialogRef.afterClosed().subscribe((result: Commission | undefined) => {
+      if (result) {
+        this.commissionService.createConfiguration(result).subscribe({
+          next: () => {
+            this.snack.open('Комиссия добавлена', 'OK', { duration: 2000 });
+            this.loadCommissions();
+          },
+          error: () => this.snack.open('Ошибка при добавлении комиссии', 'OK', { duration: 2000 })
+        });
+      }
+    });
+  }
+
+  openEditCommissionDialog(commission: Commission): void {
+    if (!this.selectedProduct || !commission.id) return;
+    const accountId = this.selectedProduct.accountId ?? this.client.clientAccountId ?? commission.accountId;
+    const dialogRef = this.dialog.open(CommissionEditComponent, {
+      minWidth: '900px',
+      data: {
+        productName: this.selectedProduct.productName || this.selectedProduct.roleProductName || '',
+        accountId,
+        productId: this.selectedProduct.roleProductId,
+        commission
+      }
+    });
+    dialogRef.afterClosed().subscribe((result: Commission | undefined) => {
+      if (result && result.id) {
+        this.commissionService.updateConfiguration(result.id, result).subscribe({
+          next: () => {
+            this.snack.open('Комиссия обновлена', 'OK', { duration: 2000 });
+            this.loadCommissions();
+          },
+          error: () => this.snack.open('Ошибка при обновлении комиссии', 'OK', { duration: 2000 })
+        });
+      }
+    });
+  }
+
+  deleteCommission(commission: Commission, event: Event): void {
+    event.stopPropagation();
+    if (!commission.id) return;
+    if (!confirm('Удалить комиссию?')) return;
+    this.commissionService.deleteConfiguration(commission.id).subscribe({
+      next: () => {
+        this.snack.open('Комиссия удалена', 'OK', { duration: 2000 });
+        this.loadCommissions();
+      },
+      error: () => this.snack.open('Ошибка при удалении комиссии', 'OK', { duration: 2000 })
+    });
+  }
+
+  getActionLabel(action: string): string {
+    const found = ACTION_OPTIONS.find(o => o.value === action);
+    return found?.label ?? action;
   }
 }
 

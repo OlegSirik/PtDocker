@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.service.numbers.NumberGeneratorService;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.numbers.service.DatabaseNumberGeneratorService;
 
 import java.net.URI;
@@ -21,7 +22,7 @@ public class RestNumberGeneratorService {
 
 
     @GetMapping("/next")
-    public ResponseEntity<String> getNextNumber(Map<String, Object> values, String productCode) {
+    public ResponseEntity<String> getNextNumber(VariableContext values, String productCode) {
         return ResponseEntity.ok(numberGeneratorService.getNextNumber(values, productCode));
     }
 

@@ -1280,6 +1280,11 @@ console.log(pkg)
     return index !== -1 ? index : 0;
   }
 
+  truncateText(text: string | undefined | null, maxLen: number): string {
+    const s = text ?? '';
+    return s.length > maxLen ? s.slice(0, maxLen) + '...' : s;
+  }
+
   getPackageIndex(pkg: Package): number {
     // Try to find by reference first (most reliable)
     const refIndex = this.product.packages.indexOf(pkg);

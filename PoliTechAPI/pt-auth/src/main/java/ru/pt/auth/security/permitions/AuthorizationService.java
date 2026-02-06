@@ -29,4 +29,17 @@ public interface AuthorizationService {
         Long resourceAccountId,
         AuthZ.Action action);
 
+    /**
+     * Checks whether the user has permission to perform the given action on the resource type.
+     * Does not throw; use {@link #check} when you need to enforce access and throw on denial.
+     *
+     * @param user the authenticated user
+     * @param resourceType the type of resource
+     * @param action the action to check
+     * @return true if the user has the permission, false otherwise
+     */
+    boolean userHasPermition(AuthenticatedUser user,
+        AuthZ.ResourceType resourceType,
+        AuthZ.Action action);
+
 }

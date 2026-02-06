@@ -1,5 +1,6 @@
 package ru.pt.api.dto.calculator;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +8,7 @@ public class CoefficientDef {
     private String varCode;
     private String varName;
     private String altVarCode;
+    private BigDecimal altVarValue;
 
     private List<CoefficientColumn> columns = new ArrayList<>();
 
@@ -40,5 +42,13 @@ public class CoefficientDef {
 
     public String getAltVarCode() {
         return altVarCode;
+    }
+
+    public void setAltVarValue(BigDecimal value) {
+        this.altVarValue = value;
+    }
+
+    public BigDecimal getAltVarValue() {
+        return this.altVarValue;
     }
 }

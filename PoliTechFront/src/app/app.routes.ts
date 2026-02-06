@@ -33,7 +33,7 @@ export const routes: Routes = [
 //  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'business-line', component: BusinessLineComponent, canActivate: [authGuard] },
   { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
-  { path: 'lob-edit/:mpCode', component: BusinessLineEditComponent, canActivate: [authGuard] },
+  { path: 'lob-edit/:id', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'product/:id/version/:versionNo', component: ProductComponent, canActivate: [authGuard] },

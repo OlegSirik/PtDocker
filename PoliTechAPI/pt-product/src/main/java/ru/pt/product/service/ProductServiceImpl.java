@@ -152,7 +152,13 @@ public class ProductServiceImpl implements ProductService {
 
         ProductEntity product = new ProductEntity();
         product.setTId(getCurrentTenantId());
+        
         var versionStatus = productVersionModel.getVersionStatus();
+        if ( versionStatus == null || versionStatus.isEmpty()) {
+            productVersionModel.setVersionStatus("DEV");
+            versionStatus = "DEV";
+            
+        }
         if (versionStatus!= null && versionStatus.equals("PROD")) {
             product.setProdVersionNo(productVersionModel.getVersionNo());
         } else {
@@ -393,8 +399,13 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setDevVersionNo(null);
         Integer pv = product.getProdVersionNo();
-        product.setProdVersionNo(pv == null ? null : Math.max(0, pv));
-        productRepository.save(product);
+        if (pv == null) {
+            // это первая версия, ни разу не була в проде. 
+            productRepository.delete(product);
+        } else {
+//        product.setProdVersionNo(pv == null ? null : Math.max(0, pv));
+            productRepository.save(product);
+        }
     }
 
 
@@ -578,11 +589,11 @@ public class ProductServiceImpl implements ProductService {
 
         var entity = productRepository.findByCode(getCurrentTenantId(), code)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
+
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
+
         if (versionNo == null) {
-            // TODO fix me
-            log.warn("No true version number resolution, we will take just not null");
-            versionNo = entity.getProdVersionNo() == null ? entity.getDevVersionNo() : entity.getProdVersionNo();
+            throw new UnprocessableEntityException("Нет подходящей версии продукта для расчета");
         }
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();

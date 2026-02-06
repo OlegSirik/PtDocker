@@ -1,5 +1,6 @@
 package ru.pt.api.dto.errors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErrorModel {
@@ -21,6 +22,14 @@ public class ErrorModel {
         this.errors = errors;
     }
 
+    public ErrorModel(int code, String message, String domain, String reason, String field) {
+        this.code = code;
+        this.message = message;
+        
+        ErrorDetail errorDetail = new ErrorDetail(domain, reason, "", field);
+        this.errors = new ArrayList<>();
+        this.errors.add(errorDetail);
+    }
     public int getCode() {
         return code;
     }

@@ -70,7 +70,7 @@ export class BusinessLineComponent implements OnInit {
   }
 
   editBusinessLine(row: BusinessLine): void {
-    this.router.navigate(['/', this.authService.tenant, 'lob-edit', row.mpCode]);
+    this.router.navigate(['/', this.authService.tenant, 'lob-edit', row.id]);
   }
 
   deleteBusinessLine(businessLine: BusinessLine): void {

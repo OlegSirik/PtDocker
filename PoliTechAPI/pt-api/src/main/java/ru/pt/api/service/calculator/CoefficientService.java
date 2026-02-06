@@ -2,6 +2,7 @@ package ru.pt.api.service.calculator;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import ru.pt.api.dto.calculator.CoefficientColumn;
+import ru.pt.domain.model.VariableContext;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public interface CoefficientService {
      */
     String getCoefficientValue(Integer calculatorId,
                                String coefficientCode,
-                               Map<String, Object> values,
+                               VariableContext values,
                                List<CoefficientColumn> columns);
 
 }

@@ -12,7 +12,7 @@ public interface LobService {
      * Получить список активных линий бизнеса
      * @return краткие описания LOB
      */
-    List<Object[]> listActiveSummaries();
+    List<LobModel> listActiveSummaries();
 
     /**
      * Найти LOB по коду
@@ -36,13 +36,6 @@ public interface LobService {
     LobModel create(LobModel payload);
 
     /**
-     * Мягко удалить LOB по коду
-     * @param code код линии бизнеса
-     * @return true если отметка удаления установлена
-     */
-    boolean softDeleteByCode(String code);
-
-    /**
      * Мягко удалить LOB по идентификатору
      * @param id айди линии бизнеса
      * @return true если отметка удаления установлена
@@ -51,9 +44,8 @@ public interface LobService {
 
     /**
      * Обновить LOB по коду
-     * @param code код линии бизнеса
      * @param payload новое описание
      * @return обновленная модель
      */
-    LobModel updateByCode(String code, LobModel payload);
+    LobModel update(LobModel payload);
 }

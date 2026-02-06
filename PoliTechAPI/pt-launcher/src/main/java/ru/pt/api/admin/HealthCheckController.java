@@ -311,7 +311,8 @@ public class HealthCheckController {
         logger.info("Dumping metadata for policy JSON");
         
         // 1. Select all from pt_metadata using JdbcTemplate
-        String sql = "SELECT var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type FROM pt_metadata";
+        String sql = "SELECT var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type FROM vw_metadata ";
+
         List<PvVar> pvVars = jdbcTemplate.query(sql, new PvVarRowMapper());
         logger.debug("Retrieved {} variables from pt_metadata", pvVars.size());
         

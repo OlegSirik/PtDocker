@@ -10,15 +10,17 @@ import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.entity.*;
 import ru.pt.auth.model.ClientSecurityConfig;
+import ru.pt.auth.security.permitions.AuthZ;
+import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.ClientRepository;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.utils.ClientMapper;
 
 import java.util.List;
@@ -37,6 +39,7 @@ public class ClientService {
     private final ClientMapper clientMapper;
     private final AccountService accountService;
     private final ProductService productService;
+    private final AuthorizationService authorizationService;
 
     public ClientService(
             ClientRepository clientRepository,
@@ -45,7 +48,8 @@ public class ClientService {
             TenantService tenantService,
             SecurityContextHelper securityContextHelper,
             AccountService accountService,
-            ProductService productService) {
+            ProductService productService,
+            AuthorizationService authorizationService) {
         this.clientRepository = clientRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.accountRepository = accountRepository;
@@ -54,9 +58,12 @@ public class ClientService {
         this.clientMapper = new ClientMapper();
         this.accountService = accountService;
         this.productService = productService;
+        this.authorizationService = authorizationService;
     }
 
     public Optional<ClientEntity> findByClientId(String clientId) {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, clientId, null, AuthZ.Action.VIEW);
         return clientRepository.findByClientId(clientId);
     }
 
@@ -64,11 +71,13 @@ public class ClientService {
      * Получает логин для базового аккаунта клиента
      */
     public Optional<String> getDefaultAccountLogin(Long defaultAccountId) {
-        // Ищем запись в acc_account_logins для базового аккаунта
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, null, defaultAccountId, AuthZ.Action.VIEW);
         return accountLoginRepository.findByAccountId(defaultAccountId)
                 .map(AccountLoginEntity::getUserLogin);
     }
 
+    /** Used during auth flow (e.g. AccountResolverService); no auth check - called before user is resolved. */
     public ClientSecurityConfig getConfig(String tenantCode, String authClientId) {
         return clientRepository.findByTenantCodeAndAuthClientId(tenantCode, authClientId)
                 .map(this::mapToDomain)
@@ -93,17 +102,14 @@ public class ClientService {
      */
     @Transactional
     public Client createClient(Client client) {
-        UserDetailsImpl currentUser = getCurrentUser();
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, null, null, AuthZ.Action.MANAGE);
 
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can create clients");
-        }
-
-        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
+        TenantEntity tenant = tenantService.findByCode(user.getTenantCode())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
-        if (clientRepository.findByClientIdandTenantCode(client.getClientId(), currentUser.getTenantCode()).isPresent()) {
+        if (clientRepository.findByClientIdandTenantCode(client.getClientId(), user.getTenantCode()).isPresent()) {
             throw new BadRequestException("Client with ID '" + client.getClientId() + "' already exists");
         }
 
@@ -142,21 +148,20 @@ public class ClientService {
      */
     @Transactional
     public Client updateClient(Client client) {
-        UserDetailsImpl currentUser = getCurrentUser();
-
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can update clients");
-        }
-
-        TenantEntity tenant = tenantService.findByCode(currentUser.getTenantCode())
-                .orElseThrow(() -> new NotFoundException("Tenant not found"));
-
+        AuthenticatedUser user = getCurrentUser();
         ClientEntity clientToUpdate = clientRepository.findById(client.getId())
                 .orElseThrow(() -> new NotFoundException("Client not found"));
+        AccountEntity clientAccount = accountRepository.findCliensAccountByClientId(clientToUpdate.getId())
+                .orElse(null);
 
-        if ("TNT_ADMIN".equals(currentUser.getUserRole())) {
-            // Если это sys_admin, то можно обновить любого клиента, если это tnt_admin то только из своего тенанта
-            // Проверка, что текущий пользователь имеет доступ к этой записи
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, String.valueOf(client.getId()),
+                clientAccount != null ? clientAccount.getId() : null, AuthZ.Action.MANAGE);
+
+        TenantEntity tenant = tenantService.findByCode(user.getTenantCode())
+                .orElseThrow(() -> new NotFoundException("Tenant not found"));
+
+        if ("TNT_ADMIN".equals(user.getUserRole())) {
+            // TNT_ADMIN: only clients from own tenant. SYS_ADMIN: any client.
             if (!clientToUpdate.getTenant().getCode().equals(tenant.getCode())) {
                 throw new ForbiddenException("You do not have access to this tenant data");
             }
@@ -164,7 +169,7 @@ public class ClientService {
 
         if (!clientToUpdate.getClientId().equals(client.getClientId())) {
             // Проверка уникальности нового clientId
-            ClientEntity oldClient = clientRepository.findByClientIdandTenantCode(client.getClientId(), currentUser.getTenantCode())
+            ClientEntity oldClient = clientRepository.findByClientIdandTenantCode(client.getClientId(), user.getTenantCode())
                     .orElse(new ClientEntity());
 
             if (oldClient.getId() != null && !oldClient.getId().equals(client.getId())) {
@@ -191,13 +196,10 @@ public class ClientService {
      */
     @Transactional(readOnly = true)
     public List<Client> listClients() {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, null, null, AuthZ.Action.LIST);
 
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can list clients");
-        }
-
-        List<ClientEntity> clients = clientRepository.findBytenantCode(currentUser.getTenantCode());
+        List<ClientEntity> clients = clientRepository.findBytenantCode(user.getTenantCode());
 
         List<Client> clientsDto = clients.stream()
             .map(client -> {
@@ -241,20 +243,12 @@ public class ClientService {
      */
     @Transactional(readOnly = true)
     public Client getClientById(Long id) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"TNT_ADMIN".equals(currentUser.getUserRole()) && !"SYS_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only TNT_ADMIN can get clients");
-        }
-
+        AuthenticatedUser user = getCurrentUser();
         ClientEntity client = clientRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Client not found"));
-
-        if (!client.getTenant().getCode().equals(currentUser.getTenantCode())) {
-            throw new ForbiddenException("Cannot access client from different tenant");
-        }
-
         AccountEntity account = accountRepository.findCliensAccountByClientId(id)
                 .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + id));
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT, String.valueOf(id), account.getId(), AuthZ.Action.VIEW);
 
         Client clientDto = clientMapper.toDto(client);
         clientDto.setClientAccountId(account.getId());
@@ -263,16 +257,17 @@ public class ClientService {
 
     // ========== HELPER METHODS ==========
 
-    private UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
+    private AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new ForbiddenException("Not authenticated"));
     }
 
     @Transactional(readOnly = true)
     public List<ProductRole> listClientProducts(Long clientId) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
+        AuthenticatedUser user = getCurrentUser();
+        AccountEntity account = accountRepository.findClientAccountById(user.getTenantCode(), clientId)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT_PRODUCTS, String.valueOf(clientId), account.getId(), AuthZ.Action.LIST);
 
         return accountService.getProductRolesByAccountId(account.getId());
         //accountService.getProd
@@ -280,9 +275,10 @@ public class ClientService {
 
     @Transactional
     public void grantProduct(Long clientId, ProductRole productRole) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
+        AuthenticatedUser user = getCurrentUser();
+        AccountEntity account = accountRepository.findClientAccountById(user.getTenantCode(), clientId)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
+        authorizationService.check(user, AuthZ.ResourceType.CLIENT_PRODUCTS, String.valueOf(clientId), account.getId(), AuthZ.Action.MANAGE);
 
         // set all boolean columns like can% to true
         ProductRole updatedProductRole = new ProductRole(
@@ -309,7 +305,7 @@ public class ClientService {
     @Transactional
     public void revokeProduct(Long clientId, Long id) {
 
-        UserDetailsImpl currentUser = getCurrentUser();
+        AuthenticatedUser currentUser = getCurrentUser();
         AccountEntity account = accountRepository.findClientAccountById(currentUser.getTenantCode(), clientId)
             .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + clientId));
 

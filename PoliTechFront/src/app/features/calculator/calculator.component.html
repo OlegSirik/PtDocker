@@ -196,6 +196,16 @@
                 <td mat-cell *matCellDef="let element">{{element.varName}}</td>
               </ng-container>
 
+              <ng-container matColumnDef="altVarName">
+                <th mat-header-cell *matHeaderCellDef>Alt var name</th>
+                <td mat-cell *matCellDef="let element">{{element.altVarName}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="altVarValue">
+                <th mat-header-cell *matHeaderCellDef>Alt var value</th>
+                <td mat-cell *matCellDef="let element">{{element.altVarValue}}</td>
+              </ng-container>
+
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
                 <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">

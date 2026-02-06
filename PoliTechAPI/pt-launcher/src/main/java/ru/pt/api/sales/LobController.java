@@ -2,10 +2,11 @@ package ru.pt.api.sales;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.security.SecuredController;
@@ -15,7 +16,6 @@ import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.hz.JsonExampleBuilder;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -41,27 +41,33 @@ public class LobController extends SecuredController {
 
     // get /admin/lobs return id, Code, Name from repository
     @GetMapping
-    public List<Map<String, Object>> listLobs(
+    public List<LobModel> listLobs(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        //requireAdmin(user);
-        return lobService.listActiveSummaries().stream()
-                .map(row -> Map.of(
-                        "id", row[0],
-                        "mpCode", row[1],
-                        "mpName", row[2]
-                ))
-                .collect(Collectors.toList());
+
+        return lobService.listActiveSummaries();
     }
 
     // get /admin/lobs/{lob_code} returns json
-    @GetMapping("/{code}")
+    @GetMapping("/{id}")
     public ResponseEntity<LobModel> getByCode(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("code") String code) {
-        //requireAdmin(user);
-        return ResponseEntity.ok(lobService.getByCode(code));
+            @PathVariable("id") String id) {
+        
+        LobModel lob;
+        try {
+            Integer lobId = Integer.parseInt(id);
+            lob = lobService.getById(lobId);
+        } catch (NumberFormatException e) {
+            lob = lobService.getByCode(id);
+        }
+        
+        if (lob == null) {
+            throw new NotFoundException("Lob " + id + " не найден");
+        }
+        
+        return ResponseEntity.ok(lob);
     }
 
     // post /admin/lobs insert new record
@@ -70,20 +76,24 @@ public class LobController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody LobModel payload) {
-        //requireAdmin(user);
+       
         LobModel created = lobService.create(payload);
         return ResponseEntity.ok(created);
     }
 
     // put /admin/lobs/{lob_code} replace json, fix name and mpCode/id rules
-    @PutMapping("/{code}")
+    @PutMapping("/{id}")
     public ResponseEntity<LobModel> updateLob(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("code") String code,
+            @PathVariable("id") Integer id,
             @RequestBody LobModel payload) {
-        //requireAdmin(user);
-        return ResponseEntity.ok(lobService.updateByCode(code, payload));
+
+        if (payload.getId() == null || id.longValue() != payload.getId()) {
+            throw new BadRequestException("ID in path must match payload ID");
+        }
+        
+        return ResponseEntity.ok(lobService.update(payload));
     }
 
     // delete /admin/lobs/{lob_code} soft delete
@@ -109,14 +119,12 @@ public class LobController extends SecuredController {
             return ResponseEntity.notFound().build();
         }
         try {
-            String jsonExample = JsonExampleBuilder.buildJsonExample(
-                    lob.getMpVars().stream()
-                    .map(LobVar::getVarPath)
-                    .collect(Collectors.toList())
-            );
+            List<String> varPaths = lob.getMpVars() != null
+                    ? lob.getMpVars().stream().map(LobVar::getVarPath).collect(Collectors.toList())
+                    : List.of();
+            String jsonExample = JsonExampleBuilder.buildJsonExample(varPaths);
             return ResponseEntity.ok(jsonExample);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }

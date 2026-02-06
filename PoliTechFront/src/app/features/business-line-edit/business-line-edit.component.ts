@@ -58,20 +58,7 @@ export class BusinessLineEditComponent implements OnInit {
   policyInsObjectDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   textVarDisplayedColumns: string[] = ['varCode', 'varName', 'varValue', 'textVarActions'];
 
-//  varSearchText = '';
-//  coverSearchText = '';
   exampleJsonText = '';
-
-//  get fullVarsCollection(): BusinessLineVar[] {
-//    if (!this.businessLine) { return [] ; }
-//    return this.varService.getPhDefVars (this.businessLine.mpPhType).concat(this.varService.getIoDefVars(this.businessLine.mpInsObjectType));
-//  }
-
-//  get filteredCovers(): BusinessLineCover[] {
-//    const s = this.coverSearchText.trim().toLowerCase();
-//    if (!s) return this.businessLine.mpCovers;
-//    return this.businessLine.mpCovers.filter(c => c.coverCode.toLowerCase().includes(s) || c.coverName.toLowerCase().includes(s) || c.risks.toLowerCase().includes(s));
-//  }
 
   get paginatedVars(): BusinessLineVar[] {
     return this.businessLine.mpVars.filter(v => v.varType == 'MAGIC' || v.varType == 'VAR' || v.varType == 'CONST');
@@ -121,12 +108,9 @@ export class BusinessLineEditComponent implements OnInit {
     
     let result: any[] = [];
     let prevCategory = '';
-    
-    //console.log('this.businessLine.mpVars', this.businessLine.mpVars);
 
     for (const category of categories) {
-      //console.log('categories', category);
-      // Only keep variables whose varCdm fits category
+
       const matchedVars = this.businessLine.mpVars
         .filter(v => v.varCdm && v.varCdm.startsWith(`insuredObject.${category}.`))
         .sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0))
@@ -136,7 +120,7 @@ export class BusinessLineEditComponent implements OnInit {
             cat = category;
             prevCategory = category;
           }
-          console.log('v', v);
+          
           return {
             category: cat,
             field: v.varPath.split('.').slice(2).join('.'),
@@ -151,7 +135,9 @@ export class BusinessLineEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const code = this.route.snapshot.paramMap.get('mpCode');
+    const code = this.route.snapshot.paramMap.get('id');
+    console.log('code=',code);
+
     this.varService.getAllVars();
     
     if (code) {
@@ -160,23 +146,30 @@ export class BusinessLineEditComponent implements OnInit {
         if (!doc) { this.router.navigate(['/', this.authService.tenant, 'business-line']); return; }
         
         // Normalize mpFiles property names (filename -> fileName)
+        /*
         const normalizedFiles = (doc.mpFiles || []).map((file: any) => ({
           fileCode: file.fileCode,
           fileName: file.fileName || file.filename || ''
         }));
+        */
 
+        this.businessLine = doc;
+        /*
         this.businessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
           mpInsObjectType: doc.mpInsObjectType || '',
           mpFiles: normalizedFiles
         };
+        */
+        /*
         this.originalBusinessLine = {
           ...doc,
           mpPhType: doc.mpPhType || '',
           mpInsObjectType: doc.mpInsObjectType || '',
           mpFiles: normalizedFiles
         };
+        */
         this.updateChanges();
       });
     } else {
@@ -184,6 +177,8 @@ export class BusinessLineEditComponent implements OnInit {
       this.businessLine.mpVars = this.varService.getAllVars();
       this.updateChanges();
     }
+    console.error(this.isNewRecord);
+    console.error(this.businessLine);
   }
 
   updateChanges(): void {
@@ -231,6 +226,22 @@ export class BusinessLineEditComponent implements OnInit {
       this.snack.open('Заполните mpCode и mpName', 'OK', { duration: 2500 });
       return;
     }
+
+    if (this.isNewRecord) {
+      this.svc.create(this.businessLine).subscribe(saved => {
+        this.businessLine = saved
+        this.updateChanges();
+        this.snack.open('Сохранено', 'OK', { duration: 2000 });
+      })
+    } else {
+      this.svc.update(this.businessLine.id, this.businessLine).subscribe(saved => {
+        this.businessLine = saved;
+        this.isNewRecord = false;
+        this.updateChanges();
+        this.snack.open('Сохранено', 'OK', { duration: 2000 });
+      })
+    }
+ /*
     const dataToSave = {
       ...this.businessLine,
       mpPhType: this.businessLine.mpPhType || '',
@@ -259,6 +270,7 @@ export class BusinessLineEditComponent implements OnInit {
       this.updateChanges();
       this.snack.open('Сохранено', 'OK', { duration: 2000 });
     });
+    */
   }
 
   addVar(): void {
@@ -278,75 +290,12 @@ export class BusinessLineEditComponent implements OnInit {
 
     });
   }
-/*
-  addAllVars(): void {
-    let newVars: any[] =[];
-  // Берём массив phPersonVars из сервиса, копируем уникальные varPath в this.businessLine.mpVars
-  if (this.businessLine.mpPhType === 'person') {
-    newVars = newVars.concat(this.svc.phPersonVars).
-      concat(this.svc.phPhoneVars).
-      concat(this.svc.phEmailVars).
-      concat(this.svc.phPersonOrganizationVars).
-      concat(this.svc.phPersonDocumentVars).
-      concat(this.svc.phAddressVars);
-  }
-  if (this.businessLine.mpPhType === 'organization') {
-    newVars = newVars.concat(this.svc.phOrganizationVars).
-      concat(this.svc.phOrganizationDocumentVars).
-      concat(this.svc.phPhoneVars).
-      concat(this.svc.phEmailVars).
-      concat(this.svc.phAddressVars);
-  }
-  const existingVarPaths = new Set(this.businessLine.mpVars.map(v => v.varPath));
-  const uniqueVarsToAdd = newVars.filter(v => !existingVarPaths.has(v.varPath));
-  this.businessLine.mpVars = [...this.businessLine.mpVars, ...uniqueVarsToAdd];
-  this.updateChanges();
 
-  }
-*/
-  editVar(v: BusinessLineVar): void {
-    this.openVarDialog({ ...v }, (res) => {
-      if (!res) return;
-      if (this.isNewRecord) {
-        const index = this.businessLine.mpVars.findIndex(x => x.varCode === v.varCode);
-        if (index !== -1) {
-          this.businessLine.mpVars = [
-            ...this.businessLine.mpVars.slice(0, index),
-            { ...v, ...res },
-            ...this.businessLine.mpVars.slice(index + 1)
-          ];
-        }
-        this.updateChanges();
-      } else {
-        this.svc.updateVar(this.businessLine.mpCode, v.varCode, res).subscribe(updated => {
-          if (updated) {
-            const index = this.businessLine.mpVars.findIndex(x => x.varCode === v.varCode);
-            if (index !== -1) {
-              this.businessLine.mpVars = [
-                ...this.businessLine.mpVars.slice(0, index),
-                updated,
-                ...this.businessLine.mpVars.slice(index + 1)
-              ];
-            }
-          }
-          this.updateChanges();
-        });
-      }
-    });
-  }
 
-  deleteVar(v: BusinessLineVar): void {
-    //this.openConfirm('Удалить переменную?', () => {
-      if (this.isNewRecord) {
-        this.businessLine.mpVars = this.businessLine.mpVars.filter(x => x.varCode !== v.varCode);
-        this.updateChanges();
-      } else {
-        this.svc.deleteVar(this.businessLine.mpCode, v.varCode).subscribe(() => {
-          this.businessLine.mpVars = this.businessLine.mpVars.filter(x => x.varCode !== v.varCode);
-          this.updateChanges();
-        });
-      }
-    //});
+
+  deleteVar(v: BusinessLineVar): void {      
+    this.businessLine.mpVars = this.businessLine.mpVars.filter(x => x.varCode !== v.varCode);
+    this.updateChanges();
   }
 
   addCover(): void {
@@ -362,7 +311,7 @@ export class BusinessLineEditComponent implements OnInit {
   editCover(c: BusinessLineCover): void {
     this.openCoverDialog({ ...c }, (res) => {
       if (!res) return;
-      if (this.isNewRecord) {
+      
         const index = this.businessLine.mpCovers.findIndex(x => x.coverCode === c.coverCode);
         if (index !== -1) {
           this.businessLine.mpCovers = [
@@ -372,37 +321,15 @@ export class BusinessLineEditComponent implements OnInit {
           ];
         }
         this.updateChanges();
-      } else {
-        this.svc.updateCover(this.businessLine.mpCode, c.coverCode, res).subscribe(updated => {
-          if (updated) {
-            const index = this.businessLine.mpCovers.findIndex(x => x.coverCode === c.coverCode);
-            if (index !== -1) {
-              this.businessLine.mpCovers = [
-                ...this.businessLine.mpCovers.slice(0, index),
-                updated,
-                ...this.businessLine.mpCovers.slice(index + 1)
-              ];
-            }
-          }
-          this.updateChanges();
-        });
-      }
-    });
+      
+      });
   }
 
   deleteCover(c: BusinessLineCover): void {
     this.openConfirm('Удалить покрытие?', () => {
-      if (this.isNewRecord) {
         this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
         this.updateChanges();
-      } else {
-        this.svc.deleteCover(this.businessLine.mpCode, c.coverCode).subscribe(() => {
-          this.businessLine.mpCovers = this.businessLine.mpCovers.filter(x => x.coverCode !== c.coverCode);
-          this.updateChanges();
-        });
-      }
     });
-
   }
 
   // JSON File operations

@@ -56,6 +56,8 @@ export interface VarReference1 {
 export interface CalculatorCoefficient {
   varCode: string;
   varName: string;
+  altVarName?: string;
+  altVarValue?: number;
   columns: CoefficientColumn[];
 }
 

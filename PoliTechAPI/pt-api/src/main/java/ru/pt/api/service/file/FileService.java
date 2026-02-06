@@ -5,6 +5,8 @@ import ru.pt.api.dto.file.FileModel;
 import java.util.List;
 import java.util.Map;
 
+import ru.pt.domain.model.VariableContext;
+
 /**
  * Работа с моделями файлов приложения
  * Задействовано файловое хранилище
@@ -67,7 +69,7 @@ public interface FileService {
      * @param keyValues параметры обработки
      * @return результат обработки
      */
-    byte[] process(Long id, Map<String, Object> keyValues);
+    byte[] process(Long id, VariableContext keyValues);
 
     /**
      * Получить файл по типу и параметрам
@@ -76,6 +78,6 @@ public interface FileService {
      * @param keyValues параметры поиска
      * @return файл в виде массива байт
      */
-    byte[] getFile(Integer fileId, Map<String, Object> keyValues);
+    byte[] getFile(Integer fileId, VariableContext keyValues);
 
 }

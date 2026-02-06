@@ -1,6 +1,7 @@
 package ru.pt.numbers.service;
 
 import org.springframework.stereotype.Service;
+
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
@@ -15,7 +16,9 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import ru.pt.api.dto.exception.UnauthorizedException;
+import ru.pt.domain.model.VariableContext;
 
 /**
  * Кор реализация сервиса генерации номеров через таблицу в БД
@@ -55,7 +58,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     }
 
     @Override
-    public String getNextNumber(Map<String, Object> values, String productCode) {
+    public String getNextNumber(VariableContext values, String productCode) {
         NumberGeneratorEntity ng = null;
         if (productCode != null && !productCode.isEmpty()) {
             ng = repository.findByProductCode(getCurrentTenantId(), productCode)
@@ -97,7 +100,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
             } else {
                 // Get value from provided map
-                replacement = values.getOrDefault(key, "").toString();
+                replacement = values.getString(key);
             }
 
             replaceAll(resultMask, matcher.group(0), replacement);

@@ -84,7 +84,7 @@
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Статус версии</mat-label>
-                <input matInput [value]="product.versionStatus || 'DRAFT'" readonly>
+                <input matInput [value]="product.versionStatus" readonly>
               </mat-form-field>
             </div>
           </mat-card-content>
@@ -221,13 +221,13 @@
 
               <ng-container matColumnDef="errorText">
                 <th mat-header-cell *matHeaderCellDef>Текст ошибки</th>
-                <td mat-cell *matCellDef="let element">{{element.errorText}}</td>
+                <td mat-cell *matCellDef="let element">{{ truncateText( element.errorText, 200) }}</td>
               </ng-container>
 
               <ng-container matColumnDef="expression">
                 <th mat-header-cell *matHeaderCellDef>Условие</th>
                 <td mat-cell *matCellDef="let element">
-                  {{ element.keyLeft }} {{ element.ruleType }} {{ element.keyRight || '' }} {{ element.valueRight || '' }}
+                  {{ truncateText((element.keyLeft || '') + ' ' + (element.ruleType || '') + ' ' + (element.keyRight || '') + ' ' + (element.valueRight || ''), 200) }}
                 </td>
               </ng-container>
 
@@ -311,13 +311,13 @@
 
               <ng-container matColumnDef="errorText">
                 <th mat-header-cell *matHeaderCellDef>Текст ошибки</th>
-                <td mat-cell *matCellDef="let element">{{element.errorText}}</td>
+                <td mat-cell *matCellDef="let element">{{ truncateText(element.errorText, 200) }}</td>
               </ng-container>
 
               <ng-container matColumnDef="expression">
                 <th mat-header-cell *matHeaderCellDef>Условие</th>
                 <td mat-cell *matCellDef="let element">
-                  {{ element.keyLeft }} {{ element.ruleType }} {{ element.keyRight || '' }} {{ element.valueRight || '' }}
+                  {{ truncateText((element.keyLeft || '') + ' ' + (element.ruleType || '') + ' ' + (element.keyRight || '') + ' ' + (element.valueRight || ''), 200) }}
                 </td>
               </ng-container>
 

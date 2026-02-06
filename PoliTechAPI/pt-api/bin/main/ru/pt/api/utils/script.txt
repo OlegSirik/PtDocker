@@ -1,0 +1,29 @@
+create commission.service.ts from api-base
+
+interface Commission
+{
+        "id"?: number,
+        "accountId": number,
+        "productId": number,
+        "action": string,
+        "rateValue"?: number,
+        "fixedAmount"?: number,
+        "minAmount"?: number,
+        "maxAmount"?: number,
+        "commissionMinRate"?: number,
+        "commissionMaxRate"?: number,
+        "adrNumber"?: string
+}
+
+create methods get all - 
+/commissions/configurations?accountId=
+
+create
+
+    @PostMapping("/configurations")
+update
+    @PutMapping("/configurations/{id}")
+delete
+    @DeleteMapping("/configurations/{id}")
+get
+    @GetMapping("/configurations/{id}")

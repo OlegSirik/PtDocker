@@ -99,7 +99,7 @@ export class CalculatorComponent implements OnInit {
   textProcessorContent: string = '';
 
   // Coefficients table
-  coefficientsDisplayedColumns = ['varCode', 'varName', 'actions'];
+  coefficientsDisplayedColumns = ['varCode', 'varName', 'altVarName', 'altVarValue', 'actions'];
   coefficientsSearchText = '';
   coefficientsPageSize = 10;
   coefficientsPageIndex = 0;
@@ -997,7 +997,7 @@ export interface PolicyVar {
             varCode: v.varCode,
             varName: v.varName,
             varPath: v.varPath,
-            varType: 'VAR', // v.varType,
+            varType: v.varType,
             varDataType: v.varDataType === 'NUMBER' ? 'NUMBER' : 'STRING',
             varValue: v.varValue,
             varCdm: v.varCdm,

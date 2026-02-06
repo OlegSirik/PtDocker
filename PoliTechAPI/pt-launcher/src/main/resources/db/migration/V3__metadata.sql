@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS pt_refdata(
 
 insert into pt_metadata (var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type) values
 
-('io_addr_addressStr', 'Адрес.адресная строка', 'insuredObjects[0].addresses[isPrimary].addresses[isPrimary]Str', 'IN', '', 'insuredObject.addresses.addressStr', '133', 'STRING'),
-('io_addr_addressStrEn', 'Адрес.адресная строка англ', 'insuredObjects[0].addresses[isPrimary].addresses[isPrimary]StrEn', 'IN', '', 'insuredObject.addresses.addressStrEn', '134', 'STRING'),
+('io_addr_addressStr', 'Адрес.адресная строка', 'insuredObjects[0].addresses[isPrimary].addressesStr', 'IN', '', 'insuredObject.addresses.addressStr', '133', 'STRING'),
+('io_addr_addressStrEn', 'Адрес.адресная строка англ', 'insuredObjects[0].addresses[isPrimary].addressesStrEn', 'IN', '', 'insuredObject.addresses.addressStrEn', '134', 'STRING'),
 ('io_addr_building', 'Адрес.строение', 'insuredObjects[0].addresses[isPrimary].building', 'IN', '', 'insuredObject.addresses.building', '127', 'STRING'),
 ('io_addr_city', 'Адрес.город', 'insuredObjects[0].addresses[isPrimary].city', 'IN', '', 'insuredObject.addresses.city', '124', 'STRING'),
 ('io_addr_countryCode', 'Адрес.код страны', 'insuredObjects[0].addresses[isPrimary].countryCode', 'IN', 'RU', 'insuredObject.addresses.countryCode', '122', 'STRING'),
@@ -162,10 +162,15 @@ insert into pt_metadata (var_code, var_name, var_path, var_type, var_value, var_
 ('io_isNewBuilding', 'Имущество.новостройка', 'insuredObjects[0].property.isNewBuilding', 'IN', '', 'insuredObject.property.isNewBuilding', 1031, 'STRING'),
 ('io_propertyValue', 'Имущество.стоимость имущества', 'insuredObjects[0].property.propertyValue', 'IN', '0', 'insuredObject.property.propertyValue', 1032, 'NUMBER'),
 ('io_commissioningDate', 'Имущество.дата ввода в эксплуатацию', 'insuredObjects[0].property.commissioningDate', 'IN', '', 'insuredObject.property.commissioningDate', 1033, 'STRING'),
-('io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 'IN', '0', 'insuredObject.property.floor', 1034, 'NUMBER'),
-('io_rfSport1', 'Доп.риск спорт #1', 'insuredObjects[0].riskFactors.sport1', 'IN', '0', 'insuredObject.riskFactors.sport1', 2034, 'STRING'),
-('io_rfSport2', 'Доп.риск спорт #2', 'insuredObjects[0].riskFactors.sport2', 'IN', '0', 'insuredObject.riskFactors.sport2', 2035, 'STRING'),
-('io_rfSport3', 'Доп.риск спорт #3', 'insuredObjects[0].riskFactors.sport3', 'IN', '0', 'insuredObject.riskFactors.sport3', 2036, 'STRING');
+
+('gross_up_factor', 'gross-up_factor 1/(1-kV)', '', 'MAGIC', '', 'policy.magic.grossUpFactor', 1050, 'NUMBER'),
+('pl_commRate', 'Процент кВ по договору', 'commission.appliedCommissionRate', 'IN', '', 'policy.commission.appliedCommissionRate', 1050, 'NUMBER'),
+
+('io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 'IN', '0', 'insuredObject.property.floor', 1034, 'NUMBER');
+
+
+
+
 
 insert into pt_refdata values
 ('fns-dul','1','Паспорт гражданина СССР'),

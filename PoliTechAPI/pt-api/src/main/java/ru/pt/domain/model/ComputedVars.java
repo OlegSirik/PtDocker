@@ -3,6 +3,8 @@ package ru.pt.domain.model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
@@ -25,21 +27,7 @@ public class ComputedVars {
             }
             
             String result;
-            switch (key) {
-                case "ph_isMale":
-                    String gender = ctx.getString("ph_gender");
-                    logger.trace("Computing ph_isMale: gender={}", gender);
-                    result = "M".equals(gender) ? "X" : "";
-                    logger.trace("ph_isMale result: {}", result);
-                    return result;
-                    
-                case "ph_isFemale":
-                    String genderFemale = ctx.getString("ph_gender");
-                    logger.trace("Computing ph_isFemale: gender={}", genderFemale);
-                    result = "F".equals(genderFemale) ? "X" : "";
-                    logger.trace("ph_isFemale result: {}", result);
-                    return result;
-                    
+            switch (key) {                    
                 case "ph_age_issue":
                     String birthDateStr = ctx.getString("ph_birthDate");
                     String issueDateStr = ctx.getString("pl_issueDate");
@@ -106,6 +94,30 @@ public class ComputedVars {
                     result = Long.toString(days);
                     logger.trace("pl_TermDays result: {} days", days);
                     return result;
+
+                case "gross_up_factor": {
+                    String val = ctx.getString("pl_commRate");
+                    //BigDecimal appliedCommissionRate = ctx.getDecimal("pl_commRate");
+                    BigDecimal appliedCommissionRate = new BigDecimal(val);
+
+                    logger.trace("Computing gross-up_factor: pl_commRate={}", appliedCommissionRate);
+                    if (appliedCommissionRate == null) {
+                        logger.trace("gross-up_factor: pl_commRate is null, returning 1");
+                        return "1";
+                    }
+                    // Rate < 1 means decimal (e.g. 0.1 for 10%); >= 1 means percentage (e.g. 10 for 10%)
+                    BigDecimal oneMinusRate = appliedCommissionRate.compareTo(BigDecimal.ONE) < 0
+                            ? BigDecimal.ONE.subtract(appliedCommissionRate)
+                            : BigDecimal.ONE.subtract(appliedCommissionRate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP));
+                    if (oneMinusRate.compareTo(BigDecimal.ZERO) <= 0) {
+                        logger.warn("gross-up_factor: division by zero (rate={}), returning 1", appliedCommissionRate);
+                        return "1";
+                    }
+                    BigDecimal factor = BigDecimal.ONE.divide(oneMinusRate, 10, RoundingMode.HALF_UP);
+                    result = factor.toPlainString();
+                    logger.trace("gross-up_factor result: {} (rate={}, oneMinusRate={})", result, appliedCommissionRate, oneMinusRate);
+                    return result;
+                }
                 /*     
                 case "io_legs":
                     Object io = ctx.get("io_ticketNr");
@@ -144,5 +156,6 @@ public class ComputedVars {
             return LocalDate.parse(isoDateTime);
         }
     }
+
 }
 

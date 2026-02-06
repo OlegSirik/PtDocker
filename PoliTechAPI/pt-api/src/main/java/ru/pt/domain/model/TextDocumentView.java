@@ -1,6 +1,9 @@
 package ru.pt.domain.model;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.*;
@@ -73,6 +76,9 @@ public final class TextDocumentView implements InitializingBean {
             }
             return obj.toString();
         });
+        filters.put("dd.MM.yyyy", obj -> { return formatDate(obj, "dd.MM.yyyy");});
+        filters.put("dd MMMM yyyy", obj -> { return formatDate(obj, "dd MMMM yyyy");});
+
     }
         
     private void addRefFilter(String attributeCode) {
@@ -217,19 +223,15 @@ public final class TextDocumentView implements InitializingBean {
      * Получение значения из контекста (поддержка вложенных свойств)
      */
     private Object getValueFromContext(VariableContext ctx, String path) {
-        String[] parts = path.split("\\.");
-        Object current = ctx;
+        //String[] parts = path.split("\\.");
+        //Object current = ctx;
         
-        for (String part : parts) {
-            if (current instanceof Map) {
-                current = ((Map<?, ?>) current).get(part);
-            } else {
-                return null;
-            }
-            if (current == null) return null;
-        }
+        //for (String part : parts) {
+            return ctx.get(path);
+        //    if (current == null) return null;
+        //}
         
-        return current;
+        // return current;
     }
     
     /**
@@ -267,6 +269,27 @@ public final class TextDocumentView implements InitializingBean {
         return this;
     }
         */
+
+// Добавить форматер для дат для отчетов
+    private String formatDate(Object obj, String format) {
+        if (obj == null) return "";
+            
+        if (obj instanceof String) {
+            String stringObj = (String) obj;
+            stringObj = stringObj.substring(0,10);
+            if ( stringObj.length() != 10) { return ""; };
+
+            try {
+                LocalDate date = LocalDate.parse(stringObj, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                return date.format(DateTimeFormatter.ofPattern(format, Locale.forLanguageTag("ru")));
+            } catch (DateTimeParseException e) {
+                return "";
+            }
+        }
+            
+        return "";
+    }
+    
 }
  
 

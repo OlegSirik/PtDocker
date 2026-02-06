@@ -4,7 +4,8 @@ import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 
 import java.util.List;
-import java.util.Map;
+
+import ru.pt.domain.model.VariableContext;
 
 /**
  * Манипуляция номерами полисов и создание новых нумераторов
@@ -17,7 +18,7 @@ public interface NumberGeneratorService {
      * @param productCode код продукта
      * @return номер полиса(уникальный)
      */
-    String getNextNumber(Map<String, Object> values, String productCode);
+    String getNextNumber(VariableContext values, String productCode);
 
     /**
      * Создать новый алгоритм нумератора

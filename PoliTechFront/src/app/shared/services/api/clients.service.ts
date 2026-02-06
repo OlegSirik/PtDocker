@@ -32,10 +32,12 @@ export interface Client {
 
   export interface ClientProduct {
     id?: number;
-    lobCode: string;
+    accountId?: number;
+    lobCode?: string;
     roleProductId: number;
-    productCode: string;
-    productName: string;
+    roleProductName?: string;
+    productCode?: string;
+    productName?: string;
     isDeleted: boolean;
 }
 

@@ -327,3 +327,7 @@ COMMENT ON COLUMN acc_logins.position IS 'Position/Title of the user (Должн
 COMMENT ON COLUMN acc_logins.is_deleted IS 'Soft delete flag. True - inactive (deleted), false - active';
 COMMENT ON COLUMN acc_logins.password IS 'Password hash for authentication';
 COMMENT ON COLUMN acc_tenants.code IS 'Unique code identifier for tenant (e.g., VSK, ALPHA)';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_code_not_deleted_pt_lobs 
+ON pt_lobs(code) 
+WHERE is_Deleted = false;
