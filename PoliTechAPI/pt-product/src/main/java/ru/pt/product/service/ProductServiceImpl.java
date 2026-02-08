@@ -786,7 +786,7 @@ public class ProductServiceImpl implements ProductService {
         numberGeneratorDescription.setId(productVersionModel.getNumberGeneratorDescription().getId());
         numberGeneratorDescription.setMask(productVersionModel.getNumberGeneratorDescription().getMask());
         numberGeneratorDescription.setMaxValue(productVersionModel.getNumberGeneratorDescription().getMaxValue());
-        numberGeneratorDescription.setProductCode(productVersionModel.getNumberGeneratorDescription().getProductCode());
+        numberGeneratorDescription.setProductCode(productVersionModel.getCode());
         numberGeneratorDescription.setResetPolicy(productVersionModel.getNumberGeneratorDescription().getResetPolicy());
         return numberGeneratorDescription;
     }
