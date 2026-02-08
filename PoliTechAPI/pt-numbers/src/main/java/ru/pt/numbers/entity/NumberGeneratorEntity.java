@@ -7,9 +7,11 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "pt_number_generators")
+@SequenceGenerator(name = "account_seq_gen", sequenceName = "account_seq", allocationSize = 1)
 public class NumberGeneratorEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq_gen")
     @Column(name = "id", nullable = false)
     private Integer id;
 
