@@ -1,15 +1,12 @@
 package ru.pt.calculator.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.calculator.CoefficientColumn;
+import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.calculator.entity.CoefficientDataEntity;
 import ru.pt.calculator.repository.CoefficientDataRepository;
@@ -18,8 +15,8 @@ import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.api.dto.exception.BadRequestException;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class CoefficientServiceImpl implements CoefficientService {
@@ -27,13 +24,11 @@ public class CoefficientServiceImpl implements CoefficientService {
     private static final Logger logger = LoggerFactory.getLogger(CoefficientServiceImpl.class);
 
     private final CoefficientDataRepository repository;
-    private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
     private final SecurityContextHelper securityContextHelper;
 
-    public CoefficientServiceImpl(CoefficientDataRepository repository, ObjectMapper objectMapper, JdbcTemplate jdbcTemplate, SecurityContextHelper securityContextHelper) {
+    public CoefficientServiceImpl(CoefficientDataRepository repository, JdbcTemplate jdbcTemplate, SecurityContextHelper securityContextHelper) {
         this.repository = repository;
-        this.objectMapper = objectMapper;
         this.jdbcTemplate = jdbcTemplate;
         this.securityContextHelper = securityContextHelper;
         }
@@ -48,23 +43,23 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional
-    public CoefficientDataEntity insert(Integer calculatorId, String code, JsonNode coefficientDataJson) {
+    public CoefficientDataEntity insert(Integer calculatorId, String code, CoefficientDataRow row) {
         logger.debug("Inserting coefficient data: calculatorId={}, code={}", calculatorId, code);
         CoefficientDataEntity entity = new CoefficientDataEntity();
         entity.setCalculatorId(calculatorId);
         entity.setCoefficientCode(code);
         entity.setTId(getCurrentTenantId());
-        mapFromJson(entity, coefficientDataJson);
+        mapFromRow(entity, row);
         CoefficientDataEntity saved = repository.save(entity);
         logger.info("Coefficient data inserted: id={}", saved.getId());
         return saved;
     }
 
     @Transactional
-    public CoefficientDataEntity update(Integer id, JsonNode coefficientDataJson) {
+    public CoefficientDataEntity update(Integer id, CoefficientDataRow row) {
         logger.debug("Updating coefficient data: id={}", id);
         CoefficientDataEntity entity = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Coefficient row not found: " + id));
-        mapFromJson(entity, coefficientDataJson);
+        mapFromRow(entity, row);
         CoefficientDataEntity updated = repository.save(entity);
         logger.info("Coefficient data updated: id={}", id);
         return updated;
@@ -77,25 +72,26 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional(readOnly = true)
-    public ArrayNode getTable(Integer calculatorId, String code) {
+    @Override
+    public List<CoefficientDataRow> getTable(Integer calculatorId, String code) {
         logger.debug("Getting coefficient table: calculatorId={}, code={}", calculatorId, code);
         List<CoefficientDataEntity> rows = repository.findAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
-        ArrayNode data = objectMapper.createArrayNode();
+        List<CoefficientDataRow> data = new ArrayList<>();
         for (CoefficientDataEntity e : rows) {
-            data.add(mapToJson(e));
+            data.add(mapToRow(e));
         }
         logger.trace("Retrieved {} coefficient rows", rows.size());
         return data;
     }
 
     @Transactional
-    public ArrayNode replaceTable(Integer calculatorId, String code, ArrayNode tableJson) {
+    @Override
+    public List<CoefficientDataRow> replaceTable(Integer calculatorId, String code, List<CoefficientDataRow> tableJson) {
         logger.info("Replacing coefficient table: calculatorId={}, code={}, rows={}", calculatorId, code, tableJson.size());
         repository.deleteAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         logger.debug("Deleted existing coefficient data");
         
-        //ArrayNode data = (tableJson.has("data") && tableJson.get("data").isArray()) ? (ArrayNode) tableJson.get("data") : objectMapper.createArrayNode();
-        for (JsonNode row : tableJson) {
+        for (CoefficientDataRow row : tableJson) {
             insert(calculatorId, code, row);
         }
         logger.info("Inserted {} new coefficient rows", tableJson.size());
@@ -103,6 +99,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public String getCoefficientValue(Integer calculatorId,
                                       String coefficientCode,
                                       VariableContext values,
@@ -178,6 +175,43 @@ public class CoefficientServiceImpl implements CoefficientService {
         }
     }
 
+    @Transactional
+    @Override
+    public int copyCoefficient(Integer calculatorIdFrom, Integer calculatorIdTo, String coefficientCode) {
+        logger.info("Copying coefficient: from={}, to={}, code={}", calculatorIdFrom, calculatorIdTo, coefficientCode);
+
+        if (calculatorIdFrom == null || calculatorIdTo == null || coefficientCode == null) {
+            throw new IllegalArgumentException("calculatorIdFrom, calculatorIdTo and coefficientCode are required");
+        }
+
+        Long tid = getCurrentTenantId();
+        String sql = """
+            insert into coefficient_data
+                (tid, calculator_id, coefficient_code,
+                 col0, col1, col2, col3, col4, col5, col6, col7, col8, col9, col10,
+                 result_value)
+            select
+                ?, ?, ?,
+                col0, col1, col2, col3, col4, col5, col6, col7, col8, col9, col10,
+                result_value
+            from coefficient_data
+            where tid = ? and calculator_id = ? and coefficient_code = ?
+            """;
+
+        int inserted = jdbcTemplate.update(
+            sql,
+            tid,
+            calculatorIdTo,
+            coefficientCode,
+            tid,
+            calculatorIdFrom,
+            coefficientCode
+        );
+
+        logger.info("Copied {} coefficient rows for code {}", inserted, coefficientCode);
+        return inserted;
+    }
+
     private String normalizeOperator(String op) {
         if (op == null) return null;
         String s = op.trim().toUpperCase();
@@ -197,30 +231,26 @@ public class CoefficientServiceImpl implements CoefficientService {
         };
     }
 
-    private void mapFromJson(CoefficientDataEntity entity, JsonNode json) {
-        ArrayNode condition = (json.has("conditionValue") && json.get("conditionValue").isArray()) ? (ArrayNode) json.get("conditionValue") : objectMapper.createArrayNode();
-        entity.setCol0(condition.size() > 0 ? condition.get(0).asText(null) : null);
-        entity.setCol1(condition.size() > 1 ? condition.get(1).asText(null) : null);
-        entity.setCol2(condition.size() > 2 ? condition.get(2).asText(null) : null);
-        entity.setCol3(condition.size() > 3 ? condition.get(3).asText(null) : null);
-        entity.setCol4(condition.size() > 4 ? condition.get(4).asText(null) : null);
-        entity.setCol5(condition.size() > 5 ? condition.get(5).asText(null) : null);
-        entity.setCol6(condition.size() > 6 ? condition.get(6).asText(null) : null);
-        entity.setCol7(condition.size() > 7 ? condition.get(7).asText(null) : null);
-        entity.setCol8(condition.size() > 8 ? condition.get(8).asText(null) : null);
-        entity.setCol9(condition.size() > 9 ? condition.get(9).asText(null) : null);
-        entity.setCol10(condition.size() > 10 ? condition.get(10).asText(null) : null);
-        if (json.has("resultValue") && !json.get("resultValue").isNull()) {
-            entity.setResultValue(json.get("resultValue").asDouble());
-        } else {
-            entity.setResultValue(null);
-        }
+    private void mapFromRow(CoefficientDataEntity entity, CoefficientDataRow row) {
+        List<String> condition = row.getConditionValue() != null ? row.getConditionValue() : List.of();
+        entity.setCol0(getConditionValue(condition, 0));
+        entity.setCol1(getConditionValue(condition, 1));
+        entity.setCol2(getConditionValue(condition, 2));
+        entity.setCol3(getConditionValue(condition, 3));
+        entity.setCol4(getConditionValue(condition, 4));
+        entity.setCol5(getConditionValue(condition, 5));
+        entity.setCol6(getConditionValue(condition, 6));
+        entity.setCol7(getConditionValue(condition, 7));
+        entity.setCol8(getConditionValue(condition, 8));
+        entity.setCol9(getConditionValue(condition, 9));
+        entity.setCol10(getConditionValue(condition, 10));
+        entity.setResultValue(row.getResultValue());
     }
 
-    private ObjectNode mapToJson(CoefficientDataEntity entity) {
-        ObjectNode row = objectMapper.createObjectNode();
-        row.put("id", entity.getId());
-        ArrayNode cond = objectMapper.createArrayNode();
+    private CoefficientDataRow mapToRow(CoefficientDataEntity entity) {
+        CoefficientDataRow row = new CoefficientDataRow();
+        row.setId(entity.getId());
+        List<String> cond = new ArrayList<>(11);
         cond.add(entity.getCol0());
         cond.add(entity.getCol1());
         cond.add(entity.getCol2());
@@ -232,9 +262,16 @@ public class CoefficientServiceImpl implements CoefficientService {
         cond.add(entity.getCol8());
         cond.add(entity.getCol9());
         cond.add(entity.getCol10());
-        row.set("conditionValue", cond);
-        if (entity.getResultValue() != null) row.put("resultValue", entity.getResultValue());
+        row.setConditionValue(cond);
+        row.setResultValue(entity.getResultValue());
         return row;
+    }
+
+    private String getConditionValue(List<String> condition, int index) {
+        if (condition == null || index < 0 || index >= condition.size()) {
+            return null;
+        }
+        return condition.get(index);
     }
 
 }

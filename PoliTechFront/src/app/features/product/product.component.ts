@@ -466,7 +466,26 @@ export class ProductComponent implements OnInit {
     });
   }
 
-  reloadPolicyVars(): void {}
+  reloadPolicyVars(): void {
+    if (!this.product?.id || !this.product?.versionNo) {
+      this.snackBar.open('Не удалось определить ID продукта или номер версии', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    const category = (this.policyFilter || '').toLowerCase().trim();
+    this.productService.reloadVars(this.product.id, this.product.versionNo, category).subscribe({
+      next: (updatedProduct: any) => {
+        this.product = updatedProduct;
+        this.updatePolicyTable();
+        this.updateTables();
+        this.snackBar.open('Переменные успешно обновлены', 'Закрыть', { duration: 3000 });
+      },
+      error: (error: any) => {
+        console.error('Error reloading vars:', error);
+        this.snackBar.open('Ошибка обновления переменных', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
 
   editSaveValidator(validator: QuoteValidator, index: number): void {
     this.loadDropdownOptions()
@@ -1023,6 +1042,10 @@ export class ProductComponent implements OnInit {
       categories = [''];
     } else if (this.policyFilter === 'Coverage') {
       prefix = 'coverage.';
+      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      categories = [''];
+    } else if (this.policyFilter === 'Strings') {
+      prefix = 'strings.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = [''];
     }

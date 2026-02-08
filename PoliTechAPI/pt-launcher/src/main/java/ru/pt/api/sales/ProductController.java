@@ -89,6 +89,17 @@ public class ProductController extends SecuredController {
         return ResponseEntity.ok(productService.publishToProd(productId, versionNo));
     }
 
+    @PostMapping("/{productId}/versions/{versionNo}/cmd/reload")
+    public ResponseEntity<ProductVersionModel> reloadVars(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("productId") Integer productId,
+            @PathVariable("versionNo") Integer versionNo,
+            @RequestParam("cat") String category) {
+        //requireRole(user, "SYS_ADMIN");
+        return ResponseEntity.ok(productService.reloadVars(productId, versionNo, category));
+    }
+
     @PutMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> updateVersion(
             @PathVariable String tenantCode,

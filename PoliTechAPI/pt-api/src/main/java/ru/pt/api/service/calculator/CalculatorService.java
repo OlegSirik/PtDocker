@@ -67,4 +67,6 @@ public interface CalculatorService {
      */
     void syncVars(Integer calculatorId);
 
+    void deleteCalculator(Integer productId, Integer versionNo, Integer packageNo);
+
 }

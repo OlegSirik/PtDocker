@@ -70,7 +70,6 @@ public class SalesController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("policyNumber") String policyNumber,
             @RequestBody String request) {
-        requireAuthenticated(user);
         
         // Validate policyNumber
         if (policyNumber == null || policyNumber.trim().isEmpty()) {

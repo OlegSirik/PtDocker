@@ -2,7 +2,6 @@ package ru.pt.api.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -11,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ProductVersionModel;
@@ -127,7 +127,7 @@ public class HealthCheckController {
             if (calculator != null && calculator.getCoefficients() != null) {
                 for (var coef : calculator.getCoefficients()) {
                     logger.debug("Getting coefficient table: {}", coef.getVarCode());
-                    ArrayNode coefficientTable = coefficientService.getTable(
+                    List<CoefficientDataRow> coefficientTable = coefficientService.getTable(
                         calculator.getId(),
                         coef.getVarCode()
                     );
@@ -424,7 +424,7 @@ public class HealthCheckController {
     public record CoefficientData(
         String code,
         String name,
-        ArrayNode data
+        List<CoefficientDataRow> data
     ) {}
     
     public record ImportResult(

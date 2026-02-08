@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS pt_calculators (
 );
 
 CREATE TABLE IF NOT EXISTS coefficient_data (
-    id INT PRIMARY KEY DEFAULT nextval('account_seq'),
+    id INT PRIMARY KEY DEFAULT nextval('coefficient_data_seq'),
     tid BIGINT NOT NULL REFERENCES acc_tenants(id),
     calculator_id INT NOT NULL,
     coefficient_code VARCHAR(128) NOT NULL,

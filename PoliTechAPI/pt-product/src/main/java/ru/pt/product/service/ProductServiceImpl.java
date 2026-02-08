@@ -388,6 +388,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteVersion(Integer id, Integer versionNo) {
         checkProductAccess(Action.ALL, String.valueOf(id));
+
         ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
@@ -406,6 +407,8 @@ public class ProductServiceImpl implements ProductService {
 //        product.setProdVersionNo(pv == null ? null : Math.max(0, pv));
             productRepository.save(product);
         }
+
+        calculatorService.deleteCalculator(deleted, versionNo, versionNo);
     }
 
 
@@ -640,6 +643,81 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public ProductVersionModel reloadVars(Integer productId, Integer versionNo, String category) {
+        checkProductAccess(Action.ALL, String.valueOf(productId));
+
+        if (category == null || category.isBlank()) {
+            throw new BadRequestException("category must not be empty");
+        }
+
+        ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+        if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
+            throw new UnprocessableEntityException("only dev version can be updated");
+        }
+
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), productId, versionNo)
+                .orElseThrow(() -> new NotFoundException("Version not found"));
+
+        ProductVersionModel productVersionModel;
+        try {
+            productVersionModel = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
+        }
+
+        if (!"DEV".equalsIgnoreCase(productVersionModel.getVersionStatus())) {
+            throw new UnprocessableEntityException("only DEV version can be reloaded");
+        }
+
+        List<PvVar> vars = productVersionModel.getVars();
+        if (vars == null) {
+            vars = new ArrayList<>();
+        } else {
+            vars = new ArrayList<>(vars);
+        }
+
+        String categoryPrefix = category.trim();
+        vars.removeIf(var -> var != null
+                && var.getVarCdm() != null
+                && var.getVarCdm().startsWith(categoryPrefix));
+
+        LobModel lob = lobService.getByCode(productVersionModel.getLob());
+        if (lob != null && lob.getMpVars() != null) {
+            for (LobVar var : lob.getMpVars()) {
+                if (var.getVarCdm() == null || !var.getVarCdm().startsWith(categoryPrefix)) {
+                    continue;
+                }
+                PvVar pvVar = new PvVar();
+                pvVar.setVarCode(var.getVarCode());
+                pvVar.setVarName(var.getVarName());
+                pvVar.setVarPath(var.getVarPath());
+                pvVar.setVarType(var.getVarType());
+                pvVar.setVarValue(var.getVarValue());
+                pvVar.setVarDataType(var.getVarDataType());
+                pvVar.setVarCdm(var.getVarCdm());
+                pvVar.setVarNr(var.getVarNr());
+                vars.add(pvVar);
+            }
+        }
+
+        productVersionModel.setVars(vars);
+        productVersionModel.setVersionStatus("DEV");
+        productVersionModel.setId(productId);
+        productVersionModel.setVersionNo(versionNo);
+
+        try {
+            pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
+        }
+        productVersionRepository.save(pv);
+
+        return productVersionModel;
+    }
+
     private PvVar mapMetadataToVar(MetadataEntity entity) {
         PvVar pvVar = new PvVar();
         pvVar.setVarCode(entity.getVarCode());
@@ -705,10 +783,10 @@ public class ProductServiceImpl implements ProductService {
 
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {
         NumberGeneratorDescription numberGeneratorDescription = new NumberGeneratorDescription();
-        numberGeneratorDescription.setId(productVersionModel.getId());
+        numberGeneratorDescription.setId(productVersionModel.getNumberGeneratorDescription().getId());
         numberGeneratorDescription.setMask(productVersionModel.getNumberGeneratorDescription().getMask());
         numberGeneratorDescription.setMaxValue(productVersionModel.getNumberGeneratorDescription().getMaxValue());
-        numberGeneratorDescription.setProductCode(productVersionModel.getCode());
+        numberGeneratorDescription.setProductCode(productVersionModel.getNumberGeneratorDescription().getProductCode());
         numberGeneratorDescription.setResetPolicy(productVersionModel.getNumberGeneratorDescription().getResetPolicy());
         return numberGeneratorDescription;
     }

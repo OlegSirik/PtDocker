@@ -96,6 +96,7 @@ public class ComputedVars {
                     return result;
 
                 case "gross_up_factor": {
+                    try {
                     String val = ctx.getString("pl_commRate");
                     //BigDecimal appliedCommissionRate = ctx.getDecimal("pl_commRate");
                     BigDecimal appliedCommissionRate = new BigDecimal(val);
@@ -117,6 +118,10 @@ public class ComputedVars {
                     result = factor.toPlainString();
                     logger.trace("gross-up_factor result: {} (rate={}, oneMinusRate={})", result, appliedCommissionRate, oneMinusRate);
                     return result;
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
+                        return "1";
+                    }
                 }
                 /*     
                 case "io_legs":

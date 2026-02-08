@@ -209,6 +209,18 @@ export class ProductService {
     );
   }
 
+  reloadVars(id: number, versionNo: number, category: string): Observable<Product> {
+    return this.http.post<Product>(
+      `${this.authService.baseApiUrl}/admin/products/${id}/versions/${versionNo}/cmd/reload?cat=${encodeURIComponent(category)}`,
+      {}
+    ).pipe(
+      tap(updatedProduct => {
+        this.mockData = { ...updatedProduct };
+        this.fixProduct();
+      })
+    );
+  }
+
   // PUT - Update existing product
   updateProduct(id: number, product: Product): Observable<Product> {
 

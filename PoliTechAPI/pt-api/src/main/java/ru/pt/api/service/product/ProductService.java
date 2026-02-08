@@ -121,4 +121,13 @@ public interface ProductService {
      * @return список PvVar
      */
     List<PvVar> getPvVars();
+
+    /**
+     * Перезагрузить переменные из LOB по категории в dev-версии продукта
+     * @param productId айди продукта
+     * @param versionNo номер версии
+     * @param category категория (например policy, insuredObject)
+     * @return обновленная версия продукта
+     */
+    ProductVersionModel reloadVars(Integer productId, Integer versionNo, String category);
 }

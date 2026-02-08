@@ -1,6 +1,15 @@
 package ru.pt.files.service;
 
-import jakarta.transaction.Transactional;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -13,29 +22,20 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ru.pt.api.dto.exception.BadRequestException;
+import jakarta.transaction.Transactional;
+import ru.pt.api.dto.exception.InternalServerErrorException;
+import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnauthorizedException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.file.FileModel;
-import ru.pt.api.service.file.FileService;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.service.file.FileService;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.domain.model.TextDocumentView;
+import ru.pt.domain.model.VariableContext;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import ru.pt.api.dto.exception.UnauthorizedException;
-import ru.pt.api.dto.exception.NotFoundException;
-import ru.pt.api.dto.exception.InternalServerErrorException;
-import ru.pt.api.dto.exception.UnprocessableEntityException;
-import ru.pt.domain.model.VariableContext;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -44,10 +44,12 @@ public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
     private final SecurityContextHelper securityContextHelper;
+    private final TextDocumentView textDocumentView;
 
-    public FileServiceImpl(FileRepository fileRepository, SecurityContextHelper securityContextHelper) {
+    public FileServiceImpl(FileRepository fileRepository, SecurityContextHelper securityContextHelper, TextDocumentView textDocumentView) {
         this.fileRepository = fileRepository;
-        this.securityContextHelper = securityContextHelper;
+        this.securityContextHelper = securityContextHelper; 
+        this.textDocumentView = textDocumentView;
     }
 
     /**
@@ -190,8 +192,185 @@ public class FileServiceImpl implements FileService {
         fileRepository.save(entity);
     }
 
-    @Override
-    public byte[] process(Long id, VariableContext keyValues) {
+/*     
+    public byte[] process_123(Long id, VariableContext keyValues) {
+        
+        logger.debug("Processing PDF file with id: {}", id);
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        if (entity.getFileBody() == null) {
+            throw new IllegalArgumentException("File body is empty");
+        }
+
+        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            if (form == null) {
+                throw new IllegalStateException("PDF has no AcroForm");
+            }
+        
+            form.setNeedAppearances(false);
+            // Configure font for Cyrillic support
+            PDType0Font font = loadCyrillicFont(doc);
+            COSName fontName = null;
+
+            if (form != null) {
+
+                if (font != null) {
+                    try {
+                        // Set default appearance with the font that supports Cyrillic
+                        PDResources resources = form.getDefaultResources();
+                        if (resources == null) {
+                            resources = new PDResources();
+                            form.setDefaultResources(resources);
+                        }
+        
+                        // добавляем шрифт и получаем имя ресурса
+                        fontName = resources.add(font);
+        
+                        // 👇 ВАЖНЕЙШАЯ СТРОКА
+                        form.setDefaultAppearance("/" + fontName.getName() + " 10 Tf 0 g");
+        
+                        logger.debug("Configured Unicode font {} for AcroForm", fontName.getName());
+                    } catch (Exception e) {
+                        logger.warn("Could not configure custom font: {}", e.getMessage());
+                    }
+                }
+                
+                // Fill form fields
+                for (PDField pdfield : form.getFieldTree()) {
+                    String fName = pdfield.getValueAsString();
+                    if (fName == null) {
+                        continue;
+                    }
+                    String fieldValue = textDocumentView.get(keyValues, fName);
+                    if (fieldValue != null) {
+                        String fValue = fieldValue.toString();
+                        try {
+                            float fontSize = getFieldFontSize(pdfield);
+                            normalizeField(pdfield);
+                            applyFieldFont(pdfield, fontName, fontSize);
+                            pdfield.setReadOnly(false);
+                            pdfield.setValue(fValue);
+                            removeBorder(pdfield);
+                            logger.trace("Set field '{}' to value: {}", fName, fValue);
+ 
+                        } catch (Exception ex) {
+                            logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
+                        }
+                    }
+
+                    // Убрать рамку
+                    //removeBorder(pdfield);
+                }
+                form.refreshAppearances();
+                form.flatten();
+                logger.debug("Form flattened successfully");
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            logger.debug("PDF processed successfully, size: {} bytes", out.size());
+            return out.toByteArray();
+        } catch (IOException ex) {
+            logger.error("Failed to process PDF: {}", ex.getMessage(), ex);
+            throw new InternalServerErrorException("Failed to process PDF", ex);
+        }
+    }
+*/
+    /* 
+    private void clearFieldAppearance(PDField field) {
+        if (field instanceof PDTerminalField terminal) {
+            for (PDAnnotationWidget widget : terminal.getWidgets()) {
+                widget.setDefaultAppearance(null);
+                widget.setAppearance(null);
+            }
+        }
+    }
+    */
+   /* 
+    private void normalizeField(PDField field) {
+        if (!(field instanceof PDTerminalField terminal)) {
+            return;
+        }
+    
+        for (PDAnnotationWidget widget : terminal.getWidgets()) {
+            COSDictionary w = widget.getCOSObject();
+    
+            // ❌ Убираем локальный DA (Helvetica)
+            w.removeItem(org.apache.pdfbox.cos.COSName.DA);
+    
+            // ❌ Убираем старый appearance stream
+            w.removeItem(org.apache.pdfbox.cos.COSName.AP);
+        }
+    
+        // ❌ Иногда DA висит и на уровне поля
+        field.getCOSObject().removeItem(COSName.DA);
+    }
+    
+    private static void removeBorder(PDField field) {
+
+        if (!(field instanceof PDTerminalField terminal)) {
+            return;
+        }
+    
+        for (PDAnnotationWidget widget : terminal.getWidgets()) {
+    
+            // BorderStyle
+            PDBorderStyleDictionary borderStyle = widget.getBorderStyle();
+            if (borderStyle != null) {
+                borderStyle.setWidth(0);
+            }
+    
+            // Border array (старый способ)
+            widget.setBorder(new COSArray());
+    
+            // Appearance (важно!)
+            widget.setAppearance(null);
+
+            PDAppearanceCharacteristicsDictionary appearance = widget.getAppearanceCharacteristics();
+            if (appearance == null) {
+                appearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
+            }
+            appearance.setBorderColour(new PDColor(new float[] {}, PDDeviceRGB.INSTANCE));
+            widget.setAppearanceCharacteristics(appearance);
+        }
+    }
+
+    private static void applyFieldFont(PDField field, COSName fontName, float fontSize) {
+        if (fontName == null || !(field instanceof PDVariableText variableText)) {
+            return;
+        }
+
+        String defaultAppearance = "/" + fontName.getName() + " " + fontSize + " Tf 0 g";
+        variableText.setDefaultAppearance(defaultAppearance);
+    }
+
+    private static float getFieldFontSize(PDField field) {
+        if (!(field instanceof PDVariableText variableText)) {
+            return 10f;
+        }
+
+        return extractFontSize(variableText.getDefaultAppearance());
+    }
+
+    private static float extractFontSize(String defaultAppearance) {
+        if (defaultAppearance == null) {
+            return 10f;
+        }
+
+        Matcher matcher = Pattern.compile("([0-9]+(?:\\.[0-9]+)?)\\s+Tf").matcher(defaultAppearance);
+        if (matcher.find()) {
+            try {
+                return Float.parseFloat(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return 10f;
+            }
+        }
+        return 10f;
+    }
+    */
+    //@Override
+    public byte[] process_old(Long id, VariableContext keyValues) {
+        
         logger.debug("Processing PDF file with id: {}", id);
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
@@ -223,12 +402,13 @@ public class FileServiceImpl implements FileService {
                 // Fill form fields
                 for (PDField pdfield : form.getFields()) {
                     String fName = pdfield.getPartialName();
-                    Object fieldValue = keyValues.get(fName);
+                    String fieldValue = textDocumentView.get(keyValues, fName);
                     if (fieldValue != null) {
                         String fValue = fieldValue.toString();
                         try {
                             pdfield.setValue(fValue);
                             logger.trace("Set field '{}' to value: {}", fName, fValue);
+ 
                         } catch (Exception ex) {
                             logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
                         }
@@ -248,7 +428,69 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-/*     @Override
+    @Override
+    public byte[] process(Long id, VariableContext keyValues) {
+        
+        logger.debug("Processing PDF file with id: {}", id);
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        if (entity.getFileBody() == null) {
+            throw new IllegalArgumentException("File body is empty");
+        }
+
+        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            if (form != null) {
+                // Configure font for Cyrillic support
+                PDFont font = loadCyrillicFont(doc);
+                if (font != null) {
+                    try {
+                        // Set default appearance with the font that supports Cyrillic
+                        PDResources resources = form.getDefaultResources();
+                        if (resources == null) {
+                            resources = new PDResources();
+                        }
+                        resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), font);
+                        form.setDefaultResources(resources);
+                        
+                        logger.debug("Configured Liberation Sans font for Cyrillic support");
+                    } catch (Exception e) {
+                        logger.warn("Could not configure custom font: {}", e.getMessage());
+                    }
+                }
+                
+                // Fill form fields
+                for (PDField pdfield : form.getFields()) {
+                    //String fName = pdfield.getPartialName();
+                    String fName = pdfield.getValueAsString();
+                    String fieldValue = textDocumentView.get(keyValues, fName);
+                    if (fieldValue != null) {
+                        String fValue = fieldValue.toString();
+                        try {
+                            pdfield.setValue(fValue);
+                            logger.trace("Set field '{}' to value: {}", fName, fValue);
+ 
+                        } catch (Exception ex) {
+                            logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
+                        }
+                    }
+                }
+
+                form.flatten();
+                logger.debug("Form flattened successfully");
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            logger.debug("PDF processed successfully, size: {} bytes", out.size());
+            return out.toByteArray();
+        } catch (IOException ex) {
+            logger.error("Failed to process PDF: {}", ex.getMessage(), ex);
+            throw new InternalServerErrorException("Failed to process PDF", ex);
+        }
+    }
+
+
+    /*     @Override
     public byte[] process_old(Long id, VariableContext keyValues) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));

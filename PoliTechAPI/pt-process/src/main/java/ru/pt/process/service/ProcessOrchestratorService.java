@@ -424,7 +424,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     @Override
     public String save(String policy) {
         logger.info("Starting save process");
-
+        AuthenticatedUser user = getCurrentUser();
+        
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
         // Добавить помойку
@@ -444,6 +445,20 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);
+
+        // 4.5 Проверить желаемую комиссию агента
+        CommissionDto commissionDTO = new CommissionDto();
+        if (policyDTO.getCommission()!=null) { commissionDTO = policyDTO.getCommission(); };
+        // задана %
+        if ( commissionDTO != null && commissionDTO.getRequestedCommissionRate() != null ) {
+            commissionService.checkRequestedCommissionRate(
+                commissionDTO.getRequestedCommissionRate(), 
+                user.getAccountId(), 
+                product.getId(), 
+                "SAVE");
+        // Если норм то меняет % на запрашиваемый
+            policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
+        }
 
         // 5. DTO → JSON (эталонная модель)
         /* обогащенные данные */
@@ -477,6 +492,17 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 10. Расчёт премии (lazy!)
         calculatePremium(policyDTO, product, varCtx);
+  
+        // 11. Рассчет КВ
+        commissionDTO = commissionService.calculateCommission(
+            commissionDTO.getRequestedCommissionRate(), 
+            user.getAccountId(), 
+            product.getId(), 
+            "SAVE",
+            policyDTO.getPremium()
+        );
+
+        policyDTO.setCommission(commissionDTO);
         
         // 11. Получить номер полиса
         String nextNumber = numberGeneratorService.getNextNumber(varCtx, productCode);
@@ -494,6 +520,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
+
 
         // 12. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);

@@ -179,8 +179,8 @@ public class FileProcessServiceImpl implements FileProcessService {
                     return new NotFoundException(errorModel);
                 });
 
-        var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getVersionNo());
-        logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getVersionNo());
+        var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getProductVersionNo());
+        logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getProductVersionNo());
 
         List<PvVarDefinition> varDefinitions = 
                 productVersion.getVars().stream()

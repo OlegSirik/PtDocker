@@ -1,11 +1,10 @@
 package ru.pt.api.service.calculator;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import ru.pt.api.dto.calculator.CoefficientColumn;
+import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.domain.model.VariableContext;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Получение и редактирование коэффициентов
@@ -18,7 +17,7 @@ public interface CoefficientService {
      * @param code код коэффициента
      * @return json представление таблицы коэффициентов
      */
-    ArrayNode getTable(Integer calculatorId, String code);
+    List<CoefficientDataRow> getTable(Integer calculatorId, String code);
 
     /**
      * Заменить таблицу коэффициента
@@ -27,7 +26,7 @@ public interface CoefficientService {
      * @param tableJson новая таблица коэффициентов
      * @return сохраненная таблица
      */
-    ArrayNode replaceTable(Integer calculatorId, String code, ArrayNode tableJson);
+    List<CoefficientDataRow> replaceTable(Integer calculatorId, String code, List<CoefficientDataRow> tableJson);
 
     /**
      * Получить значение коэффициента по заданным параметрам
@@ -41,5 +40,14 @@ public interface CoefficientService {
                                String coefficientCode,
                                VariableContext values,
                                List<CoefficientColumn> columns);
+
+    /**
+     * Копировать таблицу коэффициента между калькуляторами
+     * @param calculatorIdFrom исходный калькулятор
+     * @param calculatorIdTo целевой калькулятор
+     * @param coefficientCode код коэффициента
+     * @return количество скопированных строк
+     */
+    int copyCoefficient(Integer calculatorIdFrom, Integer calculatorIdTo, String coefficientCode);
 
 }

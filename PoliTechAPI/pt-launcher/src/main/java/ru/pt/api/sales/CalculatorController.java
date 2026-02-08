@@ -1,8 +1,5 @@
 package ru.pt.api.sales;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
@@ -57,7 +55,7 @@ public class CalculatorController extends SecuredController {
 
     // coefficients endpoints
     @GetMapping("/{calculatorId}/coefficients/{code}")
-    public ResponseEntity<JsonNode> getCoefficients(
+    public ResponseEntity<java.util.List<CoefficientDataRow>> getCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
@@ -67,27 +65,27 @@ public class CalculatorController extends SecuredController {
     }
 
     @PostMapping("/{calculatorId}/coefficients/{code}")
-    public ResponseEntity<ArrayNode> createCoefficients(
+    public ResponseEntity<java.util.List<CoefficientDataRow>> createCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
-            @RequestBody ArrayNode tableJson) {
+            @RequestBody java.util.List<CoefficientDataRow> tableJson) {
         //requireAdmin(user);
         // if any exists -> error
-        if (coefficientService.getTable(calculatorId, code).withArray("data").size() > 0) {
+        if (!coefficientService.getTable(calculatorId, code).isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }
 
     @PutMapping("/{calculatorId}/coefficients/{code}")
-    public ResponseEntity<ArrayNode> replaceCoefficients(
+    public ResponseEntity<java.util.List<CoefficientDataRow>> replaceCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("calculatorId") Integer calculatorId,
             @PathVariable("code") String code,
-            @RequestBody ArrayNode tableJson) {
+            @RequestBody java.util.List<CoefficientDataRow> tableJson) {
         //requireAdmin(user);
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
     }

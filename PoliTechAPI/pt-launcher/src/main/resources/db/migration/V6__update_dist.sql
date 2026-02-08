@@ -407,3 +407,12 @@ INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES
 ('country2', 'ZM', 'Замбия'),
 ('country2', 'ZW', 'Зимбабве');
 
+ALTER TABLE coefficient_data ALTER COLUMN id DROP DEFAULT;
+
+-- Устанавливаем новый DEFAULT с другой sequence
+ALTER TABLE coefficient_data ALTER COLUMN id 
+    SET DEFAULT nextval('coefficient_data_seq'::regclass);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_acc_commission_rates_uk
+    ON acc_commission_rates(account_id, product_id, action)
+    WHERE is_deleted = FALSE;

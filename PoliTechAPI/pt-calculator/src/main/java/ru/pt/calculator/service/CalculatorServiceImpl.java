@@ -239,6 +239,37 @@ public class CalculatorServiceImpl implements CalculatorService {
     }
 
     @Transactional
+    public void deleteCalculator(Integer productId, Integer versionNo, Integer packageNo) {
+        logger.info("Deleting calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
+
+        CalculatorModel calcModel = getCalculator(productId, versionNo, packageNo);
+        if (calcModel == null) {
+            logger.warn("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo);
+            return;
+        }
+
+        Integer calculatorId = calcModel.getId();
+        if (calculatorId != null && calcModel.getCoefficients() != null) {
+            for (CoefficientDef coefficient : calcModel.getCoefficients()) {
+                if (coefficient == null || coefficient.getVarCode() == null) {
+                    continue;
+                }
+                coefficientService.replaceTable(calculatorId, coefficient.getVarCode(), List.of());
+            }
+        }
+
+        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
+                .orElse(null);
+        if (entity == null) {
+            logger.info("Calculator not found, nothing to delete: productId={}, versionNo={}, packageNo={}",
+                    productId, versionNo, packageNo);
+            return;
+        }
+        calculatorRepository.delete(entity);
+        logger.info("Calculator deleted: id={}", entity.getId());
+    }
+
+    @Transactional
     public CalculatorModel saveCalculator(CalculatorModel calculator, boolean isUpdate) {
 
         Integer id = calculator.getId();
@@ -301,11 +332,18 @@ public class CalculatorServiceImpl implements CalculatorService {
         }
 
         calc.setVersionNo(versionNoTo);
+        Integer calcIdFrom = calc.getId();
         calc.setId(null);
 
-        saveCalculator(calc, false);
+        CalculatorModel newCalc = saveCalculator(calc, false);
         logger.info("Calculator copied successfully to version {}", versionNoTo);
 
+        for (CoefficientDef coefficient : newCalc.getCoefficients()) {
+            if (coefficient == null || coefficient.getVarCode() == null) {
+                continue;
+            }
+            coefficientService.copyCoefficient(calcIdFrom, newCalc.getId(), coefficient.getVarCode());
+        }
     }
 
     public void syncVars(Integer calculatorId) {

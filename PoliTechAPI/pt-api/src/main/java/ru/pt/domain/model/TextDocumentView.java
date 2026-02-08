@@ -1,5 +1,9 @@
 package ru.pt.domain.model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -78,6 +82,8 @@ public final class TextDocumentView implements InitializingBean {
         });
         filters.put("dd.MM.yyyy", obj -> { return formatDate(obj, "dd.MM.yyyy");});
         filters.put("dd MMMM yyyy", obj -> { return formatDate(obj, "dd MMMM yyyy");});
+
+        filters.put("money", obj -> { return formatMoney(obj);});
 
     }
         
@@ -201,7 +207,8 @@ public final class TextDocumentView implements InitializingBean {
             String varName = matcher.group(1).trim();
             String filterName = matcher.group(2);
             
-            Object value = getValueFromContext(ctx, varName);
+            //Object value = getValueFromContext(ctx, varName);
+            Object value = get(ctx, varName);
             String replacement = value != null ? value.toString() : "";
             
             // Применяем фильтр если есть
@@ -212,6 +219,9 @@ public final class TextDocumentView implements InitializingBean {
                 }
             }
             
+            if (replacement == null) {
+                replacement = "";
+            }
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         
@@ -276,6 +286,7 @@ public final class TextDocumentView implements InitializingBean {
             
         if (obj instanceof String) {
             String stringObj = (String) obj;
+            if ( stringObj.length() < 10 ) { return "";}
             stringObj = stringObj.substring(0,10);
             if ( stringObj.length() != 10) { return ""; };
 
@@ -290,6 +301,37 @@ public final class TextDocumentView implements InitializingBean {
         return "";
     }
     
+    public static String formatMoney(Object number) {
+        BigDecimal value;
+        
+        if (number == null) {
+            value = BigDecimal.ZERO;
+        } else if (number instanceof BigDecimal) {
+            value = (BigDecimal) number;
+        } else if (number instanceof Number) {
+            value = BigDecimal.valueOf(((Number) number).doubleValue());
+        } else if (number instanceof String) {
+            try {
+                String str = ((String) number).replaceAll("[\\s,]", "");
+                value = new BigDecimal(str);
+            } catch (Exception e) {
+                value = BigDecimal.ZERO;
+            }
+        } else {
+            value = BigDecimal.ZERO;
+        }
+        
+        // Округляем до 2 знаков после запятой
+        value = value.setScale(2, RoundingMode.HALF_UP);
+        
+        // Форматируем
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        symbols.setGroupingSeparator(' ');
+        symbols.setDecimalSeparator('.');
+        
+        DecimalFormat formatter = new DecimalFormat("#,##0.00", symbols);
+        return formatter.format(value);
+    }
 }
  
 

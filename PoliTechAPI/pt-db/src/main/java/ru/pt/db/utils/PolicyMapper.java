@@ -107,7 +107,7 @@ public class PolicyMapper {
         index.setPolicyNumber(policy.getPolicyNumber());
         index.setVersionNo(1);
         index.setProductCode(policy.getProductCode());
-        index.setProductVersionNo(1);
+        index.setProductVersionNo(policy.getProductVersion());
         index.setTopVersion(true);
         index.setCreateDate(ZonedDateTime.now());
         index.setIssueDate(policy.getIssueDate());
