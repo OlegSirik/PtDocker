@@ -17,7 +17,7 @@ public final class AuthZ {
 
     /** Типы ресурсов */
     public enum ResourceType {
-        TENANT,
+        TENANT, 
         CLIENT,
         CLIENT_PRODUCTS,
         TENANT_ADMIN,
@@ -122,26 +122,21 @@ public final class AuthZ {
     ROLE_PERMISSIONS.put(Role.TNT_ADMIN, Set.of(
         formatPermission(ResourceType.TENANT, Action.ALL),
         formatPermission(ResourceType.TENANT_ADMIN, Action.ALL),
-        formatPermission(ResourceType.CLIENT, Action.MANAGE),
-        formatPermission(ResourceType.CLIENT, Action.LIST),
-        formatPermission(ResourceType.CLIENT, Action.VIEW),
-        formatPermission(ResourceType.PRODUCT, Action.MANAGE),
-        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.VIEW),
-        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.MANAGE),
-        formatPermission(ResourceType.PRODUCT, Action.LIST),
-        formatPermission(ResourceType.LOB, Action.LIST),
-        formatPermission(ResourceType.LOB, Action.VIEW),
+
+        formatPermission(ResourceType.CLIENT, Action.ALL),
+        formatPermission(ResourceType.CLIENT_PRODUCTS, Action.ALL),
+
+        formatPermission(ResourceType.LOB, Action.ALL),
+        formatPermission(ResourceType.PRODUCT, Action.ALL),
 
         // ToDo - delete it just to test
-        formatPermission(ResourceType.ACCOUNT, Action.MANAGE),
-        formatPermission(ResourceType.ACCOUNT, Action.VIEW), 
-
+        formatPermission(ResourceType.ACCOUNT, Action.ALL),
+        formatPermission(ResourceType.ACCOUNT_PRODUCT, Action.ALL),
         formatPermission(ResourceType.TOKEN, Action.ALL),
         formatPermission(ResourceType.LOGIN, Action.ALL),
 
         formatPermission(ResourceType.POLICY, Action.TEST)
     ));
-
         // PRODUCT_ADMIN может SELL и VIEW продуктов
         ROLE_PERMISSIONS.put(Role.PRODUCT_ADMIN, Set.of(
                 formatPermission(ResourceType.TENANT, Action.ALL),
