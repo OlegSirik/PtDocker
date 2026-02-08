@@ -347,7 +347,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 commissionDTO.getRequestedCommissionRate(), 
                 user.getAccountId(), 
                 product.getId(), 
-                "SAVE");
+                "sale");   // ToDo make enum
         // Если норм то меняет % на запрашиваемый
             policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
         }
@@ -425,7 +425,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public String save(String policy) {
         logger.info("Starting save process");
         AuthenticatedUser user = getCurrentUser();
-        
+
         logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
@@ -456,7 +456,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 commissionDTO.getRequestedCommissionRate(), 
                 user.getAccountId(), 
                 product.getId(), 
-                "SAVE");
+                "sale");
         // Если норм то меняет % на запрашиваемый
             policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
         }
