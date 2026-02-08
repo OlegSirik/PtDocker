@@ -21,3 +21,4 @@ logging:
   level:
     org.flywaydb: DEBUG
     ru.pt: DEBUG
+    ru.pt.auth.service.CommissionServiceImpl: TRACE
