@@ -426,6 +426,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.info("Starting save process");
         AuthenticatedUser user = getCurrentUser();
         
+        logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
         // Добавить помойку
