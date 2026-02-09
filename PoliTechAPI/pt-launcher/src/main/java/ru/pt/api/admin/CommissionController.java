@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.commission.CommissionRateDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.commission.CommissionService;
@@ -38,7 +39,7 @@ public class CommissionController extends SecuredController {
             @RequestParam(required = true) Long accountId,
             @RequestParam(required = false) Integer productId,
             @RequestParam(required = false) String action) {
-        List<CommissionRateDto> list = commissionService.getConfigurations(accountId, productId, action);
+        List<CommissionRateDto> list = commissionService.getConfigurations(accountId, productId, CommissionAction.valueOf(action));
         return ResponseEntity.ok(list);
     }
 

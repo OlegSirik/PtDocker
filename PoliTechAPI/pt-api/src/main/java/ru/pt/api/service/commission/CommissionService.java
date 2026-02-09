@@ -5,6 +5,7 @@ import ru.pt.api.dto.commission.CommissionRateDto;
 import java.math.BigDecimal;
 import java.util.List;
 
+import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.commission.CommissionDto;
 
 /**
@@ -45,15 +46,15 @@ public interface CommissionService {
     /**
      * Returns commission configurations filtered by accountId, productId (optional) and action (optional).
      */
-    List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, String action);
+    List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, CommissionAction action);
 
     /* 
     * Проверяет, что запрашиваемая премия подходит
     */
-    boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, String action);
+    boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action);
 
     /*
     *  Простой расчет коммиссии. Если requestedCommissionRate = null если не передавали коррекцию. 
     */
-    CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, String action, BigDecimal premium);
+    CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action, BigDecimal premium);
 }

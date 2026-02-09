@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.commission.CommissionRateDto;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -121,7 +122,7 @@ public class CommissionServiceImpl implements CommissionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, String action) {
+    public List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, CommissionAction action) {
         if (accountId == null && productId == null && action == null) {
             return List.of();
         }
@@ -130,7 +131,7 @@ public class CommissionServiceImpl implements CommissionService {
         log.trace("getConfigurations: tid={}, accountId={}, productId={}, action={}",
                 tid, accountId, productId, action);
 
-        return commissionRateRepository.findConfigurations(tid, accountId, productId, action).stream()
+        return commissionRateRepository.findConfigurations(tid, accountId, productId, action.getValue()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -148,7 +149,7 @@ public class CommissionServiceImpl implements CommissionService {
     }
 
     @Override
-    public boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, String action) {
+    public boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action) {
         // Если желаемая комиссия не задана - ничего проверять не нужно
         if (requestedCommissionRate == null) {
             log.trace("checkRequestedCommissionRate: requestedCommissionRate is null, skip validation");
@@ -180,7 +181,7 @@ public class CommissionServiceImpl implements CommissionService {
     }
 
     @Override
-    public CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, String action, BigDecimal premium) {
+    public CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action, BigDecimal premium) {
         // 1. Получить конфиг для агента-продукта-дейсвия
         log.trace("calculateCommission: accountId={}, productId={}, action={}, requestedRate={}, premium={}",
                 accountId, productId, action, requestedCommissionRate, premium);
@@ -253,8 +254,8 @@ public class CommissionServiceImpl implements CommissionService {
         return dto; 
     }
 
-    private void softDeleteExisting(Long tid, Long accountId, Integer productId, String action) {
-        commissionRateRepository.findByAccountProductAndAction(tid, accountId, productId, action)
+    private void softDeleteExisting(Long tid, Long accountId, Integer productId, CommissionAction action) {
+        commissionRateRepository.findByAccountProductAndAction(tid, accountId, productId, action.getValue())
                 .ifPresent(e -> {
                     e.setDeleted(true);
                     commissionRateRepository.save(e);
@@ -271,7 +272,7 @@ public class CommissionServiceImpl implements CommissionService {
         entity.setTenant(tenant);
         entity.setAccount(account);
         entity.setProductId(dto.getProductId());
-        entity.setAction(dto.getAction());
+        entity.setAction(dto.getAction().getValue());
         entity.setRateValue(dto.getRateValue());
         entity.setFixedAmount(dto.getFixedAmount());
         entity.setMinAmount(dto.getMinAmount());
@@ -287,7 +288,7 @@ public class CommissionServiceImpl implements CommissionService {
         dto.setId(entity.getId());
         dto.setAccountId(entity.getAccount().getId());
         dto.setProductId(entity.getProductId());
-        dto.setAction(entity.getAction());
+        dto.setAction( CommissionAction.valueOf(entity.getAction()));
         dto.setRateValue(entity.getRateValue());
         dto.setFixedAmount(entity.getFixedAmount());
         dto.setMinAmount(entity.getMinAmount());

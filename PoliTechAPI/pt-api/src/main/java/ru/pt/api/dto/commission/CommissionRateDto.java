@@ -8,10 +8,10 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-/**
- * DTO for commission rate configuration.
- * Action values: sale, prolongation, all, etc.
- */
+    /**
+     * DTO for commission rate configuration.
+     * Action values: sale, prolo.
+     */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -28,7 +28,7 @@ public class CommissionRateDto {
     private Integer productId;
 
     @JsonProperty("action")
-    private String action;
+    private CommissionAction action;
 
     @JsonProperty("rateValue")
     private BigDecimal rateValue;

@@ -70,6 +70,7 @@ import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;
 
+import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 
@@ -347,7 +348,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 commissionDTO.getRequestedCommissionRate(), 
                 user.getAccountId(), 
                 product.getId(), 
-                "sale");   // ToDo make enum
+                CommissionAction.SALE);   // ToDo make enum
         // Если норм то меняет % на запрашиваемый
             policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
         }
@@ -404,7 +405,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             commissionDTO.getRequestedCommissionRate(), 
             user.getAccountId(), 
             product.getId(), 
-            "SAVE",
+            CommissionAction.SALE,
             policyDTO.getPremium()
         );
 
@@ -456,7 +457,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 commissionDTO.getRequestedCommissionRate(), 
                 user.getAccountId(), 
                 product.getId(), 
-                "sale");
+                CommissionAction.SALE);
         // Если норм то меняет % на запрашиваемый
             policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
         }
@@ -499,7 +500,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             commissionDTO.getRequestedCommissionRate(), 
             user.getAccountId(), 
             product.getId(), 
-            "SAVE",
+            CommissionAction.SALE,
             policyDTO.getPremium()
         );
 
