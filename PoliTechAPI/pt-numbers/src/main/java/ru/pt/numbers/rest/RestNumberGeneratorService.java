@@ -10,8 +10,8 @@ import ru.pt.numbers.service.DatabaseNumberGeneratorService;
 import java.net.URI;
 import java.util.Map;
 // TODO пока не используется - предполагается как часть настройки продукта в админке
-@RestController("restNumberGeneratorService")
-@RequestMapping("/api/v1/numbers")
+//@RestController("restNumberGeneratorService")
+//@RequestMapping("/api/v1/numbers")
 public class RestNumberGeneratorService {
 
     private final NumberGeneratorService numberGeneratorService;

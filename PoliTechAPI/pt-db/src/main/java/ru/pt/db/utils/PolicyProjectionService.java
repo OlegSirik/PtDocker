@@ -132,11 +132,11 @@ public class PolicyProjectionService {
         }
 
         try {
-            index.setAgentKvPercent(new BigDecimal("0.0"));
+            index.setAgentKvPercent(new BigDecimal("$.commission.requestedCommissionRate"));
         } catch (Exception e) {
         }
         try {
-            index.setAgentKvAmount(new BigDecimal("0.0"));
+            index.setAgentKvAmount(new BigDecimal("$.commission.commissionAmount"));
         } catch (Exception e) {
         }
         return index;

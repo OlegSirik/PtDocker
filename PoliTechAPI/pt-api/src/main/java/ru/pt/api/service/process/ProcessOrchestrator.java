@@ -56,7 +56,7 @@ public interface ProcessOrchestrator {
      * @param policy договор
      * @return данные после сохранения
      */
-    PolicyData createPolicy(String policy);
+    //PolicyData createPolicy(String policy);
 
     /**
      * Обновить договор в хранилище

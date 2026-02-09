@@ -90,7 +90,7 @@ export class BusinessLineEditComponent implements OnInit {
           }
           return {
             category: cat,
-            field: v.varPath.split('.').slice(2).join('.'),
+            field: v.varCdm.split('.').slice(2).join('.'),
             varName: v.varName,
             varCode: v.varCode,
             original: v
@@ -123,7 +123,7 @@ export class BusinessLineEditComponent implements OnInit {
           
           return {
             category: cat,
-            field: v.varPath.split('.').slice(2).join('.'),
+            field: v.varCdm.split('.').slice(2).join('.'),
             varName: v.varName,
             varCode: v.varCode,
             original: v

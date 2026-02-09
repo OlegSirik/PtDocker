@@ -14,6 +14,8 @@ import java.util.regex.*;
 //import ru.pt.domain.model.VariableContext;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ import ru.pt.api.service.db.ReferenceDataService;
 @RequiredArgsConstructor
 public final class TextDocumentView implements InitializingBean {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextDocumentView.class);
     private final ReferenceDataService referenceDataService;
     //private final Map<String, Object> context = new HashMap<>();
     private final Map<String, Function<Object, String>> filters = new HashMap<>();
@@ -40,7 +43,10 @@ public final class TextDocumentView implements InitializingBean {
 
     public String get(VariableContext ctx, String key){
         PvVarDefinition def = ctx.getDefinition(key);
-        if ( def == null ) { return key + " Not Found"; }
+        if ( def == null ) {
+            LOGGER.trace("No definition found for key: {}", key);
+            return key + " Not Found";
+        }
         if ( def.getSourceType() != PvVarDefinition.VarSourceType.TEXT ) { return ctx.getString(key); }
 
         String template = def.getTemplate();
@@ -111,6 +117,7 @@ public final class TextDocumentView implements InitializingBean {
      * Рендеринг шаблона
      */
     public String render(VariableContext ctx, String template) {
+        LOGGER.trace("Render template with length: {}", template != null ? template.length() : 0);
         String result = template;
         
         // 1. Обработка условий

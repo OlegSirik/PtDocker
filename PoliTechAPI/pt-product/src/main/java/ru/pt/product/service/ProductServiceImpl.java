@@ -368,8 +368,12 @@ public class ProductServiceImpl implements ProductService {
 
         if (newProductVersionModel.getNumberGeneratorDescription() != null) {
             var description = createNumberGeneratorDescription(newProductVersionModel);
-            numberGeneratorService.create(description);
-
+                
+            try {
+                numberGeneratorService.create(description);
+            } catch (Exception e) {
+                log.warn(e.getMessage());
+            }
         }
 
         return newProductVersionModel;

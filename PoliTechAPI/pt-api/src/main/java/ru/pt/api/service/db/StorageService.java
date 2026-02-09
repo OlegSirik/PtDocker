@@ -21,7 +21,7 @@ public interface StorageService {
      * @param uuid идентификатор договора/процесса
      * @return сохраненный договор
      */
-    PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid);
+    //PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid);
 
     /**
      * Сохранить полис

@@ -267,13 +267,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         AuthenticatedUser user = getCurrentUser();
         // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
         // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
-        boolean amTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+        boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
 
-        if (!amTester) {
+        if (!iAmTester) {
             authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.QUOTE);
         }
 
-        // ToDO проверить что юзер может продавать этот продукт
 
         // 1. JSON → DTO contract
         PolicyDTO policyDTO;
@@ -301,13 +300,20 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setProductVersion(0);
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
+
+        if (iAmTester) {
+            policyDTO.getProcessList().setProductVersionStatus(ProcessList.DEV);
+        } else {
+            policyDTO.getProcessList().setProductVersionStatus(ProcessList.PROD);
+        }
         // 3. Получить продукт
         ProductVersionModel product;
         String productCode = policyDTO.getProductCode();
         logger.debug("Fetching product. productCode={}", productCode);
 
         try {
-            product = productService.getProductByCode(productCode, amTester);
+            // Для тестера ghjlern d cnfnect дев
+            product = productService.getProductByCode(productCode, iAmTester);
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (NotFoundException e) {
             // Re-throw NotFoundException as-is
@@ -427,6 +433,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.info("Starting save process");
         AuthenticatedUser user = getCurrentUser();
 
+        // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
+        // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
+        boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+
+        if (!iAmTester) {
+            authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.CREATE);
+        }
+        
         logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
@@ -439,10 +453,16 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
         
+        if (iAmTester) {
+            policyDTO.getProcessList().setProductVersionStatus(ProcessList.DEV);
+        } else {
+            policyDTO.getProcessList().setProductVersionStatus(ProcessList.PROD);
+        }
+
         // 3. Продукт
         String productCode = policyDTO.getProductCode();
         logger.debug("Fetching product for save. productCode={}", productCode);
-        var product = productService.getProductByCode(productCode, false);
+        var product = productService.getProductByCode(productCode, iAmTester);
         logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
         // 4. Применение метаданных продукта
@@ -624,6 +644,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
     }
 
+    /* 
     @Override
     public PolicyData createPolicy(String policy) {
         logger.info("Creating new policy");
@@ -642,6 +663,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.info("Policy created. policyId={}", uuid);
         return policyData;
     }
+        */
 
     @Override
     public PolicyData updatePolicy(String policyNumber, String policy) {

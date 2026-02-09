@@ -118,7 +118,7 @@ public class PolicyMapper {
         index.setTid(userData.getTenantId());
         index.setUserAccountId(userData.getAccountId());
         index.setClientAccountId(userData.getClientId());
-//        index.setVersionStatus(policy.getVersionStatus());
+        index.setVersionStatus(policy.getProcessList().getProductVersionStatus());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());
 //        index.setInsCompany(policy.getInsCompany());
@@ -127,8 +127,8 @@ public class PolicyMapper {
         index.setIoDigest(ioDigest);
         index.setUserLogin(userData.getUsername());
         index.setPremium(policy.getPremium());
-        //index.setAgentKvPercent(policy.getAgentKvPercent());
-        //index.setAgentKvAmount(policy.getAgentKvAmount());
+        index.setAgentKvPercent(policy.getCommission().getAppliedCommissionRate());
+        index.setAgentKvAmount(policy.getCommission().getCommissionAmount());
         return index;
     }
 

@@ -48,6 +48,7 @@ public class DbStorageService implements StorageService {
     private final PolicyMapper policyMapper;
     private final PolicyReport policyReport;
 
+    @Override
     public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
         if (policy.getId() == null || policy.getId().isEmpty()) {
             policy.setId( UUID.randomUUID().toString() );
@@ -72,7 +73,7 @@ public class DbStorageService implements StorageService {
     }
 
     @Transactional
-    @Override
+  /*   
     public PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid) {
 
         var entity = new PolicyEntity();
@@ -100,7 +101,7 @@ public class DbStorageService implements StorageService {
         return policyData;
 
     }
-
+*/
     @Override
     public void update(PolicyData policyData) {
         policyIndexRepository.save(policyMapper.toEntity(policyData.getPolicyIndex()));
@@ -113,6 +114,7 @@ public class DbStorageService implements StorageService {
     @Override
     @Transactional
     public PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber) {
+        /* 
         return policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
                 .map(idx -> {
                     var uuid = idx.getPolicyId();
@@ -130,6 +132,8 @@ public class DbStorageService implements StorageService {
                     );
                     return new NotFoundException(errorModel);
                 });
+                */
+        throw new InternalServerErrorException("Policy update by policyNumber is not implemented");
     }
 
     @Override

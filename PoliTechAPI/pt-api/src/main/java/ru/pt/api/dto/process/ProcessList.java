@@ -6,6 +6,7 @@ import java.util.Map;
 public class ProcessList {
 
     private String currentOperation;  //quote or save
+    private String productVersionStatus; //prod or dev
     private String phDigest;
     private String ioDigest;
     private Map<String, Object> vars = new HashMap<>();
@@ -13,6 +14,9 @@ public class ProcessList {
     public static String QUOTE = "quote";
     public static String SAVE = "save";
     
+    public static String PROD = "prod";
+    public static String DEV = "dev";
+
     public ProcessList(String currentOperation) {
         this.currentOperation = currentOperation;
         this.phDigest = "";
@@ -49,5 +53,13 @@ public class ProcessList {
 
     public void setVars (Map<String, Object> vars) {
         this.vars.putAll(vars);
+    }
+
+    public void setProductVersionStatus(String value){
+        this.productVersionStatus = value;
+    }
+
+    public String getProductVersionStatus(){
+        return this.productVersionStatus;
     }
 }

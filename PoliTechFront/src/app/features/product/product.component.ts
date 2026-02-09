@@ -472,7 +472,7 @@ export class ProductComponent implements OnInit {
       return;
     }
 
-    const category = (this.policyFilter || '').toLowerCase().trim();
+    const category = (this.policyFilter || '').trim();
     this.productService.reloadVars(this.product.id, this.product.versionNo, category).subscribe({
       next: (updatedProduct: any) => {
         this.product = updatedProduct;
@@ -1028,23 +1028,23 @@ export class ProductComponent implements OnInit {
     let result: any[] = [];
 
     // Apply filter based on selected option
-    if (this.policyFilter === 'Policy Holder') {
+    if (this.policyFilter === 'policyHolder') {
       prefix = 'policyHolder.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = this.varsService.getPhCategories(this.lob?.mpPhType || '');
-    } else if (this.policyFilter === 'Insured Object') {
+    } else if (this.policyFilter === 'insuredObject') {
       prefix = 'insuredObject.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = this.varsService.getIoCategories(this.lob?.mpInsObjectType || 'person');
-    } else if (this.policyFilter === 'Policy') {
+    } else if (this.policyFilter === 'policy') {
       prefix = 'policy.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = [''];
-    } else if (this.policyFilter === 'Coverage') {
+    } else if (this.policyFilter === 'coverage') {
       prefix = 'coverage.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = [''];
-    } else if (this.policyFilter === 'Strings') {
+    } else if (this.policyFilter === 'strings') {
       prefix = 'strings.';
       filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
       categories = [''];
