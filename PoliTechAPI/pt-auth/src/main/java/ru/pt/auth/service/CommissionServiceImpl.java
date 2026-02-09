@@ -131,7 +131,7 @@ public class CommissionServiceImpl implements CommissionService {
         log.trace("getConfigurations: tid={}, accountId={}, productId={}, action={}",
                 tid, accountId, productId, action);
 
-        return commissionRateRepository.findConfigurations(tid, accountId, productId, action.getValue()).stream()
+        return commissionRateRepository.findConfigurations(tid, accountId, productId, CommissionAction.toString(action)).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -288,7 +288,7 @@ public class CommissionServiceImpl implements CommissionService {
         dto.setId(entity.getId());
         dto.setAccountId(entity.getAccount().getId());
         dto.setProductId(entity.getProductId());
-        dto.setAction( CommissionAction.valueOf(entity.getAction()));
+        dto.setAction( CommissionAction.fromString(entity.getAction()));
         dto.setRateValue(entity.getRateValue());
         dto.setFixedAmount(entity.getFixedAmount());
         dto.setMinAmount(entity.getMinAmount());
