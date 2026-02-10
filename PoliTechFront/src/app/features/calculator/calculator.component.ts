@@ -519,6 +519,14 @@ export class CalculatorComponent implements OnInit {
     this.textProcessorContent = this.textProcessorService.toText(lines, this.calculator.vars);
   }
 
+  toReadableText(): string {
+    if (this.selectedFormulaIndex === -1 || !this.calculator.formulas[this.selectedFormulaIndex]) {
+      return '';
+    }
+    const lines = this.calculator.formulas[this.selectedFormulaIndex].lines;
+    return this.textProcessorService.toReadableText(lines, this.calculator.vars);
+  }
+
   fromText(): void {
     if (this.selectedFormulaIndex === -1 || !this.calculator.formulas[this.selectedFormulaIndex]) {
       this.snackBar.open('Пожалуйста, выберите формулу', 'Закрыть', { duration: 3000 });

@@ -50,6 +50,75 @@ export class TextProcessorService {
   }
 
   /**
+   * Converts formula lines to a readable text format using variable names
+   * @param lines Array of formula lines to convert
+   * @param vars Array of calculator variables for dictionary
+   * @returns Readable text representation of the lines (one line per formula line)
+   */
+  toReadableText(lines: FormulaLine[], vars: CalculatorVar[] = []): string {
+    if (!lines || lines.length === 0) {
+      return '';
+    }
+
+    const varMap = new Map<string, string>();
+    vars.forEach(v => {
+      if (v.varCode) {
+        varMap.set(v.varCode, v.varName || v.varCode);
+      }
+    });
+
+    const resolveVar = (value: string): string => {
+      if (!value) {
+        return '';
+      }
+      return varMap.get(value) || value;
+    };
+
+    const sortedLines = [...lines].sort((a, b) => {
+      const aNr = parseInt(a.nr || '0', 10);
+      const bNr = parseInt(b.nr || '0', 10);
+      return (isNaN(aNr) ? 0 : aNr) - (isNaN(bNr) ? 0 : bNr);
+    });
+
+    const textLines = sortedLines.map(line => {
+      const nr = line.nr || '';
+      const conditionLeft = resolveVar(line.conditionLeft || '');
+      const conditionOperator = line.conditionOperator || '';
+      const conditionRight = resolveVar(line.conditionRight || '');
+      const expressionResult = resolveVar(line.expressionResult || '');
+      const expressionLeft = resolveVar(line.expressionLeft || '');
+      const expressionOperator = line.expressionOperator || '';
+      const expressionRight = resolveVar(line.expressionRight || '');
+      const postProcessor = line.postProcessor || '';
+
+      const parts: string[] = [];
+      parts.push(nr ? `${nr} ` : '');
+
+      if (conditionOperator) {
+        parts.push(`if ${conditionLeft} ${conditionOperator} ${conditionRight} then `);
+      }
+
+      let expression = expressionLeft;
+      if (expressionOperator === 'min') {
+        expression = `Меньшее из (${expressionLeft}, ${expressionRight})`;
+      } else if (expressionOperator === 'max') {
+        expression = `Большее из (${expressionLeft}, ${expressionRight})`;
+      } else if (expressionOperator && expressionRight) {
+          expression = `${expressionLeft} ${expressionOperator} ${expressionRight}`;
+      }
+
+      if (postProcessor) {
+        expression = `${expression} >> ${postProcessor}`;
+      }
+
+      parts.push(`${expressionResult} = ${expression}`);
+      return parts.join('');
+    });
+
+    return textLines.join('\n');
+  }
+
+  /**
    * Converts text format to formula lines
    * @param text Text representation of formula lines
    * @param vars Array of calculator variables for dictionary

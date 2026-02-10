@@ -546,6 +546,16 @@ public class CalculatorServiceImpl implements CalculatorService {
             case "/":
                 if (left != null && right != null && right != BigDecimal.ZERO) return left.divide(right);
                 return null;
+            case "min":
+                if (left == null && right == null) return null;
+                if (left == null) return right;
+                if (right == null) return left;
+                return left.min(right);
+            case "max":
+                if (left == null && right == null) return null;
+                if (left == null) return right;
+                if (right == null) return left;
+                return left.max(right);
             default:
                 return left;
         }

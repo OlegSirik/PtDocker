@@ -167,7 +167,7 @@ export class CalculatorService extends BaseApiService<Calculator> {
   }
 
   getExpressionOperatorOptions(): Observable<string[]> {
-    return of(['+', '-', '*', '/', '%', 'POW', 'MIN', 'MAX']).pipe(delay(200));
+    return of(['+', '-', '*', '/', 'min', 'max']).pipe(delay(200));
   }
 
   getPostProcessorOptions(): Observable<string[]> {

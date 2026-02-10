@@ -93,7 +93,7 @@ export class SimpleScriptProcessor {
                     : ['>', '<', '>=', '<=', '==', '!='],
                 mathOps: config.mathOps && config.mathOps.length > 0 
                     ? config.mathOps 
-                    : ['+', '-', '*', '/', '%'],
+                    : ['+', '-', '*', '/', 'min','max'],
                 postProcessors: config.postProcessors && config.postProcessors.length > 0 
                     ? config.postProcessors 
                     : ['round2_up', 'round2', 'round', 'ceil', 'floor', 'abs'],
