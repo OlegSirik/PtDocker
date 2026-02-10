@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.commission.CommissionRateDto;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
@@ -70,14 +71,15 @@ public class CommissionServiceImpl implements CommissionService {
         if (dto.getId() != null) {
             commissionRateRepository.findByIdAndTenantIncludeDeleted(tid, dto.getId())
                     .ifPresent(e -> {
-                        e.setDeleted(true);
-                        commissionRateRepository.save(e);
+                        if (e.getDeleted()) {throw new BadRequestException("Нельзя изменить удаленную запись");}
                     });
+        } else {
+            throw new BadRequestException("Не указан ID");
         }
-        softDeleteExisting(tid, dto.getAccountId(), dto.getProductId(), dto.getAction());
+        //softDeleteExisting(tid, dto.getAccountId(), dto.getProductId(), dto.getAction());
 
         CommissionRateEntity entity = toEntity(dto, tid);
-        entity.setId(null);
+        entity.setId(dto.getId());
         entity.setDeleted(false);
         CommissionRateEntity saved = commissionRateRepository.save(entity);
         return toDto(saved);
@@ -131,7 +133,8 @@ public class CommissionServiceImpl implements CommissionService {
         log.trace("getConfigurations: tid={}, accountId={}, productId={}, action={}",
                 tid, accountId, productId, action);
 
-        return commissionRateRepository.findConfigurations(tid, accountId, productId, CommissionAction.toString(action)).stream()
+        String actionCode = action != null ? action.getCode() : null;
+        return commissionRateRepository.findConfigurations(tid, accountId, productId, actionCode).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -255,7 +258,7 @@ public class CommissionServiceImpl implements CommissionService {
     }
 
     private void softDeleteExisting(Long tid, Long accountId, Integer productId, CommissionAction action) {
-        commissionRateRepository.findByAccountProductAndAction(tid, accountId, productId, action.getValue())
+        commissionRateRepository.findByAccountProductAndAction(tid, accountId, productId, action.getCode())
                 .ifPresent(e -> {
                     e.setDeleted(true);
                     commissionRateRepository.save(e);
@@ -272,8 +275,11 @@ public class CommissionServiceImpl implements CommissionService {
         entity.setTenant(tenant);
         entity.setAccount(account);
         entity.setProductId(dto.getProductId());
-        entity.setAction(dto.getAction().getValue());
+
+        entity.setAction(dto.getAction().getCode());
+        
         entity.setRateValue(dto.getRateValue());
+
         entity.setFixedAmount(dto.getFixedAmount());
         entity.setMinAmount(dto.getMinAmount());
         entity.setMaxAmount(dto.getMaxAmount());
@@ -288,7 +294,9 @@ public class CommissionServiceImpl implements CommissionService {
         dto.setId(entity.getId());
         dto.setAccountId(entity.getAccount().getId());
         dto.setProductId(entity.getProductId());
-        dto.setAction( CommissionAction.fromString(entity.getAction()));
+
+        dto.setAction( CommissionAction.fromValue(entity.getAction()));
+
         dto.setRateValue(entity.getRateValue());
         dto.setFixedAmount(entity.getFixedAmount());
         dto.setMinAmount(entity.getMinAmount());

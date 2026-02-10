@@ -1,41 +1,60 @@
 package ru.pt.api.dto.commission;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum CommissionAction {
     SALE("sale"),
-    PROLO("prolongation");
-
+    PROLONGATION("prolongation");
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(CommissionAction.class);
-    private final String value;
+    private static final Map<String, CommissionAction> BY_VALUE = new HashMap<>();
 
-    CommissionAction(String value) {
-        this.value = value;
+    private final String code;
+    
+    static {
+        for (CommissionAction action : values()) {
+            BY_VALUE.put(action.code.toLowerCase(), action);
+            BY_VALUE.put(action.name().toLowerCase(), action);
+        }
     }
 
-    public String getValue() {
-        return value;
-    }    
-
-    public static CommissionAction fromString(String value) {
+    CommissionAction(String code) {
+        this.code = code;
+    }
+    
+    public String getCode() {
+        return code;
+    }
+    
+    // Для Jackson аннотаций
+    @JsonValue
+    public String toValue() {
+        return code;
+    }
+    
+    @JsonCreator
+    public static CommissionAction fromValue(String value) {
         if (value == null) {
-            LOGGER.trace("No value found for CommissionAction: value is null");
+            LOGGER.trace("CommissionAction value is null");
             return null;
         }
-        try {
-            return valueOf(value);
-        } catch (Exception e) {
-            LOGGER.trace("No value found for CommissionAction: {}", value, e);
-            return null;
-        }
-    }
 
-    public static String toString(CommissionAction value) {
-        if (value == null) {
+        String normalized = value.trim().toLowerCase();
+        if (normalized.isEmpty()) {
+            LOGGER.trace("CommissionAction value is blank");
             return null;
         }
-        return value.getValue();
-    }
 
+        CommissionAction action = BY_VALUE.get(normalized);
+        if (action == null) {
+            LOGGER.warn("Unknown CommissionAction value: {}", value);
+        }
+        return action;
+    }
 }

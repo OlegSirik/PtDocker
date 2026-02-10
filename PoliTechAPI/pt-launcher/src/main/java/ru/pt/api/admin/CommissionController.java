@@ -39,7 +39,7 @@ public class CommissionController extends SecuredController {
             @RequestParam(required = true) Long accountId,
             @RequestParam(required = false) Integer productId,
             @RequestParam(required = false) String action) {
-        List<CommissionRateDto> list = commissionService.getConfigurations(accountId, productId, CommissionAction.fromString(action));
+        List<CommissionRateDto> list = commissionService.getConfigurations(accountId, productId, CommissionAction.fromValue(action));
         return ResponseEntity.ok(list);
     }
 
