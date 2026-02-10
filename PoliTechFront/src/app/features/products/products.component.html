@@ -6,9 +6,9 @@
   <mat-card class="datatable-card">
     <mat-card-content>
       <div class="button-section">
-        <button mat-raised-button color="primary" (click)="createNewProduct()">
+        <button mat-raised-button color="primary" class="add-button" (click)="createNewProduct()">
           <mat-icon>add</mat-icon>
-          Новый продукт
+          Создать
         </button>
       </div>
 
@@ -67,12 +67,12 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="editProduct(row)" class="clickable-row"></tr>
       </table>
 
       <mat-paginator 
         [length]="filteredProducts.length"
-        [pageSize]="pageSize"
+        [pageSize]="25"
         [pageIndex]="pageIndex"
         [pageSizeOptions]="[5, 10, 25]"
         (page)="onPageChange($event)"

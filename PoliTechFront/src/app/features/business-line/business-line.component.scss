@@ -8,94 +8,77 @@
   padding: $spacing-lg;
   max-width: 1200px;
   margin: 0 auto;
-}
 
-.page-title {
-  @include heading-1;
-  text-align: left;
-  margin-bottom: $spacing-lg;
-}
+  .page-header {
+    margin-bottom: 20px;
 
-.data-section {
-  @include card-elevated;
-}
+    .page-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+  }  
+  .datatable-card {
+    margin-bottom: 20px;
 
-.button-section {
-  @include card-base;
-  padding: $spacing-md;
-  margin-bottom: $spacing-lg;
-  background-color: $gray-50;
-}
+    .button-section {
+      @include card-base;
+      @include flex-end;
+      padding: $spacing-md;
+      margin-bottom: $spacing-lg;
+      background-color: $gray-50;
 
-.add-button {
-  @include button-primary;
-  @include flex-center;
-  gap: $spacing-sm;
-}
+      .add-button {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+      }
+    }
 
-.business-table {
-  width: 100%;
-  
-  th.mat-header-cell {
-    @include table-header;
-  }
-  
-  td.mat-cell, th.mat-header-cell {
-    @include table-cell;
-  }
-}
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
 
-.action-buttons {
-  @include flex-end;
-  gap: $spacing-xs;
-}
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+      }
 
-.action-button {
-  @include flex-center;
-  gap: $spacing-xs;
-  transition: all $transition-base;
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: $shadow-sm;
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-}
+      .search-field {
+        width: 300px;
+      }
+    }
 
-.table-header {
-  @include flex-between;
-  align-items: center;
-  margin-bottom: $spacing-md;
-  
-  .table-title {
-    @include heading-2;
-    margin: 0;
-    font-size: $font-size-xl;
-  }
-  
-  .search-field {
-    min-width: 400px;
-    appearance: outline;
-  }
+    .business-table {
+      width: 100%;
+      margin-bottom: 16px;
 
-}
+      .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
 
-// Responsive adjustments
-@include responsive(sm) {
-  .business-line-container {
-    padding: $spacing-xl;
-  }
-  
-  .page-title {
-    font-size: $font-size-4xl;
-  }
-}
+        &:hover {
+          background-color: rgba(63, 81, 181, 0.05);
+        }
+      }
 
-@include responsive(md) {
-  .business-line-container {
-    padding: $spacing-2xl;
+      .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+
+        .action-button {
+          min-width: auto;
+          padding: 0 8px;
+        }
+      }
+    }
+
+    mat-paginator {
+      border-top: 1px solid #e0e0e0;
+    }
   }
 }

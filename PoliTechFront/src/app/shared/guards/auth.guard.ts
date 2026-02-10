@@ -4,6 +4,7 @@ import { AuthGuardData, createAuthGuard } from 'keycloak-angular';
 import {AuthService} from '../services/auth.service';
 import {map} from 'rxjs';
 import {filter} from 'rxjs/operators';
+import { BASE_URL } from '../tokens';
 
 const isAccessAllowed = async (
   route: ActivatedRouteSnapshot,
@@ -37,6 +38,7 @@ export const authGuardKC = createAuthGuard<CanActivateFn>(isAccessAllowed);
 export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const baseUrl = inject(BASE_URL);
 
   return authService.isAuthenticated.pipe(
     filter(Boolean),
@@ -45,11 +47,13 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
         return true;
       }
       // Get tenantCode from route or AuthService
-      const tenantCode = route.params['tenantId'] || authService.tenant || '';
+      const tenantCode = route.params['tenantId'] || authService.getTenantCode() || '';
       if (tenantCode) {
-        return router.createUrlTree(['/', tenantCode, 'login']);
+        window.location.href = `${baseUrl}/${tenantCode}/login`;
+        return false;
       } else {
-        return router.createUrlTree(['/login']);
+        window.location.href = `${baseUrl}/login`;
+        return false;
       }
     })
   );

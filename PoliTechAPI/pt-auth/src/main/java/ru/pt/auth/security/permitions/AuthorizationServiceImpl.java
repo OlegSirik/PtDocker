@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.service.auth.AccountProductRoles;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.service.AccountDataService;
 
 /**
@@ -17,6 +20,7 @@ import ru.pt.auth.service.AccountDataService;
 public class AuthorizationServiceImpl implements AuthorizationService {
 
     private final AccountDataService accountDataService;
+    private final AccountProductRoles accountProductRoles;
 
     @Override
     public void check(
@@ -37,7 +41,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
 
         // Applicability check
-//        if (!AuthZ.isApplicable(resourceType, action)) {
+//        if (!AuthZMatrix.isApplicable(resourceType, action)) {
 //            throw new IllegalArgumentException(
 //                    "Action %s not applicable to %s"
 //                            .formatted(action, resourceType)
@@ -45,23 +49,37 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 //        }
 
         // Permission check
-        if (!AuthZ.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
+        // Для продукта проверка что user может выполнять такую операцию. 
+        if (!AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
             throw new ForbiddenException(
                     "Access denied: %s %s %s"
                             .formatted(resourceType, resourceId, action)
             );
         }
+
+        // Проверка для продукта
+        // Потом раскоментить
+        /* 
+        if (resourceType == AuthZ.ResourceType.PRODUCT && resourceId != null && !resourceId.isEmpty()) {
+            if (!checkProductAction( Long.getLong(resourceId), actingAccountId, action)) {
+                throw new ForbiddenException(
+                    "Access denied: %s %s %s"
+                            .formatted(resourceType, resourceId, action)
+            );
+            } 
+        }
+            */
         
     }
 
     public boolean userHasPermition(AuthenticatedUser user,
         AuthZ.ResourceType resourceType,
         AuthZ.Action action) {
-        return AuthZ.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
+        return AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
     }
 
 
-        /**
+        /* 
      * Check product access permissions
      * create, quote, save,
      * 
@@ -71,32 +89,42 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @param resourceAccountId account ID NA
      * @param action action to check
      * @return list of product role data from hierarchy
-     *
-    public void checkProduct(
+     */
+    public boolean checkProductAction(
             Long productId,
             Long accountId,
             AuthZ.Action action
     ) {
 
-        // UserDetailsImpl | AuthZ.ResourceType | resourceId  | resourceAccountId | AuthZ.Action action
-        // quote           | Policy             | product_id  | ?                 | QUOTE
-        // save            | Policy             | product_id  | ?                 | CREATE   
-
-        // view            | Policy             | product_id  | policy.account_id | VIEW    Начиная от policy.account_id идем вверх и проверяем что там есть actingAccountId
-        // addendum        |
-        // prolongate      |
-
-
-        ProductRole productRole = accountDataService.getProductRole(accountId, productId);
-
+        
+        ProductRole productRole = accountProductRoles.getProductRole(accountId, productId);
         if (productRole == null) {
             throw new ForbiddenException(
                 "Нет прав на действие %s для продукта %s"
                         .formatted(action, productId));
         }
+        if (action == AuthZ.Action.VIEW) { return productRole.canRead(); }
+        if (action == AuthZ.Action.QUOTE) { return productRole.canQuote(); }
+        if (action == AuthZ.Action.SELL) { return productRole.canPolicy(); }
 
-        // Check specific product action permissions
-        
+        return false;
+        /*
+        record ProductRole(
+    Long id,
+    Long tid,
+    Long clientId,
+    Long accountId,
+    Long roleProductId,
+    String roleProductName,
+    Long roleAccountId,
+    Boolean isDeleted,
+    Boolean canRead,
+    Boolean canQuote,
+    Boolean canPolicy,
+    Boolean canAddendum,
+    Boolean canCancel,
+    Boolean canProlongate
+     */
     }
-*/
+
 }

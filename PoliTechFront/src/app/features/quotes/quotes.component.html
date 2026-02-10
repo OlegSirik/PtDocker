@@ -54,12 +54,12 @@
                   </div>
                   <div class="quote-col-2">
                     <div class="quote-line-bold">{{ quote.productCode || 'N/A' }}</div>
-                    <div class="quote-line-small">{{ quote.ioDigest || quote.ioDigest || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.ioDigest || 'N/A' }}</div>
                     <div class="quote-line-small">{{ quote.premium || 0 }}</div>
                   </div>
                   <div class="quote-col-3">
                     <div class="quote-line-bold">{{ quote.policyStatus || 'N/A' }}</div>
-                    <div class="quote-line-small">{{ quote.insCompany || 'N/A' }}</div>
+                    <div class="quote-line-small">{{ quote.insCompany || 'ВСК' }}</div>
                     <div class="quote-line-small">{{ quote.agentKvAmount || 0 }} ({{ quote.agentKvPrecent || 0 }}%)</div>
                   </div>
                 </div>
@@ -72,7 +72,7 @@
                 <button mat-button class="command-text-button" (click)="executeCommand(quote, 1)">Печать договора</button>
               }
               @if (quote.comand2) {
-                <button mat-button class="command-text-button" (click)="executeCommand(quote, 2)">comand 2</button>
+                <button mat-button class="command-text-button" (click)="executeCommand(quote, 2)">Печать КИД</button>
               }
               @if (quote.comand3) {
                 <button mat-button class="command-text-button" (click)="executeCommand(quote, 3)">comand 3</button>

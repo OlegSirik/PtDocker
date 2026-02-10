@@ -21,6 +21,7 @@
 
     .button-section {
       @include card-base;
+      @include flex-end;
       padding: $spacing-md;
       margin-bottom: $spacing-lg;
       background-color: $gray-50;
@@ -52,6 +53,15 @@
     .business-table {
       width: 100%;
       margin-bottom: 16px;
+
+      .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: rgba(63, 81, 181, 0.05);
+        }
+      }
 
       .action-buttons {
         display: flex;

@@ -1,7 +1,6 @@
-package ru.pt.auth.security.permitions;
+package ru.pt.api.service.auth;
 
 import ru.pt.api.security.AuthenticatedUser;
-
 /**
  * Centralized authorization service.
  *

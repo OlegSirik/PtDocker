@@ -9,11 +9,13 @@ import { AuthService } from '../services/auth.service';
 import { ErrorHandlerService } from '../services/error-handler.service';
 import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
+import { BASE_URL } from '../tokens';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const errorHandler = inject(ErrorHandlerService);
   const router = inject(Router);
+  const baseUrl = inject(BASE_URL);
   const token = authService.getToken();
   const accountId = authService.getAccountId();
   let clonedReq = req;
@@ -37,12 +39,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return result.pipe(
     catchError((error: HttpErrorResponse) => {
       console.log('error', error);
-      const tenantCode = authService.tenant || '';
+      const tenantCode = authService.getTenantCode();
       
       if (error.status === HttpStatusCode.Unauthorized) {
         // 401: User is not authenticated → redirect to login
         const loginTenant = tenantCode || 'demo';
-        router.navigate(['/', loginTenant, 'login']);
+        window.location.href = `${baseUrl}/${loginTenant}/login`;
       } else if (error.status === HttpStatusCode.Forbidden) {
         // 403: User is authenticated but lacks permission
         const method = req.method.toUpperCase();

@@ -50,6 +50,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private baseUrl: string = inject(BASE_URL);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private readonly TENANT_CODE_KEY = 'tenant_code';
 
   public get baseApiUrl() {
     return `${this.baseUrl}/api/v1/${this.tenant}`;
@@ -60,20 +61,21 @@ export class AuthService {
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated = new BehaviorSubject<Boolean | null>(null);
-  public tenant = '';
+  public tenant = localStorage.getItem(this.TENANT_CODE_KEY) || '';
   public tenantId = -1;
   private accountId: number | null = null;
 
   login(credentials: LoginData): Observable<AuthResponse> {
     console.log(credentials);
     
-    let url = `${this.baseUrl}/api/v1/${credentials.tenantCode ?? 'demo'}/auth/login`;
+    const tenantCode = credentials.tenantCode ?? 'demo';
+    let url = `${this.baseUrl}/api/v1/${tenantCode}/auth/login`;
     return this.http.post<AuthResponse>( url, credentials)
       .pipe(
         tap(response => {
           if (response.accessToken) {
             localStorage.setItem('accessToken', response.accessToken);
-            this.tenant = credentials.tenantCode;
+            this.setTenantCode(tenantCode);
             this.getCurrentUser().subscribe();
           }
         })
@@ -92,7 +94,7 @@ export class AuthService {
       .pipe(
         tap(user=> {
           this.currentUserSubject.next(user);
-          this.tenant = user.tenantCode;
+          this.setTenantCode(user.tenantCode);
           this.tenantId = user.tenantId;
           this.isAuthenticated.next(true);
           this.setAccountId(user.accountId);
@@ -102,6 +104,7 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('accessToken');
+    this.clearTenantCode();
     this.currentUserSubject.next(null);
     this.isAuthenticated.next(false);
   }
@@ -134,6 +137,7 @@ export class AuthService {
   initializeAuthState(): Observable<User> | null {
     const token = this.getToken();
     if (token) {
+      this.tenant = localStorage.getItem(this.TENANT_CODE_KEY) || this.tenant;
       return this.getCurrentUser();
     }
     return null;
@@ -145,5 +149,23 @@ export class AuthService {
 
   getAccountId(): number | null {
     return this.accountId ?? null;
+  }
+
+  getTenantCode(): string {
+    return this.tenant || localStorage.getItem(this.TENANT_CODE_KEY) || '';
+  }
+
+  private setTenantCode(tenantCode: string) {
+    this.tenant = tenantCode;
+    if (tenantCode) {
+      localStorage.setItem(this.TENANT_CODE_KEY, tenantCode);
+    } else {
+      this.clearTenantCode();
+    }
+  }
+
+  private clearTenantCode() {
+    this.tenant = '';
+    localStorage.removeItem(this.TENANT_CODE_KEY);
   }
 }

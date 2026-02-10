@@ -37,11 +37,12 @@ import static ru.pt.api.utils.DateTimeUtils.formattedNow;
 import static ru.pt.api.utils.DateTimeUtils.formatter;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
-import ru.pt.auth.security.permitions.AuthorizationService;
-import ru.pt.auth.security.permitions.AuthZ.ResourceType;
-import ru.pt.auth.security.permitions.AuthZ.Action;
+
 import org.springframework.context.annotation.Lazy;
 
+import ru.pt.api.service.auth.AuthorizationService;
+import ru.pt.api.service.auth.AuthZ.Action;
+import ru.pt.api.service.auth.AuthZ.ResourceType;
 import ru.pt.api.service.calculator.CalculatorService;
 
 @Component

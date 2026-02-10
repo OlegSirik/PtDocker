@@ -3,8 +3,8 @@
 DELETE FROM pt_metadata;
 
 INSERT INTO pt_metadata (var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type) VALUES
-('io_addr_addressStr', 'io.Адрес.адресная строка', 'insuredObjects[0].addresses[?(@.isPrimary)].addressesStr', 'IN', NULL, 'insuredObject.addresses.addressStr', '133', 'STRING'),
-('io_addr_addressStrEn', 'io.Адрес.адресная строка англ', 'insuredObjects[0].addresses[?(@.isPrimary)].addressesStrEn', 'IN', NULL, 'insuredObject.addresses.addressStrEn', '134', 'STRING'),
+('io_addr_addressStr', 'io.Адрес.адресная строка', 'insuredObjects[0].addresses[?(@.isPrimary)].addressStr', 'IN', NULL, 'insuredObject.addresses.addressStr', '133', 'STRING'),
+('io_addr_addressStrEn', 'io.Адрес.адресная строка англ', 'insuredObjects[0].addresses[?(@.isPrimary)].addressStrEn', 'IN', NULL, 'insuredObject.addresses.addressStrEn', '134', 'STRING'),
 ('io_addr_building', 'io.Адрес.строение', 'insuredObjects[0].addresses[?(@.isPrimary)].building', 'IN', NULL, 'insuredObject.addresses.building', '127', 'STRING'),
 ('io_addr_city', 'io.Адрес.город', 'insuredObjects[0].addresses[?(@.isPrimary)].city', 'IN', NULL, 'insuredObject.addresses.city', '124', 'STRING'),
 ('io_addr_countryCode', 'io.Адрес.код страны', 'insuredObjects[0].addresses[?(@.isPrimary)].countryCode', 'IN', 'RU', 'insuredObject.addresses.countryCode', '122', 'STRING'),

@@ -31,6 +31,8 @@ import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 //import ru.pt.api.dto.product.LobModel;
 //import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.service.calculator.CalculatorService;
@@ -49,7 +51,6 @@ import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.service.ClientService;
 
 import ru.pt.domain.model.PvVarDefinition;
@@ -73,9 +74,6 @@ import java.math.BigDecimal;
 import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
-
-import ru.pt.auth.security.permitions.AuthZ;
-//import ru.pt.process.utils.VariablesService;
 
 
 @Service
@@ -269,9 +267,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
         boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
 
-        if (!iAmTester) {
-            authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.QUOTE);
-        }
 
 
         // 1. JSON → DTO contract
@@ -311,6 +306,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         String productCode = policyDTO.getProductCode();
         logger.debug("Fetching product. productCode={}", productCode);
 
+        
+
         try {
             // Для тестера ghjlern d cnfnect дев
             product = productService.getProductByCode(productCode, iAmTester);
@@ -329,6 +326,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             );
             throw new UnprocessableEntityException(errorModel);
         }
+
+        authorizationService.check(user, AuthZ.ResourceType.PRODUCT, product.getId().toString(), null, AuthZ.Action.QUOTE);
+        
         // 4. Применение метаданных продукта
         try {
             preProcessService.applyProductMetadata(policyDTO, product);
@@ -436,10 +436,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
         // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
         boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
-
-        if (!iAmTester) {
-            authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.CREATE);
-        }
         
         logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
         // 1. JSON → DTO core
@@ -465,6 +461,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         var product = productService.getProductByCode(productCode, iAmTester);
         logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
+        authorizationService.check(user, AuthZ.ResourceType.PRODUCT, null, null, AuthZ.Action.SELL);
+
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);
 
@@ -481,6 +479,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // Если норм то меняет % на запрашиваемый
             policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
         }
+
 
         // 5. DTO → JSON (эталонная модель)
         /* обогащенные данные */

@@ -16,6 +16,7 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.security.SecuredController;
+import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -45,12 +46,12 @@ public class SalesController extends SecuredController {
     private static final Logger logger = LoggerFactory.getLogger(SalesController.class);
 
     private final ProcessOrchestrator processOrchestrator;
-    private final DbStorageService dbStorageService;
+    private final StorageService dbStorageService;
     private final FileProcessService fileProcessService;
 
     public SalesController(ProcessOrchestrator processOrchestrator,
                            SecurityContextHelper securityContextHelper,
-                           DbStorageService dbStorageService,
+                           StorageService dbStorageService,
                            FileProcessService fileProcessService
     ) {
         super(securityContextHelper);

@@ -194,11 +194,31 @@ export class QuotesComponent implements OnInit, OnDestroy {
           console.error('Error downloading policy:', error);
         }
       });
-    }  
+    }
 
+    if (commandNumber === 2) {
+      this.policyService.getPf(quote.policyNr || '', 'kid').subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `policy_${quote.policyNr || 'kid'}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        },
+        error: (error) => {
+          console.error('Error downloading policy:', error);
+        }
+      });
+    }
+    
+/*
     const commandProperty = `comand${commandNumber}` as keyof Quote;
     if (quote[commandProperty]) {
       alert(`comand ${commandNumber}`);
     }
+*/    
   }
 }

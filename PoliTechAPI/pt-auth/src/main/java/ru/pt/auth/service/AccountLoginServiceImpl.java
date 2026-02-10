@@ -9,6 +9,8 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.service.auth.AccountLoginService;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.entity.LoginEntity;
@@ -17,8 +19,6 @@ import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.auth.security.permitions.AuthZ;
-import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.auth.utils.AccountLoginMapper;
 
 import java.util.List;

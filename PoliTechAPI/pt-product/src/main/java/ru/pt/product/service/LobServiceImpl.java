@@ -11,10 +11,10 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.permitions.AuthZ;
-import ru.pt.auth.security.permitions.AuthorizationService;
 import ru.pt.product.entity.LobEntity;
 import ru.pt.product.repository.LobRepository;
 

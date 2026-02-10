@@ -2,7 +2,7 @@ package ru.pt.auth.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+//import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import ru.pt.auth.security.filter.TenantResolutionFilter;
-import ru.pt.auth.security.permitions.CustomPermissionEvaluator;
+//import ru.pt.auth.security.permitions.CustomPermissionEvaluator;
 import ru.pt.auth.security.filter.IdentityResolutionFilter;
 import ru.pt.auth.security.filter.AccountResolutionFilter;
 import ru.pt.auth.security.filter.ContextCleanupFilter;
@@ -32,7 +32,7 @@ public class SecurityConfig {
     private final AccountResolutionFilter accountResolutionFilter;
     private final ContextCleanupFilter contextCleanupFilter;
     private final TenantImpersonationFilter tenantImpersonationFilter;
-    private final CustomPermissionEvaluator customPermissionEvaluator;
+//    private final CustomPermissionEvaluator customPermissionEvaluator;
     
     public SecurityConfig(
                          SecurityConfigurationProperties securityConfigurationProperties,
@@ -40,8 +40,9 @@ public class SecurityConfig {
                          IdentityResolutionFilter identityResolutionFilter,
                          AccountResolutionFilter accountResolutionFilter,
                          ContextCleanupFilter contextCleanupFilter,
-                         TenantImpersonationFilter tenantImpersonationFilter,
-                         CustomPermissionEvaluator customPermissionEvaluator) {
+                         TenantImpersonationFilter tenantImpersonationFilter
+        //                 CustomPermissionEvaluator customPermissionEvaluator
+                        ) {
         //this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.securityConfigurationProperties = securityConfigurationProperties;
         this.tenantResolutionFilter = tenantResolutionFilter;
@@ -49,7 +50,7 @@ public class SecurityConfig {
         this.accountResolutionFilter = accountResolutionFilter;
         this.contextCleanupFilter = contextCleanupFilter;
         this.tenantImpersonationFilter = tenantImpersonationFilter;
-        this.customPermissionEvaluator = customPermissionEvaluator;
+        //this.customPermissionEvaluator = customPermissionEvaluator;
     }
 
    //  TODO: добавить авторизацию через Partner headers (проверить, что все работает)
@@ -82,11 +83,13 @@ public class SecurityConfig {
      * Configures the custom permission evaluator for method-level security.
      * This allows using hasPermission() in @PreAuthorize annotations.
      */
+    /* 
     @Bean
     public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler() {
         DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
         expressionHandler.setPermissionEvaluator(customPermissionEvaluator);
         return expressionHandler;
     }
+    */
 }
 

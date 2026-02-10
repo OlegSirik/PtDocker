@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ru.pt.api.dto.process.PolicyDTO;
+import ru.pt.api.dto.sales.QuoteDto;
 /**
  * Сервис хранения договоров + методы доступа
  */
@@ -82,4 +83,10 @@ public interface StorageService {
      * @return данные полиса
      */
     PolicyData getPolicyByPaymentOrderId(String paymentOrderId);
+
+        /**
+     * Get all quotes from policy index for current account
+     * @return List<QuoteDto>
+     */
+    List<QuoteDto> getAccountQuotes(String qstr); 
 }

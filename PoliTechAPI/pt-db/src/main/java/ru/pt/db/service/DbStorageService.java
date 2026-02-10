@@ -290,6 +290,7 @@ public class DbStorageService implements StorageService {
      * Get all quotes from policy index for current account
      * @return List<QuoteDto>
      */
+    @Override
     public List<QuoteDto> getAccountQuotes(String qstr) {
         var userData = securityContextHelper.getCurrentUser()
             .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
@@ -297,106 +298,6 @@ public class DbStorageService implements StorageService {
 
         return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
 
-/*
-
-    String id, // uuid
-    String draftId, // uuid
-    String policyNr,
-    String productCode,
-    String insCompany,
-    ZonedDateTime createDate, // Date | string
-    ZonedDateTime issueDate, // Date | string
-    String issueTimezone,
-    ZonedDateTime paymentDate, // Date | string
-    ZonedDateTime startDate, // Date | string
-    ZonedDateTime endDate, // Date | string
-    String policyStatus,
-    String phDigest,
-    String ioDigest,
-    Double premium,
-    String agentDigest,
-    Double agentKvPrecent,
-    Double agentKvAmount,
-    Boolean comand1,
-    Boolean comand2,
-    Boolean comand3,
-    Boolean comand4,
-    Boolean comand5,
-    Boolean comand6,
-    Boolean comand7,
-    Boolean comand8,
-    Boolean comand9
-
-    SELECT 
-            p.id,
-            p.draft_id,
-            p.policy_nr,
-            p.product_code,
-            p.create_date,
-            p.issue_date,
-            p.payment_date,
-            p.start_date,
-            p.end_date,
-            p.policy_status, 
-            p.user_account_id,
-            p.client_account_id,
-            p.version_status,
-            p.payment_order_id,
-            p.ph_digest,
-            p.io_digest,
-            p.premium::text,
-            p.agent_kv_percent::text,
-            p.agent_kv_amount::text
-        FROM policy_index p
-      
-        List<QuoteDto> quotes = policyIndexRepository.findPoliciesByAccountIdRecursive(accountId, qstr).stream().map(quote -> {
-            // Helper method to convert Object to ZonedDateTime
-            Function<Object, ZonedDateTime> toZonedDateTime = obj -> {
-                if (obj == null) return null;
-                if (obj instanceof Timestamp) {
-                    return ((Timestamp) obj).toInstant().atZone(ZoneId.systemDefault());
-                }
-                if (obj instanceof ZonedDateTime) {
-                    return (ZonedDateTime) obj;
-                }
-                if (obj instanceof java.time.OffsetDateTime) {
-                    return ((java.time.OffsetDateTime) obj).toZonedDateTime();
-                }
-                return null;
-            };
-            
-            return new QuoteDto(
-                quote[0] != null ? quote[0].toString() : null,        // id (UUID converted to String)
-                quote[1] != null ? (String) quote[1] : null,          // draftId
-                quote[2] != null ? (String) quote[2] : null,          // policyNr
-                quote[3] != null ? (String) quote[3] : null,          // productCode
-                null,                                                  // insCompany (not in query)
-                toZonedDateTime.apply(quote[4]),                      // createDate
-                toZonedDateTime.apply(quote[5]),                      // issueDate
-                quote[6] != null ? (String) quote[6] : null,          // issueTimezone
-                toZonedDateTime.apply(quote[7]),                      // paymentDate
-                toZonedDateTime.apply(quote[8]),                      // startDate
-                toZonedDateTime.apply(quote[9]),                      // endDate
-                quote[10] != null ? quote[10].toString() : null,     // policyStatus
-                quote[14] != null ? (String) quote[14] : null,        // phDigest (not in query)
-                quote[15] != null ? (String) quote[15] : null,        // ioDigest (not in query)
-                quote[16] != null ? (String) quote[16] : null,        // premium (not in query)
-                "account_id:",                                                  // agentDigest (not in query)
-                quote[17] != null ? (String) quote[17] : null,        // agentKvPrecent (not in query)
-                quote[18] != null ? (String) quote[18] : null,        // agentKvAmount (not in query)
-                true,                                                  // comand1 (not in query)
-                false,                                                  // comand2 (not in query)
-                false,                                                  // comand3 (not in query)
-                false,                                                  // comand4 (not in query)
-                false,                                                  // comand5 (not in query)
-                false,                                                  // comand6 (not in query)
-                false,                                                  // comand7 (not in query)
-                false,                                                  // comand8 (not in query)
-                false                                                   // comand9 (not in query)
-            );
-        }).collect(Collectors.toList());
-        return quotes;
-        */
     }
 
 }

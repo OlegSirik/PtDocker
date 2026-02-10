@@ -47,7 +47,8 @@ public class PolicyReport {
             p.io_digest,
             p.premium::text,
             p.agent_kv_percent::text,
-            p.agent_kv_amount::text
+            p.agent_kv_amount::text,
+            p.user_login
         FROM policy_index p
         JOIN account_tree at ON p.user_account_id = at.id
         WHERE ( p.policy_nr LIKE ? OR p.ph_digest LIKE ? )
@@ -92,7 +93,7 @@ public class PolicyReport {
                 rs.getString(2),                 // draftId
                 rs.getString(3),                 // policyNr
                 rs.getString(4),                 // productCode
-                null,                            // insCompany (not present)
+                "VSK",                            // insCompany (not present)
                 createDate,                      // createDate
                 issueDate,                       // issueDate
                 issueTimezone,                   // issueTimezone
@@ -103,11 +104,11 @@ public class PolicyReport {
                 rs.getString(15),                // phDigest
                 rs.getString(16),                // ioDigest
                 rs.getString(17),                // premium (text)
-                "account_id",                    // agentDigest (placeholder)
+                rs.getString(20),                    // agentDigest (placeholder)
                 rs.getString(18),                // agentKvPrecent
                 rs.getString(19),                // agentKvAmount
                 Boolean.TRUE,                    // comand1
-                Boolean.FALSE,                   // comand2
+                Boolean.TRUE,                   // comand2
                 Boolean.FALSE,                   // comand3
                 Boolean.FALSE,                   // comand4
                 Boolean.FALSE,                   // comand5

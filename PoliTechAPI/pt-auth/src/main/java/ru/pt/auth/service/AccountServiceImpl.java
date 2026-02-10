@@ -9,14 +9,14 @@ import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.service.auth.AccountService;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.ProductRoleEntity;
 import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.ProductRoleRepository;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.auth.security.permitions.AuthorizationService;
-import ru.pt.auth.security.permitions.AuthZ;
 import ru.pt.auth.utils.AccountMapper;
 import ru.pt.auth.utils.ProductRoleMapper;
 
