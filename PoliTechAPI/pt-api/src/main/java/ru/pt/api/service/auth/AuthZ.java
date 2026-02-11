@@ -17,7 +17,8 @@ public final class AuthZ {
         ACCOUNT_PRODUCT,
         TOKEN,
         LOGIN,
-        POLICY
+        POLICY,
+        CONTRACT
     }
 
     /** Действия */

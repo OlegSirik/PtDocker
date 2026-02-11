@@ -1,6 +1,6 @@
 .calculator-container {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
 
   .page-header {
@@ -286,6 +286,43 @@
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
   }
+
+  &.row-selected {
+    background-color: rgba(25, 118, 210, 0.12) !important;
+    
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.16) !important;
+    }
+  }
+}
+
+.tariff-tables-table {
+  .col-code {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+  }
+
+  .col-name {
+    width: 70%;
+    min-width: 200px;
+  }
+
+  .col-altVar {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+  }
+
+  .col-altVal {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+  }
+}
+
+.text-right {
+  text-align: right !important;
 }
 
 // Material Design overrides

@@ -62,40 +62,96 @@
       </div>
     </mat-tab>
 
-    <!-- Formulas Tab -->
-    <mat-tab label="Формулы">
+    <!-- Tariff tables Tab -->
+    <mat-tab label="Тарифные таблицы">
       <div class="tab-content">
-@if (false) {
         <mat-card class="datatable-card">
           <mat-card-content>
-            <table mat-table [dataSource]="paginatedFormulas" class="calculator-table">
-              <ng-container matColumnDef="varCode">
-                <th mat-header-cell *matHeaderCellDef>Код переменной</th>
-                <td mat-cell *matCellDef="let element">{{element.varCode}}</td>
+            <div class="table-header">
+              <h3>Тарифные таблицы</h3>
+            </div>
+            <table mat-table [dataSource]="paginatedCoefficients" class="calculator-table tariff-tables-table">
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef class="col-code">код</th>
+                <td mat-cell *matCellDef="let element" class="col-code">{{ element.varCode }}</td>
               </ng-container>
 
-              <ng-container matColumnDef="varName">
-                <th mat-header-cell *matHeaderCellDef>Название переменной</th>
-                <td mat-cell *matCellDef="let element">{{element.varName}}</td>
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef class="col-name">наименование</th>
+                <td mat-cell *matCellDef="let element" class="col-name">{{ element.varName }}</td>
               </ng-container>
 
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
-                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
-                  <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
-                    <button mat-button color="primary" matBadge="{{element.lines.length}}" class="action-button1" (click)="showLines(element, i)">
-                      lines
-                    </button>
-                  </div>
-                </td>
+              <ng-container matColumnDef="altVar">
+                <th mat-header-cell *matHeaderCellDef class="col-altVar">Алт.источник</th>
+                <td mat-cell *matCellDef="let element" class="col-altVar">{{ element.altVarName }}</td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="formulasDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: formulasDisplayedColumns;"></tr>
+              <ng-container matColumnDef="altVal">
+                <th mat-header-cell *matHeaderCellDef class="col-altVal">Алт.значение</th>
+                <td mat-cell *matCellDef="let element" class="col-altVal">{{ element.altVarValue }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['code', 'name', 'altVar', 'altVal']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['code', 'name', 'altVar', 'altVal'];"
+                  (click)="onCoefficientRowClick(row)"
+                  class="clickable-row"
+                  [class.row-selected]="selectedCoefficientCode !== null && row.varCode === selectedCoefficientCode">
+              </tr>
             </table>
           </mat-card-content>
         </mat-card>
-}
+
+        <!-- Coefficient Data Card (copied) -->
+        @if (coefficientDataVisible) {
+          <mat-card class="datatable-card">
+            <mat-card-content>
+              
+              <div class="table-header">
+                <h3 style="text-align: start; margin: 0;">Таблица: {{ selectedCoefficientCode }}</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button mat-raised-button color="primary" class="add-button" (click)="saveCoefficientData()">
+                    <mat-icon>save</mat-icon>
+                    Save
+                  </button>
+                  <button mat-raised-button color="accent" class="add-button" (click)="exportCoefficientDataCsv()">
+                    <mat-icon>file_download</mat-icon>
+                    To Excel
+                  </button>
+                  <button mat-raised-button color="accent" class="add-button" (click)="importCoefficientDataCsv()">
+                    <mat-icon>file_upload</mat-icon>
+                    From Excel
+                  </button>
+                </div>
+              </div>
+              
+              
+              <table mat-table [dataSource]="paginatedCoefficientData" class="calculator-table">
+                @for (col of coefficientDataColumns; track col) {
+                  <ng-container [matColumnDef]="col">
+                    <th mat-header-cell *matHeaderCellDef [class.text-right]="col === 'r'">{{ getCoefficientDataHeader(col) }}</th>
+                    <td mat-cell *matCellDef="let row" [class.text-right]="col === 'r'">{{ getCoefficientDataCell(row, col) }}</td>
+                  </ng-container>
+                }
+                <tr mat-header-row *matHeaderRowDef="coefficientDataColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: coefficientDataColumns;"></tr>
+              </table>
+              <mat-paginator
+                [length]="filteredCoefficientData.length"
+                [pageSize]="coefficientDataPageSize"
+                [pageIndex]="coefficientDataPageIndex"
+                [pageSizeOptions]="[5, 10, 25]"
+                (page)="onCoefficientDataPageChange($event)"
+                showFirstLastButtons>
+              </mat-paginator>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- Formulas Tab -->
+    <mat-tab label="Формулы">
+      <div class="tab-content">
         <!-- Lines Card -->
         
           <mat-card class="datatable-card">

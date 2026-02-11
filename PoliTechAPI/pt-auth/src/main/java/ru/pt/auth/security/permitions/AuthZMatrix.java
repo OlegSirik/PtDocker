@@ -41,6 +41,7 @@ public final class AuthZMatrix {
 
         MATRIX.put(AuthZ.ResourceType.TOKEN, EnumSet.of(AuthZ.Action.MANAGE, AuthZ.Action.LIST, AuthZ.Action.VIEW));
         MATRIX.put(AuthZ.ResourceType.LOGIN, EnumSet.of(AuthZ.Action.MANAGE, AuthZ.Action.LIST, AuthZ.Action.VIEW));
+        MATRIX.put(AuthZ.ResourceType.CONTRACT, EnumSet.of(AuthZ.Action.MANAGE, AuthZ.Action.LIST, AuthZ.Action.VIEW));
 
         // ======================
         // Role -> permissions
@@ -67,6 +68,7 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.ACCOUNT_PRODUCT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.TOKEN, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.LOGIN, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.CONTRACT, AuthZ.Action.ALL),
 
             formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST)
         ));
@@ -86,6 +88,7 @@ public final class AuthZMatrix {
 
             formatPermission(AuthZ.ResourceType.TOKEN, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.LOGIN, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.CONTRACT, AuthZ.Action.ALL),
 
             formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST)
         ));

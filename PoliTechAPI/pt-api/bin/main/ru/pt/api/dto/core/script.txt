@@ -1,0 +1,78 @@
+package core 
+
+create crud dto, entity,services, controller for the next objects
+
+
+table mt_contract_model
+id long not null default nextval(mt_seq)
+tid long
+code string 50 'box'
+name string 300 'BOX_CONTRACT'
+ 
+primary key id
+unique( tid, code )
+unique( tid, name )
+ 
+table mt_contract_section
+id long not null default nextval(mt_seq)
+tid long not null
+model_id long not null
+code string 50 'PH', 'IO', 'POLICY', 'SERVICE'
+name string 300
+ 
+primary key id
+unique( model_id, code )
+unique( model_id, name )
+refernce model_id to mt_contract_model(id)
+ 
+table mt_entity_def
+id long not null default nextval(mt_seq)
+tid long not null
+section_id string 30 not null 
+code string 50 not null 'person','identifier'
+name string 30 not null
+cardinality string 10 not null 'SINGLE/MULTIPLE
+ 
+primary key id
+unique( section_id, code )
+unique( section_id, name )
+reference section_id to mt_contract_section (id)
+ 
+table mt_attribute_def
+id long not null default nextval(mt_seq)
+tid long not null
+entity_id string 30 not null 
+code string 50 not null
+name string 30 not null
+data_type string 10 not null STRING, NUMBER
+ 
+primary key id
+unique( entity_id, code )
+unique( entity_id, name )
+reference entity_id to mt_contract_entity (id)
+ 
+ 
+dto
+section {code, name }
+entity_def {code, name}
+attribute_def {code, name, data_type }
+ 
+ 
+controller
+For all methods call SecurityService.check( Object=CONTRACT, Action=MANAGE or LIST for get)
+methods
+GET /admin/schema/{contract_code}/sections return List of sections for current tid and contract code
+POST /admin/schema/{contract_code}/sections insert new record. code must contains only latin letters, first char in lowercase.
+PUT /admin/schema/{contract_code}/sections/{code} only name can be updated
+DELETE /admin/schema/{contract_code}/sections/{code} delete and catch exception if child record exists, return error "Delete child record first"
+ 
+GET /admin/schema/{contract_code}/{section_code}/entities return List of sections for current tid and contract code
+POST /admin/schema/{contract_code}/{section_code}/entities insert new record . code must contains only latin letters, first char in lowercase.
+PUT /admin/schema/{contract_code}/{section_code}/entities{code} only name can be updated
+DELETE /admin/schema/{contract_code}/{section_code}/entities{code} delete and catch exception if child record exists, return error "Delete child record first"
+ 
+GET /admin/schema/{contract_code}/{section_code}/{entities_code}/attributes return List of entity for current tid and sectionId
+POST /admin/schema/{contract_code}/{section_code}/{entities_code}/entities insert new record . code must contains only latin letters, first char in lowercase.
+ 
+PUT /admin/schema/{contract_code}/{section_code}/{entities_code}/entities{code} only name can be updated
+DELETE /admin/schema/{contract_code}/{section_code}/{entities_code}/entities{code} delete and catch exception if child record exists, return error "Delete child record first"

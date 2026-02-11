@@ -703,6 +703,12 @@ export class CalculatorComponent implements OnInit {
       (item.varName && item.varName.toLowerCase().includes(this.coefficientsSearchText.toLowerCase()))
     );
     this.updateCoefficientsPagination();
+    
+    // Auto-select first coefficient if none is selected and data exists
+    if (this.filteredCoefficients.length > 0 && !this.selectedCoefficientCode) {
+      const firstCoefficient = this.filteredCoefficients[0];
+      this.onCoefficientRowClick(firstCoefficient);
+    }
   }
 
   onCoefficientsPageChange(event: PageEvent): void {

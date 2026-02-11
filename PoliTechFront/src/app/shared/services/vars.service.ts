@@ -5,15 +5,37 @@ import { tap, catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export interface LobVar {
-    varCode: string;
-    varType: string;
-    varPath: string;
-    varName: string;
-    varDataType: string;
-    varValue: string;
-    varCdm: string
-    varNr: number;
-  }
+  varCode: string;
+  varType: string;
+  varPath: string;
+  varName: string;
+  varDataType: string;
+  varValue: string;
+  varCdm: string;
+  varNr: number;
+}
+
+/** Section from schema API */
+export interface SchemaSection {
+  code: string;
+  name: string;
+}
+
+/** Entity definition from schema API */
+export interface SchemaEntity {
+  code: string;
+  name: string;
+}
+
+/** Attribute definition from schema API */
+export interface SchemaAttribute {
+  code?: string;
+  name: string;
+  dataType?: string;
+  nr?: number;
+  varCode?: string;
+  varValue?: string;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -218,5 +240,85 @@ export class VarsService {
   }  
   getIoRiskFactorsVars(): LobVar[] {
     return this.allVars.filter(v => v.varCdm?.startsWith('insuredObject.riskFactors'));
-  }  
+  }
+
+  // ---------- Schema API (contract model = 'box') ----------
+
+  private schemaUrl(contractModel: string): string {
+    return `${this.authService.baseApiUrl}/admin/schema/${contractModel}`;
+  }
+
+  /**
+   * Load sections for a contract model.
+   * GET /api/v1/{tenant}/admin/schema/{contractCode}/sections
+   */
+  loadSections(contractModel: string = 'box'): Observable<SchemaSection[]> {
+    const url = `${this.schemaUrl(contractModel)}/sections`;
+    return this.http.get<SchemaSection[]>(url);
+  }
+
+  /**
+   * Load entities for a section.
+   * GET /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/entities
+   */
+  loadEntities(contractModel: string, sectionCode: string): Observable<SchemaEntity[]> {
+    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/entities`;
+    return this.http.get<SchemaEntity[]>(url);
+  }
+
+  /**
+   * Load attributes for an entity.
+   * GET /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes
+   */
+  loadAttributes(
+    contractModel: string,
+    sectionCode: string,
+    entityCode: string
+  ): Observable<SchemaAttribute[]> {
+    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes`;
+    return this.http.get<SchemaAttribute[]>(url);
+  }
+
+  /**
+   * Create attribute.
+   * POST /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes
+   */
+  createAttribute(
+    contractModel: string,
+    sectionCode: string,
+    entityCode: string,
+    body: SchemaAttribute
+  ): Observable<SchemaAttribute> {
+    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes`;
+    return this.http.post<SchemaAttribute>(url, body);
+  }
+
+  /**
+   * Update attribute (only name can be updated on API).
+   * PUT /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes/{code}
+   */
+  updateAttribute(
+    contractModel: string,
+    sectionCode: string,
+    entityCode: string,
+    code: string,
+    body: SchemaAttribute
+  ): Observable<SchemaAttribute> {
+    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes/${encodeURIComponent(code)}`;
+    return this.http.put<SchemaAttribute>(url, body);
+  }
+
+  /**
+   * Delete attribute.
+   * DELETE /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes/{code}
+   */
+  deleteAttribute(
+    contractModel: string,
+    sectionCode: string,
+    entityCode: string,
+    code: string
+  ): Observable<void> {
+    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes/${encodeURIComponent(code)}`;
+    return this.http.delete<void>(url);
+  }
 }

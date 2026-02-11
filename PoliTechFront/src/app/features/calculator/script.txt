@@ -1,0 +1,7 @@
+add tab on second position. name is "Tariff tables"
+first card if for table with datasource - paginatedCoefficients
+Table title Tariff tables
+Table with columns - code, name, altVar, altVal
+no pagination, no search
+record is clickable
+when record click show table with coefficietnts, copy from <!-- Coefficient Data Card -->

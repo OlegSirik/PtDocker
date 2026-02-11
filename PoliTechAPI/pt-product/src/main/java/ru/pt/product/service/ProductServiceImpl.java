@@ -20,10 +20,10 @@ import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.product.entity.MetadataEntity;
+import ru.pt.product.entity.AttributeDefEntity;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
-import ru.pt.product.repository.MetadataRepository;
+
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
@@ -45,6 +45,8 @@ import ru.pt.api.service.auth.AuthZ.Action;
 import ru.pt.api.service.auth.AuthZ.ResourceType;
 import ru.pt.api.service.calculator.CalculatorService;
 
+import ru.pt.product.repository.AttributeDefRepository;
+
 @Component
 public class ProductServiceImpl implements ProductService {
 
@@ -59,7 +61,7 @@ public class ProductServiceImpl implements ProductService {
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationService authService;
     private final CalculatorService calculatorService;
-    private final MetadataRepository metadataRepository;
+    private final AttributeDefRepository attributeDefRepository;
 
     // Constructor with @Lazy to break circular dependency with CalculatorService
     public ProductServiceImpl(
@@ -72,7 +74,7 @@ public class ProductServiceImpl implements ProductService {
             SecurityContextHelper securityContextHelper,
             AuthorizationService authService,
             @Lazy CalculatorService calculatorService,
-            MetadataRepository metadataRepository) {
+            AttributeDefRepository attributeDefRepository) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.lobService = lobService;
@@ -82,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
         this.securityContextHelper = securityContextHelper;
         this.authService = authService;
         this.calculatorService = calculatorService;
-        this.metadataRepository = metadataRepository;
+        this.attributeDefRepository = attributeDefRepository;
     }
 
     /**
@@ -641,9 +643,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<PvVar> getPvVars() {
         // Only check that user is authenticated, no authorization check
-        getCurrentUser();
+        var user = getCurrentUser();
         
-        return metadataRepository.findAllOrderByNr().stream()
+        List<AttributeDefEntity> metadata = attributeDefRepository.findByTenantAndModelCode(user.getTenantId(), "box1");
+
+        return metadata.stream()
                 .map(this::mapMetadataToVar)
                 .collect(Collectors.toList());
     }
@@ -722,8 +726,8 @@ public class ProductServiceImpl implements ProductService {
 
         return productVersionModel;
     }
-
-    private PvVar mapMetadataToVar(MetadataEntity entity) {
+ 
+    private PvVar mapMetadataToVar(AttributeDefEntity entity) {
         PvVar pvVar = new PvVar();
         pvVar.setVarCode(entity.getVarCode());
         pvVar.setVarName(entity.getVarName());
