@@ -15,12 +15,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ru.pt.auth.model.AuthType;
+import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.model.TenantSecurityConfig;
 import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.security.strategy.IdentitySourceStrategy;
 import ru.pt.auth.service.AccountResolverService;
 import ru.pt.auth.service.TenantSecurityConfigService;
 import ru.pt.auth.configuration.SecurityConfigurationProperties;
+import ru.pt.auth.service.ClientSecurityConfigService;
 
 public class AccountResolutionFilter extends AbstractSecurityFilter {
 
@@ -28,18 +30,22 @@ public class AccountResolutionFilter extends AbstractSecurityFilter {
     private final List<IdentitySourceStrategy> strategies;
     private final AccountResolverService accountResolverService;
     private final RequestContext requestContext;
+    private final ClientSecurityConfigService clientSecurityConfigService;
+
     public AccountResolutionFilter(
         SecurityConfigurationProperties securityProperties,
         TenantSecurityConfigService configService,
         List<IdentitySourceStrategy> strategies,
         AccountResolverService accountResolverService,
-        RequestContext requestContext
+        RequestContext requestContext,
+        ClientSecurityConfigService clientSecurityConfigService
     ) {
         super(securityProperties);
         this.configService = configService;
         this.strategies = strategies;
         this.accountResolverService = accountResolverService;
         this.requestContext = requestContext;
+        this.clientSecurityConfigService = clientSecurityConfigService;
     }
 
     /* 
@@ -72,13 +78,22 @@ public class AccountResolutionFilter extends AbstractSecurityFilter {
         }
 
         TenantSecurityConfig config = configService.getConfig(tenant);
-        if (config.authType() == AuthType.NONE) {
+        AuthType authType = config.authType();
+
+        String clientId = request.getHeader("X-Client-ID");
+        if (clientId !=null && !clientId.isEmpty()) {
+            ClientSecurityConfig clientConfig = clientSecurityConfigService.getConfig(tenant, clientId);
+            authType = clientConfig.authType();
+        }
+        if (authType == AuthType.NONE) {
             filterChain.doFilter(request, response);
             return;
         }
         
+        final AuthType aType = authType;
+
         IdentitySourceStrategy strategy = strategies.stream()
-            .filter(s -> s.supports(config.authType()))
+            .filter(s -> s.supports(aType))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No AuthenticationStrategy for " + config.authType()));
 

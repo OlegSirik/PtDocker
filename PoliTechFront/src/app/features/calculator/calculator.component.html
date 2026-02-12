@@ -150,74 +150,68 @@
     </mat-tab>
 
     <!-- Formulas Tab -->
-    <mat-tab label="Формулы">
+    <mat-tab label="Формула">
       <div class="tab-content">
         <!-- Lines Card -->
         
           <mat-card class="datatable-card">
             <mat-card-content>
               <div class="table-header">
-                <h3>lines</h3>
+                <h3>Порядок расчета премии</h3>
                 <button mat-raised-button color="primary" class="add-button" (click)="addLine()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
+
               </div>
               <table mat-table [dataSource]="paginatedLines" class="calculator-table">
                 <ng-container matColumnDef="nr">
                   <th mat-header-cell *matHeaderCellDef>№</th>
                   <td mat-cell *matCellDef="let element">{{element.nr}}</td>
                 </ng-container>
-                <ng-container matColumnDef="conditionLeft">
-                  <th mat-header-cell *matHeaderCellDef>Условие слева</th>
+
+                <ng-container matColumnDef="condition">
+                  <th mat-header-cell *matHeaderCellDef>Пред.условие</th>
                   <td mat-cell *matCellDef="let element">
                     <div class="var-cell">
-                      <div>{{element.conditionLeft}}</div>
+                      <div>{{getConditionDisplay(element)}}</div>
                     </div>
                   </td>
                 </ng-container>
-                <ng-container matColumnDef="conditionOperator">
-                  <th mat-header-cell *matHeaderCellDef>Оператор условия</th>
-                  <td mat-cell *matCellDef="let element">{{element.conditionOperator}}</td>
-                </ng-container>
-                <ng-container matColumnDef="conditionRight">
-                  <th mat-header-cell *matHeaderCellDef>Условие справа</th>
-                  <td mat-cell *matCellDef="let element">
-                    <div class="var-cell">
-                      <div>{{element.conditionRight}}</div>
-                    </div>
-                  </td>
-                </ng-container>
+              
+
                 <ng-container matColumnDef="expressionResult">
-                  <th mat-header-cell *matHeaderCellDef>Результат выражения</th>
+                  <th mat-header-cell *matHeaderCellDef>Результат</th>
                   <td mat-cell *matCellDef="let element">
                     <div class="var-cell">
-                      <div>{{element.expressionResult}}</div>
+                      <div>{{showVarName(element.expressionResult)}}</div>
                     </div>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="expressionLeft">
-                  <th mat-header-cell *matHeaderCellDef>Выражение слева</th>
+                  <th mat-header-cell *matHeaderCellDef>Аргумент 1</th>
                   <td mat-cell *matCellDef="let element">
                     <div class="var-cell">
-                      <div>{{element.expressionLeft}}</div>
+                      <div>{{showVarName(element.expressionLeft)}}</div>
                     </div>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="expressionOperator">
-                  <th mat-header-cell *matHeaderCellDef>Оператор выражения</th>
+                  <th mat-header-cell *matHeaderCellDef>Оператор</th>
                   <td mat-cell *matCellDef="let element">{{element.expressionOperator}}</td>
                 </ng-container>
                 <ng-container matColumnDef="expressionRight">
-                  <th mat-header-cell *matHeaderCellDef>Выражение справа</th>
+                  <th mat-header-cell *matHeaderCellDef>Аргумент 2</th>
                   <td mat-cell *matCellDef="let element">
                     <div class="var-cell">
-                      <div>{{element.expressionRight}}</div>
+                      <div>{{showVarName(element.expressionRight)}}</div>
                     </div>
                   </td>
                 </ng-container>
+
+
                 <ng-container matColumnDef="postProcessor">
-                  <th mat-header-cell *matHeaderCellDef>Постпроцессор</th>
+                  <th mat-header-cell *matHeaderCellDef>Округлить</th>
                   <td mat-cell *matCellDef="let element">{{element.postProcessor || ''}}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
@@ -254,6 +248,12 @@
                   <button mat-raised-button color="primary" (click)="fromText()">
                     from_text
                   </button>
+
+                  <mat-button-toggle-group [(ngModel)]="varDisplayMode" name="varDisplay" style="margin-left: auto;">
+                    <mat-button-toggle value="text">Текст</mat-button-toggle>
+                    <mat-button-toggle value="code">Код</mat-button-toggle>
+                  </mat-button-toggle-group>
+
                 </div>
                 <textarea 
                   class="text-processor-textarea" 
@@ -332,10 +332,14 @@
         @if (selectedCoefficientIndex !== -1) {
           <mat-card class="datatable-card">
             <mat-card-content>
-              <div class="button-section">
+              <div class="button-section" style="display: flex; justify-content: flex-end; gap: 8px; align-items: center;">
                 <button mat-raised-button color="primary" class="add-button" (click)="addColumn()">
                   <mat-icon>add</mat-icon>
                   Add column
+                </button>
+                <button mat-raised-button color="accent" class="add-button" (click)="showSql()">
+                  <mat-icon>code</mat-icon>
+                  Show SQL
                 </button>
               </div>
               <div class="table-header">

@@ -50,7 +50,7 @@ public class AccountResolverService {
         }
 
         // Если это CLIENT_AUTH то всегда берем экаутн с клиента
-        if (clientSecurityConfig.authType() == ClientAuthType.CLIENT) {
+        if (clientSecurityConfig.authLevel() == ClientAuthType.CLIENT) {
             //  это клиентский аккаунт.Но нет дефолтного аккаунта.
             Long defaultAccountId = clientSecurityConfig.defaultAccountId();
 

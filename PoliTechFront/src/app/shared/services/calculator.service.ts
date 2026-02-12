@@ -215,4 +215,15 @@ export class CalculatorService extends BaseApiService<Calculator> {
       })
     );
   }
+
+  /** GET coefficient SQL template (variable names as placeholders) */
+  getCoefficientSql(calculatorId: string, coefficientCode: string): Observable<string> {
+    const url = this.getUrl(calculatorId) + '/coefficients/' + encodeURIComponent(coefficientCode) + '/SQL';
+    return this.http.get(url, { responseType: 'text' }).pipe(
+      catchError(error => {
+        console.error('Error fetching coefficient SQL:', error);
+        throw error;
+      })
+    );
+  }
 }

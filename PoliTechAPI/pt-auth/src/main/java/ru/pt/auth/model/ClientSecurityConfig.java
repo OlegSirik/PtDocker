@@ -8,5 +8,6 @@ public record ClientSecurityConfig (
     Long defaultAccountId,
     Long tid,
     String name,
-    ClientAuthType authType
+    AuthType authType,
+    ClientAuthType authLevel
 ) { }

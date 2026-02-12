@@ -48,8 +48,11 @@ public class ClientEntity {
     @OneToOne(targetEntity = ClientConfigurationEntity.class, cascade = CascadeType.ALL)
     private ClientConfigurationEntity clientConfigurationEntity;
 
-    @Column(name = "auth_type", nullable = false, length = 10)
+    @Column(name = "auth_type")
     private String authType;
+
+    @Column(name = "auth_level", nullable = false, length = 10)
+    private String authLevel;
 
     public String getAuthType() {
         return authType;
@@ -172,5 +175,13 @@ public class ClientEntity {
 
     public static ClientEntity defaultForTenant(TenantEntity tenantEntity) {
         return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", "USER", tenantEntity);
+    }
+
+    public void setAuthLevel(String authLevel) {
+        this.authLevel = authLevel;
+    }
+
+    public String getAuthLevel() {
+        return this.authLevel;
     }
 }

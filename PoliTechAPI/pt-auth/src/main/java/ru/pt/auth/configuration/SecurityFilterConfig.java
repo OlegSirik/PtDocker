@@ -15,6 +15,7 @@ import ru.pt.auth.security.filter.TenantImpersonationFilter;
 import ru.pt.auth.security.strategy.IdentitySourceStrategy;
 import ru.pt.auth.service.AccountResolverService;
 import ru.pt.auth.service.TenantSecurityConfigService;
+import ru.pt.auth.service.ClientSecurityConfigService;
 
 @Configuration
 public class SecurityFilterConfig {
@@ -42,14 +43,16 @@ public class SecurityFilterConfig {
             TenantSecurityConfigService tenantSecurityConfigService,
             List<IdentitySourceStrategy> identitySourceStrategies,
             AccountResolverService accountResolverService,
-            RequestContext requestContext
+            RequestContext requestContext,
+            ClientSecurityConfigService clientSecurityConfigService
     ) {
         return new AccountResolutionFilter(
             securityConfigurationProperties,
             tenantSecurityConfigService,
             identitySourceStrategies,
             accountResolverService,
-            requestContext
+            requestContext,
+            clientSecurityConfigService
         );
     }
 

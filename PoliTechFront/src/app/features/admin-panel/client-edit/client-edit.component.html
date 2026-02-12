@@ -53,11 +53,24 @@
           
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Тип авторизации</mat-label>
-                <mat-select [(ngModel)]="client.authType" (ngModelChange)="onFieldChange()">
+                <mat-select [(ngModel)]="client.authType" name="authType"  (ngModelChange)="onFieldChange()" >
+                  <mat-option value="JWT">JWT</mat-option>
+                  <mat-option value="HEADER">HEADER</mat-option>
+                  <mat-option value="API-KEY">API-KEY</mat-option>
+                  <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>
+                  <mat-option value="NONE">NONE</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field class="form-field" appearance="outline">
+                <mat-label>Уровень авторизации</mat-label>
+                <mat-select [(ngModel)]="client.authLevel" (ngModelChange)="onFieldChange()" required>
                   <mat-option value="CLIENT">CLIENT</mat-option>
                   <mat-option value="USER">USER</mat-option>
                 </mat-select>
               </mat-form-field>
+
+
             </div>
             <div *ngIf="!loading && client.clientAccountId" class="form-row">
               <div class="form-action-row" style="display: flex; gap: 8px;">

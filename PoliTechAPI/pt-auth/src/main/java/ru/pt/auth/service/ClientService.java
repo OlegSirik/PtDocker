@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class ClientService {
+public class ClientService implements ClientSecurityConfigService {
 
     private final ClientRepository clientRepository;
     private final AccountLoginRepository accountLoginRepository;
@@ -78,6 +78,7 @@ public class ClientService {
     }
 
     /** Used during auth flow (e.g. AccountResolverService); no auth check - called before user is resolved. */
+    @Override
     public ClientSecurityConfig getConfig(String tenantCode, String authClientId) {
         return clientRepository.findByTenantCodeAndAuthClientId(tenantCode, authClientId)
                 .map(this::mapToDomain)
@@ -91,7 +92,8 @@ public class ClientService {
             e.getDefaultAccountId(),
             e.getTenant().getId(),
             e.getName(),
-            ClientAuthType.valueOf(e.getAuthType())
+            null,
+            ClientAuthType.valueOf(e.getAuthLevel())
         );
     }
 
@@ -317,6 +319,5 @@ public class ClientService {
         accountService.revokeProduct(account.getId(), productRole.id());
 
         }
-
     
 }

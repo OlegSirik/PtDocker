@@ -2,17 +2,19 @@ package ru.pt.api.sales;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.calculator.CoefficientDataRow;
+import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+
+import java.util.Optional;
 
 
 /**
@@ -88,6 +90,36 @@ public class CalculatorController extends SecuredController {
             @RequestBody java.util.List<CoefficientDataRow> tableJson) {
         //requireAdmin(user);
         return ResponseEntity.ok(coefficientService.replaceTable(calculatorId, code, tableJson));
+    }
+
+    @GetMapping("/{calculatorId}/coefficients/{code}/SQL")
+    public ResponseEntity<String> getCoefficientSQL(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("calculatorId") Integer calculatorId,
+            @PathVariable("code") String code) {
+        //requireAdmin(user);
+        CalculatorModel calculator = calculateService.getCalculatorById(calculatorId);
+        if (calculator == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Optional<CoefficientDef> coefficientOpt = calculator.getCoefficients().stream()
+                .filter(c -> c.getVarCode().equals(code))
+                .findFirst();
+        
+        if (coefficientOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        CoefficientDef coefficient = coefficientOpt.get();
+        String sql = coefficientService.getSQL(calculatorId, code, coefficient.getColumns());
+        
+        if (sql == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        return ResponseEntity.ok(sql);
     }
 
     @PostMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")

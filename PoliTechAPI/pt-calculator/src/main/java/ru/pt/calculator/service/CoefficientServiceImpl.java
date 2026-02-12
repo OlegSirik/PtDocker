@@ -98,6 +98,74 @@ public class CoefficientServiceImpl implements CoefficientService {
         return getTable(calculatorId, code);
     }
 
+    /**
+     * Generates SQL query string for coefficient lookup using variable names instead of values.
+     * This method creates a template SQL that shows which variables are used in the conditions.
+     *
+     * @param calculatorId Calculator ID
+     * @param coefficientCode Coefficient code
+     * @param columns List of coefficient columns defining conditions
+     * @return SQL query string with variable names, or null if parameters are invalid
+     */
+    public String getSQL(Integer calculatorId,
+                         String coefficientCode,
+                         List<CoefficientColumn> columns) {
+        logger.debug("Generating SQL: calculatorId={}, coefficientCode={}", calculatorId, coefficientCode);
+        
+        if (calculatorId == null || coefficientCode == null || columns == null) {
+            logger.warn("Invalid parameters: calculatorId={}, coefficientCode={}, columns={}", 
+                    calculatorId, coefficientCode, columns != null ? "present" : "null");
+            return null;
+        }
+
+        StringBuilder sql = new StringBuilder("select result_value from coefficient_data where calculator_id = ");
+        sql.append(calculatorId.toString());
+        sql.append(" and coefficient_code = ");
+        sql.append("'").append(coefficientCode).append("'");
+
+        StringBuilder orderBy = new StringBuilder();
+
+        for (CoefficientColumn col : columns) {
+            if (col == null) continue;
+            String varCode = col.getVarCode();
+            String nr = (col.getNr() - 1) + "";  // TODO
+            String op = col.getConditionOperator();
+            String sortOrder = col.getSortOrder();
+            String varDataType = col.getVarDataType();
+
+            if (varCode == null || nr == null || op == null) return null;
+            if (!nr.matches("1?0|[0-9]")) return null; // only 0..10
+
+            String operator = normalizeOperator(op);
+            if (operator == null) return null;
+
+            if (varDataType != null && varDataType.equals("NUMBER")) {
+                sql.append(" AND to_number(col").append(nr).append(",'9999999999.99') ").append(operator).append(":").append(varCode);
+            } else {
+                sql.append(" AND col").append(nr).append(" ").append(operator).append(" :").append(varCode);
+            }
+
+            String ord = normalizeOrder(sortOrder);
+            if (ord != null) {
+                if (orderBy.length() == 0) orderBy.append(" order by ");
+                else orderBy.append(", ");
+                if (varDataType != null && varDataType.equals("NUMBER")) {
+                    orderBy.append("to_number(col").append(nr).append(",'9999999999.99') ");
+                } else {
+                    orderBy.append("col").append(nr).append(" ");
+                }
+                orderBy.append(" ").append(ord);
+            }
+        }
+
+        if (orderBy.length() > 0) sql.append(orderBy);
+        sql.append(" limit 1");
+        String sqlS = sql.toString();
+        
+        logger.trace("Generated SQL query: {}", sqlS);
+        return sqlS;
+    }
+
     @Transactional(readOnly = true)
     @Override
     public String getCoefficientValue(Integer calculatorId,

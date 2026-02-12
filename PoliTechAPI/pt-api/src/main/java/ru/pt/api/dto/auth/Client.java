@@ -12,6 +12,7 @@ public class Client {
     private Boolean isDeleted;
     private ClientConfiguration clientConfiguration;
     private String authType;
+    private String authLevel;
     private Product[] products;
 
     public Client() {
@@ -95,5 +96,13 @@ public class Client {
 
     public void setProducts(Product[] products) {
         this.products = products;
+    }
+
+    public void setAuthLevel(String authLevel) {
+        this.authLevel = authLevel;
+    }
+
+    public String getAuthLevel() {
+        return this.authLevel;
     }
 }

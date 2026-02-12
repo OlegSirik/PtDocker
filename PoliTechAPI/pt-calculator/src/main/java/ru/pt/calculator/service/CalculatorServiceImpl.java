@@ -85,6 +85,25 @@ public class CalculatorServiceImpl implements CalculatorService {
                 .orElse(null);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public CalculatorModel getCalculatorById(Integer calculatorId) {
+        logger.debug("Getting calculator by ID: calculatorId={}", calculatorId);
+        return calculatorRepository.findById(calculatorId)
+                .filter(entity -> entity.getTId().equals(getCurrentTenantId()))
+                .map(CalculatorEntity::getCalculator)
+                .map(c -> {
+                    try {
+                        logger.trace("Parsing calculator JSON for calculatorId={}", calculatorId);
+                        return objectMapper.readValue(c, CalculatorModel.class);
+                    } catch (JsonProcessingException e) {
+                        logger.error("Failed to parse calculator JSON: {}", e.getMessage(), e);
+                        throw new RuntimeException(e);
+                    }
+                })
+                .orElse(null);
+    }
+
     @Transactional
     public CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo) {
         logger.info("Creating calculator if missing: productId={}, productCode={}, versionNo={}, packageNo={}", 

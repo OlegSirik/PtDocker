@@ -17,7 +17,8 @@ export interface Client {
     isDeleted: boolean;
     clientAccountId?: number;
     clientConfiguration?: ClientConfiguration;
-    authType: string;
+    authType?: string;
+    authLevel: string;
   }
 
   export interface ClientConfiguration {

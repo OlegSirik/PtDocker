@@ -14,6 +14,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { CalculatorService, Calculator, CalculatorVar, CalculatorFormula, FormulaLine, CalculatorCoefficient, CoefficientColumn, CoefficientDataRow } from '../../shared/services/calculator.service';
 import { VarDialogComponent } from './var-dialog/var-dialog.component';
@@ -21,6 +22,7 @@ import { FormulaDialogComponent } from './formula-dialog/formula-dialog.componen
 import { LineDialogComponent } from './line-dialog/line-dialog.component';
 import { CoefficientDialogComponent } from './coefficient-dialog/coefficient-dialog.component';
 import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
+import { SqlDialogComponent } from './sql-dialog/sql-dialog.component';
 import { ProductService } from '../../shared/services/product.service';
 import { TextProcessorService } from './text-processor';
 
@@ -40,7 +42,8 @@ import * as XLSX from 'xlsx';
     MatTableModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatButtonToggleModule
 ],
     templateUrl: './calculator.component.html',
     styleUrls: ['./calculator.component.scss']
@@ -88,7 +91,7 @@ export class CalculatorComponent implements OnInit {
   selectedFormulaIndex = 0;
 
   // Formula lines table
-  linesDisplayedColumns = ['nr', 'conditionLeft', 'conditionOperator', 'conditionRight', 'expressionResult', 'expressionLeft', 'expressionOperator', 'expressionRight', 'postProcessor', 'actions'];
+  linesDisplayedColumns = ['nr', 'condition', 'expressionResult', 'expressionLeft', 'expressionOperator', 'expressionRight', 'postProcessor', 'actions'];
   linesSearchText = '';
   linesPageSize = 200;
   linesPageIndex = 0;
@@ -97,6 +100,9 @@ export class CalculatorComponent implements OnInit {
 
   // Text processor
   textProcessorContent: string = '';
+
+  // Lines table: toggle Текст (varName) / Код (varCode)
+  varDisplayMode: 'text' | 'code' = 'text';
 
   // Coefficients table
   coefficientsDisplayedColumns = ['varCode', 'varName', 'altVarName', 'altVarValue', 'actions'];
@@ -438,7 +444,8 @@ export class CalculatorComponent implements OnInit {
         vars: this.calculator.vars.slice().sort((a, b) => a.varCode.localeCompare(b.varCode)),
         conditionOperatorOptions: this.conditionOperatorOptions,
         expressionOperatorOptions: this.expressionOperatorOptions,
-        postProcessorOptions: this.postProcessorOptions
+        postProcessorOptions: this.postProcessorOptions,
+        varDisplayMode: this.varDisplayMode
       }
     });
 
@@ -475,7 +482,8 @@ export class CalculatorComponent implements OnInit {
         vars: this.calculator.vars,
         conditionOperatorOptions: this.conditionOperatorOptions,
         expressionOperatorOptions: this.expressionOperatorOptions,
-        postProcessorOptions: this.postProcessorOptions
+        postProcessorOptions: this.postProcessorOptions,
+        varDisplayMode: this.varDisplayMode
       }
     });
 
@@ -608,6 +616,39 @@ export class CalculatorComponent implements OnInit {
       );
     });
     this.updateLinesPagination();
+  }
+
+  showVarName(val: unknown): string {
+    if (val == null) return '';
+    if (typeof val === 'string') {
+      if (this.varDisplayMode === 'code') return val;
+      const found = this.calculator.vars?.find(v => v.varCode === val);
+      return found?.varName ?? val;
+    }
+    if (typeof val === 'object' && val !== null) {
+      const obj = val as { varCode?: string; varName?: string };
+      return this.varDisplayMode === 'code' ? (obj.varCode ?? '') : (obj.varName ?? obj.varCode ?? '');
+    }
+    return String(val);
+  }
+
+  getConditionDisplay(line: FormulaLine): string {
+    const left = this.showVarName(line.conditionLeft);
+    const op = (line.conditionOperator ?? '').toString();
+    const right = this.showVarName(line.conditionRight);
+    return [left, op, right].filter(Boolean).join(' ').trim();
+  }
+
+  private resolveLineValue(val: unknown): string {
+    if (val == null) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val !== null && 'varName' in val && typeof (val as any).varName === 'string') {
+      return (val as any).varName;
+    }
+    if (typeof val === 'object' && val !== null && 'varCode' in val && typeof (val as any).varCode === 'string') {
+      return (val as any).varCode;
+    }
+    return String(val);
   }
 
   onLinesPageChange(event: PageEvent): void {
@@ -772,6 +813,26 @@ export class CalculatorComponent implements OnInit {
       this.updateColumnsTable();
       this.updateChanges();
     }
+  }
+
+  showSql(): void {
+    if (!this.calculator.id || this.selectedCoefficientIndex === -1) {
+      this.snackBar.open('Выберите коэффициент', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const code = this.calculator.coefficients[this.selectedCoefficientIndex].varCode;
+    this.calculatorService.getCoefficientSql(this.calculator.id, code).subscribe({
+      next: (sql) => {
+        this.dialog.open(SqlDialogComponent, {
+          width: '700px',
+          minWidth: '500px',
+          data: { sql }
+        });
+      },
+      error: () => {
+        this.snackBar.open('Ошибка загрузки SQL', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   updateColumnsTable(): void {

@@ -50,4 +50,15 @@ public interface CoefficientService {
      */
     int copyCoefficient(Integer calculatorIdFrom, Integer calculatorIdTo, String coefficientCode);
 
+    /**
+     * Получить SQL запрос для коэффициента с именами переменных вместо значений
+     * @param calculatorId айди калькулятора
+     * @param coefficientCode код коэффициента
+     * @param columns описание колонок коэффициента
+     * @return SQL запрос в виде строки с именами переменных, или null если параметры невалидны
+     */
+    String getSQL(Integer calculatorId,
+                  String coefficientCode,
+                  List<CoefficientColumn> columns);
+
 }

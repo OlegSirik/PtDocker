@@ -1,10 +1,7 @@
 package ru.pt.api.service.calculator;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
-import ru.pt.api.dto.product.PvVar;
 import ru.pt.domain.model.VariableContext;
-
-import java.util.List;
 
 /**
  * Методы для CRUD операций с калькуляторами и для расчета страховой премии договора
@@ -66,6 +63,13 @@ public interface CalculatorService {
      * @param calculatorId идентификатор калькулятора
      */
     void syncVars(Integer calculatorId);
+
+    /**
+     * Получить калькулятор по идентификатору
+     * @param calculatorId идентификатор калькулятора
+     * @return модель калькулятора или null, если не найден
+     */
+    CalculatorModel getCalculatorById(Integer calculatorId);
 
     void deleteCalculator(Integer productId, Integer versionNo, Integer packageNo);
 
