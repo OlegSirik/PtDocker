@@ -656,5 +656,51 @@
         }
       </div>
     </mat-tab>
+
+    <!-- Test Tab -->
+    <mat-tab label="Test">
+      <div class="tab-content">
+        <mat-card class="data-card">
+          <mat-card-content>
+            <div class="test-toolbar">
+              <mat-form-field appearance="outline" class="test-type-field">
+                <mat-label>Тип</mat-label>
+                <mat-select [(ngModel)]="testType" (ngModelChange)="onTestTypeChange()">
+                  <mat-option value="quote">Quote</mat-option>
+                  <mat-option value="policy">Policy</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="test-toolbar-buttons">
+                <button mat-raised-button color="primary" (click)="loadTestRequest()">
+                  <mat-icon>download</mat-icon>
+                  Загрузить
+                </button>
+                <button mat-raised-button color="accent" (click)="executeTest()">
+                  <mat-icon>play_arrow</mat-icon>
+                  Execute
+                </button>
+                <button mat-raised-button color="warn" (click)="saveTestRequest()">
+                  <mat-icon>save</mat-icon>
+                  Save
+                </button>
+              </div>
+            </div>
+            <div class="form-row" style="flex-direction: column; gap: 16px;">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Request</mat-label>
+                <textarea matInput [(ngModel)]="testRequestText" rows="35" placeholder="JSON request"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Response</mat-label>
+                <textarea matInput [(ngModel)]="testResponseText" rows="35" readonly placeholder="JSON response"></textarea>
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+
+
   </mat-tab-group>
 </div>

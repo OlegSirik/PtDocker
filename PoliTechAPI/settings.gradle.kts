@@ -1,6 +1,5 @@
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
-}
+// foojay-resolver отключён для Docker — JDK уже в образе gradle:8.7-jdk21
+// Исключает загрузку с plugins.gradle.org (Read timed out)
 rootProject.name = "pt-app"
 
 include("pt-api")

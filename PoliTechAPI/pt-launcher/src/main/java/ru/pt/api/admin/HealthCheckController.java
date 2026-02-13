@@ -22,6 +22,8 @@ import ru.pt.api.service.product.ProductService;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.model.VariableContextImpl;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -69,7 +71,7 @@ public class HealthCheckController {
                 .map(this::toDefinition)
                 .toList();
         
-        VariableContext varContext = new VariableContext(policyData.getPolicy(), varDefinitions);
+        VariableContext varContext = new VariableContextImpl(policyData.getPolicy(), varDefinitions);
         logger.debug("Variable context created with {} definitions", varDefinitions.size());
         
         // Call get for all var to init databind
@@ -330,7 +332,7 @@ public class HealthCheckController {
             logger.error("Failed to serialize policy JSON: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to serialize policy JSON", e);
         }
-        VariableContext varCtx = new VariableContext(policyJsonString, varDefinitions);
+        VariableContext varCtx = new VariableContextImpl(policyJsonString, varDefinitions);
         logger.debug("Created VariableContext with {} definitions", varDefinitions.size());
         
         // 4. For all vars, call varCtx.getString(varCode) and put into map1

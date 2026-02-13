@@ -40,7 +40,7 @@ import { BusinessLineService } from '../../shared/services/business-line.service
 import { BusinessLineEditService, BusinessLineFile, BusinessLineVar, BusinessLineEdit } from '../../shared/services/business-line-edit.service';
 import { FilesService, FileTemplate } from '../../shared/services/api/files.service';
 import { AuthService } from '../../shared/services/auth.service';
-
+import { TestRequestService } from '../../shared/services/api/test-request.service';
 import { VarsService } from '../../shared/services/vars.service';
 
 @Component({
@@ -155,9 +155,6 @@ export class ProductComponent implements OnInit {
   filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
   businessLineFiles: PackageFile[] = [];
   
-  // Files service
-  filesService: FilesService = inject(FilesService);
-  
   // Files data
   paginatedFiles: PackageFile[] = [];
 
@@ -172,6 +169,8 @@ export class ProductComponent implements OnInit {
     private businessLineEditService: BusinessLineEditService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private filesService: FilesService,
+    private testRequestService: TestRequestService,
     private varsService: VarsService,
   ) {}
 
@@ -1168,6 +1167,83 @@ export class ProductComponent implements OnInit {
       }
     };
     input.click();
+  }
+
+  // Test tab
+  testType: 'quote' | 'policy' = 'quote';
+  testRequestText = '';
+  testResponseText = '';
+
+  onTestTypeChange(): void {
+    this.loadTestRequest();
+  }
+
+  loadTestRequest(): void {
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    if (!productId || versionNo == null) {
+      this.snackBar.open('Product not loaded', 'Close', { duration: 3000 });
+      return;
+    }
+    const obs = this.testType === 'quote'
+      ? this.testRequestService.getTestQuote(productId, versionNo)
+      : this.testRequestService.getTestPolicy(productId, versionNo);
+    obs.subscribe({
+      next: (json) => {
+        this.testRequestText = json;
+        try {
+          this.testRequestText = JSON.stringify(JSON.parse(json), null, 2);
+        } catch {
+          this.testRequestText = json;
+        }
+      },
+      error: (e) => this.snackBar.open('Error: ' + (e?.error?.message || e?.message || 'Unknown'), 'Close', { duration: 5000 })
+    });
+  }
+
+  executeTest(): void {
+    const json = this.testRequestText?.trim();
+    if (!json) {
+      this.snackBar.open('Request is empty', 'Close', { duration: 3000 });
+      return;
+    }
+    const obs = this.testType === 'quote'
+      ? this.testRequestService.executeQuote(json)
+      : this.testRequestService.executePolicy(json);
+    obs.subscribe({
+      next: (res) => {
+        try {
+          this.testResponseText = JSON.stringify(JSON.parse(res), null, 2);
+        } catch {
+          this.testResponseText = res;
+        }
+      },
+      error: (e) => {
+        const msg = e?.error?.message || e?.message || e?.statusText || 'Unknown error';
+        this.testResponseText = typeof e?.error === 'string' ? e.error : (e?.error?.message || msg);
+      }
+    });
+  }
+
+  saveTestRequest(): void {
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    if (!productId || versionNo == null) {
+      this.snackBar.open('Product not loaded', 'Close', { duration: 3000 });
+      return;
+    }
+    const json = this.testRequestText?.trim();
+    if (!json) {
+      this.snackBar.open('Request is empty', 'Close', { duration: 3000 });
+      return;
+    }
+    const obs = this.testType === 'quote'
+      ? this.testRequestService.saveTestQuote(productId, versionNo, json)
+      : this.testRequestService.saveTestPolicy(productId, versionNo, json);
+    obs.subscribe({
+      next: () => this.snackBar.open('Saved', 'Close', { duration: 2000 }),
+      error: (e) => this.snackBar.open('Error: ' + (e?.error?.message || e?.message || 'Unknown'), 'Close', { duration: 5000 })
+    });
   }
 
   getTestRequest(): void {

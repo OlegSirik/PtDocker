@@ -2,11 +2,14 @@ package ru.pt.calculator.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
@@ -26,7 +29,8 @@ import ru.pt.calculator.entity.CalculatorEntity;
 import ru.pt.calculator.repository.CalculatorRepository;
 import ru.pt.calculator.utils.ValidatorImpl;
 import ru.pt.domain.model.PvVarDefinition;
-import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.model.CalculatorContext;
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -35,6 +39,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import static java.math.RoundingMode.HALF_UP;
+
+import ru.pt.domain.model.VariableContextImpl;
 
 @Component
 @RequiredArgsConstructor
@@ -418,7 +424,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         Integer productId,
         Integer versionNo,
         Integer packageNo,
-        VariableContext ctx
+        CalculatorContext ctx
     ) {
         logger.info("Running calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
         
@@ -504,7 +510,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 }
 
 
-    protected BigDecimal resolveValue(VariableContext ctx, CalculatorModel model, String varCode)
+    protected BigDecimal resolveValue(CalculatorContext ctx, CalculatorModel model, String varCode)
     {
         logger.trace("Resolving value for varCode: {}", varCode);
         PvVarDefinition varDef = ctx.getDefinition(varCode);

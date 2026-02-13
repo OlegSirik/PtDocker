@@ -5,9 +5,10 @@ WORKDIR /app
 # Upgrade npm to latest stable version
 RUN npm install -g npm@11.7.0
 
-# Install dependencies first (better caching)
+# Install dependencies — npm cache persists between builds
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # Copy source and build
 COPY . .

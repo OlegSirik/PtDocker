@@ -1,0 +1,44 @@
+create table pt_product_tests
+id long primary key
+quote_example json
+policy_example json
+
+add create script to flyway
+
+create entity in pt-product / entity
+
+create service ProductTestService in api
+string getTestQuote(id)
+string getTestPolicy(id)
+void saveTestQuote(id, string)
+void saveTestPolicy(id, string)
+
+create service ProductTestServiceImpt in pt-product
+string getTestQuote(id) select quote_example  from pt_product_tests where id = id
+if no data found then  call ProductVersionRepository get product version by tid and id
+call ProductService.getJsonExampleQuote
+save string to pt_product_tests
+return string
+
+string getTestPolicy(id)
+same as getTestQuote, use column policy_example and method getJsonExampleSave
+
+void saveTestQuote(id, string)
+insert string with json to column quote_example, if record not exists and update if exitst
+
+void saveTestPolicy(id, string)
+insert string with json to column quote_example, if record not exists and update if exitst
+
+Create controller in pt_launcher admin
+methods
+get /admin/text/quote/id - return getTestQuote
+get /admin/text/policy/id - return getTestPolicy
+
+post /admin/text/quote/id - calls saveTestQuote , json - body of request
+post /admin/text/policy/id - calls saveTestPolicy, json - body of request
+
+In front application create service tessrequest.service.ts with this 4 methods
+
+
+
+

@@ -52,10 +52,11 @@ import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.ClientService;
-
+import ru.pt.domain.model.CalculatorContext;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.model.VariableContextImpl;
 import ru.pt.files.service.email.EmailGateService;
 import ru.pt.payments.service.PaymentClientSwitch;
 import ru.pt.process.utils.MdcWrapper;
@@ -181,7 +182,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
     }
 
-    private void calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, VariableContext varCtx) {
+    private void calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, CalculatorContext varCtx) {
         logger.debug("Calculating premium. productCode={}, packageCode={}", 
             product.getCode(), policyDTO.getInsuredObjects().get(0).getPackageCode());
 
@@ -370,7 +371,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
 
         // 7. Runtime-контекст
-        VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
+        CalculatorContext varCtx = new VariableContextImpl(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);
@@ -492,7 +493,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .toList();
 
         // 7. Runtime-контекст
-        VariableContext varCtx = new VariableContext(policyJSON, varDefinitions);
+        CalculatorContext varCtx = new VariableContextImpl(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);

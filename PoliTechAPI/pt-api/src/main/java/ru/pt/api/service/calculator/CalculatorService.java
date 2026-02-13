@@ -1,7 +1,7 @@
 package ru.pt.api.service.calculator;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
-import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.model.CalculatorContext;
 
 /**
  * Методы для CRUD операций с калькуляторами и для расчета страховой премии договора
@@ -44,7 +44,7 @@ public interface CalculatorService {
      * @param inputValues входные переменные
      * @return список переменных с рассчитанными значениями
      */
-    void runCalculator(Integer productId, Integer versionNo, Integer packageNo, VariableContext ctx);
+    void runCalculator(Integer productId, Integer versionNo, Integer packageNo, CalculatorContext ctx);
 
     /**
      * Заменить модель калькулятора
