@@ -135,6 +135,10 @@ public final class VariableContextImpl implements CalculatorContext
         //def.setValue(value);
     }
 */
+    @Override
+    public Object getByPath(String path) {
+        return JsonPath.read(jsonDocument, path);
+    }
     // ---------- Lazy evaluation ----------
 
     @Override

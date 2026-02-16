@@ -1,6 +1,8 @@
 package ru.pt.numbers.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -13,7 +15,6 @@ import ru.pt.numbers.repository.NumberGeneratorRepository;
 import ru.pt.numbers.utils.NumberGeneratorMapper;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +59,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String getNextNumber(VariableContext values, String productCode) {
         NumberGeneratorEntity ng = null;
         if (productCode != null && !productCode.isEmpty()) {
@@ -140,7 +142,8 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     }
 
     private NumberGeneratorEntity getNext(Integer id) {
-        NumberGeneratorEntity ng = repository.findByTidAndId(getCurrentTenantId(), id)
+        Long tid = getCurrentTenantId();
+        NumberGeneratorEntity ng = repository.findByTidAndIdForUpdate(tid, id)
                 .orElseThrow(() -> new NotFoundException("Generator not found: " + id));
 
         LocalDate today = LocalDate.now();
@@ -162,11 +165,16 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
         int next = ng.getCurrentValue() + 1;
         if (ng.getMaxValue() != null && next > ng.getMaxValue()) {
-            next = 1;
+            ng.setCurrentValue(0);
         }
-        ng.setCurrentValue(next);
+        repository.save(ng);
 
-        return repository.save(ng);
+        Integer newValue = repository.incrementAndGetCurrentValue(tid, id);
+        if (newValue == null) {
+            throw new NotFoundException("Generator not found: " + id);
+        }
+        ng.setCurrentValue(newValue);
+        return ng;
     }
 
 }

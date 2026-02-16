@@ -31,6 +31,7 @@ import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
+import ru.pt.api.service.addon.PolicyAddOnService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 //import ru.pt.api.dto.product.LobModel;
@@ -72,6 +73,7 @@ import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;
 
+import ru.pt.api.dto.addon.PolicyAddOnDto;
 import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
@@ -103,6 +105,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final AuthorizationService authorizationService;
     private final CommissionService commissionService;
     
+    private final PolicyAddOnService policyAddOnService;
     /**
      * Get current authenticated user from security context.
      * @return AuthenticatedUser representing the current user
@@ -302,6 +305,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         } else {
             policyDTO.getProcessList().setProductVersionStatus(ProcessList.PROD);
         }
+
         // 3. Получить продукт
         ProductVersionModel product;
         String productCode = policyDTO.getProductCode();
@@ -396,6 +400,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             ErrorModel errorModel = new ErrorModel(400, errorMessage, errorDetails);
             throw new BadRequestException(errorModel);
         }
+
+        // 4.4 Проверить список опций
+
+        List<PolicyAddOnDto> policyAddOns = policyAddOnService.checkRequestedAddOns(product, varCtx, policyDTO.getOptions());
+        policyDTO.setOptions(policyAddOns);
 
         // 10. Расчёт премии (lazy!)
         calculatePremium(policyDTO, product, varCtx);

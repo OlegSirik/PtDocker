@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ru.pt.api.dto.commission.CommissionDto;
+import ru.pt.api.dto.addon.PolicyAddOnDto;
 
 import java.time.ZonedDateTime;
 import java.util.HashMap;
@@ -67,6 +68,8 @@ public class PolicyDTO {
     private ProcessList processList;
 
     private CommissionDto commission;
+
+    private List<PolicyAddOnDto> options;
     // Constructors
     public PolicyDTO() {
         this.additionalAttributes = new HashMap<>();
@@ -246,5 +249,13 @@ public class PolicyDTO {
     public void setCommission(CommissionDto commission) {
         this.commission = commission;
         
+    }
+
+    public List<PolicyAddOnDto> getOptions() {
+        return this.options;
+    }
+
+    public void setOptions(List<PolicyAddOnDto> options) {
+        this.options = options;
     }
 }

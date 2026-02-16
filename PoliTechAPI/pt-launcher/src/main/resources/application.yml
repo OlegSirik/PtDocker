@@ -129,5 +129,6 @@ logging:
     ru.pt.calculator.service.CoefficientServiceImpl: TRACE
     ru.pt.auth.service.CommissionServiceImpl: TRACE
     ru.pt.domain.model.ComputedVars: TRACE
+    ru.pt.product.service.addon.PolicyAddOnServiceImpl: TRACE
     ru.pt.domain.model.VariableContext: TRACE
     org.apache.pdfbox.pdmodel.font: WARN  # Suppress PDFBox font warnings

@@ -18,6 +18,7 @@ public final class AuthZ {
         TOKEN,
         LOGIN,
         POLICY,
+        POLICY_ADDON,
         CONTRACT
     }
 

@@ -20,4 +20,7 @@ public interface VariableContext
     void putDefinition(PvVarDefinition def);
 
     List<PvVarDefinition> getDefinitions();
+
+    Object getByPath(String path);
+
 }

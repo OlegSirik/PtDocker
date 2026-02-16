@@ -1,0 +1,81 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.pricelist-edit-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .page-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: $spacing-sm;
+    }
+  }
+
+  .tab-content {
+    padding: $spacing-md 0;
+  }
+
+  .data-card {
+    margin-bottom: 20px;
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-md;
+
+      .form-field {
+        min-width: 180px;
+        flex: 1;
+      }
+    }
+
+    .loading {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+  }
+
+  .datatable-card {
+    .button-section {
+      @include card-base;
+      padding: $spacing-md;
+      margin-bottom: $spacing-lg;
+      background-color: $gray-50;
+
+      .add-button {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+      }
+    }
+
+    .table-header h3 {
+      margin: 0 0 16px 0;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .business-table {
+      width: 100%;
+    }
+
+    .empty-state {
+      padding: 20px;
+      color: #666;
+    }
+  }
+}

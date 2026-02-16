@@ -22,3 +22,4 @@ logging:
     org.flywaydb: DEBUG
     ru.pt: DEBUG
     ru.pt.auth.service.CommissionServiceImpl: TRACE
+    ru.pt.product.service.addon.PolicyAddOnServiceImpl: TRACE

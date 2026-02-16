@@ -8,6 +8,7 @@
       <button mat-button [routerLink]="['/', tenantCode, 'lk', 'quotes']" class="nav-button">Quotes</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
+      <button mat-button [routerLink]="['/', tenantCode, 'admin', 'addon', 'sp-list']" class="nav-button">Доп.продукты</button>
       <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
       @if ((currentUser$ | async); as user) {
         <button mat-button [matMenuTriggerFor]="userMenu" class="nav-button">{{user.username}}</button>

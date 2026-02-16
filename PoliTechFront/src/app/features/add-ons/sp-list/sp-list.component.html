@@ -1,0 +1,118 @@
+<div class="sp-list-container">
+  <div class="page-header">
+    <h1 class="page-title">Доп.продукты</h1>
+  </div>
+
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" (click)="addProvider()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      <div class="table-header">
+        <h3>Service providers</h3>
+      </div>
+
+      <div *ngIf="loading" class="loading">Загрузка...</div>
+      <table mat-table [dataSource]="providers" class="business-table" *ngIf="!loading">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let p">{{ p.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Название</th>
+          <td mat-cell *matCellDef="let p">{{ p.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Статус</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="status-badge" [ngClass]="getStatusClass(p.status)">
+              {{ p.status || 'ACTIVE' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Действия</th>
+          <td mat-cell *matCellDef="let p">
+            <button mat-icon-button (click)="editProvider(p, $event)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            (click)="selectProvider(row)"
+            [class.row-selected]="selectedProvider?.id === row.id"
+            class="clickable-row"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="datatable-card pricelist-card" *ngIf="selectedProvider">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button add-right" (click)="addPricelist()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      <div class="table-header">
+        <h3>Pricelist</h3>
+      </div>
+
+      <div *ngIf="loadingPricelists" class="loading">Загрузка...</div>
+      <table mat-table [dataSource]="pricelists" class="business-table" *ngIf="!loadingPricelists">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let pl">{{ pl.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let pl">{{ pl.code }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Название</th>
+          <td mat-cell *matCellDef="let pl">{{ pl.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef>Цена</th>
+          <td mat-cell *matCellDef="let pl">{{ pl.price ?? '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Статус</th>
+          <td mat-cell *matCellDef="let pl">
+            <span class="status-badge" [ngClass]="getStatusClass(pl.status)">
+              {{ pl.status || 'ACTIVE' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Действия</th>
+          <td mat-cell *matCellDef="let pl">
+            <button mat-icon-button (click)="editPricelist(pl, $event)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="pricelistColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: pricelistColumns"
+            (click)="selectPricelist(row)"
+            class="clickable-row"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

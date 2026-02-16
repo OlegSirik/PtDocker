@@ -13,6 +13,9 @@ import {TenantsPageComponent} from './features/admin-panel/tenants-page/tenants-
 import {ClientsPageComponent} from './features/admin-panel/clients-page/clients-page.component';
 import {ClientEditComponent} from './features/admin-panel/client-edit/client-edit.component';
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
+import { SpListComponent } from './features/add-ons/sp-list/sp-list.component';
+import { SpProviderComponent } from './features/add-ons/sp-provider/sp-provider.component';
+import { PricelistEditComponent } from './features/add-ons/pricelist-edit/pricelist-edit.component';
 import { TenantGuard } from './shared/guards/tenant.guard';
 import { QuotesComponent } from './features/quotes/quotes.component';
 import { UserProfileComponent } from './features/user-profile/user-profile.component';
@@ -47,6 +50,11 @@ export const routes: Routes = [
   { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/clients/:client-id', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/accounts/:id', component: AccountDetailPageComponent, canActivate: [authGuard] },
+  { path: 'admin/addon/sp-list', component: SpListComponent, canActivate: [authGuard] },
+  { path: 'admin/addon/sp-provider/edit', component: SpProviderComponent, canActivate: [authGuard] },
+  { path: 'admin/addon/sp-provider/:id', component: SpProviderComponent, canActivate: [authGuard] },
+  { path: 'admin/addon/pricelist-edit/edit', component: PricelistEditComponent, canActivate: [authGuard] },
+  { path: 'admin/addon/pricelist-edit/:id', component: PricelistEditComponent, canActivate: [authGuard] },
   { path: 'user_profile', component: UserProfileComponent, canActivate: [authGuard] }
 ]},
 {

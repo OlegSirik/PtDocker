@@ -1,0 +1,28 @@
+Add position to the top menu - "Доп.продукты"
+
+
+Add page sp-list with h3 text "Service providers" and button Add
+take all styles from page clients
+
+then table with data from addons providers
+columns id, name, status ( show as rectangle, green or orange ) , actions - edit
+if add or edit pressed then goto page sp-provider
+if record clicked show next table with proce list
+create service addon-providers.service.ts
+
+next table procelist, button add align right
+create service addon-pricelist.service.ts for admin/addon/pricelists
+show table with columns from getAll plus actions (edit )
+if record clicked call edit
+if add or edit then go to page pricelist-edit
+
+Page pricelist-edit
+h3 header - name of product + name of provider 
+tab group
+first tab pricelist data 
+id is readonly.
+
+second tab - products
+table of addon-products for this addonbutton Add - show dialig with product list for this tenant
+
+
