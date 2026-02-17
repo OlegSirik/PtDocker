@@ -57,6 +57,7 @@ export class PricelistEditComponent implements OnInit {
     status: 'ACTIVE'
   };
   provider: ProviderDto | null = null;
+  productsList: ProductList[] = [];
   isNewRecord = true;
   loading = false;
   loadingProducts = false;
@@ -84,6 +85,7 @@ export class PricelistEditComponent implements OnInit {
         next: (pl) => {
           this.pricelist = { ...pl };
           this.loadProvider();
+          this.loadProductsList();
           this.loading = false;
         },
         error: () => {
@@ -111,7 +113,10 @@ export class PricelistEditComponent implements OnInit {
   loadProductsList(): void {
     this.loadingProductList = true;
     this.productService.getProductsList().subscribe({
-      next: () => this.loadingProductList = false,
+      next: (products) => {
+        this.productsList = products || [];
+        this.loadingProductList = false;
+      },
       error: () => this.loadingProductList = false
     });
   }
@@ -162,23 +167,32 @@ export class PricelistEditComponent implements OnInit {
   }
 
   openAddProductDialog(): void {
-    this.productService.getProductsList().subscribe({
-      next: (products) => {
-        const existingIds = new Set((this.pricelist.addonProducts || []).map(ap => ap.productId));
-        const available = products.filter(p => p.id && !existingIds.has(p.id));
+    const openWithProducts = (products: ProductList[]) => {
+      const existingIds = new Set((this.pricelist.addonProducts || []).map(ap => ap.productId));
+      const available = products.filter(p => p.id && !existingIds.has(p.id));
 
-        const dialogRef = this.dialog.open(AddonProductDialogComponent, {
-          width: '420px',
-          data: { products: available, loading: false }
-        });
+      const dialogRef = this.dialog.open(AddonProductDialogComponent, {
+        width: '420px',
+        data: { products: available, loading: false }
+      });
 
-        dialogRef.afterClosed().subscribe((productId: number | null) => {
-          if (productId) {
-            this.addProduct(productId);
-          }
-        });
-      }
-    });
+      dialogRef.afterClosed().subscribe((productId: number | null) => {
+        if (productId) {
+          this.addProduct(productId);
+        }
+      });
+    };
+
+    if (this.productsList.length > 0) {
+      openWithProducts(this.productsList);
+    } else {
+      this.productService.getProductsList().subscribe({
+        next: (list) => {
+          this.productsList = list || [];
+          openWithProducts(this.productsList);
+        }
+      });
+    }
   }
 
   addProduct(productId: number): void {
@@ -218,8 +232,8 @@ export class PricelistEditComponent implements OnInit {
   }
 
   getProductName(productId: number): string {
-    // We don't have product names in addonProducts - would need to resolve from product list
-    return String(productId);
+    const p = this.productsList.find(pl => pl.id === productId);
+    return p ? (p.name || p.code || String(productId)) : String(productId);
   }
 }
 

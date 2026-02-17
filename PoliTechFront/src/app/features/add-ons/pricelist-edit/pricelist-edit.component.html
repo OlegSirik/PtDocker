@@ -14,72 +14,69 @@
     <mat-tab label="Pricelist data">
       <div class="tab-content">
         <mat-card class="data-card">
+          <mat-card-header>
+            <mat-card-title>Данные прайс-листа</mat-card-title>
+          </mat-card-header>
           <mat-card-content>
             <div *ngIf="loading" class="loading">Загрузка...</div>
-            <div *ngIf="!loading" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>ID</mat-label>
-                <input matInput [value]="pricelist.id || ''" readonly>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Code</mat-label>
-                <input matInput [(ngModel)]="pricelist.code" required>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Название</mat-label>
-                <input matInput [(ngModel)]="pricelist.name" required>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Provider ID</mat-label>
-                <input matInput [value]="pricelist.providerId" readonly>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Category</mat-label>
-                <input matInput [(ngModel)]="pricelist.categoryCode">
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Price</mat-label>
-                <input matInput type="number" [(ngModel)]="pricelist.price">
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Amount Free</mat-label>
-                <input matInput type="number" [(ngModel)]="pricelist.amountFree">
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Статус</mat-label>
-                <mat-select [(ngModel)]="pricelist.status">
-                  <mat-option value="ACTIVE">ACTIVE</mat-option>
-                  <mat-option value="SUSPENDED">SUSPENDED</mat-option>
-                  <mat-option value="DELETED">DELETED</mat-option>
-                </mat-select>
-              </mat-form-field>
+            <div *ngIf="!loading">
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>ID</mat-label>
+                  <input matInput [value]="pricelist.id || ''" readonly>
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <input matInput [(ngModel)]="pricelist.categoryCode">
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Code</mat-label>
+                  <input matInput [(ngModel)]="pricelist.code" required>
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Название</mat-label>
+                  <input matInput [(ngModel)]="pricelist.name" required>
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Price</mat-label>
+                  <input matInput type="number" [(ngModel)]="pricelist.price">
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Amount Free</mat-label>
+                  <input matInput type="number" [(ngModel)]="pricelist.amountFree">
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Статус</mat-label>
+                  <mat-select [(ngModel)]="pricelist.status">
+                    <mat-option value="ACTIVE">ACTIVE</mat-option>
+                    <mat-option value="SUSPENDED">SUSPENDED</mat-option>
+                    <mat-option value="DELETED">DELETED</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>
       </div>
     </mat-tab>
 
-    <mat-tab label="Products" [disabled]="isNewRecord">
+    <mat-tab label="Страховые продукты" [disabled]="isNewRecord">
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
-            <div class="button-section">
+            <div class="table-header">
+              <h3>К каким продуктам предлагать</h3>
               <button mat-raised-button color="primary" class="add-button"
                       (click)="openAddProductDialog()" [disabled]="loadingProducts || isNewRecord">
                 <mat-icon>add</mat-icon>
-                Add
+                Добавить продукт
               </button>
-            </div>
-
-            <div class="table-header">
-              <h3>Addon products</h3>
             </div>
 
             <div *ngIf="loadingProducts" class="loading">Загрузка...</div>

@@ -43,6 +43,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
         entity.setAmountFree(cmd.getAmountFree() != null ? cmd.getAmountFree() : 0L);
         entity.setAmountBooked(cmd.getAmountBooked() != null ? cmd.getAmountBooked() : 0L);
         entity.setStatus(cmd.getStatus() != null ? cmd.getStatus() : "ACTIVE");
+        
         entity = pricelistRepository.save(entity);
         if (cmd.getAddonProducts() != null) {
             for (var ref : cmd.getAddonProducts()) {
@@ -50,7 +51,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
                 ap.setTid(tid);
                 ap.setProductId(ref.getProductId());
                 ap.setAddonId(entity.getId());
-                ap.setPreconditions(ref.getPreconditions());
+                ap.setPreconditions(toJsonPreconditions(ref.getPreconditions()));
                 addonProductRepository.save(ap);
             }
         }
@@ -81,7 +82,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
                 ap.setTid(tid);
                 ap.setProductId(ref.getProductId());
                 ap.setAddonId(entity.getId());
-                ap.setPreconditions(ref.getPreconditions());
+                ap.setPreconditions(toJsonPreconditions(ref.getPreconditions()));
                 addonProductRepository.save(ap);
             }
         }
@@ -136,6 +137,13 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
 
     private Long getCurrentTenantId() {
         return getCurrentUser().getTenantId();
+    }
+
+    private String toJsonPreconditions(String preconditions) {
+        if (preconditions == null || preconditions.isBlank()) {
+            return "{}";
+        }
+        return preconditions;
     }
 
     private PricelistDto toDto(AddonPricelistEntity e) {
