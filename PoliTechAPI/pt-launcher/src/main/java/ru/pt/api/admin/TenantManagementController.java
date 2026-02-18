@@ -39,7 +39,7 @@ public class TenantManagementController extends SecuredController {
      */
 
     @GetMapping
-    @PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
+    //@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
     public ResponseEntity<List<Tenant>> getTenants() {
         List<Tenant> tenants = tenantService.getTenants();
         return ResponseEntity.ok(tenants);
@@ -50,7 +50,7 @@ public class TenantManagementController extends SecuredController {
      * POST /api/v1/{tenantCode}/admin/tenants
      */
     @PostMapping
-    @PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
+    //@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
     public ResponseEntity<Tenant> createTenant(
             @PathVariable String tenantCode,
             @RequestBody Tenant tenantDto) {

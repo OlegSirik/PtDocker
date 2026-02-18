@@ -162,7 +162,7 @@ public class ClientEntity {
 
     public boolean isSystem() {return SYS_CLIENT_ID.equals(clientId);}
 
-    private ClientEntity(String authClientId,String name, String authType, TenantEntity tenantEntity) {
+    private ClientEntity(String authClientId,String name, String authType, String authLevel,TenantEntity tenantEntity) {
         this.name = name;
         this.tenantEntity = tenantEntity;
         this.clientId = authClientId.toLowerCase();
@@ -171,10 +171,11 @@ public class ClientEntity {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.authType = authType;
+        this.authLevel = authLevel;
     }
 
     public static ClientEntity defaultForTenant(TenantEntity tenantEntity) {
-        return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", "USER", tenantEntity);
+        return new ClientEntity(SYS_CLIENT_ID, "Default Admin App Client", null, "USER", tenantEntity);
     }
 
     public void setAuthLevel(String authLevel) {

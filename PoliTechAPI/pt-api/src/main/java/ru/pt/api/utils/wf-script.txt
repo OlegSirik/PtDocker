@@ -1,0 +1,242 @@
+create minimal workflow engine based on DAG (directed acyclic graph)
+workflow depends on event ( policy created, policy paid, etc.), tenant_id and client_id(optional) and lob_id ( optional )
+workers are - send email, send sms, export policy to endpoint
+
+=== ANALYSIS & SUGGESTIONS ===
+1. TYPO: "acive" -> "active" in unique index
+2. MISSING: event_type in wf_workflow_binding - how to trigger workflow for POLICY_CREATED vs POLICY_PAID?
+3. ID TYPES: WorkflowEngine uses UUID but tables use Long - policy_id is UUID in policy_index, use UUID for aggregate_id
+4. DAG: parent_job_code (single) = tree. For full DAG (A,B->C) need wf_job_dependency (job_code, parent_job_code)
+5. RETRY: scheduleRetry() must check max_retries - if exceeded, mark FAILED
+6. JobContext: add handler_config JSONB for job-specific params (email template, endpoint URL)
+7. lockRunnableJobs: use SELECT ... FOR UPDATE SKIP LOCKED to avoid blocking
+8. wf_job_handler: add tid for tenant-scoped handlers (optional, global handlers tid=0)
+
+=== TABLES, ENTITIES ===
+
+wf_workflow_definition
+--------------------
+id              BIGINT PRIMARY KEY ( sequence wf_seq )
+tid             BIGINT NOT NULL
+code            VARCHAR(30) NOT NULL
+version         BIGINT NOT NULL
+active          BOOLEAN DEFAULT FALSE
+created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+UNIQUE ( tid, code, version )
+UNIQUE ( tid, code ) WHERE active = true
+
+
+wf_job_handler
+--------------
+id              BIGSERIAL PRIMARY KEY
+code            VARCHAR(50) NOT NULL UNIQUE
+description     VARCHAR(300)
+created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+
+wf_job_definition
+-----------------
+id                      BIGINT PRIMARY KEY ( sequence wf_seq )
+tid                     BIGINT NOT NULL
+workflow_definition_id   BIGINT NOT NULL REFERENCES wf_workflow_definition(id)
+job_code                VARCHAR(50) NOT NULL
+parent_job_code         VARCHAR(50)  -- nullable, root jobs have null
+handler_code            VARCHAR(50) NOT NULL REFERENCES wf_job_handler(code)
+handler_config          JSONB  -- job-specific: {"template":"welcome","toField":"email"}
+max_retries             BIGINT DEFAULT 3
+retry_delay_seconds     BIGINT DEFAULT 60
+backoff_type            VARCHAR(20) DEFAULT 'FIXED'  -- LINEAR / EXPONENTIAL / FIXED
+max_retry_delay_seconds BIGINT  -- cap for EXPONENTIAL
+
+UNIQUE ( workflow_definition_id, job_code )
+
+-- For multi-parent DAG (optional, if parent_job_code insufficient):
+-- wf_job_dependency (workflow_definition_id, job_code, parent_job_code) PK
+
+
+wf_workflow_instance
+--------------------
+id                      BIGINT PRIMARY KEY ( sequence wf_seq )
+tid                     BIGINT NOT NULL
+workflow_definition_id  BIGINT NOT NULL REFERENCES wf_workflow_definition(id)
+aggregate_id            UUID NOT NULL  -- policy_id from policy_index
+status                  VARCHAR(30) NOT NULL DEFAULT 'PENDING'  -- PENDING/RUNNING/DONE/FAILED/CANCELLED
+created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+completed_at            TIMESTAMP
+
+INDEX ( tid, status )
+INDEX ( aggregate_id )
+
+
+wf_job_instance
+---------------
+id                      BIGINT PRIMARY KEY ( sequence wf_seq )
+tid                     BIGINT NOT NULL
+workflow_instance_id     BIGINT NOT NULL REFERENCES wf_workflow_instance(id)
+job_definition_id       BIGINT NOT NULL REFERENCES wf_job_definition(id)
+parent_job_instance_id   BIGINT REFERENCES wf_job_instance(id)
+
+status                  VARCHAR(30) NOT NULL DEFAULT 'PENDING'  -- PENDING/PROCESSING/DONE/FAILED
+retry_count             BIGINT DEFAULT 0
+next_retry_at           TIMESTAMP
+locked_by               VARCHAR(100)
+locked_at               TIMESTAMP
+created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+completed_at             TIMESTAMP
+error_message            VARCHAR(1000)  -- last error for FAILED
+
+INDEX ( workflow_instance_id, status )
+INDEX ( next_retry_at ) WHERE status = 'PENDING' AND (next_retry_at IS NULL OR next_retry_at <= NOW())
+
+
+wf_workflow_binding
+-------------------
+id                      BIGINT PRIMARY KEY ( sequence wf_seq )
+tid                     BIGINT NOT NULL
+event_type              VARCHAR(50) NOT NULL  -- POLICY_CREATED, POLICY_PAID, QUOTE_SAVED, etc.
+workflow_code           VARCHAR(30) NOT NULL  -- matches wf_workflow_definition.code
+client_id               BIGINT  -- optional filter
+lob_id                  BIGINT  -- optional filter
+product_id              BIGINT  -- optional filter
+priority                INT DEFAULT 0  -- higher = evaluated first when multiple match
+
+UNIQUE ( tid, event_type, client_id, lob_id, product_id )  -- or partial unique per event
+-- Matching: event + (client_id IS NULL OR client_id = ?) AND (lob_id IS NULL OR lob_id = ?) ...
+
+
+=== RETRY BACKOFF ===
+/*
+long computeDelaySeconds(JobInstance job) {
+    long base = job.getRetryDelaySeconds();
+    int retryCount = job.getRetryCount();
+    return switch (job.getBackoffType()) {
+        case LINEAR -> base * (retryCount + 1);
+        case EXPONENTIAL -> Math.min(base * (1L << retryCount), job.getMaxRetryDelaySeconds());
+        default -> base;
+    };
+}
+*/
+
+
+=== INTERFACES ===
+
+public interface JobHandler {
+    String getCode();
+    void handle(JobContext context);
+}
+
+public interface JobContext {
+    UUID getAggregateId();
+    Long getWorkflowInstanceId();
+    Long getJobInstanceId();
+    Map<String, Object> getHandlerConfig();
+    <T> T getPayload(Class<T> type);  // policy, quote, etc.
+}
+
+@Component
+public class EmailJobHandler implements JobHandler {
+    @Override
+    public String getCode() { return "EMAIL_HANDLER"; }
+
+    @Override
+    public void handle(JobContext context) {
+        String template = (String) context.getHandlerConfig().getOrDefault("template", "default");
+        // логика отправки письма
+    }
+}
+
+@Component
+public class SmsJobHandler implements JobHandler {
+    @Override
+    public String getCode() { return "SMS_HANDLER"; }
+
+    @Override
+    public void handle(JobContext context) {
+        // логика отправки смс
+    }
+}
+
+@Component
+public class ExportPolicyJobHandler implements JobHandler {
+    @Override
+    public String getCode() { return "EXPORT_POLICY_HANDLER"; }
+
+    @Override
+    public void handle(JobContext context) {
+        String endpoint = (String) context.getHandlerConfig().get("endpointUrl");
+        // export policy to endpoint
+    }
+}
+
+@Component
+public class JobHandlerRegistry {
+    private final Map<String, JobHandler> handlers;
+
+    public JobHandlerRegistry(List<JobHandler> handlerList) {
+        handlers = handlerList.stream()
+                .collect(Collectors.toMap(JobHandler::getCode, Function.identity()));
+    }
+
+    public JobHandler get(String code) {
+        JobHandler handler = handlers.get(code);
+        if (handler == null) {
+            throw new IllegalArgumentException("No handler found for code " + code);
+        }
+        return handler;
+    }
+}
+
+public interface WorkflowEngine {
+    Long startWorkflow(String workflowCode, UUID aggregateId);
+    void cancelWorkflow(Long workflowInstanceId);
+}
+
+public interface WorkflowTrigger {
+    /** Called when event occurs - finds matching bindings and starts workflows */
+    void onEvent(String eventType, UUID aggregateId, Long clientId, Long lobId, Long productId);
+}
+
+public interface JobExecutor {
+    void execute(JobInstance job);
+}
+
+
+=== POLLER & EXECUTION ===
+
+@Scheduled(fixedDelayString = "${workflow.poll-interval-ms:5000}")
+public void poll() {
+    List<JobInstance> jobs = jobInstanceRepository.findAndLockRunnableJobs(workerId, limit);
+    for (JobInstance job : jobs) {
+        executor.execute(job);
+    }
+}
+
+// SQL: SELECT * FROM wf_job_instance ji
+//      JOIN wf_job_definition jd ON ji.job_definition_id = jd.id
+//      WHERE ji.status = 'PENDING'
+//        AND (ji.next_retry_at IS NULL OR ji.next_retry_at <= NOW())
+//        AND NOT EXISTS (SELECT 1 FROM wf_job_instance p WHERE p.workflow_instance_id = ji.workflow_instance_id
+//                        AND p.job_definition_id = (SELECT parent... ) AND p.status != 'DONE')
+//      FOR UPDATE SKIP LOCKED LIMIT 10
+
+@Transactional
+public void execute(JobInstance job) {
+    job.markProcessing(workerId);
+
+    try {
+        JobHandler handler = handlerRegistry.get(job.getHandlerCode());
+        JobContext context = buildContext(job);
+        handler.handle(context);
+
+        job.markDone();
+        scheduleChildJobsIfReady(job);
+
+    } catch (Exception e) {
+        if (job.getRetryCount() >= job.getMaxRetries()) {
+            job.markFailed(e.getMessage());
+        } else {
+            job.scheduleRetry(computeDelaySeconds(job));
+        }
+    }
+}
