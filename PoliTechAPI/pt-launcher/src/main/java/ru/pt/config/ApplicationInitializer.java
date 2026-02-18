@@ -73,7 +73,7 @@ public class ApplicationInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        logger.info("Application initialization started");
+        logger.info("Application initialization started ######### 123 ###############");
 
         try {
             // Add your initialization logic here
@@ -84,7 +84,7 @@ public class ApplicationInitializer implements ApplicationRunner {
             // - Check database connectivity
             // - Verify required entities exist
             
-            performInitialization();
+            //performInitialization();
             
             logger.info("Application initialization completed successfully");
         } catch (Exception e) {
