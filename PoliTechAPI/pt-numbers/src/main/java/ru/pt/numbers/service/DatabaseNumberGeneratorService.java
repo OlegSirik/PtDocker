@@ -131,8 +131,10 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
         if (numberGeneratorDescription.getId() == null) {
             throw new BadRequestException("NumberGenerator ID must not be null for update");
         }
-        var existing = repository.findByTidAndId(getCurrentTenantId(), numberGeneratorDescription.getId())
-                .orElseThrow(() -> new NotFoundException("NumberGenerator not found with id: " + numberGeneratorDescription.getId()));
+
+        var existing = repository.findByProductCode(getCurrentTenantId(), numberGeneratorDescription.getProductCode())
+            .orElseThrow(() -> new NotFoundException("NumberGenerator not found with icode: " + numberGeneratorDescription.getProductCode()));
+
         existing.setProductCode(numberGeneratorDescription.getProductCode());
         existing.setMask(numberGeneratorDescription.getMask());
         existing.setResetPolicy(numberGeneratorDescription.getResetPolicy());

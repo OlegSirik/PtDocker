@@ -44,9 +44,9 @@ export class ProductsComponent implements OnInit {
 
 
   products: ProductList[] = [];
-  displayedColumns: string[] = ['id', 'lob', 'name', 'code', 'prodVersionNo', 'devVersionNo', 'actions'];
+  displayedColumns: string[] = ['id', 'lob', 'code', 'name', 'prodVersionNo', 'devVersionNo', 'actions'];
   searchText = '';
-  pageSize = 5;
+  pageSize = 25;
   pageIndex = 0;
 
   get filteredProducts(): ProductList[] {

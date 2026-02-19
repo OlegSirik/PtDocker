@@ -12,6 +12,7 @@ import {ForbiddenComponent} from './features/forbidden/forbidden.component';
 import {TenantsPageComponent} from './features/admin-panel/tenants-page/tenants-page.component';
 import {ClientsPageComponent} from './features/admin-panel/clients-page/clients-page.component';
 import {ClientEditComponent} from './features/admin-panel/client-edit/client-edit.component';
+import { CommissionEditPageComponent } from './features/admin-panel/commission-edit/commission-edit.component';
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 import { SpListComponent } from './features/add-ons/sp-list/sp-list.component';
 import { SpProviderComponent } from './features/add-ons/sp-provider/sp-provider.component';
@@ -49,6 +50,8 @@ export const routes: Routes = [
   { path: 'admin/clients', component: ClientsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/clients/:client-id', component: ClientEditComponent, canActivate: [authGuard] },
+  { path: 'admin/clients/:client-id/commission/edit', component: CommissionEditPageComponent, canActivate: [authGuard] },
+  { path: 'admin/clients/:client-id/commission/:commission-id', component: CommissionEditPageComponent, canActivate: [authGuard] },
   { path: 'admin/accounts/:id', component: AccountDetailPageComponent, canActivate: [authGuard] },
   { path: 'admin/addon/sp-list', component: SpListComponent, canActivate: [authGuard] },
   { path: 'admin/addon/sp-provider/edit', component: SpProviderComponent, canActivate: [authGuard] },

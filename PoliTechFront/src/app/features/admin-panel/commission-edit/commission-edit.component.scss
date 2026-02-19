@@ -1,7 +1,7 @@
 @import '../../../../styles/variables';
 @import '../../../../styles/mixins';
 
-.sp-provider-container {
+.commission-edit-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
@@ -77,6 +77,17 @@
 
       .form-field {
         width: 100%;
+      }
+    }
+
+    .form-row-with-title {
+      margin-bottom: 16px;
+
+      .form-row-title {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #495057;
       }
     }
 

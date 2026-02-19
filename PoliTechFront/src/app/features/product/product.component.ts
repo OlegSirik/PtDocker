@@ -301,6 +301,10 @@ export class ProductComponent implements OnInit {
     }
   }
 
+  goBack(): void {
+    this.router.navigate(['/', this.authService.tenant, 'products']);
+  }
+
   reloadProduct(productId: string, versionNo: string): void {
     if (!productId) return;
     if (!versionNo) return;

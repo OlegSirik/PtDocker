@@ -238,8 +238,8 @@ public class ProductServiceImpl implements ProductService {
         if (productVersionModel.getNumberGeneratorDescription() != null) {
             var numberGeneratorDescription = createNumberGeneratorDescription(productVersionModel);
             numberGeneratorService.create(numberGeneratorDescription);
-
         }
+
         productVersionModel = syncCoversVars(productVersionModel);
         return productVersionModel;
     }
@@ -370,6 +370,7 @@ public class ProductServiceImpl implements ProductService {
         productVersionRepository.save(pv);
 
         if (newProductVersionModel.getNumberGeneratorDescription() != null) {
+            
             var description = createNumberGeneratorDescription(newProductVersionModel);
                 
             try {

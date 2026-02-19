@@ -27,10 +27,17 @@
       align-items: center;
       flex-wrap: wrap;
 
-      .save-button {
-        min-width: 140px;
+      .header-btn {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+        min-width: 150px;
         height: 40px;
         font-weight: 500;
+      }
+
+      .header-btn:not(.save-btn) {
+        @include button-secondary;
       }
 
       @media (max-width: 768px) {
@@ -38,7 +45,7 @@
         width: 100%;
         gap: 8px;
 
-        .save-button {
+        .header-btn {
           width: 100%;
         }
       }
@@ -54,11 +61,23 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
 
     h3 {
       margin: 0;
+      color: #495057;
       font-size: 20px;
+      font-weight: 600;
+    }
+
+    .add-button {
+      @include button-primary;
+      @include flex-center;
+      gap: $spacing-sm;
+      min-width: 150px;
+      height: 40px;
       font-weight: 500;
     }
   }
@@ -66,23 +85,30 @@
   .business-table {
     width: 100%;
     margin-bottom: 16px;
+    table-layout: fixed;
+
+    &.products-table {
+      .col-id { width: 100px; min-width: 100px; }
+      .col-product-name { width: 100%; }
+      .col-status { width: 100px; min-width: 100px; }
+      .col-actions { width: 100px; min-width: 100px; }
+    }
+
+    &.commissions-table {
+      .col-agd { width: 100px; min-width: 100px; }
+      .col-action { width: 100px; min-width: 100px; }
+      .col-rate { width: 80px; min-width: 80px; }
+      .col-min-rate { width: 90px; min-width: 90px; }
+      .col-max-rate { width: 100px; min-width: 100px; }
+      .col-min-amount { width: 110px; min-width: 110px; }
+      .col-max-amount { width: 110px; min-width: 110px; }
+      .col-fixed { width: 110px; min-width: 110px; }
+      .col-actions { width: 100px; min-width: 100px; }
+    }
   }
 
   .datatable-card {
     margin-bottom: 20px;
-
-    .button-section {
-      @include card-base;
-      padding: $spacing-md;
-      margin-bottom: $spacing-lg;
-      background-color: $gray-50;
-
-      .add-button {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-      }
-    }
   }
 
   .action-buttons {
@@ -94,6 +120,14 @@
       min-width: auto;
       padding: 0 8px;
     }
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
   }
 
   .status-active {
@@ -123,6 +157,14 @@
     }
     &.row-selected {
       background-color: rgba(25, 118, 210, 0.12);
+    }
+  }
+
+  .commissions-table .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+    &:hover {
+      background-color: rgba(63, 81, 181, 0.05);
     }
   }
 
@@ -173,6 +215,11 @@
       .form-field {
         width: 100%;
       }
+    }
+
+    .form-action-row {
+      display: flex;
+      gap: 8px;
     }
 
     .loading {

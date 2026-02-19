@@ -60,10 +60,7 @@ public class FileServiceImpl implements FileService {
     private PDFont loadCyrillicFont(PDDocument doc) {
         // Try multiple font locations in order of preference
         String[] fontPaths = {
-            "/fonts/LiberationSans-Regular.ttf",  // Classpath resource
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",  // Debian/Ubuntu
-            "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",  // RedHat/CentOS
-            "/usr/share/fonts/liberation/LiberationSans-Regular.ttf"  // Alpine Linux
+            "/fonts/LiberationSans-Regular.ttf"  // Classpath resource
         };
         
         for (String fontPath : fontPaths) {

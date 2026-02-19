@@ -1,0 +1,118 @@
+---
+description: Edit/dialog page style - pricelist-edit, sp-provider look and feel
+globs: "**/*-edit/**/*.{html,scss,ts}"
+alwaysApply: false
+---
+
+# Edit Page Component Style
+
+Use this structure and styling for edit/form pages (e.g. pricelist-edit, sp-provider). Keeps consistent look and feel.
+
+## Page Header
+
+- Title on left, 2 buttons on right: **Назад** (goBack), **Сохранить** (save)
+- Buttons: `header-btn` class, `save-btn` for primary save button
+- Назад: secondary style (gray)
+- Сохранить: primary (blue), with mat-icon save
+
+```html
+<div class="page-header">
+  <h1 class="page-title">{{ headerTitle }}</h1>
+  <div class="header-actions">
+    <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
+    <button mat-raised-button color="primary" class="header-btn save-btn" (click)="save()" [disabled]="loading">
+      <mat-icon>save</mat-icon>
+      Сохранить
+    </button>
+  </div>
+</div>
+```
+
+## Data Card (2 columns per row)
+
+- `mat-card` with `data-card` class
+- `mat-card-header` with `mat-card-title`
+- `mat-card-content` with `form-row` divs
+- **Each form-row**: 2 items (grid 1fr 1fr)
+- `mat-form-field` with `form-field` class, `appearance="outline"`
+
+```html
+<mat-card class="data-card">
+  <mat-card-header>
+    <mat-card-title>Данные ...</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="loading" class="loading">Загрузка...</div>
+    <div *ngIf="!loading">
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>ID</mat-label>
+          <input matInput [value]="item.id || ''" readonly>
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Название</mat-label>
+          <input matInput [(ngModel)]="item.name" required>
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <!-- 2 fields per row -->
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+```
+
+## Optional: Tab Group
+
+For multi-tab edit pages (e.g. pricelist-edit):
+- First tab: data card with form
+- Second tab: datatable card (see list-page.mdc for table style)
+
+## Layout Rules
+
+| Element | Style |
+|---------|-------|
+| **Container** | `padding: 20px`, `max-width: 1200px`, `margin: 0 auto` |
+| **Page header** | `border-bottom: 2px solid #e0e0e0`, `padding-bottom: 16px` |
+| **Page title** | `font-size: 28px`, `color: #333` |
+| **Header buttons** | `min-width: 150px`, `height: 40px`, `@include button-primary` / `button-secondary` |
+| **Data card** | `border-radius: 8px`, `box-shadow: 0 2px 8px rgba(0,0,0,0.1)` |
+| **Card header** | `background: #f8f9fa`, `padding: 16px 20px` |
+| **Form row** | `grid-template-columns: 1fr 1fr`, `gap: 20px` |
+| **Form field** | `width: 100%` |
+
+## SCSS
+
+```scss
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  .header-actions .header-btn {
+    @include button-primary;
+    @include flex-center;
+    gap: $spacing-sm;
+    min-width: 150px;
+    height: 40px;
+  }
+  .header-actions .header-btn:not(.save-btn) {
+    @include button-secondary;
+  }
+}
+
+.data-card .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 16px;
+  .form-field { width: 100%; }
+}
+```
+
+## Reference
+
+See `PoliTechFront/src/app/features/add-ons/pricelist-edit/` and `sp-provider/` for full implementation.

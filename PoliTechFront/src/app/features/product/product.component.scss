@@ -1,3 +1,6 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
 .product-container {
   padding: 20px;
   max-width: 1200px;
@@ -24,9 +27,21 @@
       align-items: center;
       flex-wrap: wrap;
 
-      .save-button,
+      .header-btn {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+        min-width: 150px;
+        height: 40px;
+        font-weight: 500;
+      }
+
+      .header-btn:not(.save-btn) {
+        @include button-secondary;
+      }
+
       .json-button {
-        min-width: 140px;
+        min-width: 40px;
         height: 40px;
         font-weight: 500;
       }
@@ -36,7 +51,7 @@
         width: 100%;
         gap: 8px;
 
-        .save-button,
+        .header-btn,
         .json-button {
           width: 100%;
         }

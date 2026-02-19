@@ -1,0 +1,112 @@
+---
+description: List page component style - sp-list look and feel
+globs: "**/*-list/**/*.{html,scss,ts}"
+alwaysApply: false
+---
+
+# List Page Component Style
+
+Use this structure and styling for list/datatable pages (e.g. sp-list, clients-page). Keeps consistent look and feel across the app.
+
+## HTML Structure
+
+```html
+<div class="list-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ pageTitle }}</h1>
+  </div>
+
+  <mat-card class="datatable-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" (click)="addItem()">
+          <mat-icon>add</mat-icon>
+          Добавить
+        </button>
+      </div>
+
+      <div class="table-header">
+        <h3>{{ tableTitle }}</h3>
+      </div>
+
+      <div *ngIf="loading" class="loading">Загрузка...</div>
+      <table mat-table [dataSource]="items" class="business-table" *ngIf="!loading">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
+          <td mat-cell *matCellDef="let item" class="col-id">{{ item.id }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef align="end" class="col-status">Статус</th>
+          <td mat-cell *matCellDef="let item" align="end" class="col-status">
+            <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+              {{ item.status || 'ACTIVE' }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+          <td mat-cell *matCellDef="let item" align="end" class="col-actions">
+            <button mat-icon-button (click)="editItem(item, $event)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            (click)="selectRow(row)"
+            [class.row-selected]="selectedItem?.id === row.id"
+            class="clickable-row"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>
+```
+
+## Layout Rules
+
+| Element | Style |
+|---------|-------|
+| **Container** | `padding: 20px`, `max-width: 1200px`, `margin: 0 auto` |
+| **Button section** | `display: flex`, `justify-content: flex-end`, button `min-width: 150px` |
+| **Actions column** | `align="end"`, `min-width: 50px` or `width: 100px` |
+| **Table** | `table-layout: fixed`, `width: 100%` |
+| **Rows** | `clickable-row` with hover `background-color: rgba(63, 81, 181, 0.05)` |
+| **Status badge** | `status-badge` + `status-active` / `status-suspended` / `status-deleted` |
+
+## Column Widths (optional)
+
+For fixed column layout, add classes and styles:
+- `col-id`: `width: 100px`
+- `col-name`: `width: 100%` (flexible)
+- `col-status`: `width: 100px`
+- `col-actions`: `width: 100px`
+
+## Status Badge
+
+Use `status-badge` with dynamic class from `getStatusClass(item.status)`:
+
+```ts
+getStatusClass(status: string): string {
+  if (status === 'SUSPENDED') return 'status-suspended';
+  if (status === 'DELETED') return 'status-deleted';
+  return 'status-active';
+}
+```
+
+## Status Badge Colors
+
+- `status-active`: green (#4caf50)
+- `status-suspended`: orange (#ff9800)
+- `status-deleted`: red (#f44336)
+
+## SCSS Imports
+
+```scss
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+```
+
+## Reference
+
+See `PoliTechFront/src/app/features/add-ons/sp-list/` for full implementation.

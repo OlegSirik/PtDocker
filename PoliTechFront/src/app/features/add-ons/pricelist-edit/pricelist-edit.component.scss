@@ -27,11 +27,17 @@
       align-items: center;
       flex-wrap: wrap;
 
-      .save-button,
-      button {
-        min-width: 140px;
+      .header-btn {
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+        min-width: 150px;
         height: 40px;
         font-weight: 500;
+      }
+
+      .header-btn:not(.save-btn) {
+        @include button-secondary;
       }
     }
   }
@@ -110,7 +116,10 @@
       }
 
       .add-button {
-        min-width: 140px;
+        @include button-primary;
+        @include flex-center;
+        gap: $spacing-sm;
+        min-width: 150px;
         height: 40px;
         font-weight: 500;
       }
@@ -118,6 +127,23 @@
 
     .business-table {
       width: 100%;
+      table-layout: fixed;
+
+      &.addon-products-table {
+        .col-product-id { width: 100px; min-width: 100px; }
+        .col-product-name { width: 100%; }
+        .col-preconditions { width: 100px; min-width: 100px; }
+        .col-actions { width: 100px; min-width: 100px; }
+      }
+
+      .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: rgba(63, 81, 181, 0.05);
+        }
+      }
     }
 
     .empty-state {

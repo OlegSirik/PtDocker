@@ -2,7 +2,8 @@
   <div class="page-header">
     <h1 class="page-title">Клиент: {{ client.name || 'Новый клиент' }}</h1>
     <div class="header-actions">
-      <button mat-raised-button color="primary" class="save-button" (click)="save()">
+      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
+      <button mat-raised-button color="primary" class="header-btn save-btn" (click)="save()" [disabled]="loading">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
@@ -10,7 +11,7 @@
   </div>
 
   <mat-tab-group>
-    <mat-tab label="Client">
+    <mat-tab label="Основные данные">
       <div class="tab-content">
         <!-- Main Client Data Card -->
         <mat-card class="data-card">
@@ -19,61 +20,59 @@
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="loading" class="loading">Загрузка...</div>
-            <div *ngIf="!loading" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>ID</mat-label>
-                <input matInput [value]="client.id || ''" readonly>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Client ID</mat-label>
-                <input matInput [(ngModel)]="client.clientId" (ngModelChange)="onFieldChange()">
-                <mat-hint>client_id приходящее в токене от IdP</mat-hint>
-              </mat-form-field>
-
-            </div>
-            <div *ngIf="!loading" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Название</mat-label>
-                <input matInput [(ngModel)]="client.name" (ngModelChange)="onFieldChange()" required>
-              </mat-form-field>
-              <mat-form-field class="form-field" appearance="outline">
-
-                <mat-label>Статус</mat-label>
-                <mat-select [(ngModel)]="client.isDeleted" (ngModelChange)="onFieldChange()">
-                  <mat-option [value]="false">ACTIVE</mat-option>
-                  <mat-option [value]="true">SUSPENDED</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Account ID</mat-label>
-                <input matInput [value]="client.clientAccountId || ''" readonly>
-              </mat-form-field>
-          
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Тип авторизации</mat-label>
-                <mat-select [(ngModel)]="client.authType" name="authType"  (ngModelChange)="onFieldChange()" >
-                  <mat-option value="JWT">JWT</mat-option>
-                  <mat-option value="HEADER">HEADER</mat-option>
-                  <mat-option value="API-KEY">API-KEY</mat-option>
-                  <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>
-                  <mat-option value="NONE">NONE</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Уровень авторизации</mat-label>
-                <mat-select [(ngModel)]="client.authLevel" (ngModelChange)="onFieldChange()" required>
-                  <mat-option value="CLIENT">CLIENT</mat-option>
-                  <mat-option value="USER">USER</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-
+            <div *ngIf="!loading">
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>ID</mat-label>
+                  <input matInput [value]="client.id || ''" readonly>
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Client ID</mat-label>
+                  <input matInput [(ngModel)]="client.clientId" (ngModelChange)="onFieldChange()">
+                  <mat-hint>client_id приходящее в токене от IdP</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Название</mat-label>
+                  <input matInput [(ngModel)]="client.name" (ngModelChange)="onFieldChange()" required>
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Статус</mat-label>
+                  <mat-select [(ngModel)]="client.isDeleted" (ngModelChange)="onFieldChange()">
+                    <mat-option [value]="false">ACTIVE</mat-option>
+                    <mat-option [value]="true">SUSPENDED</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Account ID</mat-label>
+                  <input matInput [value]="client.clientAccountId || ''" readonly>
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Тип авторизации</mat-label>
+                  <mat-select [(ngModel)]="client.authType" name="authType" (ngModelChange)="onFieldChange()">
+                    <mat-option value="JWT">JWT</mat-option>
+                    <mat-option value="HEADER">HEADER</mat-option>
+                    <mat-option value="API-KEY">API-KEY</mat-option>
+                    <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>
+                    <mat-option value="NONE">NONE</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Уровень авторизации</mat-label>
+                  <mat-select [(ngModel)]="client.authLevel" (ngModelChange)="onFieldChange()" required>
+                    <mat-option value="CLIENT">CLIENT</mat-option>
+                    <mat-option value="USER">USER</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </div>
             <div *ngIf="!loading && client.clientAccountId" class="form-row">
-              <div class="form-action-row" style="display: flex; gap: 8px;">
+              <div class="form-action-row">
                 <button mat-raised-button color="primary" type="button" 
                         [disabled]="loading || !client.clientAccountId"
                         (click)="gotoAccount(client)">
@@ -93,13 +92,14 @@
           <mat-card-content>
             <div *ngIf="loading" class="loading">Загрузка...</div>
 
-                    <div *ngIf="!loading && client.clientConfiguration" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Email сотрудника</mat-label>
-                <input matInput type="email" [(ngModel)]="client.clientConfiguration.employeeEmail" (ngModelChange)="onFieldChange()">
-              </mat-form-field>
-            </div>
-            <div *ngIf="!loading && client.clientConfiguration" class="form-row">
+            <div *ngIf="!loading && client.clientConfiguration">
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Email сотрудника</mat-label>
+                  <input matInput type="email" [(ngModel)]="client.clientConfiguration.employeeEmail" (ngModelChange)="onFieldChange()">
+                </mat-form-field>
+              </div>
+              <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Отправлять email после покупки</mat-label>
                 <mat-select [(ngModel)]="client.clientConfiguration.sendEmailAfterBuy" (ngModelChange)="onFieldChange()">
@@ -114,6 +114,7 @@
                   <mat-option [value]="false">Нет</mat-option>
                 </mat-select>
               </mat-form-field>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>
@@ -125,9 +126,10 @@
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="loading" class="loading">Загрузка...</div>
-            <div *ngIf="!loading && client.clientConfiguration" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Платежный шлюз</mat-label>
+            <div *ngIf="!loading && client.clientConfiguration">
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Платежный шлюз</mat-label>
                 <mat-select [(ngModel)]="client.clientConfiguration.paymentGate" (ngModelChange)="onFieldChange()">
                   <mat-option value="YOUKASSA">YOUKASSA</mat-option>
                   <mat-option value="VSK">VSK</mat-option>
@@ -137,16 +139,17 @@
                 <mat-label>Номер агента платежного шлюза</mat-label>
                 <input matInput [(ngModel)]="client.clientConfiguration.paymentGateAgentNumber" (ngModelChange)="onFieldChange()">
               </mat-form-field>
-            </div>
-            <div *ngIf="!loading && client.clientConfiguration" class="form-row">
-              <mat-form-field class="form-field" appearance="outline">
-                <mat-label>Логин платежного шлюза</mat-label>
+              </div>
+              <div class="form-row">
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Логин платежного шлюза</mat-label>
                 <input matInput [(ngModel)]="client.clientConfiguration.paymentGateLogin" (ngModelChange)="onFieldChange()">
               </mat-form-field>
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Пароль платежного шлюза</mat-label>
                 <input matInput type="password" [(ngModel)]="client.clientConfiguration.paymentGatePassword" (ngModelChange)="onFieldChange()">
               </mat-form-field>
+              </div>
             </div>
 
           </mat-card-content>
@@ -154,25 +157,17 @@
 
       </div>
     </mat-tab>
-    <mat-tab label="Products" [disabled]="isNewRecord">
+    <mat-tab label="Страховые продукты" [disabled]="isNewRecord">
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
-            <div class="button-section">
-              <button
-                mat-raised-button
-                color="primary"
-                class="add-button"
-                (click)="openAddProductDialog()"
-                [disabled]="loadingProductList || isNewRecord"
-              >
+            <div class="table-header">
+              <h3>Доступные продукты</h3>
+              <button mat-raised-button color="primary" class="add-button"
+                      (click)="openAddProductDialog()" [disabled]="loadingProductList || isNewRecord">
                 <mat-icon>add</mat-icon>
                 Добавить продукт
               </button>
-            </div>
-
-            <div class="table-header">
-              <h3>Доступные продукты</h3>
             </div>
 
             <div *ngIf="loadingProducts" class="loading">Загрузка...</div>
@@ -182,27 +177,27 @@
 
             <table mat-table [dataSource]="clientProducts" class="business-table products-table" *ngIf="!loadingProducts && clientProducts.length">
               <ng-container matColumnDef="id">
-                <th mat-header-cell *matHeaderCellDef>ID</th>
-                <td mat-cell *matCellDef="let element">{{ element.roleProductId }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
+                <td mat-cell *matCellDef="let element" class="col-id">{{ element.roleProductId }}</td>
               </ng-container>
 
               <ng-container matColumnDef="productName">
-                <th mat-header-cell *matHeaderCellDef>Продукт</th>
-                <td mat-cell *matCellDef="let element">{{ element.productName || element.roleProductName || '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-product-name">Продукт</th>
+                <td mat-cell *matCellDef="let element" class="col-product-name">{{ element.productName || element.roleProductName || '-' }}</td>
               </ng-container>
 
               <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef align="end">Статус</th>
-                <td mat-cell *matCellDef="let element" align="end">
-                  <mat-chip [ngClass]="'status-' + (element.isDeleted ? 'suspended' : 'active')">
+                <th mat-header-cell *matHeaderCellDef align="end" class="col-status">Статус</th>
+                <td mat-cell *matCellDef="let element" align="end" class="col-status">
+                  <span class="status-badge" [ngClass]="getProductStatusClass(element.isDeleted)">
                     {{ element.isDeleted ? 'Удалён' : 'Активен' }}
-                  </mat-chip>
+                  </span>
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef align="end">Действия</th>
-                <td mat-cell *matCellDef="let element" align="end">
+                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+                <td mat-cell *matCellDef="let element" align="end" class="col-actions">
                   <button mat-icon-button color="warn" (click)="deleteProduct(element); $event.stopPropagation()">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -221,20 +216,12 @@
         <mat-card class="datatable-card commissions-card" *ngIf="selectedProduct">
           <mat-card-content>
             <div class="table-header">
-              <h3>Агентский договора {{ selectedProduct.productName || selectedProduct.roleProductName || '' }}</h3>
-
-              <button
-                mat-raised-button
-                color="primary"
-                class="add-button"
-                (click)="openAddCommissionDialog()"
-                [disabled]="loadingCommissions"
-              >
+              <h3>Агентский договор: {{ selectedProduct.productName || selectedProduct.roleProductName || '' }}</h3>
+              <button mat-raised-button color="primary" class="add-button"
+                      (click)="openAddCommissionDialog()" [disabled]="loadingCommissions">
                 <mat-icon>add</mat-icon>
                 Добавить АГД
               </button>
-
-
             </div>
 
             <div *ngIf="loadingCommissions" class="loading">Загрузка...</div>
@@ -242,42 +229,42 @@
               Нет комиссий
             </div>
 
-            <table mat-table [dataSource]="commissions" class="business-table" *ngIf="!loadingCommissions && commissions.length">
+            <table mat-table [dataSource]="commissions" class="business-table commissions-table" *ngIf="!loadingCommissions && commissions.length">
               <ng-container matColumnDef="agdNumber">
-                <th mat-header-cell *matHeaderCellDef>agdNumber</th>
-                <td mat-cell *matCellDef="let el">{{ el.agdNumber || '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-agd">№ АгД</th>
+                <td mat-cell *matCellDef="let el" class="col-agd">{{ el.agdNumber || '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="action">
-                <th mat-header-cell *matHeaderCellDef>Action</th>
-                <td mat-cell *matCellDef="let el">{{ getActionLabel(el.action || '') }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-action">Основание</th>
+                <td mat-cell *matCellDef="let el" class="col-action">{{ getActionLabel(el.action || '') }}</td>
               </ng-container>
               <ng-container matColumnDef="rateValue">
-                <th mat-header-cell *matHeaderCellDef>rateValue</th>
-                <td mat-cell *matCellDef="let el">{{ el.rateValue ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-rate">% кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-rate">{{ el.rateValue ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="commissionMinRate">
-                <th mat-header-cell *matHeaderCellDef>commissionMinRate</th>
-                <td mat-cell *matCellDef="let el">{{ el.commissionMinRate ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-min-rate">мин % кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-min-rate">{{ el.commissionMinRate ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="commissionMaxRate">
-                <th mat-header-cell *matHeaderCellDef>commissionMaxRate</th>
-                <td mat-cell *matCellDef="let el">{{ el.commissionMaxRate ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-max-rate">макс % кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-max-rate">{{ el.commissionMaxRate ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="minAmount">
-                <th mat-header-cell *matHeaderCellDef>minAmount</th>
-                <td mat-cell *matCellDef="let el">{{ el.minAmount ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-min-amount">мин сумма кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-min-amount">{{ el.minAmount ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="maxAmount">
-                <th mat-header-cell *matHeaderCellDef>maxAmount</th>
-                <td mat-cell *matCellDef="let el">{{ el.maxAmount ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-max-amount">макс сумма кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-max-amount">{{ el.maxAmount ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="fixedAmount">
-                <th mat-header-cell *matHeaderCellDef>fixedAmount</th>
-                <td mat-cell *matCellDef="let el">{{ el.fixedAmount ?? '-' }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-fixed">фикс сумма кВ</th>
+                <td mat-cell *matCellDef="let el" class="col-fixed">{{ el.fixedAmount ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Действия</th>
-                <td mat-cell *matCellDef="let el">
+                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+                <td mat-cell *matCellDef="let el" align="end" class="col-actions">
                   <button mat-icon-button (click)="openEditCommissionDialog(el); $event.stopPropagation()">
                     <mat-icon>edit</mat-icon>
                   </button>
@@ -288,7 +275,9 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="commissionColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: commissionColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: commissionColumns;"
+                  (click)="openEditCommissionDialog(row)"
+                  class="clickable-row"></tr>
             </table>
           </mat-card-content>
         </mat-card>

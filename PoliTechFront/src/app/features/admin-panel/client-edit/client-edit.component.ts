@@ -14,14 +14,13 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatChipsModule } from '@angular/material/chips';
 import { ClientsService, Client, ClientConfiguration, ClientProduct } from '../../../shared/services/api/clients.service';
 import { CommissionService, Commission } from '../../../shared/services/api/commission.service';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ProductService } from '../../../shared/services/product.service';
 import { ProductList } from '../../../shared/services/products.service';
-import { CommissionEditComponent, ACTION_OPTIONS } from '../components/commission-edit/commission-edit.component';
+import { ACTION_OPTIONS } from '../commission-edit/commission-edit.component';
 
 @Component({
   selector: 'app-client-edit',
@@ -40,8 +39,7 @@ import { CommissionEditComponent, ACTION_OPTIONS } from '../components/commissio
     MatCheckboxModule,
     MatTableModule,
     MatTabsModule,
-    MatDialogModule,
-    MatChipsModule
+    MatDialogModule
   ],
   templateUrl: './client-edit.component.html',
   styleUrls: ['./client-edit.component.scss']
@@ -197,6 +195,10 @@ export class ClientEditComponent implements OnInit {
         }
       });
     }
+  }
+
+  goBack(): void {
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'clients']);
   }
 
   gotoAccount(client: Client) {
@@ -365,51 +367,32 @@ export class ClientEditComponent implements OnInit {
   }
 
   openAddCommissionDialog(): void {
-    if (!this.selectedProduct || !this.client.clientAccountId) return;
+    if (!this.selectedProduct || !this.client.clientAccountId || !this.client.id) return;
     const accountId = this.selectedProduct.accountId ?? this.client.clientAccountId;
-    const dialogRef = this.dialog.open(CommissionEditComponent, {
-      minWidth: '900px',
-      data: {
-        productName: this.selectedProduct.productName || this.selectedProduct.roleProductName || '',
-        accountId,
-        productId: this.selectedProduct.roleProductId,
-        commission: null
+    const productName = this.selectedProduct.productName || this.selectedProduct.roleProductName || '';
+    this.router.navigate(
+      ['/', this.authService.tenant, 'admin', 'clients', this.client.id.toString(), 'commission', 'edit'],
+      {
+        queryParams: { accountId, productId: this.selectedProduct.roleProductId, productName: encodeURIComponent(productName) },
+        state: { productName, clientName: this.client.name || '' }
       }
-    });
-    dialogRef.afterClosed().subscribe((result: Commission | undefined) => {
-      if (result) {
-        this.commissionService.createConfiguration(result).subscribe({
-          next: () => {
-            this.snack.open('Комиссия добавлена', 'OK', { duration: 2000 });
-            this.loadCommissions();
-          },
-          error: () => this.snack.open('Ошибка при добавлении комиссии', 'OK', { duration: 2000 })
-        });
-      }
-    });
+    );
   }
 
   openEditCommissionDialog(commission: Commission): void {
-    if (!this.selectedProduct || !commission.id) return;
-    const accountId = this.selectedProduct.accountId ?? this.client.clientAccountId ?? commission.accountId;
-    const dialogRef = this.dialog.open(CommissionEditComponent, {
-      minWidth: '900px',
-      data: {
+    if (!this.selectedProduct || !commission.id || !this.client.id) return;
+    this.router.navigate([
+      '/',
+      this.authService.tenant,
+      'admin',
+      'clients',
+      this.client.id.toString(),
+      'commission',
+      commission.id.toString()
+    ], {
+      state: {
         productName: this.selectedProduct.productName || this.selectedProduct.roleProductName || '',
-        accountId,
-        productId: this.selectedProduct.roleProductId,
-        commission
-      }
-    });
-    dialogRef.afterClosed().subscribe((result: Commission | undefined) => {
-      if (result && result.id) {
-        this.commissionService.updateConfiguration(result.id, result).subscribe({
-          next: () => {
-            this.snack.open('Комиссия обновлена', 'OK', { duration: 2000 });
-            this.loadCommissions();
-          },
-          error: () => this.snack.open('Ошибка при обновлении комиссии', 'OK', { duration: 2000 })
-        });
+        clientName: this.client.name || ''
       }
     });
   }
@@ -425,6 +408,10 @@ export class ClientEditComponent implements OnInit {
       },
       error: () => this.snack.open('Ошибка при удалении комиссии', 'OK', { duration: 2000 })
     });
+  }
+
+  getProductStatusClass(isDeleted: boolean): string {
+    return isDeleted ? 'status-deleted' : 'status-active';
   }
 
   getActionLabel(action: string): string {

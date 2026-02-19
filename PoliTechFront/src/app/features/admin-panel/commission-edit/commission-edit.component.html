@@ -1,0 +1,97 @@
+<div class="commission-edit-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ isNewRecord ? 'Агентский договор' : 'Агентский договор' }} {{ productName ? ': ' + productName : '' }}</h1>
+    <div class="header-actions">
+      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
+      <button mat-raised-button color="primary" class="header-btn save-btn" (click)="save()" [disabled]="loading">
+        <mat-icon>save</mat-icon>
+        Сохранить
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="data-card">
+    <mat-card-header>
+      <mat-card-title>Агентский договор с: {{ clientName }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">Загрузка...</div>
+      <div *ngIf="!loading">
+        <div class="form-row">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>ID</mat-label>
+            <input matInput [value]="model.id || ''" readonly>
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>№ Агентского договора</mat-label>
+            <input matInput [(ngModel)]="model.agdNumber" name="agdNumber">
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div></div>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Основание начисления комиссии</mat-label>
+            <mat-select [(ngModel)]="model.action" name="action">
+              <mat-option *ngFor="let opt of actionOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row-with-title">
+          <h4 class="form-row-title">Размер комиссионного вознаграждения</h4>
+  
+        <div class="form-row">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>% Кв</mat-label>
+            <input matInput type="number" [(ngModel)]="model.rateValue" name="rateValue"
+                   min="0" [max]="maxRate" step="0.01">
+          </mat-form-field>
+
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Фиксированная сумма (руб)</mat-label>
+            <input matInput type="number" [(ngModel)]="model.fixedAmount" name="fixedAmount"
+                   min="0" step="0.01">
+          </mat-form-field>
+
+        </div>
+      </div>
+
+        <div class="form-row-with-title">
+          <h4 class="form-row-title">Диапазон изменения Кв агентом</h4>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>минимальный %</mat-label>
+              <input matInput type="number" [(ngModel)]="model.commissionMinRate" name="commissionMinRate"
+                     min="0" [max]="maxRate" step="0.01">
+            </mat-form-field>
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>максимальный %</mat-label>
+              <input matInput type="number" [(ngModel)]="model.commissionMaxRate" name="commissionMaxRate"
+                     min="0" [max]="maxRate" step="0.01">
+            </mat-form-field>
+          </div>
+        </div>
+
+
+        <div class="form-row-with-title">
+          <h4 class="form-row-title">Ограничения на фактическую сумму Кв</h4>
+
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Минимальная сумма кВ агента (руб)</mat-label>
+              <input matInput type="number" [(ngModel)]="model.minAmount" name="minAmount"
+                     min="0" step="0.01">
+            </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Максимальная сумма кВ агента (руб)</mat-label>
+            <input matInput type="number" [(ngModel)]="model.maxAmount" name="maxAmount"
+                   min="0" step="0.01">
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    </mat-card-content>
+  </mat-card>
+</div>

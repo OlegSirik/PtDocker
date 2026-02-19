@@ -21,6 +21,8 @@
 
     .button-section {
       @include card-base;
+      display: flex;
+      justify-content: flex-end;
       padding: $spacing-md;
       margin-bottom: $spacing-lg;
       background-color: $gray-50;
@@ -29,19 +31,7 @@
         @include button-primary;
         @include flex-center;
         gap: $spacing-sm;
-      }
-
-      .add-right {
-        margin-left: auto;
-      }
-    }
-
-    &.pricelist-card .button-section {
-      display: flex;
-      justify-content: flex-end;
-
-      .add-button {
-        margin-left: 0;
+        min-width: 150px;
       }
     }
 
@@ -61,6 +51,23 @@
     .business-table {
       width: 100%;
       margin-bottom: 16px;
+      table-layout: fixed;
+
+      &.providers-table {
+        .col-id { width: 100px; min-width: 100px; }
+        .col-name { width: 100%; }
+        .col-status { width: 100px; min-width: 100px; }
+        .col-actions { width: 100px; min-width: 100px; }
+      }
+
+      &.pricelist-table {
+        .col-id { width: 100px; min-width: 100px; }
+        .col-code { width: 100px; min-width: 100px; }
+        .col-name { width: 100%; }
+        .col-price { width: 100px; min-width: 100px; }
+        .col-status { width: 100px; min-width: 100px; }
+        .col-actions { width: 100px; min-width: 100px; }
+      }
 
       .clickable-row {
         cursor: pointer;
@@ -81,6 +88,14 @@
         border-radius: 4px;
         font-size: 12px;
         font-weight: 500;
+      }
+
+      .actions-column {
+        min-width: 50px;
+      }
+
+      .col-actions {
+        min-width: 50px;
       }
     }
   }
