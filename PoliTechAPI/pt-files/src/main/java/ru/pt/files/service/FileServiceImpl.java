@@ -18,6 +18,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,41 +53,56 @@ public class FileServiceImpl implements FileService {
         this.textDocumentView = textDocumentView;
     }
 
+    private static final String FONT_CLASSPATH = "fonts/calibri.ttf";
+
     /**
-     * Load a TrueType font that supports Cyrillic characters
+     * Load a TrueType font that supports Cyrillic characters (Liberation Sans, compatible with Helvetica).
+     * Tries classpath first, then filesystem fallbacks.
+     *
      * @param doc The PDF document
      * @return PDFont instance or null if no suitable font found
      */
     private PDFont loadCyrillicFont(PDDocument doc) {
-        // Try multiple font locations in order of preference
-        String[] fontPaths = {
-            "/fonts/LiberationSans-Regular.ttf"  // Classpath resource
+        // 1. Classpath resource (preferred)
+        try (InputStream fontStream = getClass().getClassLoader().getResourceAsStream(FONT_CLASSPATH)) {
+            if (fontStream != null) {
+                logger.debug("Loading font from classpath: {}", FONT_CLASSPATH);
+                return PDType0Font.load(doc, fontStream, false);
+            }
+        } catch (IOException e) {
+            logger.trace("Could not load font from classpath: {}", e.getMessage());
+        }
+
+        // 2. Alternative: getClass().getResource (for some classloader setups)
+        try (InputStream fontStream = getClass().getResourceAsStream("/" + FONT_CLASSPATH)) {
+            if (fontStream != null) {
+                logger.debug("Loading font from classpath (absolute): /{}", FONT_CLASSPATH);
+                return PDType0Font.load(doc, fontStream, false);
+            }
+        } catch (IOException e) {
+            logger.trace("Could not load font from classpath (absolute): {}", e.getMessage());
+        }
+
+        // 3. Filesystem fallbacks (Linux)
+        String[] fsPaths = {
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/liberation/LiberationSans-Regular.ttf"
         };
-        
-        for (String fontPath : fontPaths) {
+        for (String path : fsPaths) {
             try {
-                InputStream fontStream = null;
-                
-                // Try loading from classpath first
-                if (fontPath.startsWith("/fonts/")) {
-                    fontStream = getClass().getResourceAsStream(fontPath);
-                    if (fontStream != null) {
-                        logger.debug("Loading font from classpath: {}", fontPath);
-                        return PDType0Font.load(doc, fontStream);
+                File f = new File(path);
+                if (f.exists() && f.canRead()) {
+                    try (FileInputStream fis = new FileInputStream(f)) {
+                        logger.debug("Loading font from file system: {}", path);
+                        return PDType0Font.load(doc, fis, false);
                     }
                 }
-                
-                // Try loading from file system
-                File fontFile = new File(fontPath);
-                if (fontFile.exists() && fontFile.canRead()) {
-                    logger.debug("Loading font from file system: {}", fontPath);
-                    return PDType0Font.load(doc, new FileInputStream(fontFile));
-                }
             } catch (Exception e) {
-                logger.trace("Could not load font from {}: {}", fontPath, e.getMessage());
+                logger.trace("Could not load font from {}: {}", path, e.getMessage());
             }
         }
-        
+
         logger.info("No custom Cyrillic font found, PDFBox will use built-in fallback fonts");
         return null;
     }
@@ -189,242 +205,6 @@ public class FileServiceImpl implements FileService {
         fileRepository.save(entity);
     }
 
-/*     
-    public byte[] process_123(Long id, VariableContext keyValues) {
-        
-        logger.debug("Processing PDF file with id: {}", id);
-        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        if (entity.getFileBody() == null) {
-            throw new IllegalArgumentException("File body is empty");
-        }
-
-        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
-            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
-            if (form == null) {
-                throw new IllegalStateException("PDF has no AcroForm");
-            }
-        
-            form.setNeedAppearances(false);
-            // Configure font for Cyrillic support
-            PDType0Font font = loadCyrillicFont(doc);
-            COSName fontName = null;
-
-            if (form != null) {
-
-                if (font != null) {
-                    try {
-                        // Set default appearance with the font that supports Cyrillic
-                        PDResources resources = form.getDefaultResources();
-                        if (resources == null) {
-                            resources = new PDResources();
-                            form.setDefaultResources(resources);
-                        }
-        
-                        // добавляем шрифт и получаем имя ресурса
-                        fontName = resources.add(font);
-        
-                        // 👇 ВАЖНЕЙШАЯ СТРОКА
-                        form.setDefaultAppearance("/" + fontName.getName() + " 10 Tf 0 g");
-        
-                        logger.debug("Configured Unicode font {} for AcroForm", fontName.getName());
-                    } catch (Exception e) {
-                        logger.warn("Could not configure custom font: {}", e.getMessage());
-                    }
-                }
-                
-                // Fill form fields
-                for (PDField pdfield : form.getFieldTree()) {
-                    String fName = pdfield.getValueAsString();
-                    if (fName == null) {
-                        continue;
-                    }
-                    String fieldValue = textDocumentView.get(keyValues, fName);
-                    if (fieldValue != null) {
-                        String fValue = fieldValue.toString();
-                        try {
-                            float fontSize = getFieldFontSize(pdfield);
-                            normalizeField(pdfield);
-                            applyFieldFont(pdfield, fontName, fontSize);
-                            pdfield.setReadOnly(false);
-                            pdfield.setValue(fValue);
-                            removeBorder(pdfield);
-                            logger.trace("Set field '{}' to value: {}", fName, fValue);
- 
-                        } catch (Exception ex) {
-                            logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
-                        }
-                    }
-
-                    // Убрать рамку
-                    //removeBorder(pdfield);
-                }
-                form.refreshAppearances();
-                form.flatten();
-                logger.debug("Form flattened successfully");
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            doc.save(out);
-            logger.debug("PDF processed successfully, size: {} bytes", out.size());
-            return out.toByteArray();
-        } catch (IOException ex) {
-            logger.error("Failed to process PDF: {}", ex.getMessage(), ex);
-            throw new InternalServerErrorException("Failed to process PDF", ex);
-        }
-    }
-*/
-    /* 
-    private void clearFieldAppearance(PDField field) {
-        if (field instanceof PDTerminalField terminal) {
-            for (PDAnnotationWidget widget : terminal.getWidgets()) {
-                widget.setDefaultAppearance(null);
-                widget.setAppearance(null);
-            }
-        }
-    }
-    */
-   /* 
-    private void normalizeField(PDField field) {
-        if (!(field instanceof PDTerminalField terminal)) {
-            return;
-        }
-    
-        for (PDAnnotationWidget widget : terminal.getWidgets()) {
-            COSDictionary w = widget.getCOSObject();
-    
-            // ❌ Убираем локальный DA (Helvetica)
-            w.removeItem(org.apache.pdfbox.cos.COSName.DA);
-    
-            // ❌ Убираем старый appearance stream
-            w.removeItem(org.apache.pdfbox.cos.COSName.AP);
-        }
-    
-        // ❌ Иногда DA висит и на уровне поля
-        field.getCOSObject().removeItem(COSName.DA);
-    }
-    
-    private static void removeBorder(PDField field) {
-
-        if (!(field instanceof PDTerminalField terminal)) {
-            return;
-        }
-    
-        for (PDAnnotationWidget widget : terminal.getWidgets()) {
-    
-            // BorderStyle
-            PDBorderStyleDictionary borderStyle = widget.getBorderStyle();
-            if (borderStyle != null) {
-                borderStyle.setWidth(0);
-            }
-    
-            // Border array (старый способ)
-            widget.setBorder(new COSArray());
-    
-            // Appearance (важно!)
-            widget.setAppearance(null);
-
-            PDAppearanceCharacteristicsDictionary appearance = widget.getAppearanceCharacteristics();
-            if (appearance == null) {
-                appearance = new PDAppearanceCharacteristicsDictionary(new COSDictionary());
-            }
-            appearance.setBorderColour(new PDColor(new float[] {}, PDDeviceRGB.INSTANCE));
-            widget.setAppearanceCharacteristics(appearance);
-        }
-    }
-
-    private static void applyFieldFont(PDField field, COSName fontName, float fontSize) {
-        if (fontName == null || !(field instanceof PDVariableText variableText)) {
-            return;
-        }
-
-        String defaultAppearance = "/" + fontName.getName() + " " + fontSize + " Tf 0 g";
-        variableText.setDefaultAppearance(defaultAppearance);
-    }
-
-    private static float getFieldFontSize(PDField field) {
-        if (!(field instanceof PDVariableText variableText)) {
-            return 10f;
-        }
-
-        return extractFontSize(variableText.getDefaultAppearance());
-    }
-
-    private static float extractFontSize(String defaultAppearance) {
-        if (defaultAppearance == null) {
-            return 10f;
-        }
-
-        Matcher matcher = Pattern.compile("([0-9]+(?:\\.[0-9]+)?)\\s+Tf").matcher(defaultAppearance);
-        if (matcher.find()) {
-            try {
-                return Float.parseFloat(matcher.group(1));
-            } catch (NumberFormatException ignored) {
-                return 10f;
-            }
-        }
-        return 10f;
-    }
-    */
-    //@Override
-    public byte[] process_old(Long id, VariableContext keyValues) {
-        
-        logger.debug("Processing PDF file with id: {}", id);
-        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        if (entity.getFileBody() == null) {
-            throw new IllegalArgumentException("File body is empty");
-        }
-
-        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
-            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
-            if (form != null) {
-                // Configure font for Cyrillic support
-                PDFont font = loadCyrillicFont(doc);
-                if (font != null) {
-                    try {
-                        // Set default appearance with the font that supports Cyrillic
-                        PDResources resources = form.getDefaultResources();
-                        if (resources == null) {
-                            resources = new PDResources();
-                        }
-                        resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), font);
-                        form.setDefaultResources(resources);
-                        
-                        logger.debug("Configured Liberation Sans font for Cyrillic support");
-                    } catch (Exception e) {
-                        logger.warn("Could not configure custom font: {}", e.getMessage());
-                    }
-                }
-                
-                // Fill form fields
-                for (PDField pdfield : form.getFields()) {
-                    String fName = pdfield.getPartialName();
-                    String fieldValue = textDocumentView.get(keyValues, fName);
-                    if (fieldValue != null) {
-                        String fValue = fieldValue.toString();
-                        try {
-                            pdfield.setValue(fValue);
-                            logger.trace("Set field '{}' to value: {}", fName, fValue);
- 
-                        } catch (Exception ex) {
-                            logger.warn("Failed to set field '{}': {}", fName, ex.getMessage());
-                        }
-                    }
-                }
-
-                form.flatten();
-                logger.debug("Form flattened successfully");
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            doc.save(out);
-            logger.debug("PDF processed successfully, size: {} bytes", out.size());
-            return out.toByteArray();
-        } catch (IOException ex) {
-            logger.error("Failed to process PDF: {}", ex.getMessage(), ex);
-            throw new InternalServerErrorException("Failed to process PDF", ex);
-        }
-    }
-
     @Override
     public byte[] process(Long id, VariableContext keyValues) {
         
@@ -439,16 +219,29 @@ public class FileServiceImpl implements FileService {
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             if (form != null) {
                 // Configure font for Cyrillic support
-                PDFont font = loadCyrillicFont(doc);
-                if (font != null) {
+                PDFont cyrillicFont = loadCyrillicFont(doc);
+                if (cyrillicFont != null) {
                     try {
                         // Set default appearance with the font that supports Cyrillic
                         PDResources resources = form.getDefaultResources();
                         if (resources == null) {
                             resources = new PDResources();
                         }
-                        resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), font);
+
+                        // Добавляем шрифт в ресурсы и получаем его имя
+                        String fontName = resources.add(cyrillicFont).getName();
+                        // Alias Helv (Helvetica) — многие PDF-формы используют его по умолчанию
+                        resources.put(org.apache.pdfbox.cos.COSName.getPDFName("Helv"), cyrillicFont);
                         form.setDefaultResources(resources);
+
+                        // Устанавливаем appearance для всех текстовых полей (включая вложенные)
+                        for (PDField field : form.getFieldTree()) {
+                            if (field instanceof PDTextField) {
+                                ((PDTextField) field).setDefaultAppearance("/" + fontName + " 12 Tf 0 g");
+                            }
+                        }
+                        
+                        form.setDefaultAppearance("/" + fontName + " 12 Tf 0 g");
                         
                         logger.debug("Configured Liberation Sans font for Cyrillic support");
                     } catch (Exception e) {
@@ -456,8 +249,8 @@ public class FileServiceImpl implements FileService {
                     }
                 }
                 
-                // Fill form fields
-                for (PDField pdfield : form.getFields()) {
+                // Fill form fields (включая вложенные через getFieldTree)
+                for (PDField pdfield : form.getFieldTree()) {
                     //String fName = pdfield.getPartialName();
                     String fName = pdfield.getValueAsString();
                     String fieldValue = textDocumentView.get(keyValues, fName);
