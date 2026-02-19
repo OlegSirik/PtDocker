@@ -1,5 +1,5 @@
 # .github/workflows/compose-build-push.yml
-name: Build, Push and Deploy with Compose
+name: "Build Push and Deploy with Compose"
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-and-push: 
-    name: Build and Push Images
+    name: "Build #${{ github.run_number }} - Build and Push Images"
     runs-on: ubuntu-latest
     
     steps:
@@ -48,7 +48,7 @@ jobs:
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:master
-            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.BACKEND_IMAGE }}:${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -61,15 +61,15 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:master
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.FRONTEND_IMAGE }}:${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Build Summary
         run: |
           echo "✅ Images built and pushed successfully!"
-          echo "Backend: ${{ env.BACKEND_IMAGE }}:latest"
-          echo "Frontend: ${{ env.FRONTEND_IMAGE }}:latest"
+          echo "Backend: ${{ env.BACKEND_IMAGE }}:${{ github.run_number }}"
+          echo "Frontend: ${{ env.FRONTEND_IMAGE }}:${{ github.run_number }}"
 
   deploy:
     name: Deploy to Production
