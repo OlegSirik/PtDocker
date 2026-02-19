@@ -32,6 +32,7 @@
         @include button-primary;
         @include flex-center;
         gap: $spacing-sm;
+        min-width: 150px;
       }
     }
 
@@ -55,6 +56,14 @@
     .business-table {
       width: 100%;
       margin-bottom: 16px;
+      table-layout: fixed;
+
+      &.business-line-table {
+        .col-id { width: 100px; min-width: 100px; }
+        .col-code { width: 100px; min-width: 100px; }
+        .col-name { width: 100%; }
+        .col-actions { width: 140px; min-width: 140px; }
+      }
 
       .clickable-row {
         cursor: pointer;

@@ -21,8 +21,8 @@ import { Cover } from '../../../shared/services/product.service';
     MatButtonModule
 ],
     template: `
-    <h2 mat-dialog-title>{{ data.isNew ? 'Добавить покрытие' : 'Редактировать покрытие' }}</h2>
-    <mat-dialog-content>
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ data.isNew ? 'Добавить покрытие' : 'Редактировать покрытие' }}</h2>
+    <mat-dialog-content style="padding-top: 20px;">
       <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Код покрытия</mat-label>

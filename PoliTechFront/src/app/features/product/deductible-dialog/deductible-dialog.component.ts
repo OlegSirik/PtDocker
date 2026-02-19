@@ -19,13 +19,13 @@ import { Deductible } from '../../../shared/services/product.service';
     MatButtonModule
 ],
     template: `
-    <h2 mat-dialog-title>{{ data.isNew ? 'Добавить франшизу' : 'Редактировать франшизу' }}</h2>
-    <mat-dialog-content>
-      <mat-form-field appearance="outline" style="width: 100%; display: block; margin-bottom: 16px;">
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ data.isNew ? 'Добавить франшизу' : 'Редактировать франшизу' }}</h2>
+    <mat-dialog-content style="padding-top: 20px;">
+      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>ID</mat-label>
         <input matInput type="number" [(ngModel)]="deductible.id" required placeholder="1">
       </mat-form-field>
-      <mat-form-field appearance="outline" style="width: 100%; display: block;">
+      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>Текст</mat-label>
         <input matInput type="text" [(ngModel)]="deductible.text" required placeholder="X рублей">
       </mat-form-field>

@@ -352,26 +352,25 @@
     </mat-tab>
 
     <!-- Policy Tab -->
-    <mat-tab label="Policy">
+    <mat-tab label="Состав договора">
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
             <div class="table-header">
-              <h3>Policy Variables</h3>
+              <h3>Атрибутивный состав договора</h3>
               <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
                 <mat-form-field appearance="outline" style="width: 200px;">
                   <mat-label>Filter</mat-label>
                   <mat-select [(ngModel)]="policyFilter" (ngModelChange)="updatePolicyTable()">
-                    <mat-option value="policy">Policy</mat-option>
-                    <mat-option value="policyHolder">Policy Holder</mat-option>
-                    <mat-option value="insuredObject">Insured Object</mat-option>
-                    <mat-option value="coverage">Coverage</mat-option>
-                    <mat-option value="strings">Strings</mat-option>
+                    <mat-option value="policy">Договор</mat-option>
+                    <mat-option value="policyHolder">Страхователь</mat-option>
+                    <mat-option value="insuredObject">Объект страхования</mat-option>
+                    <mat-option value="coverage">Покрытия</mat-option>
+                    <mat-option value="strings">Шаблоны</mat-option>
                   </mat-select>
                 </mat-form-field>
                 <button mat-raised-button color="accent" class="action-button" (click)="reloadPolicyVars()">
                   <mat-icon>refresh</mat-icon>
-                  Reload vars
                 </button>
               </div>
             </div>
@@ -464,7 +463,8 @@
                 <td mat-cell *matCellDef="let element; let i = index">
                   <div class="action-buttons">
                     <button mat-button color="accent" class="action-button1" (click)="openCalculator(element); $event.stopPropagation()">
-                      Calculator
+                      <mat-icon>calculator</mat-icon>
+                      Калькулятор
                     </button>
                     <button mat-button color="primary" class="action-button" (click)="editPackage(element, i); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>

@@ -2,17 +2,16 @@
   <div class="page-header">
     <h1 class="page-title">Линия бизнеса: {{ businessLine.mpName || 'Новая линия' }}</h1>
     <div class="header-actions">
-      <button mat-raised-button color="primary" class="save-button" [disabled]="!hasChanges" (click)="save()">
+      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
+      <button mat-raised-button color="primary" class="header-btn save-btn" [disabled]="!hasChanges" (click)="save()">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
-      <button mat-raised-button color="accent" class="json-button" (click)="saveToFile()">
+      <button mat-icon-button color="accent" class="json-button" (click)="saveToFile()">
         <mat-icon>file_download</mat-icon>
-        Файл
       </button>
-      <button mat-raised-button color="warn" class="json-button" (click)="loadFromFile()">
+      <button mat-icon-button color="warn" class="json-button" (click)="loadFromFile()">
         <mat-icon>file_upload</mat-icon>
-        Файл
       </button>
     </div>
   </div>
@@ -20,77 +19,74 @@
   <mat-tab-group>
     <!-- Main Info Tab -->
     <mat-tab label="Основная информация">
-      <mat-card class="segment-card">
+      <mat-card class="data-card">
+        <mat-card-header>
+          <mat-card-title>Название группы продуктов</mat-card-title>
+          <mat-card-subtitle>Код используется для краткой ссылки на группу.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
           <div class="form-row">
             <mat-form-field class="form-field" appearance="outline">
-              <mat-label>mpCode</mat-label>
+              <mat-label>Код продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpCode" [disabled]="!isNewRecord" (ngModelChange)="updateChanges()">
             </mat-form-field>
             <mat-form-field class="form-field" appearance="outline">
-              <mat-label>mpName</mat-label>
+              <mat-label>Название продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpName" (ngModelChange)="updateChanges()">
             </mat-form-field>
           </div>
         </mat-card-content>
       </mat-card>
-
     </mat-tab>
 
 
     <!-- Policy Holder Tab -->
     <mat-tab label="Страхователь">
       <mat-card class="datatable-card">
+        <mat-card-header>
+          <mat-card-title>Атрибутивный состав данных страхователя</mat-card-title>
+          <mat-card-subtitle>Атрибуты страхователя необходимые и применимые для данной группы продуктов.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
-          <div class="form-row" style="display: flex; align-items: center; gap: 16px;">
-            <mat-form-field class="form-field" appearance="outline" style="margin-bottom: 0;">
+          <div class="form-row form-row-inline">
+            <mat-form-field class="form-field" appearance="outline">
               <mat-label>Тип страхователя</mat-label>
               <mat-select [(ngModel)]="businessLine.mpPhType" name="mpPhType" (ngModelChange)="phTypeChanged()">
-                <mat-option value="person">
-                  физик
-                </mat-option>
-                <mat-option value="organization">
-                  юрик
-                </mat-option>
+                <mat-option value="person">физик</mat-option>
+                <mat-option value="organization">юрик</mat-option>
               </mat-select>
             </mat-form-field>
-            <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-              <button mat-raised-button color="accent" (click)="showPolicyHolderJson()">
-                <mat-icon>code</mat-icon>
-                Тестовый запрос
-              </button>
-              <button mat-raised-button color="primary" (click)="addPolicyHolderVar()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
           </div>
 
-          <table mat-table [dataSource]="policyHolderVars" class="business-table">
+          <div class="table-header">
+            <h3>Атрибуты страхователя</h3>
+          </div>
+
+          <table mat-table [dataSource]="policyHolderVars" class="business-table policy-holder-table">
             <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef>Category</th>
-              <td mat-cell *matCellDef="let element">{{element.category}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-category">Объект</th>
+              <td mat-cell *matCellDef="let element" class="col-category">{{ element.category }}</td>
             </ng-container>
 
             <ng-container matColumnDef="field">
-              <th mat-header-cell *matHeaderCellDef>Field</th>
-              <td mat-cell *matCellDef="let element">{{element.field}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-field">Атрибут</th>
+              <td mat-cell *matCellDef="let element" class="col-field">{{ element.field }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varName">
-              <th mat-header-cell *matHeaderCellDef>Название</th>
-              <td mat-cell *matCellDef="let element">{{element.varName}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-name">Название</th>
+              <td mat-cell *matCellDef="let element" class="col-var-name">{{ element.varName }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varCode">
-              <th mat-header-cell *matHeaderCellDef>Код</th>
-              <td mat-cell *matCellDef="let element">{{element.varCode}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-code">Код</th>
+              <td mat-cell *matCellDef="let element" class="col-var-code">{{ element.varCode }}</td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>...</th>
-              <td mat-cell *matCellDef="let element">
-                <button mat-icon-button color="warn" (click)="deleteVar(element.original)">
+              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
+                <button mat-icon-button color="warn" (click)="deleteVar(element.original); $event.stopPropagation()">
                   <mat-icon>delete</mat-icon>
                 </button>
               </td>
@@ -106,8 +102,12 @@
     <!-- Policy io Tab -->
     <mat-tab label="Объект страхования">
       <mat-card class="datatable-card">
+        <mat-card-header>
+          <mat-card-title>Атрибутивный состав данных объекта страхования</mat-card-title>
+          <mat-card-subtitle>Атрибуты объекта страхования необходимые для полного описания объекта.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
-          <div class="form-row" style="display: flex; align-items: center; gap: 16px;">
+          <div class="form-row form-row-inline">
             <mat-form-field class="form-field" appearance="outline">
               <mat-label>Тип объекта страхования</mat-label>
               <mat-select [(ngModel)]="businessLine.mpInsObjectType" name="mpInsObjectType" (ngModelChange)="ioChanged()">
@@ -116,46 +116,39 @@
                 <mat-option value="property">Имущество</mat-option>
                 <mat-option value="avia-ns">Авиаперевозки НС</mat-option>
                 <mat-option value="Car">Car</mat-option>
-                
               </mat-select>
             </mat-form-field>
-              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-              <button mat-raised-button color="accent" (click)="showInsObjectJson()">
-                <mat-icon>code</mat-icon>
-                Тестовый запрос
-              </button>
-              <button mat-raised-button color="primary" (click)="addInsObjectVar()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
           </div>
 
-          <table mat-table [dataSource]="policyInsObjectVars" class="business-table">
+          <div class="table-header">
+            <h3>Атрибуты объекта страхования</h3>
+          </div>
+
+          <table mat-table [dataSource]="policyInsObjectVars" class="business-table policy-ins-object-table">
             <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef>Category</th>
-              <td mat-cell *matCellDef="let element">{{element.category}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-category">Объект</th>
+              <td mat-cell *matCellDef="let element" class="col-category">{{ element.category }}</td>
             </ng-container>
 
             <ng-container matColumnDef="field">
-              <th mat-header-cell *matHeaderCellDef>Field</th>
-              <td mat-cell *matCellDef="let element">{{element.field}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-field">Атрибут</th>
+              <td mat-cell *matCellDef="let element" class="col-field">{{ element.field }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varName">
-              <th mat-header-cell *matHeaderCellDef>Название</th>
-              <td mat-cell *matCellDef="let element">{{element.varName}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-name">Название</th>
+              <td mat-cell *matCellDef="let element" class="col-var-name">{{ element.varName }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varCode">
-              <th mat-header-cell *matHeaderCellDef>Код</th>
-              <td mat-cell *matCellDef="let element">{{element.varCode}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-code">Код</th>
+              <td mat-cell *matCellDef="let element" class="col-var-code">{{ element.varCode }}</td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>...</th>
-              <td mat-cell *matCellDef="let element">
-                <button mat-icon-button color="warn" (click)="deleteVar(element.original)">
+              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
+                <button mat-icon-button color="warn" (click)="deleteVar(element.original); $event.stopPropagation()">
                   <mat-icon>delete</mat-icon>
                 </button>
               </td>
@@ -171,59 +164,51 @@
       <!-- Covers Tab -->
       <mat-tab label="Покрытия">
         <mat-card class="datatable-card">
+          <mat-card-header>
+            <mat-card-title>Список покрытий, применимых к группе продуктов</mat-card-title>
+            <mat-card-subtitle>Полный список покрытий, используемых для данной группы продуктов. Используется далее при настройке конкретных продуктов.</mat-card-subtitle>
+          </mat-card-header>
           <mat-card-content>
-  
             <div class="table-header">
               <h3>Справочник покрытий</h3>
-
               <div class="button-section">
                 <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
               </div>
-  
-              <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="coverSearchText" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-              -->
             </div>
-  
-            <table mat-table [dataSource]="paginatedCovers" class="business-table">
+
+            <table mat-table [dataSource]="paginatedCovers" class="business-table covers-table">
               <ng-container matColumnDef="coverCode">
-                <th mat-header-cell *matHeaderCellDef>код покрытия</th>
-                <td mat-cell *matCellDef="let element">{{element.coverCode}}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-cover-code">Код покрытия</th>
+                <td mat-cell *matCellDef="let element" class="col-cover-code">{{ element.coverCode }}</td>
               </ng-container>
-  
+
               <ng-container matColumnDef="coverName">
-                <th mat-header-cell *matHeaderCellDef>Покрытие</th>
-                <td mat-cell *matCellDef="let element">{{element.coverName}}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-cover-name">Покрытие</th>
+                <td mat-cell *matCellDef="let element" class="col-cover-name">{{ element.coverName }}</td>
               </ng-container>
-  
+
               <ng-container matColumnDef="risks">
-                <th mat-header-cell *matHeaderCellDef>Список рисков</th>
-                <td mat-cell *matCellDef="let element">{{element.risks}}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-risks">Список рисков</th>
+                <td mat-cell *matCellDef="let element" class="col-risks">{{ element.risks }}</td>
               </ng-container>
-  
+
               <ng-container matColumnDef="coverActions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="editCover(element)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteCover(element)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
+                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+                <td mat-cell *matCellDef="let element" align="end" class="col-actions">
+                  <button mat-icon-button color="primary" (click)="editCover(element); $event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteCover(element); $event.stopPropagation()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
                 </td>
               </ng-container>
-  
+
               <tr mat-header-row *matHeaderRowDef="coverDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: coverDisplayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: coverDisplayedColumns;" (click)="editCover(row)" class="clickable-row"></tr>
             </table>
 <!--
             <mat-paginator 
@@ -242,6 +227,10 @@
     <!-- Files Tab -->
     <mat-tab label="Файлы">
       <mat-card class="datatable-card">
+        <mat-card-header>
+          <mat-card-title>Справочник типов документов</mat-card-title>
+          <mat-card-subtitle>Справочник типов документов, применимых к группе продуктов. Код и название. Код используется для доступа по АПИ.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
           <div class="table-header">
             <h3>Файлы</h3>
@@ -253,25 +242,23 @@
             </div>
           </div>
 
-          <table mat-table [dataSource]="files" class="business-table">
+          <table mat-table [dataSource]="files" class="business-table files-table">
             <ng-container matColumnDef="fileCode">
-              <th mat-header-cell *matHeaderCellDef>fileCode</th>
-              <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-file-code">Код</th>
+              <td mat-cell *matCellDef="let element" class="col-file-code">{{ element.fileCode }}</td>
             </ng-container>
 
             <ng-container matColumnDef="fileName">
-              <th mat-header-cell *matHeaderCellDef>fileName</th>
-              <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-file-name">Название</th>
+              <td mat-cell *matCellDef="let element" class="col-file-name">{{ element.fileName }}</td>
             </ng-container>
 
             <ng-container matColumnDef="fileActions">
-              <th mat-header-cell *matHeaderCellDef style="text-align: end;">...</th>
-              <td mat-cell *matCellDef="let element" style="text-align: end;">
-                <div class="action-buttons">
-                  <button mat-button color="warn" class="action-button" (click)="deleteFile(element); $event.stopPropagation()">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
+              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
+                <button mat-icon-button color="warn" (click)="deleteFile(element); $event.stopPropagation()">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </td>
             </ng-container>
 
@@ -285,6 +272,10 @@
     <!-- Text Vars Tab -->
     <mat-tab label="Строки">
       <mat-card class="datatable-card">
+        <mat-card-header>
+          <mat-card-title>Справочник строковых шаблонов</mat-card-title>
+          <mat-card-subtitle>Строковые шаблоны можно использовать при проектировании печатных документов. Если нужно отформатировать текст или собрать служебную строку. Код используется как placeholder в ПФ.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
           <div class="table-header">
             <h3>Строки</h3>
@@ -296,30 +287,28 @@
             </div>
           </div>
 
-          <table mat-table [dataSource]="textVars" class="business-table">
+          <table mat-table [dataSource]="textVars" class="business-table text-vars-table">
             <ng-container matColumnDef="varCode">
-              <th mat-header-cell *matHeaderCellDef>varCode</th>
-              <td mat-cell *matCellDef="let element">{{element.varCode}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-code">Код</th>
+              <td mat-cell *matCellDef="let element" class="col-var-code">{{ element.varCode }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varName">
-              <th mat-header-cell *matHeaderCellDef>varName</th>
-              <td mat-cell *matCellDef="let element">{{element.varName}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-name">Наименование</th>
+              <td mat-cell *matCellDef="let element" class="col-var-name">{{ element.varName }}</td>
             </ng-container>
 
             <ng-container matColumnDef="varValue">
-              <th mat-header-cell *matHeaderCellDef>varValue</th>
-              <td mat-cell *matCellDef="let element">{{element.varValue}}</td>
+              <th mat-header-cell *matHeaderCellDef class="col-var-value">Шаблон</th>
+              <td mat-cell *matCellDef="let element" class="col-var-value">{{ element.varValue }}</td>
             </ng-container>
 
             <ng-container matColumnDef="textVarActions">
-              <th mat-header-cell *matHeaderCellDef>...</th>
-              <td mat-cell *matCellDef="let element">
-                <div class="action-buttons">
-                  <button mat-button color="warn" class="action-button" (click)="deleteTextVar(element); $event.stopPropagation()">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
+              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
+                <button mat-icon-button color="warn" (click)="deleteTextVar(element); $event.stopPropagation()">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </td>
             </ng-container>
 

@@ -1,0 +1,41 @@
+---
+description: Modal dialog component style - mat-dialog with form fields
+globs: "**/*-edit/**/*.ts"
+alwaysApply: false
+---
+
+# Modal Edit Dialog Style
+
+Use this structure and styling for Angular Material edit dialogs (e.g. TextVarEditDialog, FileEditDialog).
+
+## HTML Structure
+
+```html
+<h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ title }}</h2>
+<div mat-dialog-content style="padding-top: 20px;">
+  <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+    <mat-label>Label</mat-label>
+    <input matInput [(ngModel)]="model.field">
+  </mat-form-field>
+  <!-- more fields -->
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Отмена</button>
+  <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
+</div>
+```
+
+## Layout Rules
+
+| Element | Style |
+|---------|-------|
+| **Title** | `h2 mat-dialog-title`, `color: #495057`, `font-size: 18px`, `font-weight: 600` |
+| **Content** | `mat-dialog-content`, `padding-top: 20px` |
+| **Form fields** | `mat-form-field appearance="outline"`, `width: 100%`, `margin-bottom: 16px` |
+| **Actions** | `mat-dialog-actions align="end"` |
+| **Cancel** | `mat-button mat-dialog-close` |
+| **Save** | `mat-raised-button color="primary"`, `[mat-dialog-close]="model"` |
+
+## Reference
+
+See `TextVarEditDialog` in `business-line-edit.component.ts`.

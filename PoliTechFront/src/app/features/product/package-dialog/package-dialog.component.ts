@@ -17,16 +17,18 @@ import { Package } from '../../../shared';
     MatButtonModule
 ],
     template: `
-    <h2 mat-dialog-title>{{ data.isNew ? 'Добавить пакет' : 'Редактировать пакет' }}</h2>
-    <mat-dialog-content>
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ data.isNew ? 'Добавить пакет' : 'Редактировать пакет' }}</h2>
+    <mat-dialog-content style="padding-top: 20px;">
       <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Код</mat-label>
-          <input matInput [(ngModel)]="package.code" required placeholder="Basic">
+          <input matInput [(ngModel)]="package.code" required placeholder="1">
         </mat-form-field>
+      </div>
+      <div class="form-row">  
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Название</mat-label>
-          <input matInput [(ngModel)]="package.name" required placeholder="Простой">
+          <input matInput [(ngModel)]="package.name" required placeholder="1">
         </mat-form-field>
       </div>
     </mat-dialog-content>
@@ -40,7 +42,7 @@ import { Package } from '../../../shared';
     styles: [`
     .form-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      //grid-template-columns: 1fr 1fr;
       gap: 16px;
       margin-bottom: 16px;
     }

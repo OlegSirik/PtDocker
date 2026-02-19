@@ -345,6 +345,10 @@ export class BusinessLineEditComponent implements OnInit {
     this.snack.open('JSON файл сохранен', 'Закрыть', { duration: 2000 });
   }
 
+  goBack(): void {
+    this.router.navigate(['/', this.authService.tenant, 'business-line']);
+  }
+
   loadFromFile(): void {
     const input = document.createElement('input');
     input.type = 'file';
@@ -640,13 +644,13 @@ export class BusinessLineEditComponent implements OnInit {
     selector: 'app-var-edit-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule],
     template: `
-  <h2 mat-dialog-title>Переменная</h2>
-  <div mat-dialog-content>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Переменная</h2>
+  <div mat-dialog-content style="padding-top: 20px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>varCode</mat-label>
       <input matInput [(ngModel)]="model.varCode">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>varType</mat-label>
       <mat-select [(ngModel)]="model.varType">
         <mat-option value="IN">IN</mat-option>
@@ -655,15 +659,15 @@ export class BusinessLineEditComponent implements OnInit {
         <mat-option value="MAGIC">MAGIC</mat-option>
       </mat-select>
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>varPath</mat-label>
       <input matInput [(ngModel)]="model.varPath">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>varName</mat-label>
       <input matInput [(ngModel)]="model.varName">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>varDataType</mat-label>
       <mat-select [(ngModel)]="model.varDataType">
         <mat-option value="STRING">STRING</mat-option>
@@ -675,7 +679,7 @@ export class BusinessLineEditComponent implements OnInit {
   </div>
   <div mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model">OK</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model">Сохранить</button>
   </div>
   `
 })
@@ -688,24 +692,24 @@ export class VarEditDialog {
     selector: 'app-cover-edit-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
     template: `
-  <h2 mat-dialog-title>Покрытие</h2>
-  <div mat-dialog-content>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
-      <mat-label>coverCode</mat-label>
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Покрытие</h2>
+  <div mat-dialog-content style="padding-top: 20px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>Код покрытия</mat-label>
       <input matInput [(ngModel)]="model.coverCode">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
-      <mat-label>coverName</mat-label>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>Название покрытия</mat-label>
       <input matInput [(ngModel)]="model.coverName">
     </mat-form-field>
-    <mat-form-field appearance="outline" style="min-width: 400px;">
-      <mat-label>risks</mat-label>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>Список рисков</mat-label>
       <input matInput [(ngModel)]="model.risks">
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model">OK</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model">Сохранить</button>
   </div>
   `
 })
@@ -718,8 +722,8 @@ export class CoverEditDialog {
     selector: 'app-confirm-dialog',
     imports: [MatDialogModule, MatButtonModule],
     template: `
-  <h2 mat-dialog-title>Подтверждение</h2>
-  <div mat-dialog-content>{{data.message}}</div>
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Подтверждение</h2>
+  <div mat-dialog-content style="padding-top: 20px;">{{data.message}}</div>
   <div mat-dialog-actions align="end">
     <button mat-button [mat-dialog-close]="false">Нет</button>
     <button mat-raised-button color="warn" [mat-dialog-close]="true">Да</button>
@@ -734,16 +738,16 @@ export class ConfirmDialog {
     selector: 'app-json-view-dialog',
     imports: [MatDialogModule, MatButtonModule, MatIconModule, JsonPipe],
     template: `
-    <h2 mat-dialog-title>{{ data.title }}</h2>
-    <div mat-dialog-content style="max-height: 60vh; overflow: auto;">
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ data.title }}</h2>
+    <div mat-dialog-content style="padding-top: 20px; max-height: 60vh; overflow: auto;">
       <pre style="background-color: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto;">{{ data.object | json }}</pre>
     </div>
     <div mat-dialog-actions align="end">
       <button mat-button (click)="copyToClipboard()">
         <mat-icon>content_copy</mat-icon>
-        Copy
+        Копировать
       </button>
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-raised-button color="primary" mat-dialog-close>Закрыть</button>
     </div>
   `,
     styles: [`
@@ -772,8 +776,8 @@ export class JsonViewDialog {
     selector: 'app-add-policy-holder-var-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
     template: `
-    <h2 mat-dialog-title>Add PolicyHolder Variable</h2>
-    <div mat-dialog-content>
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Добавить переменную страхователя</h2>
+    <div mat-dialog-content style="padding-top: 20px;">
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varCode</mat-label>
         <input matInput [(ngModel)]="varCode" placeholder="e.g., person.firstName">
@@ -789,12 +793,12 @@ export class JsonViewDialog {
       </p>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-button mat-dialog-close>Отмена</button>
       <button mat-raised-button
               color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
-        OK
+        Сохранить
       </button>
     </div>
   `
@@ -808,8 +812,8 @@ export class AddPolicyHolderVarDialog {
     selector: 'app-add-ins-object-var-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
     template: `
-    <h2 mat-dialog-title>Add Insured Object Variable</h2>
-    <div mat-dialog-content>
+    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Добавить переменную объекта страхования</h2>
+    <div mat-dialog-content style="padding-top: 20px;">
       <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
         <mat-label>varCode</mat-label>
         <input matInput [(ngModel)]="varCode" placeholder="e.g., device.serialNumber">
@@ -825,12 +829,12 @@ export class AddPolicyHolderVarDialog {
       </p>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-button mat-dialog-close>Отмена</button>
       <button mat-raised-button
               color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
-        OK
+        Сохранить
       </button>
     </div>
   `
@@ -844,17 +848,17 @@ export class AddInsObjectVarDialog {
     selector: 'app-file-edit-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
     template: `
-  <h2 mat-dialog-title>{{ isEdit ? 'Редактировать файл' : 'Добавить файл' }}</h2>
-  <div mat-dialog-content>
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ isEdit ? 'Редактировать файл' : 'Добавить файл' }}</h2>
+  <div mat-dialog-content style="padding-top: 20px;">
     <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-      <mat-label>fileCode</mat-label>
+      <mat-label>Код типа файлв</mat-label>
       <input matInput [(ngModel)]="model.fileCode" [readonly]="isEdit" (ngModelChange)="onFileCodeChange($event)">
       @if (hasUpperCase) {
         <mat-hint style="color: #f44336;">fileCode должен содержать только строчные буквы</mat-hint>
       }
     </mat-form-field>
-    <mat-form-field appearance="outline" style="width: 100%;">
-      <mat-label>fileName</mat-label>
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
+      <mat-label>Название типа файла</mat-label>
       <input matInput [(ngModel)]="model.fileName">
     </mat-form-field>
   </div>
@@ -905,19 +909,19 @@ export class FileEditDialog {
     selector: 'app-text-var-edit-dialog',
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
     template: `
-  <h2 mat-dialog-title>{{ isEdit ? 'Редактировать строку' : 'Добавить строку' }}</h2>
-  <div mat-dialog-content>
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ isEdit ? 'Редактировать строковый шаблон' : 'Добавить строковый шаблон' }}</h2>
+  <div mat-dialog-content style="padding-top: 20px;">
     <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-      <mat-label>code</mat-label>
+      <mat-label>Код шаблона</mat-label>
       <input matInput [(ngModel)]="model.code" [readonly]="isEdit">
     </mat-form-field>
     <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-      <mat-label>name</mat-label>
+      <mat-label>Наименование шаблона</mat-label>
       <input matInput [(ngModel)]="model.name">
     </mat-form-field>
     <mat-form-field appearance="outline" style="width: 100%;">
-      <mat-label>value</mat-label>
-      <textarea matInput [(ngModel)]="model.value" rows="3"></textarea>
+      <mat-label>Шаблон текста</mat-label>
+      <textarea matInput [(ngModel)]="model.value" rows="4"></textarea>
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">

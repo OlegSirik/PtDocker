@@ -17,20 +17,20 @@ import { Limit } from '../../../shared';
     MatButtonModule
 ],
     template: `
-  <h2 mat-dialog-title>{{ data.isNew ? 'Добавить лимит' : 'Редактировать лимит' }}</h2>
-  <div mat-dialog-content>
-    <mat-form-field appearance="outline" style="width: 100%; display: block; margin-bottom: 16px;">
+  <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">{{ data.isNew ? 'Добавить лимит' : 'Редактировать лимит' }}</h2>
+  <div mat-dialog-content style="padding-top: 20px;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>Страховая сумма</mat-label>
       <input matInput type="number" [(ngModel)]="model.sumInsured" placeholder="0" required>
     </mat-form-field>
-    <mat-form-field appearance="outline" style="width: 100%; display: block;">
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
       <mat-label>Премия</mat-label>
       <input matInput type="number" [(ngModel)]="model.premium" placeholder="0" required>
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Добавить</button>
+    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">{{ data.isNew ? 'Добавить' : 'Сохранить' }}</button>
   </div>
   `
 })
