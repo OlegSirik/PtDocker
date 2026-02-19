@@ -1,5 +1,5 @@
 # .github/workflows/compose-build-push.yml
-name: "Build #${{ github.run_number }} - Push and Deploy with Compose"
+name: "Build Push and Deploy with Compose"
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-and-push: 
-    name: Build and Push Images
+    name: "Build #${{ github.run_number }} - Build and Push Images"
     runs-on: ubuntu-latest
     
     steps:
