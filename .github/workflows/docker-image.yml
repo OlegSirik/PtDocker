@@ -1,6 +1,5 @@
 # .github/workflows/compose-build-push.yml
-name: Build, Push and Deploy with Compose
-run_name: "Build #${{ github.run_number }} - ${{ github.ref_name }}"
+name: "Build #${{ github.run_number }} - Push and Deploy with Compose"
 
 on:
   push:
