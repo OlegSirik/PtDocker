@@ -1,20 +1,36 @@
 <div class="dashboard-container">
   <div class="page-header">
     <h1 class="page-title">Dashboard</h1>
-    <mat-form-field appearance="outline" class="period-select">
-      <mat-label>Period</mat-label>
-      <mat-select [(ngModel)]="selectedPeriod" (selectionChange)="onPeriodChange()">
-        <mat-option *ngFor="let option of periodOptions" [value]="option.value">
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
+  </div>
+
+  <div class="filter-row">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Дата с</mat-label>
+      <input matInput type="date" [(ngModel)]="dateFrom" />
     </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Дата по</mat-label>
+      <input matInput type="date" [(ngModel)]="dateTo" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="onShow()">Показать</button>
+  </div>
+
+  <div class="cards-grid">
+    <mat-card class="stat-card" *ngFor="let card of cards">
+      <mat-card-content>
+        <div class="stat-title">{{ card.title }}</div>
+        <div class="stat-value">
+          {{ card.value }}
+          <span class="stat-unit" *ngIf="card.unit">{{ card.unit }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <mat-card class="datatable-card">
     <mat-card-content>
       <div class="table-header">
-        <h3>Sales by period</h3>
+        <h3>Продажи по периодам</h3>
       </div>
 
       <div *ngIf="loadingChart" class="loading">Загрузка...</div>
@@ -27,13 +43,33 @@
     </mat-card-content>
   </mat-card>
 
-  <div class="cards-grid">
-    <mat-card class="stat-card" *ngFor="let card of cards">
+  <div class="charts-row">
+    <mat-card class="chart-card half-width">
       <mat-card-content>
-        <div class="stat-title">{{ card.title }}</div>
-        <div class="stat-value">
-          {{ card.value }}
-          <span class="stat-unit" *ngIf="card.unit">{{ card.unit }}</span>
+        <div class="table-header">
+          <h3>Продажи по продуктам</h3>
+        </div>
+        <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
+        <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
+          <canvas #productsChartCanvas></canvas>
+        </div>
+        <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
+          Нет данных для графика
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card half-width">
+      <mat-card-content>
+        <div class="table-header">
+          <h3>Продажи по клиентам</h3>
+        </div>
+        <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
+        <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
+          <canvas #clientsChartCanvas></canvas>
+        </div>
+        <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">
+          Нет данных для графика
         </div>
       </mat-card-content>
     </mat-card>

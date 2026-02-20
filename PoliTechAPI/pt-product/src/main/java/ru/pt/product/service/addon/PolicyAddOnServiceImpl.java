@@ -128,7 +128,7 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
                 }
             }
         }
-        var policyIndex = policyIndexRepository.findById(policyId)
+        var policyIndex = policyIndexRepository.findByPublicId(policyId)
                 .orElseThrow(() -> new NotFoundException("Policy not found: " + policyId));
         if (!policyIndex.getTid().equals(tid)) {
             throw new NotFoundException("Policy not found: " + policyId);
@@ -139,7 +139,7 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
             throw new BadRequestException("Add-on not available: " + addOnId);
         }
         var entity = new AddonPolicyEntity();
-        entity.setPolicyId(policyId);
+        entity.setPolicyId(policyIndex.getId());
         entity.setAddonId(addOnId);
         entity.setAddonNumber(null);
         entity.setAddonStatus("BOOKED");
@@ -158,12 +158,12 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
     public void markPaid(UUID policyId, Long addOnId) {
         log.trace("markPaid policyId={}, addOnId={}", policyId, addOnId);
         Long tid = getCurrentTenantId();
-        var policyIndex = policyIndexRepository.findById(policyId)
+        var policyIndex = policyIndexRepository.findByPublicId(policyId)
                 .orElseThrow(() -> new NotFoundException("Policy not found: " + policyId));
         if (!policyIndex.getTid().equals(tid)) {
             throw new NotFoundException("Policy not found: " + policyId);
         }
-        var policies = addonPolicyRepository.findByPolicyIdAndAddonId(policyId, addOnId);
+        var policies = addonPolicyRepository.findByPolicyIdAndAddonId(policyIndex.getId(), addOnId);
         for (var ap : policies) {
             ap.setAddonStatus("PAID");
             addonPolicyRepository.save(ap);
@@ -174,13 +174,13 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
     @Override
     public List<PolicyAddOnDto> getPolicyAddOns(UUID policyId) {
         log.trace("getPolicyAddOns policyId={}", policyId);
-        var policyIndex = policyIndexRepository.findById(policyId)
+        var policyIndex = policyIndexRepository.findByPublicId(policyId)
                 .orElseThrow(() -> new NotFoundException("Policy not found: " + policyId));
         Long tid = getCurrentTenantId();
         if (!policyIndex.getTid().equals(tid)) {
             throw new NotFoundException("Policy not found: " + policyId);
         }
-        var result = addonPolicyRepository.findByPolicyIdOrderById(policyId).stream()
+        var result = addonPolicyRepository.findByPolicyIdOrderById(policyIndex.getId()).stream()
                 .map(e -> toDto(e, tid))
                 .collect(Collectors.toList());
         log.trace("getPolicyAddOns policyId={}, resultSize={}", policyId, result.size());

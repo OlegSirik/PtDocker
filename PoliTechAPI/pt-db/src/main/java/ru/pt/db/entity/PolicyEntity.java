@@ -5,8 +5,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 
-import java.util.UUID;
-
 /**
  * Entity for storing complete policy data as JSON
  */
@@ -15,7 +13,10 @@ import java.util.UUID;
 public class PolicyEntity {
 
     @Id
-    private UUID id;
+    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "policy_seq")
+    //@SequenceGenerator(name = "policy_seq", sequenceName = "policy_seq", allocationSize = 1)
+    @Column(name = "id")
+    private Long id;
 
     @Column(name = "tid")
     private Long tid;
@@ -30,17 +31,17 @@ public class PolicyEntity {
     public PolicyEntity() {
     }
 
-    public PolicyEntity(UUID id, Long tid, String policy) {
+    public PolicyEntity(Long id, Long tid, String policy) {
         this.id = id;
         this.policy = policy;
         this.tid = tid;
     }
 
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

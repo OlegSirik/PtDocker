@@ -7,10 +7,6 @@
   margin: 0 auto;
 
   .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
     margin-bottom: 20px;
 
     .page-title {
@@ -18,9 +14,17 @@
       font-size: 24px;
       font-weight: 500;
     }
+  }
 
-    .period-select {
-      width: 200px;
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+
+    .filter-field {
+      width: 160px;
     }
   }
 
@@ -90,5 +94,21 @@
     padding: 16px;
     color: #666;
     text-align: center;
+  }
+
+  .charts-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .chart-card {
+    flex: 1 1 45%;
+    min-width: 300px;
+
+    &.half-width {
+      flex: 1 1 calc(50% - 10px);
+    }
   }
 }

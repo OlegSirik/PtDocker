@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.pt.api.dto.dashboard.DashboardBarResponse;
 import ru.pt.api.dto.dashboard.DashboardCardsResponse;
 import ru.pt.api.dto.dashboard.DashboardChartResponse;
 import ru.pt.api.security.SecuredController;
@@ -43,6 +44,28 @@ public class DashboardController extends SecuredController {
     @GetMapping("/cards")
     public ResponseEntity<DashboardCardsResponse> getCards(@PathVariable String tenantCode) {
         return ResponseEntity.ok(dashboardService.getCards());
+    }
+
+    @GetMapping("/chart-by-products")
+    public ResponseEntity<DashboardBarResponse> getChartByProducts(
+        @PathVariable String tenantCode,
+        @RequestParam(name = "from", required = false) String from,
+        @RequestParam(name = "to", required = false) String to
+    ) {
+        LocalDate fromDate = parseDate(from);
+        LocalDate toDate = parseDate(to);
+        return ResponseEntity.ok(dashboardService.getChartByProducts(fromDate, toDate));
+    }
+
+    @GetMapping("/chart-by-clients")
+    public ResponseEntity<DashboardBarResponse> getChartByClients(
+        @PathVariable String tenantCode,
+        @RequestParam(name = "from", required = false) String from,
+        @RequestParam(name = "to", required = false) String to
+    ) {
+        LocalDate fromDate = parseDate(from);
+        LocalDate toDate = parseDate(to);
+        return ResponseEntity.ok(dashboardService.getChartByClients(fromDate, toDate));
     }
 
     private LocalDate parseDate(String value) {

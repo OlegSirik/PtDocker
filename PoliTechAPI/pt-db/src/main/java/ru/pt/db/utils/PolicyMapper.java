@@ -26,7 +26,7 @@ public class PolicyMapper {
 
     public PolicyIndex toDto(PolicyIndexEntity entity) {
         var dto = new PolicyIndex();
-        dto.setPolicyId(entity.getPolicyId());
+        dto.setPolicyId(entity.getPublicId());
         if (entity.getEndDate() != null) {
             dto.setEndDate(entity.getEndDate());
         }
@@ -50,7 +50,7 @@ public class PolicyMapper {
 
     public PolicyIndexEntity toEntity(PolicyIndex dto) {
         var entity = new PolicyIndexEntity();
-        entity.setPolicyId(dto.getPolicyId());
+        entity.setPublicId(dto.getPolicyId());
         ofNullable(dto.getStartDate()).ifPresent(
             startDate -> entity.setStartDate(ofInstant(startDate.toInstant(), ZoneId.systemDefault())));
         ofNullable(dto.getEndDate()).ifPresent(
@@ -62,7 +62,7 @@ public class PolicyMapper {
         entity.setUserAccountId(dto.getUserAccountId());
         entity.setVersionStatus(dto.getVersionStatus());
         entity.setVersionNo(dto.getVersionNo());
-        dto.setPaymentOrderId(entity.getPaymentOrderId());
+        entity.setPaymentOrderId(dto.getPaymentOrderId());
         return entity;
     }
 
@@ -90,7 +90,6 @@ public class PolicyMapper {
         policy.setProcessList(processList);
 
         var entity = new PolicyEntity();
-        entity.setId(UUID.fromString(policy.getId()));
         entity.setPolicy(policyJson);
 
         return entity;
@@ -103,7 +102,7 @@ public class PolicyMapper {
         String ioDigest = processList.getIoDigest();
         
         var index = new PolicyIndexEntity();
-        index.setPolicyId(UUID.fromString(policy.getId()));
+        index.setPublicId(UUID.fromString(policy.getPublicId()));
         index.setPolicyNumber(policy.getPolicyNumber());
         index.setVersionNo(1);
         index.setProductCode(policy.getProductCode());

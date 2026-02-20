@@ -3,7 +3,6 @@ package ru.pt.db.entity;
 import jakarta.persistence.*;
 import ru.pt.api.dto.db.PolicyStatus;
 
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -16,7 +15,10 @@ public class PolicyIndexEntity {
 
     @Id
     @Column(name = "id")
-    private UUID policyId;
+    private Long id;
+
+    @Column(name = "public_id", nullable = false, unique = true)
+    private java.util.UUID publicId;
 
     @Column(name = "tid")
     private Long tid;
@@ -93,12 +95,20 @@ public class PolicyIndexEntity {
     public PolicyIndexEntity() {
     }
 
-    public UUID getPolicyId() {
-        return policyId;
+    public Long getId() {
+        return id;
     }
 
-    public void setPolicyId(UUID policyId) {
-        this.policyId = policyId;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public UUID getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(UUID publicId) {
+        this.publicId = publicId;
     }
 
     // Getters and Setters

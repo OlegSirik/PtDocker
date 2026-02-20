@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, UUID> {
+public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, Long> {
+
+    Optional<PolicyIndexEntity> findByPublicId(UUID publicId);
 
     Optional<PolicyIndexEntity> findPolicyIndexEntityByPolicyNumber(String policyNumber);
 

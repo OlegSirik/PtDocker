@@ -73,11 +73,11 @@ public class FileProcessServiceImpl implements FileProcessService {
                     );
                     return new NotFoundException(errorModel);
                 });
-        var policy = policyRepository.findById(policyIndex.getPolicyId())
+        var policy = policyRepository.findById(policyIndex.getId())
                 .orElseThrow(() -> {
                     ErrorModel errorModel = ErrorConstants.createErrorModel(
                         404,
-                        ErrorConstants.policyNotFoundById(policyIndex.getPolicyId().toString()),
+                        ErrorConstants.policyNotFoundById(policyIndex.getPublicId().toString()),
                         ErrorConstants.DOMAIN_STORAGE,
                         ErrorConstants.REASON_NOT_FOUND,
                         "policyId"

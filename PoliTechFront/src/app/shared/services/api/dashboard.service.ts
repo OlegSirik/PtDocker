@@ -24,6 +24,16 @@ export interface DashboardCardsResponse {
   cards: DashboardCard[];
 }
 
+export interface DashboardBarPoint {
+  label: string;
+  amount: number;
+  sum: number;
+}
+
+export interface DashboardBarResponse {
+  points: DashboardBarPoint[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -43,5 +53,19 @@ export class DashboardService {
 
   getCards(): Observable<DashboardCardsResponse> {
     return this.http.get<DashboardCardsResponse>(`${this.authService.baseApiUrl}/dashboard/cards`);
+  }
+
+  getChartByProducts(from?: string, to?: string): Observable<DashboardBarResponse> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<DashboardBarResponse>(`${this.authService.baseApiUrl}/dashboard/chart-by-products`, { params });
+  }
+
+  getChartByClients(from?: string, to?: string): Observable<DashboardBarResponse> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<DashboardBarResponse>(`${this.authService.baseApiUrl}/dashboard/chart-by-clients`, { params });
   }
 }

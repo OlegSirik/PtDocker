@@ -1,9 +1,11 @@
 package ru.pt.db.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import ru.pt.db.entity.PolicyEntity;
 
-import java.util.UUID;
+public interface PolicyRepository extends JpaRepository<PolicyEntity, Long> {
 
-public interface PolicyRepository extends JpaRepository<PolicyEntity, UUID> {
+    @Query(value = "SELECT nextval('policy_seq')", nativeQuery = true)
+    Long getNextPolicySeqValue();
 }

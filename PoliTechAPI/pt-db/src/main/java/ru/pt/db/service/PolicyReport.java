@@ -29,7 +29,7 @@ public class PolicyReport {
             JOIN account_tree at ON a.parent_id = at.id
         )
         SELECT 
-            p.id,
+            p.public_id::text,
             p.draft_id,
             p.policy_nr,
             p.product_code,

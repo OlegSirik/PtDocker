@@ -19,7 +19,7 @@ public class PolicyProjectionService {
 
     public PolicyIndexEntity readPolicyIndex(UUID uuid, Version version, AuthenticatedUser userData, String policy) {
         var index = new PolicyIndexEntity();
-        index.setPolicyId(uuid);
+        index.setPublicId(uuid);
 
         var ctx = JsonPath.parse(policy);
 

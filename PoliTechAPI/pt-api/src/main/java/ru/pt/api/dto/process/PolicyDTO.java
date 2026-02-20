@@ -20,6 +20,9 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PolicyDTO {
 
+    @JsonProperty("publicId")
+    private String publicId;
+
     @JsonProperty("draftId")
     private String draftId;
 
@@ -258,4 +261,13 @@ public class PolicyDTO {
     public void setOptions(List<PolicyAddOnDto> options) {
         this.options = options;
     }
+
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
+    }
+
+    public String getPublicId() {
+        return this.publicId;
+    }
+
 }

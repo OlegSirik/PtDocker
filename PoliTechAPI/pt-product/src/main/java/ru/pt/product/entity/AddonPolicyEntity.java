@@ -7,7 +7,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -22,7 +21,7 @@ public class AddonPolicyEntity {
     private Long id;
 
     @Column(name = "policy_id", nullable = false)
-    private UUID policyId;
+    private Long policyId;
 
     @Column(name = "addon_id", nullable = false)
     private Long addonId;

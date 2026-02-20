@@ -1,0 +1,11 @@
+design of page
+first line - filter { dateFrom, dateTo,... button "Show" }
+
+Cart grid ( exists )
+
+Sales by period ( exists )
+
+new chart - sales by Products . Bar chart 1/2 of page width. Create api method, create chart
+
+new chart - sales by Clients . Bar chart 1/2 of page width. Create api method, create chart
+

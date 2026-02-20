@@ -50,21 +50,29 @@ public class DbStorageService implements StorageService {
 
     @Override
     public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
-        if (policy.getId() == null || policy.getId().isEmpty()) {
-            policy.setId( UUID.randomUUID().toString() );
+
+        Long id = policyRepository.getNextPolicySeqValue();
+        policy.setId(id.toString());
+
+        if (policy.getPublicId() == null || policy.getPublicId().isEmpty()) {
+            policy.setPublicId(UUID.randomUUID().toString());
         }
-        
+
+    
         var entity = policyMapper.policyEntityFromDTO(policy, userData);
+        entity.setId(id);
         entity.setTid(userData.getTenantId());
         entity.setCid(userData.getClientId());
-        policyRepository.save(entity);
+        entity = policyRepository.save(entity);
 
         var index = policyMapper.policyIndexFromDTO(policy, userData);
+
+        index.setId(id);
         policyIndexRepository.save(index);
 
         var policyData = new PolicyData();
         policyData.setPolicyIndex(policyMapper.toDto(index));
-        policyData.setPolicyId(entity.getId());
+        policyData.setPolicyId(index.getPublicId());
         policyData.setPolicyStatus(index.getPolicyStatus());
         policyData.setPolicyNumber(index.getPolicyNumber());
         policyData.setPolicy(entity.getPolicy());
@@ -104,10 +112,24 @@ public class DbStorageService implements StorageService {
 */
     @Override
     public void update(PolicyData policyData) {
-        policyIndexRepository.save(policyMapper.toEntity(policyData.getPolicyIndex()));
-        PolicyEntity policyEntity = new PolicyEntity();
+        var indexEntity = policyIndexRepository.findByPublicId(policyData.getPolicyId())
+                .orElseThrow(() -> new NotFoundException(ErrorConstants.createErrorModel(404,
+                        ErrorConstants.policyNotFoundById(policyData.getPolicyId().toString()),
+                        ErrorConstants.DOMAIN_STORAGE, ErrorConstants.REASON_NOT_FOUND, "policyId")));
+        var dtoUpdates = policyMapper.toEntity(policyData.getPolicyIndex());
+        indexEntity.setPolicyNumber(dtoUpdates.getPolicyNumber());
+        indexEntity.setVersionNo(dtoUpdates.getVersionNo());
+        indexEntity.setPolicyStatus(dtoUpdates.getPolicyStatus());
+        indexEntity.setStartDate(dtoUpdates.getStartDate());
+        indexEntity.setEndDate(dtoUpdates.getEndDate());
+        indexEntity.setPaymentOrderId(dtoUpdates.getPaymentOrderId());
+        policyIndexRepository.save(indexEntity);
+
+        var policyEntity = policyRepository.findById(indexEntity.getId())
+                .orElseThrow(() -> new NotFoundException(ErrorConstants.createErrorModel(404,
+                        ErrorConstants.policyNotFoundById(policyData.getPolicyId().toString()),
+                        ErrorConstants.DOMAIN_STORAGE, ErrorConstants.REASON_NOT_FOUND, "policyId")));
         policyEntity.setPolicy(policyData.getPolicy());
-        policyEntity.setId(policyData.getPolicyId());
         policyRepository.save(policyEntity);
     }
 
@@ -138,7 +160,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public PolicyData getPolicyById(UUID policyId) {
-        var policy = policyIndexRepository.findById(policyId)
+        var policy = policyIndexRepository.findByPublicId(policyId)
                 .orElseThrow(() -> {
                     ErrorModel errorModel = ErrorConstants.createErrorModel(
                         404,
@@ -175,7 +197,7 @@ public class DbStorageService implements StorageService {
         var policies = policyIndexRepository.findAllByClientAccountIdAndUserAccountId(
                 userData.getClientId(), userData.getAccountId());
 
-        var idToData = policies.stream().collect(Collectors.toMap(PolicyIndexEntity::getPolicyId, Function.identity()));
+        var idToData = policies.stream().collect(Collectors.toMap(PolicyIndexEntity::getId, Function.identity()));
 
         var idToJson = policyRepository.findAllById(idToData.keySet())
                 .stream()
@@ -183,16 +205,16 @@ public class DbStorageService implements StorageService {
 
         var result = new ArrayList<PolicyData>(idToData.size());
 
-        idToData.forEach((uuid, entity) -> {
+        idToData.forEach((id, entity) -> {
             var dto = policyMapper.toDto(entity);
 
             var policyData = new PolicyData();
             policyData.setPolicyIndex(dto);
-            policyData.setPolicyId(entity.getPolicyId());
+            policyData.setPolicyId(entity.getPublicId());
             policyData.setPolicyStatus(entity.getPolicyStatus());
             policyData.setPolicyNumber(entity.getPolicyNumber());
 
-            var json = idToJson.get(uuid).getPolicy();
+            var json = idToJson.get(id).getPolicy();
 
             policyData.setPolicy(json);
             result.add(policyData);
@@ -207,16 +229,16 @@ public class DbStorageService implements StorageService {
 
         var policyData = new PolicyData();
         policyData.setPolicyIndex(dto);
-        policyData.setPolicyId(policy.getPolicyId());
+        policyData.setPolicyId(policy.getPublicId());
         policyData.setPolicyStatus(policy.getPolicyStatus());
         policyData.setPolicyNumber(policy.getPolicyNumber());
 
-        var json = policyRepository.findById(policy.getPolicyId())
+        var json = policyRepository.findById(policy.getId())
             .map(PolicyEntity::getPolicy)
             .orElseThrow(() -> {
                 ErrorModel errorModel = ErrorConstants.createErrorModel(
                     500,
-                    String.format("Policy JSON not found in storage for policyId: %s", policy.getPolicyId()),
+                    String.format("Policy JSON not found in storage for policyId: %s", policy.getPublicId()),
                     ErrorConstants.DOMAIN_STORAGE,
                     ErrorConstants.REASON_INTERNAL_ERROR,
                     "policyId"
@@ -264,16 +286,16 @@ public class DbStorageService implements StorageService {
 
         var policyData = new PolicyData();
         policyData.setPolicyIndex(dto);
-        policyData.setPolicyId(policy.getPolicyId());
+        policyData.setPolicyId(policy.getPublicId());
         policyData.setPolicyStatus(policy.getPolicyStatus());
         policyData.setPolicyNumber(policy.getPolicyNumber());
 
-        var json = policyRepository.findById(policy.getPolicyId())
+        var json = policyRepository.findById(policy.getId())
                 .map(PolicyEntity::getPolicy)
                 .orElseThrow(() -> {
                     ErrorModel errorModel = ErrorConstants.createErrorModel(
                         500,
-                        String.format("Policy JSON not found in storage for policyId: %s", policy.getPolicyId()),
+                        String.format("Policy JSON not found in storage for policyId: %s", policy.getPublicId()),
                         ErrorConstants.DOMAIN_STORAGE,
                         ErrorConstants.REASON_INTERNAL_ERROR,
                         "policyId"
