@@ -16,6 +16,7 @@ import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.entity.*;
+import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.AccountRepository;
@@ -92,7 +93,7 @@ public class ClientService implements ClientSecurityConfigService {
             e.getDefaultAccountId(),
             e.getTenant().getId(),
             e.getName(),
-            null,
+            AuthType.valueOf(e.getAuthType()),
             ClientAuthType.valueOf(e.getAuthLevel())
         );
     }
@@ -138,9 +139,14 @@ public class ClientService implements ClientSecurityConfigService {
         defAccount.setId(accountRepository.getNextAccountId());
         AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
+        AccountEntity admin_account = AccountEntity.groupAdminAccount(savedDefAccount);
+        admin_account.setId(accountRepository.getNextAccountId());
+        accountRepository.save(admin_account);
+
         saved.setDefaultAccountId(savedDefAccount.getId());
         saved = clientRepository.save(saved);
 
+         
         Client clientDto = clientMapper.toDto(saved);
         return clientDto;
     }

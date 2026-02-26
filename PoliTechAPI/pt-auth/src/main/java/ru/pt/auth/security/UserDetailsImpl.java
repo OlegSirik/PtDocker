@@ -5,6 +5,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.AccountTokenEntity;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -62,28 +63,6 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
         this.actingAccountId = actingAccountId;
     }
 
-    /**
-     * Создает UserDetailsImpl из LoginEntity и AccountLoginEntity
-     *
-    public static UserDetailsImpl build(LoginEntity loginEntity, AccountLoginEntity accountLoginEntity,
-                                        Set<String> productRoles) {
-        return new UserDetailsImpl(
-                accountLoginEntity.getId(),
-                loginEntity.getUserLogin(),
-                loginEntity.getTenant().getCode(),
-                loginEntity.getTenant().getId(),
-                accountLoginEntity.getAccount().getId(),
-                accountLoginEntity.getAccount().getName(),
-                accountLoginEntity.getClient().getId(),
-                accountLoginEntity.getClient().getName(),
-                accountLoginEntity.getAccount().getNodeType().getValue(),
-                productRoles,
-                accountLoginEntity.getDefault(),
-                accountLoginEntity.getAccount().getParent().getId()
-        );
-    }
-    */
-
     public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
         /*Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
@@ -101,6 +80,26 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
             productRoles, //Set<String> productRoles
             accountLoginEntity.getDefault() //boolean isDefault
             , actingAccountId
+        );
+    }
+
+    public static UserDetailsImpl build(AccountTokenEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
+        /*Long id, String username, String tenantCode, Long tenantId,
+                          Long accountId, String accountName, Long clientId, String clientName,
+                          String userRole, Set<String> productRoles, boolean isDefault */
+        return new UserDetailsImpl(
+            accountLoginEntity.getId(),   //Long id
+            accountLoginEntity.getToken(), //String username
+            accountLoginEntity.getTenant().getCode(), //String tenantCode
+            accountLoginEntity.getTenant().getId(), //Long tenantId
+            accountLoginEntity.getAccount().getId(), //Long accountId
+            accountLoginEntity.getAccount().getName(), //String accountName
+            accountLoginEntity.getClient().getId(), //Long clientId
+            accountLoginEntity.getClient().getName(), //String clientName
+            accountLoginEntity.getAccount().getNodeType().getValue(), //String userRole
+            productRoles, //Set<String> productRoles
+            true, // accountLoginEntity.getDefault() //boolean isDefault
+            actingAccountId
         );
     }
 

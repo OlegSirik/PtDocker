@@ -8,7 +8,6 @@ import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.ClientAdminsManagementService;
 import ru.pt.auth.service.ClientService;
 
 import java.util.List;
@@ -30,8 +29,7 @@ public class ClientManagementController extends SecuredController {
     private final ClientService clientService;
 
     public ClientManagementController(SecurityContextHelper securityContextHelper,
-                                      ClientService clientService,
-                                      ClientAdminsManagementService clientAdminsManagementService) {
+                                      ClientService clientService) {
         super(securityContextHelper);
         this.clientService = clientService;
     }

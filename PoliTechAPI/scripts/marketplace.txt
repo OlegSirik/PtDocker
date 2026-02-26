@@ -1,0 +1,86 @@
+create controller, service, model 
+
+X-Api-Key -> tenant, client, accountid
+
+
+controller -
+
+get /integrations/mp/owner
+get /integrations/mp/products
+get /integrations/mp/products/{productCode}
+
+service
+
+getPageOwner(): return static json. add ToDO to change it for data from database 
+    return {
+      legal_data: {
+        fullName: 'САО "ВСК"',
+        address: '121552, Российская Федерация, г. Москва, ул. Островная, д.4',        
+        inn: '7710026574',
+        licenseInfo: 'Лицензии СЛ 0621, СИ 0621, выданны ЦБ РФ без ограничения срока действия',
+        ogrn: '1027700186062',
+        phone: '+74957852726',
+        email: 'info@vsk.ru',
+	phoneCs: '8-800-775-15-75',
+        webSite: 'https://www.vsk.ru'
+      },
+      logo: 'https://storage.yandexcloud.net/slt-sc-files/33aca2e5-180b-4e7d-a182-7c32d008ade2',
+      title: 'ВСК'
+    };
+  }
+
+getAllProducts(): get current accoutn from context. get all products for this account with permition can_quote and can_policy
+	for each product get product version throught product service
+	for each package -
+	
+	productDTO:
+      	{
+	productId: - id
+	productCode : code
+	productName : name
+	packageCode: '0', - packages.code
+        packageName: 'страхование хомяков и других зверей', - packages.name
+        term: '1 год', - if policyTerm,validatorType = LIST and validatorValue.split(,).length = 1 then value, else does not include this package to responce
+        covers: [ - for each covers
+          { code: - code
+	    name: - latter from dictionary
+	    limits - must be length = 1. if not, does not include produt to responce
+	    limit: - limits[0].sumInsured
+	    premium - limits[0].premium }
+        ]
+	limit: sum of limits
+	premium: sum of premiums
+      },
+
+	take lob by product lob.code
+	take covers from lob, get name by code and populate productDTO.covers.name  
+
+    return array of products[];
+
+getProduct(productCode)
+	schema service
+	
+FormMetadata = {
+  title: '', - get name from mt_contract_model ( currentUser( tenaneId, 'box1' ) 
+  sections: [ - get all contract sections by currentUser( tenaneId ) and model =  'box1'  
+    { code: 'policyHolder', label: 'Страхователь' },
+    { code: 'object', label: 'Объект' },
+    { code: 'contact', label: 'Контакты' },
+    { code: 'financial', label: 'Платеж' }
+  ],
+  entities: [  - get all entities by tenant and model
+    { code: 'persons', section: 'policyHolder', label: 'Перс данные' },
+    { code: 'docs', section: 'policyHolder', label: 'Документы' },
+    { code: 'contacts', section: 'policyHolder', label: 'Контактные данные' },
+    { code: 'payment', section: 'financial', label: 'Оплата' }
+  ],
+  fields: [ - take vars from product varsions and attributes from tp_attributes by tenant and model. link then by code
+    {
+      code: attribute.var_cdm ,
+      key: product_version.var_code,
+      type: 'text',
+      label: product_version.var_name,
+      placeholder: product_version.var_name
+    },
+  ]
+};

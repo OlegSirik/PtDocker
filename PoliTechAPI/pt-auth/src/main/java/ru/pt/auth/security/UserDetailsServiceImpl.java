@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.AccountTokenEntity;
 import ru.pt.auth.repository.AccountLoginRepository;
+import ru.pt.auth.repository.AccountTokenRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.repository.ProductRoleRepository;
 import ru.pt.auth.security.context.RequestContext;
@@ -28,6 +30,8 @@ import ru.pt.auth.entity.AccountEntity;
 @Transactional(readOnly = true)
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    private final AccountTokenRepository accountTokenRepository;
+
     private final LoginRepository loginRepository;
     private final AccountLoginRepository accountLoginRepository;
     private final AccountRepository accountRepository;
@@ -40,13 +44,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                                   AccountRepository accountRepository,
                                   ProductRoleRepository productRoleRepository,
                                   ClientService clientService,
-                                  RequestContext requestContext) {
+                                  RequestContext requestContext, AccountTokenRepository accountTokenRepository) {
         this.loginRepository = loginRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.accountRepository = accountRepository;
         this.productRoleRepository = productRoleRepository;
         this.clientService = clientService;
         this.requestContext = requestContext;
+        this.accountTokenRepository = accountTokenRepository;
     }
 
     // TODO create method public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -68,11 +73,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (authClientId == null || authClientId.isEmpty()) {
             throw new IllegalStateException("ClientContext not set");
         }
-        // Client не проверен.
-        String login = requestContext.getLogin();
 
-        AccountLoginEntity accountLoginEntity = accountLoginRepository.findByAll4Fields(tenantCode, authClientId, login, accountId).
-            orElseThrow(() -> new UsernameNotFoundException("AccountLogin not found with id: " + accountId));
+        String login = requestContext.getLogin();
+        AccountLoginEntity accountLoginEntity = null;
+        AccountTokenEntity accountTokenEntity = null;
+
+        if (login != null && !login.isEmpty()) {
+            accountLoginEntity = accountLoginRepository.findByAll4Fields(tenantCode, authClientId, login, accountId)
+                    .orElseThrow(() -> new UsernameNotFoundException("AccountLogin not found with id: " + accountId));
+        } else {
+            // API key auth: no login, resolve by tenant + client + account
+            accountTokenEntity = accountTokenRepository.findByAll4Fields(tenantCode, authClientId, accountId)
+                    .orElseThrow(() -> new UsernameNotFoundException("AccountToken not found for account id: " + accountId));
+        }
         //requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
         requestContext.setAccount(username);
         // Инициализируем lazy-loaded поля внутри транзакции
@@ -104,7 +117,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .orElseThrow(() -> new UsernameNotFoundException("Tenant account not found for tenant: " + tenantCode));
                 actingAccountId = tenantAccount.getId();
                 break;
-            case GROUP_ADMIN:
+             case GROUP_ADMIN:  
                 // Родитель - это группа или клиент
                 actingAccountId = accountEntity.getParent() != null
                     ? accountEntity.getParent().getId()
@@ -120,73 +133,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // Создаем UserDetails без пароля (JWT авторизация)
-        UserDetails userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountId);
+        UserDetails userDetails = null;
+        if (accountLoginEntity != null) {
+            userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountId);
+        } 
+        if (accountTokenEntity != null) {
+            userDetails = UserDetailsImpl.build(accountTokenEntity, productRoles, actingAccountId);
+        } 
+
         return userDetails;
     }
 
-    /**
-     * Загружает пользователя по логину и ID аккаунта
-     *
-    public UserDetails loadUserByUsernameAndAccountId(String username, Long accountId) throws UsernameNotFoundException {
-        LoginEntity loginEntity = loginRepository.findByUserLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + username));
-
-        AccountLoginEntity accountLogin = accountLoginRepository.findByUserLoginAndAccountId(username, accountId)
-                .orElseThrow(() -> new UsernameNotFoundException("Account not found for user: " + username + " and accountId: " + accountId));
-
-        // Инициализируем lazy-loaded поля
-        initializeLazyFields(accountLogin, loginEntity);
-
-        Set<String> productRoles = getProductRoles(accountLogin.getAccount().getId());
-
-        return UserDetailsImpl.build(loginEntity, accountLogin, productRoles);
-    }
-*/
-    /**
-     * Загружает пользователя по логину и клиенту
-     *
-    public UserDetails loadUserByUsernameAndClient(String username, String client) throws UsernameNotFoundException {
-        LoginEntity loginEntity = loginRepository.findByUserLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + username));
-
-        List<AccountLoginEntity> accountLogins = accountLoginRepository.findByClientAndLogin(client, username);
-
-        if (accountLogins.isEmpty()) {
-            throw new UsernameNotFoundException("No accounts found for user: " + username + " and client: " + client);
-        }
-
-        AccountLoginEntity defaultAccountLogin = accountLogins.stream()
-                .filter(AccountLoginEntity::getDefault)
-                .findFirst()
-                .orElse(accountLogins.get(0));
-
-        // Инициализируем lazy-loaded поля
-        initializeLazyFields(defaultAccountLogin, loginEntity);
-
-        Set<String> productRoles = getProductRoles(defaultAccountLogin.getAccount().getId());
-
-        return UserDetailsImpl.build(loginEntity, defaultAccountLogin, productRoles);
-    }
-
-    **
-     * Инициализирует lazy-loaded поля для избежания LazyInitializationException
-     *
-    private void initializeLazyFields(AccountLoginEntity accountLogin, LoginEntity loginEntity) {
-        // Инициализируем связанные сущности, обращаясь к их методам
-        if (accountLogin.getAccount() != null) {
-            accountLogin.getAccount().getId(); // Trigger lazy loading
-            accountLogin.getAccount().getName(); // Trigger lazy loading
-        }
-        if (accountLogin.getClient() != null) {
-            accountLogin.getClient().getId();
-            accountLogin.getClient().getName();
-        }
-        if (loginEntity.getTenant() != null) {
-            loginEntity.getTenant().getId();
-            loginEntity.getTenant().getName();
-        }
-    }
-*/
     /**
      * Получает все роли продуктов для аккаунта
      */

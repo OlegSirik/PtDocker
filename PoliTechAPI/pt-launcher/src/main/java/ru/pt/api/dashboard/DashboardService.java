@@ -38,8 +38,8 @@ public class DashboardService {
             new DashboardCard("Sales count", "128", "policies"),
             new DashboardCard("Total sales", "4 260 000", "RUB"),
             new DashboardCard("Agent commission", "318 000", "RUB"),
-            new DashboardCard("Average sale", "33 281", "RUB"),
-            new DashboardCard("Просто 5 карта", "33 281", "RUB")
+            new DashboardCard("Average sale", "33 281", "RUB")
+            ///new DashboardCard("Просто 5 карта", "33 281", "RUB")
         );
         return new DashboardCardsResponse(cards);
     }

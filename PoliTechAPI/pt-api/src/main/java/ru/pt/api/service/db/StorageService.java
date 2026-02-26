@@ -84,8 +84,10 @@ public interface StorageService {
      */
     PolicyData getPolicyByPaymentOrderId(String paymentOrderId);
 
-        /**
+    /**
      * Get all quotes from policy index for current account
+     * Вершина дерева берется из actingAccountId.
+     * Нужны права - POLICY::LIST
      * @return List<QuoteDto>
      */
     List<QuoteDto> getAccountQuotes(String qstr); 

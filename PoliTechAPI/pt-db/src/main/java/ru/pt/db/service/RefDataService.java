@@ -69,6 +69,31 @@ FamilyStType
 SexType
 Product
 */
-    
-    
+
+    @Override
+    public Map<String, String> getRefData(String attributeCode) {
+        Map<String, String> byAttr = cache.get(attributeCode);
+        if (byAttr == null) {
+            return Collections.emptyMap();
+        }
+        return new HashMap<>(byAttr);
+    }
+
+    @Override
+    public Map<String, String> getRefData(String attributeCode, List<String> filter) {
+        if (filter == null || filter.isEmpty()) {
+            return getRefData(attributeCode);
+        }
+        Map<String, String> byAttr = cache.get(attributeCode);
+        if (byAttr == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> result = new HashMap<>();
+        for (String key : filter) {
+            if (byAttr.containsKey(key)) {
+                result.put(key, byAttr.get(key));
+            }
+        }
+        return result;
+    }
 }

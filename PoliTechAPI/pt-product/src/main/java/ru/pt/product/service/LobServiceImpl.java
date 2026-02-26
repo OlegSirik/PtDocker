@@ -73,7 +73,7 @@ public class LobServiceImpl implements LobService {
 
     @Override
     public LobModel getByCode(String code) {
-        authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, code, null, AuthZ.Action.VIEW);
+        //authService.check(getCurrentUser(), AuthZ.ResourceType.LOB, code, null, AuthZ.Action.VIEW);
 
         LobEntity lob = lobRepository.findByCode(getCurrentTenantId(), code).orElse(null);
         if (lob == null) {

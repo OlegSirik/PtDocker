@@ -326,7 +326,8 @@ public class AccountEntity {
     }
 
     public static AccountEntity groupAdminAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+        if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
+            parentAccount.getNodeType() != AccountNodeType.GROUP) {
             throw new IllegalArgumentException(
                 "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
             );

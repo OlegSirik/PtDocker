@@ -73,9 +73,9 @@ public class ValidatorRule {
         this.errorText = errorText;
     }
 
-//    public String getValueRight() {
-//        return valueRight;
-//    }
+    public String getValueRight() {
+        return valueRight;
+    }
 
     public void setValueRight(String valueRight) {
         this.valueRight = valueRight;

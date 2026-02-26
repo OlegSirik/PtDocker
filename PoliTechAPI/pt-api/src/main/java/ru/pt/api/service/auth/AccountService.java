@@ -80,6 +80,32 @@ public interface AccountService {
     void revokeProduct(Long accountId, Long productId);
 
     /**
+     * Assign product role to account (TNT_ADMIN / GROUP_ADMIN).
+     * @param accountId account to assign role to
+     * @param roleProductId product id
+     * @param roleAccountId role account id
+     * @return created product role
+     */
+    ProductRole assignProductRole(Long accountId, Long roleProductId, Long roleAccountId,
+                                  Boolean canRead, Boolean canQuote, Boolean canPolicy,
+                                  Boolean canAddendum, Boolean canCancel, Boolean canProlong);
+
+    /**
+     * Revoke product role by id (TNT_ADMIN / GROUP_ADMIN).
+     * @param productRoleId product role id to revoke
+     */
+    void revokeProductRole(Long productRoleId);
+
+    /**
+     * Update product role permissions (TNT_ADMIN / GROUP_ADMIN).
+     * @param productRoleId product role id
+     * @return updated product role
+     */
+    ProductRole updateProductRole(Long productRoleId, Boolean canRead, Boolean canQuote,
+                                 Boolean canPolicy, Boolean canAddendum, Boolean canCancel,
+                                 Boolean canProlong);
+
+    /**
      * Получить все продуктовые роли для аккаунта
      * @param accountId идентификатор аккаунта
      * @return список ролей продукта

@@ -205,7 +205,8 @@ export class CreateProductDialogComponent {
     quoteValidator: [],
     saveValidator: [],
     packages: [],
-    vars: []
+    vars: [],
+    rules: { insuredEqualsPolicyHolder: false }
   };
 
   constructor(

@@ -32,7 +32,31 @@ public interface AccountTokenRepository extends JpaRepository<AccountTokenEntity
            "WHERE at.token = :token AND at.accountEntity.id = :accountId")
     Optional<AccountTokenEntity> findByTokenAndAccountId(@Param("token") String token,
                                                          @Param("accountId") Long accountId);
-                                              
+
+    @Query("SELECT at FROM AccountTokenEntity at " +
+           "WHERE at.token = :token AND at.tenantEntity.code = :tenantCode")
+    Optional<AccountTokenEntity> findByTokenAndTenantCode(@Param("token") String token,
+                                                         @Param("tenantCode") String tenantCode);
+
+    @Query("SELECT at FROM AccountTokenEntity at " +
+           "LEFT JOIN FETCH at.clientEntity " +
+           "LEFT JOIN FETCH at.accountEntity " +
+           "WHERE at.token = :token AND at.tenantEntity.code = :tenantCode")
+    Optional<AccountTokenEntity> findByTokenAndTenantCodeWithClientAndAccount(
+            @Param("token") String token,
+            @Param("tenantCode") String tenantCode);
+
+            @Query("SELECT at FROM AccountTokenEntity at " +
+            "LEFT JOIN FETCH at.clientEntity " +
+            "LEFT JOIN FETCH at.accountEntity " +
+            "WHERE at.tenantEntity.code = :tenantCode AND at.clientEntity.clientId = :clientAuthId AND at.accountEntity.id = :accountId")
+     Optional<AccountTokenEntity> findByAll4Fields(
+              @Param("tenantCode") String tenantCode,
+              @Param("clientAuthId") String clientAuthId,
+              //@Param("token") String token,
+              @Param("accountId") Long accountId
+       );
+             
     @Query("SELECT at FROM AccountTokenEntity at WHERE at.accountEntity.Id = :accountId")
     Optional<List<AccountTokenEntity>> findByAccountId(@Param("accountId") Long accountId);
 }

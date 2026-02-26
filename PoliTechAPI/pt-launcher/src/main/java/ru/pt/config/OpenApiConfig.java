@@ -29,6 +29,11 @@ public class OpenApiConfig {
                     .description("JWT token для авторизации. " +
                             "Получить токен можно через /api/auth/login или /api/auth/token")
                 )
+                .addSecuritySchemes("apiKeyAuth", new SecurityScheme()
+                    .type(SecurityScheme.Type.APIKEY)
+                    .in(SecurityScheme.In.HEADER)
+                    .name("X-Api-Key")
+                    .description("API key для маркетплейс интеграции. Резолвится в tenant, client, account"))
             )
             .info(new Info()
                 .title("PoliTech API")

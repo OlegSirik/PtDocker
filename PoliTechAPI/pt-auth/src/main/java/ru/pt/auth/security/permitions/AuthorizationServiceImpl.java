@@ -53,7 +53,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         if (!AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
             throw new ForbiddenException(
                     "Access denied: %s %s %s"
-                            .formatted(resourceType, resourceId, action)
+                            .formatted(AuthZ.Role.valueOf(user.getUserRole()),resourceType, action)
             );
         }
 
@@ -79,25 +79,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     }
 
 
-        /* 
-     * Check product access permissions
-     * create, quote, save,
-     * 
-     * @param user current user
-     * @param resourceType resource type (PRODUCT)
-     * @param productId product ID
-     * @param resourceAccountId account ID NA
-     * @param action action to check
-     * @return list of product role data from hierarchy
-     */
     public boolean checkProductAction(
+            AuthenticatedUser user,
             Long productId,
-            Long accountId,
             AuthZ.Action action
     ) {
 
-        
-        ProductRole productRole = accountProductRoles.getProductRole(accountId, productId);
+        Long actingAccountId = user.getActingAccountId();
+
+        ProductRole productRole = accountProductRoles.getProductRole(actingAccountId, productId);
         if (productRole == null) {
             throw new ForbiddenException(
                 "Нет прав на действие %s для продукта %s"

@@ -16,6 +16,8 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.versioning.Version;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -47,6 +49,7 @@ public class DbStorageService implements StorageService {
     private final PolicyProjectionService policyProjectionService;
     private final PolicyMapper policyMapper;
     private final PolicyReport policyReport;
+    private final AuthorizationService authService;
 
     @Override
     public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
@@ -81,35 +84,6 @@ public class DbStorageService implements StorageService {
     }
 
     @Transactional
-  /*   
-    public PolicyData save(String policy, AuthenticatedUser userData, Version version, UUID uuid) {
-
-        var entity = new PolicyEntity();
-        entity.setId(uuid);
-        entity.setTid(userData.getTenantId());
-        entity.setCid(userData.getClientId());
-        entity.setPolicy(policy);
-        policyRepository.save(entity);
-
-        var index = policyProjectionService.readPolicyIndex(uuid, version, userData, policy);
-        index.setVersionNo(1);
-
-        index.setTid(userData.getTenantId());
-        index.setClientAccountId(userData.getClientId());
-        index.setUserAccountId(userData.getAccountId());
-        
-        policyIndexRepository.save(index);
-
-        var policyData = new PolicyData();
-        policyData.setPolicyIndex(policyMapper.toDto(index));
-        policyData.setPolicyId(uuid);
-        policyData.setPolicyStatus(index.getPolicyStatus());
-        policyData.setPolicyNumber(index.getPolicyNumber());
-        policyData.setPolicy(policy);
-        return policyData;
-
-    }
-*/
     @Override
     public void update(PolicyData policyData) {
         var indexEntity = policyIndexRepository.findByPublicId(policyData.getPolicyId())
@@ -316,7 +290,9 @@ public class DbStorageService implements StorageService {
     public List<QuoteDto> getAccountQuotes(String qstr) {
         var userData = securityContextHelper.getCurrentUser()
             .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
-        Long accountId = userData.getAccountId();
+        Long accountId = userData.getActingAccountId();
+
+        authService.check(userData, AuthZ.ResourceType.POLICY, null, accountId, AuthZ.Action.LIST);
 
         return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
 

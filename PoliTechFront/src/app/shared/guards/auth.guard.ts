@@ -1,10 +1,9 @@
-import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthGuardData, createAuthGuard } from 'keycloak-angular';
 import {AuthService} from '../services/auth.service';
-import {map} from 'rxjs';
+import {map, take} from 'rxjs';
 import {filter} from 'rxjs/operators';
-import { BASE_URL } from '../tokens';
 
 const isAccessAllowed = async (
   route: ActivatedRouteSnapshot,
@@ -37,24 +36,16 @@ export const authGuardKC = createAuthGuard<CanActivateFn>(isAccessAllowed);
 
 export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
-  const router = inject(Router);
-  const baseUrl = inject(BASE_URL);
 
   return authService.isAuthenticated.pipe(
-    filter(Boolean),
+    filter((v): v is boolean => v !== null),
+    take(1),
     map(isAuthenticated => {
-      if (isAuthenticated) {
-        return true;
-      }
-      // Get tenantCode from route or AuthService
+      if (isAuthenticated) return true;
       const tenantCode = route.params['tenantId'] || authService.getTenantCode() || '';
-      if (tenantCode) {
-        window.location.href = `${baseUrl}/${tenantCode}/login`;
-        return false;
-      } else {
-        window.location.href = `${baseUrl}/login`;
-        return false;
-      }
+      const loginPath = tenantCode ? `/${tenantCode}/login` : '/login';
+      window.location.href = window.location.origin + loginPath;
+      return false;
     })
   );
   /*

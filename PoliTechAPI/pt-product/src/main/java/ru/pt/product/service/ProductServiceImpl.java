@@ -359,6 +359,9 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new NotFoundException("Version not found"));
 
         newProductVersionModel = syncCoversVars(newProductVersionModel);
+
+
+
         String newProductVersionJson;
         try {
             newProductVersionJson = objectMapper.writeValueAsString(newProductVersionModel);
@@ -370,11 +373,10 @@ public class ProductServiceImpl implements ProductService {
         productVersionRepository.save(pv);
 
         if (newProductVersionModel.getNumberGeneratorDescription() != null) {
-            
+        
             var description = createNumberGeneratorDescription(newProductVersionModel);
-                
             try {
-                numberGeneratorService.create(description);
+                numberGeneratorService.update(description);
             } catch (Exception e) {
                 log.warn(e.getMessage());
             }
@@ -576,7 +578,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductVersionModel getProduct(Integer id, boolean forDev) {
-        checkProductAccess(Action.VIEW, String.valueOf(id));
+        //checkProductAccess(Action.VIEW, String.valueOf(id));
         var entity = productRepository.findById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
@@ -594,7 +596,7 @@ public class ProductServiceImpl implements ProductService {
     //get product by code and isDeletedFalse
     @Override
     public ProductVersionModel getProductByCode(String code, boolean forDev) {
-        checkProductAccess(Action.VIEW, code);
+//        checkProductAccess(Action.VIEW, code);
 
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
@@ -793,7 +795,7 @@ public class ProductServiceImpl implements ProductService {
 
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {
         NumberGeneratorDescription numberGeneratorDescription = new NumberGeneratorDescription();
-        numberGeneratorDescription.setId(productVersionModel.getNumberGeneratorDescription().getId());
+        numberGeneratorDescription.setId(productVersionModel.getId());
         numberGeneratorDescription.setMask(productVersionModel.getNumberGeneratorDescription().getMask());
         numberGeneratorDescription.setMaxValue(productVersionModel.getNumberGeneratorDescription().getMaxValue());
         numberGeneratorDescription.setProductCode(productVersionModel.getCode());

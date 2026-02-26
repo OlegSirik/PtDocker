@@ -7,15 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
-import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
-import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
-import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.service.admin.AdminPermissionHelper;
 import ru.pt.auth.model.LoginDto;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,18 +31,18 @@ public class LoginManagementService {
     private final TenantService tenantService;
     private final AccountLoginRepository accountLoginRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SecurityContextHelper securityContextHelper;
+    private final AdminPermissionHelper adminPermissionHelper;
 
     public LoginManagementService(LoginRepository loginRepository,
                                  TenantService tenantService,
                                  AccountLoginRepository accountLoginRepository,
-                                 SecurityContextHelper securityContextHelper
+                                 AdminPermissionHelper adminPermissionHelper
     ) {
         this.loginRepository = loginRepository;
         this.tenantService = tenantService;
         this.accountLoginRepository = accountLoginRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
-        this.securityContextHelper = securityContextHelper;
+        this.adminPermissionHelper = adminPermissionHelper;
     }
 
     /**
@@ -53,7 +50,7 @@ public class LoginManagementService {
      * POST /tnts/{tenantCode}/logins
      */
     public LoginDto createLogin(String tenantCode, String userLogin, String fullName, String position) {
-        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+        String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
 
         // Шаг 1: Проверка обязательных параметров
         if (tntCode == null || tntCode.isBlank()) {
@@ -96,7 +93,7 @@ public class LoginManagementService {
      * Требуется роль SYS_ADMIN
      */
     public void setPassword(String tenantCode, String userLogin, String password) {
-        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+        String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
         // Шаг 1: Проверка обязательных параметров
         if (userLogin == null || userLogin.isBlank()) {
             throw new BadRequestException("userLogin is required");
@@ -123,7 +120,7 @@ public class LoginManagementService {
      * PATCH /tnts/{tenantCode}/logins/{id}
      */
     public LoginDto updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
-        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+        String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
         // Шаг 1: Проверка наличия тенанта
         TenantEntity tenant = tenantService.findByCode(tntCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
@@ -166,7 +163,7 @@ public class LoginManagementService {
      */
     @Transactional(readOnly = true)
     public List<LoginDto> getLoginsByTenant(String tenantCode) {
-        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+        String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
         // Шаг 1: Проверка наличия тенанта
         List<LoginEntity> logins = new ArrayList<LoginEntity>();
         try {
@@ -190,7 +187,7 @@ public class LoginManagementService {
      * DELETE /tnts/{tenantCode}/logins/{id}
      */
     public void deleteLogin(String tenantCode, Long id) {
-        String tntCode = checkPermitionAndGetTenantCode(tenantCode);
+        String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
         // Шаг 1: Проверка наличия тенанта
         TenantEntity tenant = tenantService.findByCode(tntCode)
                 .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
@@ -213,33 +210,6 @@ public class LoginManagementService {
     }
 
 
-
-    // HELPERS 
-    private UserDetailsImpl getCurrentUser() {
-        return securityContextHelper.getCurrentUser()
-                .orElseThrow(() -> new ForbiddenException("Not authenticated"));
-    }
-    
-    private boolean userIsSysAdmin() {
-        UserDetailsImpl currentUser = getCurrentUser();
-        return UserRole.SYS_ADMIN.getValue().equals(currentUser.getUserRole());
-    }
-
-    private String checkPermitionAndGetTenantCode(String tenantCode) {
-
-        if ( userIsSysAdmin() )
-        {
-            String currentTenantCode = getCurrentUser().getImpersonatedTenantCode();
-            if (currentTenantCode == null) {
-                throw new ForbiddenException("SYS ADMIN must be impersonated");
-            }
-            return currentTenantCode;
-        }
-        if ( !tenantCode.equals( getCurrentUser().getTenantCode() )) {
-            throw new ForbiddenException("Only SYS_ADMIN or TNT_ADMIN can access other tenants");
-        }
-        return tenantCode;
-    }
 
     private LoginDto fromEntity(LoginEntity login) {
         

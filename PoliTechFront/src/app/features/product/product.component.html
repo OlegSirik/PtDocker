@@ -183,24 +183,27 @@
       </div>
     </mat-tab>
 
-    <!-- Quote Validator Tab -->
-    <!--
-    add button "get test request"
-    make a get call to base_url/admin/products/{product_id}/versions/{version_no}/example_save
-    {product_id} and {version_no} are parameters from url
-
-    result show in dialog with title "Test request"
-    show text as well formatter json
-    add button "copy to clipboard"
-    add button "close"
-    -->
-    <mat-tab label="Проверка предрасчета">
+    <mat-tab label="Правила и проверки">
       <div class="tab-content">
+
+        <mat-card class="data-card">
+          <mat-card-header>
+            <mat-card-title>Правила договора</mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            <mat-checkbox [(ngModel)]="product.rules.insuredEqualsPolicyHolder" name="insuredEqualsPolicyHolder"
+              [disabled]="product.phType !== product.ioType" (ngModelChange)="updateChanges()" >
+              Страхователь = Застрахованный
+            </mat-checkbox>
+          </mat-card-content>
+        </mat-card>
+
         <mat-card class="datatable-card">
           <mat-card-content>
 
             <div class="table-header">
-              <h3>Правила предрасчета</h3>
+              <h3>Проверки предрасчета</h3>
               <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
                 <button mat-raised-button color="primary" class="add-button" (click)="addQuoteValidator()">
                   <mat-icon>add</mat-icon>
@@ -245,56 +248,14 @@
               <tr mat-header-row *matHeaderRowDef="quoteValidatorDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: quoteValidatorDisplayedColumns;" (click)="editQuoteValidator(row, getQuoteValidatorIndex(row))" class="clickable-row"></tr>
             </table>
-            <!--
-            <mat-paginator
-              [length]="filteredQuoteValidators.length"
-              [pageSize]="quoteValidatorPageSize"
-              [pageIndex]="quoteValidatorPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onQuoteValidatorPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-            -->
           </mat-card-content>
         </mat-card>
-      </div>
-    </mat-tab>
 
-    <!-- Save Validator Tab -->
-
-
-    <mat-tab label="Проверки договора">
-      <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
-            <!---
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addSaveValidator()">
-                <mat-icon>add</mat-icon>
-                add line
-              </button>
-              <button mat-raised-button color="accent" class="action-button" (click)="getTestRequestSave()">
-                <mat-icon>science</mat-icon>
-                Get Test Request Save
-              </button>
-            </div>
-            -->
             <div class="table-header">
               <h3>Проверки договора</h3>
-              <!--
-              <mat-form-field class="search-field" appearance="outline">
-                <mat-label>Поиск</mat-label>
-                <input matInput [(ngModel)]="saveValidatorSearchText" (ngModelChange)="updateSaveValidatorTable()" placeholder="Поиск">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-              -->
               <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-<!---
-                <button mat-raised-button color="accent" class="action-button" (click)="getTestRequestSave()">
-                  <mat-icon>science</mat-icon>
-                  Тестовый запрос
-                </button>
--->
                 <button mat-raised-button color="primary" class="add-button" (click)="addSaveValidator()">
                   <mat-icon>add</mat-icon>
                   Добавить
@@ -338,16 +299,9 @@
               <tr mat-row *matRowDef="let row; columns: saveValidatorDisplayedColumns;" (click)="editSaveValidator(row, getSaveValidatorIndex(row))" class="clickable-row"></tr>
             </table>
 
-            <mat-paginator
-              [length]="filteredSaveValidators.length"
-              [pageSize]="saveValidatorPageSize"
-              [pageIndex]="saveValidatorPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onSaveValidatorPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
           </mat-card-content>
         </mat-card>
+
       </div>
     </mat-tab>
 

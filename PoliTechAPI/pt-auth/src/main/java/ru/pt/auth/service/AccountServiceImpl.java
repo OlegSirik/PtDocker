@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.service.auth.AccountService;
@@ -13,10 +14,12 @@ import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.ProductRoleEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.ProductRoleRepository;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.service.admin.AdminPermissionHelper;
 import ru.pt.auth.utils.AccountMapper;
 import ru.pt.auth.utils.ProductRoleMapper;
 
@@ -41,6 +44,7 @@ public class AccountServiceImpl implements AccountService {
     private final AuthorizationService authService;
     private final SecurityContextHelper securityContextHelper;
     private final AccountDataService accountDataService;
+    private final AdminPermissionHelper adminPermissionHelper;
     
 
     @Override
@@ -75,6 +79,11 @@ public class AccountServiceImpl implements AccountService {
         account.setId(accountRepository.getNextAccountId());
 
         AccountEntity savedAccount = accountRepository.save(account);
+
+        AccountEntity admin_account = AccountEntity.groupAdminAccount(savedAccount);
+        admin_account.setId(accountRepository.getNextAccountId());
+        accountRepository.save(admin_account);
+        
         return accountMapper.toDto(savedAccount);
     }
 
@@ -229,6 +238,110 @@ public class AccountServiceImpl implements AccountService {
         if (roleToRemove != null) {
             productRoleRepository.delete(roleToRemove);
         }
+    }
+
+    @Override
+    @Transactional
+    public ProductRole assignProductRole(Long accountId, Long roleProductId, Long roleAccountId,
+                                         Boolean canRead, Boolean canQuote, Boolean canPolicy,
+                                         Boolean canAddendum, Boolean canCancel, Boolean canProlong) {
+        var currentUser = adminPermissionHelper.getCurrentUser();
+        String userRoleStr = currentUser.getUserRole();
+        if (!UserRole.TNT_ADMIN.getValue().equals(userRoleStr) && !UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can assign product roles");
+        }
+
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        AccountEntity roleAccount = accountRepository.findById(roleAccountId)
+                .orElseThrow(() -> new NotFoundException("Role account not found"));
+
+        if (!account.getTenant().getCode().equals(currentUser.getTenantCode())) {
+            throw new ForbiddenException("Cannot assign role to account in different tenant");
+        }
+
+        if (UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            if (!account.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only assign roles within their client");
+            }
+        }
+
+        ProductRoleEntity role = new ProductRoleEntity();
+        role.setTenant(account.getTenant());
+        role.setClient(account.getClient());
+        role.setAccount(account);
+        role.setRoleProductId(roleProductId);
+        role.setRoleAccount(roleAccount);
+        role.setCanRead(canRead != null && canRead);
+        role.setCanQuote(canQuote != null && canQuote);
+        role.setCanPolicy(canPolicy != null && canPolicy);
+        role.setCanAddendum(canAddendum != null && canAddendum);
+        role.setCanCancel(canCancel != null && canCancel);
+        role.setCanProlongate(canProlong != null && canProlong);
+
+        ProductRoleEntity saved = productRoleRepository.save(role);
+        return productRoleMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public void revokeProductRole(Long productRoleId) {
+        var currentUser = adminPermissionHelper.getCurrentUser();
+        String userRoleStr = currentUser.getUserRole();
+        if (!UserRole.TNT_ADMIN.getValue().equals(userRoleStr) && !UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can revoke product roles");
+        }
+
+        ProductRoleEntity role = productRoleRepository.findById(productRoleId)
+                .orElseThrow(() -> new NotFoundException("ProductRole not found"));
+
+        if (!role.getTenant().getCode().equals(currentUser.getTenantCode())) {
+            throw new ForbiddenException("Cannot revoke role from different tenant");
+        }
+
+        if (UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            if (!role.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only revoke roles within their client");
+            }
+        }
+
+        productRoleRepository.deleteById(productRoleId);
+    }
+
+    @Override
+    @Transactional
+    public ProductRole updateProductRole(Long productRoleId, Boolean canRead, Boolean canQuote,
+                                        Boolean canPolicy, Boolean canAddendum, Boolean canCancel,
+                                        Boolean canProlong) {
+        var currentUser = adminPermissionHelper.getCurrentUser();
+        String userRoleStr = currentUser.getUserRole();
+        if (!UserRole.TNT_ADMIN.getValue().equals(userRoleStr) && !UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            throw new ForbiddenException("Only TNT_ADMIN or GROUP_ADMIN can update product roles");
+        }
+
+        ProductRoleEntity role = productRoleRepository.findById(productRoleId)
+                .orElseThrow(() -> new NotFoundException("ProductRole not found"));
+
+        if (!role.getTenant().getCode().equals(currentUser.getTenantCode())) {
+            throw new ForbiddenException("Cannot update role from different tenant");
+        }
+
+        if (UserRole.GROUP_ADMIN.getValue().equals(userRoleStr)) {
+            if (!role.getClient().getId().equals(currentUser.getClientId())) {
+                throw new ForbiddenException("GROUP_ADMIN can only update roles within their client");
+            }
+        }
+
+        if (canRead != null) role.setCanRead(canRead);
+        if (canQuote != null) role.setCanQuote(canQuote);
+        if (canPolicy != null) role.setCanPolicy(canPolicy);
+        if (canAddendum != null) role.setCanAddendum(canAddendum);
+        if (canCancel != null) role.setCanCancel(canCancel);
+        if (canProlong != null) role.setCanProlongate(canProlong);
+
+        productRoleRepository.save(role);
+        return accountDataService.getProductRole(role.getAccount().getId(), role.getRoleProductId());
     }
     
     @Override

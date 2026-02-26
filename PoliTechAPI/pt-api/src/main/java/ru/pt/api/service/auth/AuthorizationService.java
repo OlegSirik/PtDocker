@@ -41,4 +41,19 @@ public interface AuthorizationService {
         AuthZ.ResourceType resourceType,
         AuthZ.Action action);
 
+    /* 
+     * Check product access permissions
+     * create, quote, save,
+     * 
+     * @param user current user
+     * @param productId product ID
+     * @param action action to check
+     * @return true or exception
+     */
+    boolean checkProductAction(
+        AuthenticatedUser user,
+        Long productId,
+        AuthZ.Action action
+    ); 
+
 }

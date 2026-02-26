@@ -27,6 +27,9 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.id = :id")
     Optional<AccountEntity> findByTenantCodeAndId(@Param("tenantCode") String tenantCode, @Param("id") Long id);
 
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.parent.id = :groupId AND a.nodeType = :nodeType")
+    Optional<AccountEntity> findGroupAdminAccount(@Param("tenantCode") String tenantCode, @Param("groupId") Long groupId, @Param("nodeType") AccountNodeType nodeType);
+
     /**
      * Find all child accounts of a specific parent
      */

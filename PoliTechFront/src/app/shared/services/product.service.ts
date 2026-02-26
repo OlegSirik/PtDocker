@@ -32,6 +32,9 @@ export interface Product {
   saveValidator: QuoteValidator[];
   packages: Package[];
   vars: PolicyVar[];
+  rules: {
+    insuredEqualsPolicyHolder: boolean | false;
+  };
 }
 
 export interface PolicyVar {
@@ -124,7 +127,8 @@ export class ProductService {
     quoteValidator: [],
     saveValidator: [],
     packages: [],
-    vars: []
+    vars: [],
+    rules: { insuredEqualsPolicyHolder: false }
   };
 
   // GET - Get product by ID
@@ -147,6 +151,9 @@ export class ProductService {
       }
       if (!Array.isArray(this.mockData.packages)) {
         this.mockData.packages = [];
+      }
+      if (!this.mockData.rules || typeof this.mockData.rules !== 'object') {
+        this.mockData.rules = { insuredEqualsPolicyHolder: false };
       }
     }
   }

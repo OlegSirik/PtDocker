@@ -10,12 +10,13 @@ import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.AccountLogin;
 import ru.pt.api.dto.auth.AccountToken;
 import ru.pt.api.dto.auth.ProductRole;
+import ru.pt.auth.model.AdminResponse;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.auth.AccountLoginService;
 import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.auth.AccountTokenService;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.admin.AdminManagementService;
 
 import java.util.List;
 
@@ -39,7 +40,7 @@ import java.util.List;
 @RequestMapping("/api/v1/{tenantCode}/admin/accounts")
 public class AccountManagementController extends SecuredController {
 
-    private final AdminUserManagementService adminUserManagementService;
+    private final AdminManagementService adminManagementService;
     private final AccountService accountService;
     private final AccountTokenService accountTokenService;
     private final AccountLoginService accountLoginService;
@@ -48,12 +49,12 @@ public class AccountManagementController extends SecuredController {
                                       AccountService accountService,
                                       AccountTokenService accountTokenService,
                                       AccountLoginService accountLoginService,
-                                      AdminUserManagementService adminUserManagementService) {
+                                      AdminManagementService adminManagementService) {
         super(securityContextHelper);
         this.accountService = accountService;
         this.accountTokenService = accountTokenService;
         this.accountLoginService = accountLoginService;
-        this.adminUserManagementService = adminUserManagementService;
+        this.adminManagementService = adminManagementService;
     }
 
 
@@ -102,6 +103,54 @@ public class AccountManagementController extends SecuredController {
         return new ResponseEntity<>(account, HttpStatus.CREATED);
     }
 
+    /**
+     * Get GROUP_ADMIN users for a group
+     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins
+     */
+    @GetMapping("/{accountId}/group_admins")
+    public ResponseEntity<List<AdminResponse>> getGroupAdmins(
+            @PathVariable String tenantCode, @PathVariable Long accountId) {
+        List<AdminResponse> admins = adminManagementService.getGroupAdmins(accountId);
+        return ResponseEntity.ok(admins);
+    }
+
+    /**
+     * Add GROUP_ADMIN user to an existing group
+     * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins
+     */
+    @PostMapping("/{accountId}/group_admins")
+    public ResponseEntity<AdminResponse> addGroupAdmin(
+            @PathVariable String tenantCode, @PathVariable Long accountId,
+            @RequestBody AddGroupAdminRequest request) {
+        AdminResponse admin = adminManagementService.addGroupAdminToGroup(accountId, request.getUserLogin());
+        return new ResponseEntity<>(admin, HttpStatus.CREATED);
+    }
+
+    /**
+     * Create new group with its first GROUP_ADMIN user
+     * POST /api/v1/{tenantCode}/admin/accounts/group-admins (alternative - uses createGroupAdmin)
+     */
+    @PostMapping("/group_admins")
+    public ResponseEntity<AdminResponse> createGroupAdmin(
+            @PathVariable String tenantCode, @RequestBody CreateGroupAdminRequest request) {
+//        AdminResponse admin = adminManagementService.createGroupAdmin(
+//                request.getUserLogin(), request.getGroupName(), request.getFullName());
+//        return new ResponseEntity<>(admin, HttpStatus.CREATED);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    /**
+     * Delete GROUP_ADMIN user
+     * DELETE /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins/{accountLoginId}
+     */
+    @DeleteMapping("/{accountId}/group_admins/{accountLoginId}")
+    public ResponseEntity<Void> deleteGroupAdmin(
+            @PathVariable String tenantCode, @PathVariable Long accountId,
+            @PathVariable Long accountLoginId) {
+        adminManagementService.deleteGroupAdmin(accountLoginId);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/subaccounts
      * Get subaccounts under the specified account
     */
@@ -145,6 +194,34 @@ public class AccountManagementController extends SecuredController {
         accountTokenService.deleteToken(accountId, token);
         return ResponseEntity.noContent().build();
     }
+
+   /*  
+    @GetMapping("/{accountId}/roles/{rolename}")
+    public ResponseEntity<List<AdminResponse>> getAccountLogins(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId) {
+        List<AccountLogin> logins = accountLoginService.getLoginsByAccountId(accountId);
+        return ResponseEntity.ok(logins);
+    }
+
+    @PostMapping("/{accountId}/group_admin")
+    public ResponseEntity<AccountLogin> createLogin(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @RequestBody AccountLogin login) {
+        AccountLogin createdLogin = accountLoginService.createLogin(accountId, login);
+        return new ResponseEntity<>(createdLogin, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{accountId}/group_admin/{id}")
+    public ResponseEntity<Void> deleteLogin(
+            @PathVariable String tenantCode, 
+            @PathVariable Long accountId, 
+            @PathVariable String userLogin) {
+        accountLoginService.deleteLogin(accountId, userLogin);
+        return ResponseEntity.noContent().build();
+    }
+   */
 
     /**
      * Get all logins for the account
@@ -273,6 +350,26 @@ public class AccountManagementController extends SecuredController {
 
         public String getToken() { return token; }
         public void setToken(String token) { this.token = token; }
+    }
+
+    public static class AddGroupAdminRequest {
+        private String userLogin;
+
+        public String getUserLogin() { return userLogin; }
+        public void setUserLogin(String userLogin) { this.userLogin = userLogin; }
+    }
+
+    public static class CreateGroupAdminRequest {
+        private String userLogin;
+        private String groupName;
+        private String fullName;
+
+        public String getUserLogin() { return userLogin; }
+        public void setUserLogin(String userLogin) { this.userLogin = userLogin; }
+        public String getGroupName() { return groupName; }
+        public void setGroupName(String groupName) { this.groupName = groupName; }
+        public String getFullName() { return fullName; }
+        public void setFullName(String fullName) { this.fullName = fullName; }
     }
 }
 

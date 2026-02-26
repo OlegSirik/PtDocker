@@ -5,12 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.security.SecuredController;
-import ru.pt.auth.entity.ProductRoleEntity;
+import ru.pt.api.service.auth.AccountService;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.AdminUserManagementService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,12 +25,12 @@ import java.util.Map;
 @RequestMapping("/api/admin/product-roles")
 public class ProductRoleManagementController extends SecuredController {
 
-    private final AdminUserManagementService adminUserManagementService;
+    private final AccountService accountService;
 
     public ProductRoleManagementController(SecurityContextHelper securityContextHelper,
-                                           AdminUserManagementService adminUserManagementService) {
+                                           AccountService accountService) {
         super(securityContextHelper);
-        this.adminUserManagementService = adminUserManagementService;
+        this.accountService = accountService;
     }
 
     /**
@@ -41,7 +41,7 @@ public class ProductRoleManagementController extends SecuredController {
     @PreAuthorize("hasAnyRole('TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> assignProductRole(@RequestBody AssignProductRoleRequest request) {
         try {
-            ProductRoleEntity role = adminUserManagementService.assignProductRole(
+            ProductRole role = accountService.assignProductRole(
                     request.getAccountId(),
                     request.getRoleProductId(),
                     request.getRoleAccountId(),
@@ -54,10 +54,10 @@ public class ProductRoleManagementController extends SecuredController {
             );
 
             Map<String, Object> response = new HashMap<>();
-            response.put("id", role.getId());
-            response.put("accountId", role.getAccount().getId());
-            response.put("roleProductId", role.getRoleProductId());
-            response.put("roleAccountId", role.getRoleAccount().getId());
+            response.put("id", role.id());
+            response.put("accountId", role.accountId());
+            response.put("roleProductId", role.roleProductId());
+            response.put("roleAccountId", role.roleAccountId());
             response.put("permissions", buildPermissions(role));
             response.put("message", "Product role assigned successfully");
 
@@ -78,8 +78,8 @@ public class ProductRoleManagementController extends SecuredController {
             @RequestBody UpdateProductRoleRequest request) {
         try {
             requireAnyRole("TNT_ADMIN", "GROUP_ADMIN");
-/* 
-            ProductRoleEntity role = adminUserManagementService.updateProductRole(
+
+            ProductRole role = accountService.updateProductRole(
                     productRoleId,
                     request.getCanRead(),
                     request.getCanQuote(),
@@ -90,12 +90,10 @@ public class ProductRoleManagementController extends SecuredController {
             );
 
             Map<String, Object> response = new HashMap<>();
-            response.put("id", role.getId());
+            response.put("id", role.id());
             response.put("permissions", buildPermissions(role));
 
             return buildSuccessResponse(response, "Product role updated successfully");
-*/
-            return buildSuccessResponse(null, "Product role updated successfully");
         } catch (Exception e) {
             return handleException(e);
         }
@@ -111,7 +109,7 @@ public class ProductRoleManagementController extends SecuredController {
         try {
             requireAnyRole("TNT_ADMIN", "GROUP_ADMIN");
 
-            adminUserManagementService.revokeProductRole(productRoleId);
+            accountService.revokeProductRole(productRoleId);
 
             Map<String, Object> response = buildSimpleResponse("Product role revoked successfully");
             response.put("productRoleId", productRoleId);
@@ -128,26 +126,25 @@ public class ProductRoleManagementController extends SecuredController {
      */
     @GetMapping("/account/{accountId}")
     @PreAuthorize("hasAnyRole('TNT_ADMIN', 'GROUP_ADMIN', 'PRODUCT_ADMIN')")
-    public ResponseEntity<List<Map<String, Object>>> getProductRolesByAccount(@PathVariable Long accountId) {
+    public ResponseEntity<List<ProductRole>> getProductRolesByAccount(@PathVariable Long accountId) {
         try {
             requireAnyRole("TNT_ADMIN", "GROUP_ADMIN", "PRODUCT_ADMIN");
 
-            //List<Map<String, Object>> roles = adminUserManagementService.getProductRolesByAccount(accountId);
-            //return ResponseEntity.ok(roles);
-            return ResponseEntity.ok(null);
+            List<ProductRole> roles = accountService.getProductRolesByAccountId(accountId);
+            return ResponseEntity.ok(roles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    private Map<String, Boolean> buildPermissions(ProductRoleEntity role) {
+    private Map<String, Boolean> buildPermissions(ProductRole role) {
         Map<String, Boolean> permissions = new HashMap<>();
-        permissions.put("canRead", role.getCanRead());
-        permissions.put("canQuote", role.getCanQuote());
-        permissions.put("canPolicy", role.getCanPolicy());
-        permissions.put("canAddendum", role.getCanAddendum());
-        permissions.put("canCancel", role.getCanCancel());
-        permissions.put("canProlongate", role.getCanProlongate());
+        permissions.put("canRead", role.canRead());
+        permissions.put("canQuote", role.canQuote());
+        permissions.put("canPolicy", role.canPolicy());
+        permissions.put("canAddendum", role.canAddendum());
+        permissions.put("canCancel", role.canCancel());
+        permissions.put("canProlongate", role.canProlongate());
         return permissions;
     }
 

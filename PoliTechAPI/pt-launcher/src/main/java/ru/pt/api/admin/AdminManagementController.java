@@ -9,7 +9,7 @@ import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.model.AdminResponse;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.service.AdminUserManagementService;
+import ru.pt.auth.service.admin.AdminManagementService;
 import ru.pt.api.dto.exception.BadRequestException;
 
 import java.util.List;
@@ -27,12 +27,12 @@ import java.util.List;
 @RequestMapping("/api/v1/{tenantCode}/admins/roles")
 public class AdminManagementController extends SecuredController {
 
-    private final AdminUserManagementService adminUserManagementService;
+    private final AdminManagementService adminManagementService;
 
     public AdminManagementController(SecurityContextHelper securityContextHelper,
-                                    AdminUserManagementService adminUserManagementService) {
+                                    AdminManagementService adminManagementService) {
         super(securityContextHelper);
-        this.adminUserManagementService = adminUserManagementService;
+        this.adminManagementService = adminManagementService;
     }
 
     // ========== UNIFIED ADMIN MANAGEMENT METHODS ==========
@@ -51,7 +51,7 @@ public class AdminManagementController extends SecuredController {
         if (role == null) {
             throw new BadRequestException("Invalid role: " + roleName + ". Valid values: SYS_ADMIN, TNT_ADMIN, PRODUCT_ADMIN");
         }
-        List<AdminResponse> admins = adminUserManagementService.getAdmins(tenantCode, role);
+        List<AdminResponse> admins = adminManagementService.getAdmins(tenantCode, role);
         return ResponseEntity.ok(admins);
     }
 
@@ -73,7 +73,7 @@ public class AdminManagementController extends SecuredController {
         if (role == null) {
             throw new BadRequestException("Invalid role: " + request.role() + ". Valid values: SYS_ADMIN, TNT_ADMIN, PRODUCT_ADMIN");
         }
-        AdminResponse admin = adminUserManagementService.createAdmin(tenantCode, request.authClientId(), request.userLogin(), role);
+        AdminResponse admin = adminManagementService.createAdmin(tenantCode, request.authClientId(), request.userLogin(), role);
         return ResponseEntity.ok(admin);
     }
 
@@ -86,7 +86,7 @@ public class AdminManagementController extends SecuredController {
     public ResponseEntity<Void> deleteAdmin(
             @PathVariable String tenantCode,
             @PathVariable Long roleId) {
-        adminUserManagementService.deleteAdmin(tenantCode, roleId);
+        adminManagementService.deleteAdmin(tenantCode, roleId);
         return ResponseEntity.noContent().build();
     }
 

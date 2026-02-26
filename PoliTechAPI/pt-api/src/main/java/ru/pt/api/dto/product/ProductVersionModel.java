@@ -55,6 +55,9 @@ public class ProductVersionModel {
     @JsonProperty("numberGenerator")
     private NumberGeneratorDescription numberGeneratorDescription;
 
+    @JsonProperty("rules")
+    private PvProductRules rules;
+
     public Integer getId() {
         return id;
     }
@@ -174,4 +177,13 @@ public class ProductVersionModel {
     public void setIoType(String ioType) {
         this.ioType = ioType;
     }
+
+    public PvProductRules getRules() {
+        return this.rules;
+    }
+
+    public void setRules(PvProductRules rules) {
+        this.rules = rules;
+    }
+
 }

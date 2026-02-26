@@ -32,9 +32,9 @@ export const routes: Routes = [
     path: ':tenantId',
     canActivate: [TenantGuard],
     children: [
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'forbidden', component: ForbiddenComponent  },
-//  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'business-line', component: BusinessLineComponent, canActivate: [authGuard] },
   { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'lob-edit/:id', component: BusinessLineEditComponent, canActivate: [authGuard] },

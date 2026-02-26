@@ -1,7 +1,9 @@
 // rest auth - temporary file
-import {Injectable, inject, Inject} from '@angular/core';
+import {Injectable, inject} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {BehaviorSubject, Observable, tap} from 'rxjs';
+import {BehaviorSubject, Observable, of, tap} from 'rxjs';
+import {catchError, switchMap} from 'rxjs/operators';
+import {throwError} from 'rxjs';
 import {BASE_URL} from '../tokens';
 
 export interface LoginData {
@@ -51,6 +53,7 @@ export class AuthService {
   private baseUrl: string = inject(BASE_URL);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private readonly TENANT_CODE_KEY = 'tenant_code';
+  private readonly ACCOUNT_ID_KEY = 'account_id';
 
   public get baseApiUrl() {
     return `${this.baseUrl}/api/v1/${this.tenant}`;
@@ -65,21 +68,21 @@ export class AuthService {
   public tenantId = -1;
   private accountId: number | null = null;
 
-  login(credentials: LoginData): Observable<AuthResponse> {
-    console.log(credentials);
-    
+  login(credentials: LoginData): Observable<AuthResponse | User> {
+    this.accountId = null;
     const tenantCode = credentials.tenantCode ?? 'demo';
-    let url = `${this.baseUrl}/api/v1/${tenantCode}/auth/login`;
-    return this.http.post<AuthResponse>( url, credentials)
-      .pipe(
-        tap(response => {
-          if (response.accessToken) {
-            localStorage.setItem('accessToken', response.accessToken);
-            this.setTenantCode(tenantCode);
-            this.getCurrentUser().subscribe();
-          }
-        })
-      );
+    const url = `${this.baseUrl}/api/v1/${tenantCode}/auth/login`;
+    return this.http.post<AuthResponse>(url, credentials).pipe(
+      switchMap(response => {
+        if (!response.accessToken) {
+          return of(response);
+        }
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.removeItem(this.ACCOUNT_ID_KEY);
+        this.setTenantCode(tenantCode);
+        return this.getCurrentUser();
+      })
+    );
   }
 
   changePassword(credentials: LoginData): Observable<LoginData> {
@@ -88,22 +91,41 @@ export class AuthService {
   }
 
   getCurrentUser(): Observable<User> {
-
-    
     return this.http.get<User>(`${this.baseApiUrl}/auth/me`)
       .pipe(
-        tap(user=> {
+        tap(user => {
           this.currentUserSubject.next(user);
           this.setTenantCode(user.tenantCode);
           this.tenantId = user.tenantId;
           this.isAuthenticated.next(true);
-          this.setAccountId(user.accountId);
+          const savedAccountId = this.getStoredAccountId();
+          const accountId = this.resolveAccountId(user, savedAccountId);
+          this.setAccountId(accountId);
+        }),
+        catchError(err => {
+          this.logout();
+          return throwError(() => err);
         })
       );
   }
 
+  private getStoredAccountId(): number | null {
+    const raw = localStorage.getItem(this.ACCOUNT_ID_KEY);
+    if (raw == null) return null;
+    const id = parseInt(raw, 10);
+    return isNaN(id) ? null : id;
+  }
+
+  private resolveAccountId(user: User, savedId: number | null): number {
+    if (savedId != null && user.accounts?.some(a => a.id === savedId)) {
+      return savedId;
+    }
+    return user.accountId;
+  }
+
   logout(): void {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem(this.ACCOUNT_ID_KEY);
     this.clearTenantCode();
     this.currentUserSubject.next(null);
     this.isAuthenticated.next(false);
@@ -138,17 +160,25 @@ export class AuthService {
     const token = this.getToken();
     if (token) {
       this.tenant = localStorage.getItem(this.TENANT_CODE_KEY) || this.tenant;
-      return this.getCurrentUser();
+      return this.getCurrentUser().pipe(
+        catchError(() => {
+          this.isAuthenticated.next(false);
+          return of(null as unknown as User);
+        })
+      );
     }
+    this.isAuthenticated.next(false);
     return null;
   }
 
   setAccountId(accountId: number) {
     this.accountId = accountId;
+    localStorage.setItem(this.ACCOUNT_ID_KEY, accountId.toString());
   }
 
   getAccountId(): number | null {
-    return this.accountId ?? null;
+    if (this.accountId != null) return this.accountId;
+    return this.getStoredAccountId();
   }
 
   getTenantCode(): string {

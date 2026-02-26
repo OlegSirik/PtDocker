@@ -89,7 +89,8 @@ export class FormlyFormsComponent implements OnInit {
     quoteValidator: [],
     saveValidator: [],
     packages: [],
-    vars: []
+    vars: [],
+    rules: { insuredEqualsPolicyHolder: false }
   };
 
 
@@ -271,7 +272,6 @@ export class FormlyFormsComponent implements OnInit {
 
   getFieldVisible(fieldName: string): boolean {
     const found = this.product.vars.some(v => v.varCode === fieldName);
-    //console.log(fieldName + "=" + found.toString());
     return found;
   }
 

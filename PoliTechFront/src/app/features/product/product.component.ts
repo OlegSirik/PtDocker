@@ -78,7 +78,10 @@ export class ProductComponent implements OnInit {
     quoteValidator: [],
     saveValidator: [],
     packages: [],
-    vars: []
+    vars: [],
+    rules: {
+      insuredEqualsPolicyHolder: false
+    }
   };
 
   isNewRecord = false;
@@ -227,6 +230,10 @@ export class ProductComponent implements OnInit {
       return this.productService.getProduct(id, versionNo || 0).pipe(
         tap((product) => {
           this.product = product;
+          // Ensure rules is initialized
+          if (!this.product.rules) {
+            this.product.rules = { insuredEqualsPolicyHolder: false };
+          }
           // Ensure arrays are initialized for all packages and covers
           if (this.product.packages) {
             this.product.packages.forEach(pkg => {

@@ -3,7 +3,7 @@ package ru.pt.auth.model;
 public enum AuthType {
     JWT("JWT"),
     HEADERS("HEADERS"),
-    API_KEY("API_KEY"),
+    APIKEY("APIKEY"),
     KEYCLOAK("KEYCLOAK"),
     NONE("NONE");
 
