@@ -7,7 +7,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Entity
 @Table(name = "acc_accounts")
@@ -199,147 +202,47 @@ public class AccountEntity {
     }
 
     /**
-    * Создаёт группу под клиентом
-    */
-    public static AccountEntity groupAccount(AccountEntity parentAccount, String name) {
-    if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
-            parentAccount.getNodeType() != AccountNodeType.GROUP) {
-            throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT or GROUP, but was " + parentAccount.getNodeType()
-            );
-        }
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),  // копируем клиента с родителя
-            parentAccount,
-            AccountNodeType.GROUP,
-            name
-        );
+     * Creates a child account under the given parent. Uses parent's tenant and client.
+     */
+    private static AccountEntity newChildAccount(AccountEntity parent, AccountNodeType nodeType, String name) {
+        String displayName = (name != null && !name.isBlank()) ? name : nodeType.name();
+        return new AccountEntity(null, parent.getTenant(), parent.getClient(), parent, nodeType, displayName);
     }
 
     /**
-    * Создаёт группу под клиентом
-    */
-    public static AccountEntity accountAccount(AccountEntity parentAccount, String name) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
-                parentAccount.getNodeType() != AccountNodeType.GROUP) {
-                throw new IllegalArgumentException(
-                    "Parent account must be of type CLIENT or GROUP, but was " + parentAccount.getNodeType()
-                );
-            }
-            return new AccountEntity(
-                null,
-                parentAccount.getTenant(),
-                parentAccount.getClient(),  // копируем клиента с родителя
-                parentAccount,
-                AccountNodeType.ACCOUNT,
-                name
-            );
-        }
-    
+     * Matrix of allowed child account types per parent type.
+     * Defines which account types can be created under which parent.
+     */
+    private static final Map<AccountNodeType, Set<AccountNodeType>> ALLOWED_CHILD_TYPES = Map.of(
+        AccountNodeType.TENANT, Set.of(AccountNodeType.CLIENT),
+        AccountNodeType.CLIENT, Set.of(AccountNodeType.GROUP, AccountNodeType.ACCOUNT, AccountNodeType.SYS_ADMIN,
+            AccountNodeType.TNT_ADMIN, AccountNodeType.CLIENT_ADMIN, AccountNodeType.PRODUCT_ADMIN),
+        AccountNodeType.GROUP, Set.of(AccountNodeType.GROUP, AccountNodeType.ACCOUNT, AccountNodeType.GROUP_ADMIN),
+        AccountNodeType.ACCOUNT, Set.of(AccountNodeType.SUB),
+        AccountNodeType.SUB, Collections.emptySet(),
+        AccountNodeType.SYS_ADMIN, Collections.emptySet(),
+        AccountNodeType.TNT_ADMIN, Collections.emptySet(),
+        AccountNodeType.CLIENT_ADMIN, Collections.emptySet(),
+        AccountNodeType.GROUP_ADMIN, Collections.emptySet(),
+        AccountNodeType.PRODUCT_ADMIN, Collections.emptySet()
+    );
+
     /**
-    * Создаёт группу под клиентом
-    */
-    public static AccountEntity subaccountAccount(AccountEntity parentAccount, String name) {
-        if (parentAccount.getNodeType() != AccountNodeType.ACCOUNT) {
-                throw new IllegalArgumentException(
-                    "Parent account must be of type ACCOUNT, but was " + parentAccount.getNodeType()
-                );
-            }
-            return new AccountEntity(
-                null,
-                parentAccount.getTenant(),
-                parentAccount.getClient(),  // копируем клиента с родителя
-                parentAccount,
-                AccountNodeType.SUB,
-                name
-            );
-        }
-
-        /**
-    * Создаёт стандартный аккаунт под клиентом (например, default)
-    */
-    public static AccountEntity defaultClientAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
+     * Creates an account of the given type under the parent account.
+     * Validates hierarchy via ALLOWED_CHILD_TYPES, then creates the entity.
+     */
+    public static AccountEntity createAccount(AccountEntity parentAccount, String name, AccountNodeType childType) {
+        AccountNodeType parentType = parentAccount.getNodeType();
+        Set<AccountNodeType> allowed = ALLOWED_CHILD_TYPES.getOrDefault(parentType, Collections.emptySet());
+        if (!allowed.contains(childType)) {
             throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
-            );
+                "Account type " + childType + " cannot be created under " + parentType);
         }
-
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),
-            parentAccount,
-            AccountNodeType.ACCOUNT,
-            "Default account for client"
-        );
-    }
-
-    public static AccountEntity sysAdminAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
-            throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
-            );
-        }
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),
-            parentAccount,
-            AccountNodeType.SYS_ADMIN,
-        "SYS_ADMIN"
-        );
-    }
-
-    public static AccountEntity tntAdminAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
-            throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
-            );
-        }
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),
-            parentAccount,
-            AccountNodeType.TNT_ADMIN,
-            "TNT_ADMIN"
-        );
-    }
-
-    public static AccountEntity productAdminAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT) {
-            throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
-            );
-        }
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),
-            parentAccount,
-            AccountNodeType.PRODUCT_ADMIN,
-            "PRODUCT_ADMIN"
-        );
-    }
-
-    public static AccountEntity groupAdminAccount(AccountEntity parentAccount) {
-        if (parentAccount.getNodeType() != AccountNodeType.CLIENT &&
-            parentAccount.getNodeType() != AccountNodeType.GROUP) {
-            throw new IllegalArgumentException(
-                "Parent account must be of type CLIENT, but was " + parentAccount.getNodeType()
-            );
-        }
-        return new AccountEntity(
-            null,
-            parentAccount.getTenant(),
-            parentAccount.getClient(),
-            parentAccount,
-            AccountNodeType.GROUP_ADMIN,
-            "GROUP_ADMIN"
-        );
+        return switch (childType) {
+            case TENANT -> throw new IllegalArgumentException("TENANT cannot be created as child; use tenantAccount(TenantEntity)");
+            case CLIENT -> throw new IllegalArgumentException("Use clientAccount(ClientEntity, AccountEntity) for CLIENT");
+            default -> newChildAccount(parentAccount, childType, name);
+        };
     }
 
 }

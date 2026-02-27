@@ -2,10 +2,15 @@ package ru.pt.api.dto.auth;
 
 public enum AccountType {
 
-    ROOT,
+    TENANT, 
     CLIENT,
     GROUP,
     ACCOUNT,
-    SUBACCOUNT
+    SUB,
+    SYS_ADMIN,
+    TNT_ADMIN,
+    CLIENT_ADMIN,
+    GROUP_ADMIN,
+    PRODUCT_ADMIN
 
 }

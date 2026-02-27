@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
+import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
@@ -13,6 +14,7 @@ import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.AccountEntity;
+import ru.pt.auth.entity.AccountNodeType;
 import ru.pt.auth.entity.ProductRoleEntity;
 import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.repository.AccountRepository;
@@ -65,26 +67,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public Account createGroup(String name, Long parentId) {
-        authService.check(
-            getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.MANAGE);
-
-        AccountEntity parentAccount = accountRepository.findById(parentId)
-                .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
-
-        AccountEntity account = AccountEntity.groupAccount(parentAccount, name);
-        account.setId(accountRepository.getNextAccountId());
-
-        AccountEntity savedAccount = accountRepository.save(account);
-
-        AccountEntity admin_account = AccountEntity.groupAdminAccount(savedAccount);
-        admin_account.setId(accountRepository.getNextAccountId());
-        accountRepository.save(admin_account);
-        
-        return accountMapper.toDto(savedAccount);
+        return createAccount(AccountNodeType.GROUP, name, parentId);
     }
 
     @Override
@@ -102,21 +85,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public Account createAccount(String name, Long parentId) {
-        authService.check(
-            getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.MANAGE);
-
-        AccountEntity parentAccount = accountRepository.findById(parentId)
-                .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
-
-        AccountEntity account = AccountEntity.accountAccount(parentAccount, name);
-        account.setId(accountRepository.getNextAccountId());
-
-        AccountEntity savedAccount = accountRepository.save(account);
-        return accountMapper.toDto(savedAccount);
+        return createAccount(AccountNodeType.ACCOUNT, name, parentId);
     }
 
     @Override
@@ -134,21 +103,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public Account createSubaccount(String name, Long parentId) {
-        authService.check(
-            getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.MANAGE);
-
-        AccountEntity parentAccount = accountRepository.findById(parentId)
-                .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
-
-        AccountEntity account = AccountEntity.subaccountAccount(parentAccount, name);
-        account.setId(accountRepository.getNextAccountId());
-
-        AccountEntity savedAccount = accountRepository.save(account);
-        return accountMapper.toDto(savedAccount);
+        return createAccount(AccountNodeType.SUB, name, parentId);
     }
 
     @Override
@@ -408,4 +363,61 @@ public class AccountServiceImpl implements AccountService {
         
         return returnList;
     }
+
+    /********************* */
+    public Account createAccount(AccountNodeType accountNodeType, String name, Long parentId) {
+        /* Проверить что есть доступ к account под который создается еще один */
+        authService.check(
+            getCurrentUser(), 
+            AuthZ.ResourceType.ACCOUNT, 
+            parentId.toString(),
+            parentId,
+            AuthZ.Action.MANAGE);
+        
+        /* Находим родительский экаунт */    
+        AccountEntity parentAccount = accountRepository.findById(parentId)
+                .orElseThrow(() -> new NotFoundException("Parent account not found: " + parentId));
+
+        /* Добавляем экаунт в БД. Entity формируется через factory. Там же проверяется 
+        * допустимость связки paretn-child 
+        */        
+        try {
+            AccountEntity account = AccountEntity.createAccount(parentAccount, name, accountNodeType);
+            account.setId(accountRepository.getNextAccountId());
+            AccountEntity savedAccount = accountRepository.save(account);
+            return accountMapper.toDto(savedAccount);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
+        }
+    }
+
+    /*
+    * Используется только для ролевых экаунтов типа админов. Где всегда один узел определенного типа.
+    * для account, sub вернет первую любую. 
+    */
+    public Account getRoleAccount(AccountNodeType accountNodeType, Long parentId) {
+        authService.check(
+            getCurrentUser(), 
+            AuthZ.ResourceType.ACCOUNT, 
+            parentId.toString(),
+            parentId,
+            AuthZ.Action.MANAGE);
+
+        List<Account> children = accountDataService.getChildAccounts(parentId); 
+        for (Account child : children) {
+            if (child.nodeType().equals(accountNodeType.name())) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    public Account getOrCreateRoleAccount(AccountNodeType accountNodeType, String name, Long parentId) {
+        Account account = getRoleAccount(accountNodeType, parentId);
+        if ( account == null ) {
+            return createAccount(accountNodeType, name, parentId);
+        }
+        return account;
+    }
+
 }

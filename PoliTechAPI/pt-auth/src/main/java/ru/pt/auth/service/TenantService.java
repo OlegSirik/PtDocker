@@ -126,20 +126,20 @@ public class TenantService implements TenantSecurityConfigService {
 
 
         if ( tenant.isSystem()) {
-            AccountEntity sysAdminAccount = AccountEntity.sysAdminAccount(savedClientAccount);
+            AccountEntity sysAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.SYS_ADMIN);
             sysAdminAccount.setId(getNextId());
             accountRepository.save(sysAdminAccount);
         } else {
-            AccountEntity tntAdminAccount = AccountEntity.tntAdminAccount(savedClientAccount);
+            AccountEntity tntAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.TNT_ADMIN);
             tntAdminAccount.setId(getNextId());
             accountRepository.save(tntAdminAccount);
         }
 
-        AccountEntity productAdminAccount = AccountEntity.productAdminAccount(savedClientAccount);
+        AccountEntity productAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.PRODUCT_ADMIN);
         productAdminAccount.setId(getNextId());
         accountRepository.save(productAdminAccount);
 
-        AccountEntity defaultClientAccount = AccountEntity.defaultClientAccount(savedClientAccount);
+        AccountEntity defaultClientAccount = AccountEntity.createAccount(savedClientAccount, "Default account for client", AccountNodeType.ACCOUNT);
         defaultClientAccount.setId(getNextId());
         AccountEntity savedDefaultClientAccount = accountRepository.save(defaultClientAccount);
 

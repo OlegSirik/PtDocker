@@ -7,14 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.service.auth.AccountLoginService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.*;
 import ru.pt.auth.model.AdminResponse;
 import ru.pt.auth.repository.*;
+import ru.pt.auth.service.AccountServiceImpl;
 import ru.pt.auth.service.TenantService;
 
 import java.util.List;
@@ -37,6 +40,8 @@ public class AdminManagementService {
     private final AccountLoginRepository accountLoginRepository;
     private final AdminPermissionHelper adminPermissionHelper;
     private final AuthorizationService authService;
+    private final AccountServiceImpl accountService;
+    private final AccountLoginService accountLoginService;
 
     // ========== SYS_ADMIN, TNT_ADMIN, PRODUCT_ADMIN ==========
 
@@ -76,11 +81,11 @@ public class AdminManagementService {
             if (!tenantCode.equals(TenantEntity.SYS_TENANT_CODE)) {
                 throw new BadRequestException("Tenant code is required");
             }
-            accountLogin = AccountLoginEntity.createSysAdmin(adminAccount, userLogin);
+            accountLogin = AccountLoginEntity.create(adminAccount, loginEntity);
         } else if (role == UserRole.TNT_ADMIN) {
-            accountLogin = AccountLoginEntity.createTntAdmin(adminAccount, userLogin);
+            accountLogin = AccountLoginEntity.create(adminAccount, loginEntity);
         } else if (role == UserRole.PRODUCT_ADMIN) {
-            accountLogin = AccountLoginEntity.createProductAdmin(adminAccount, userLogin);
+            accountLogin = AccountLoginEntity.create(adminAccount, loginEntity);
         } else {
             throw new BadRequestException("Invalid role: " + role.getValue());
         }
@@ -132,7 +137,7 @@ public class AdminManagementService {
         LoginEntity loginEntity = loginRepository.findByTenantCodeAndUserLogin(currentTenantCode, userLogin)
                 .orElseThrow(() -> new NotFoundException("Login not found"));
 
-        AccountLoginEntity accountLogin = AccountLoginEntity.createClientAdmin(clientAccount, userLogin);
+        AccountLoginEntity accountLogin = AccountLoginEntity.create(clientAccount, loginEntity);
         accountLogin.setLogin(loginEntity);
         return accountLoginRepository.save(accountLogin);
     }
@@ -172,7 +177,7 @@ public class AdminManagementService {
         LoginEntity login = loginRepository.findByUserLogin(userLogin)
             .orElseThrow(() -> new BadRequestException("Login '" + userLogin + "' not found"));
 
-        AccountLoginEntity accountLogin = AccountLoginEntity.createGroupAdmin(adminAccount, userLogin);
+        AccountLoginEntity accountLogin = AccountLoginEntity.create(adminAccount, login);
         accountLogin.setLogin(login);
         AccountLoginEntity saved = accountLoginRepository.save(accountLogin);
 
@@ -250,11 +255,11 @@ public class AdminManagementService {
         LoginEntity loginEntity = loginRepository.findByTenantCodeAndUserLogin(currentTenantCode, userLogin)
                 .orElseThrow(() -> new NotFoundException("Login not found"));
 
-        AccountEntity groupAdminAccount = AccountEntity.groupAdminAccount(groupAccount);
+        AccountEntity groupAdminAccount = AccountEntity.createAccount(groupAccount, null, AccountNodeType.GROUP_ADMIN);
         groupAdminAccount.setId(accountRepository.getNextAccountId());
         accountRepository.save(groupAdminAccount);
 
-        AccountLoginEntity accountLogin = AccountLoginEntity.createGroupAdmin(groupAdminAccount, userLogin);
+        AccountLoginEntity accountLogin = AccountLoginEntity.create(groupAdminAccount, loginEntity);
         accountLogin.setLogin(loginEntity);
         AccountLoginEntity saved = accountLoginRepository.save(accountLogin);
 
@@ -294,4 +299,24 @@ public class AdminManagementService {
                 accountLogin.getLogin().getPosition()
         );
     }
+
+//--------------------------
+
+    
+/* 
+    public AdminResponse grantRole(Long groupId, UserRole role, String userLogin) {
+        
+        Account account = accountService.getOrCreateRoleAccount(AccountNodeType.fromString(role.getValue()), userLogin, groupId);
+
+        /* Есть такой логин
+        LoginEntity login = loginRepository.findByUserLogin(userLogin)
+            .orElseThrow(() -> new BadRequestException("Login '" + userLogin + "' not found"));
+
+        AccountLoginService.create( account.id(), login);
+
+    logger.info("GROUP_ADMIN user created: {} for group '{}'", userLogin, groupId);
+    return fromEntity(saved);
+}
+*/
+
 }

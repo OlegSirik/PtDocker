@@ -135,39 +135,11 @@ public class AccountLoginEntity {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-    
-    public static AccountLoginEntity createSysAdmin(AccountEntity accountEntity, String userLogin) {
-        if (accountEntity.getNodeType() != AccountNodeType.SYS_ADMIN ) {
-            throw new IllegalArgumentException("Account must be of type SYS_ADMIN");
-        }
-        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
+
+    public static AccountLoginEntity create(AccountEntity accountEntity, LoginEntity login) {
+        AccountLoginEntity accountLogin = new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, login.getUserLogin());
+        accountLogin.setLogin(login);
+        return accountLogin;
     }
 
-    public static AccountLoginEntity createTntAdmin(AccountEntity accountEntity, String userLogin) {
-        if (accountEntity.getNodeType() != AccountNodeType.TNT_ADMIN ) {
-            throw new IllegalArgumentException("Account must be of type CLIENT");
-        }
-        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
-    }
-
-    public static AccountLoginEntity createClientAdmin(AccountEntity accountEntity, String userLogin) {
-        if (accountEntity.getNodeType() != AccountNodeType.CLIENT_ADMIN) {
-            throw new IllegalArgumentException("Account must be of type CLIENT");
-        }
-        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
-    }
-
-    public static AccountLoginEntity createGroupAdmin(AccountEntity accountEntity, String userLogin) {
-        if (accountEntity.getNodeType() != AccountNodeType.GROUP_ADMIN) {
-            throw new IllegalArgumentException("Account must be of type GROUP or CLIENT");
-        }
-        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
-    }
-    
-    public static AccountLoginEntity createProductAdmin(AccountEntity accountEntity, String userLogin) {
-        if (accountEntity.getNodeType() != AccountNodeType.PRODUCT_ADMIN ) {
-            throw new IllegalArgumentException("Account must be of type PRODUCT_ADMIN");
-        }
-        return new AccountLoginEntity(accountEntity.getTenant(), accountEntity.getClient(), accountEntity, userLogin);
-    }
 }

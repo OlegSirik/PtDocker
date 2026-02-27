@@ -135,11 +135,11 @@ public class ClientService implements ClientSecurityConfigService {
         AccountEntity savedAccount = accountRepository.save(account);
 
         // default account
-        AccountEntity defAccount = AccountEntity.defaultClientAccount(savedAccount);
+        AccountEntity defAccount = AccountEntity.createAccount(savedAccount, "Default account for client", AccountNodeType.ACCOUNT);
         defAccount.setId(accountRepository.getNextAccountId());
         AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
-        AccountEntity admin_account = AccountEntity.groupAdminAccount(savedDefAccount);
+        AccountEntity admin_account = AccountEntity.createAccount(savedDefAccount, null, AccountNodeType.GROUP_ADMIN);
         admin_account.setId(accountRepository.getNextAccountId());
         accountRepository.save(admin_account);
 

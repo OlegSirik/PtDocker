@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.AccountLogin;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.service.auth.AccountLoginService;
+import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.auth.entity.AccountEntity;
@@ -37,6 +39,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
     private final AccountLoginMapper accountLoginMapper;
     private final AuthorizationService authService;
     private final SecurityContextHelper securityContextHelper;
+    private final AccountService accountService;
 
     @Override
     @Transactional
@@ -142,4 +145,58 @@ public class AccountLoginServiceImpl implements AccountLoginService {
         return securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
     }
+
+
+/*     public AccountLogin createAccountLogin(Long accountId, String login, boolean isDefault) {
+        if (login == null || login.isEmpty()) {
+            throw new BadRequestException("Login cannot be null or empty");
+        }
+
+        String userLogin = login.trim();
+
+        // Authorization check
+        authService.check(
+            getCurrentUser(),
+            AuthZ.ResourceType.LOGIN,
+            userLogin,
+            accountId,
+            AuthZ.Action.MANAGE
+        );
+
+        // Check if login already exists for this account
+        if (loginExists(accountId, userLogin)) {
+            throw new BadRequestException("Нарушение уникальности. Такой Login уже привязан к аккаунту");
+        }
+
+        Account account = accountService.getAccountById(accountId);
+        // Get account entity
+        if (account == null) {throw new NotFoundException("Account not found: " + accountId)) };
+
+        // Check if login exists in acc_logins, create if not
+        LoginEntity loginEntity = loginRepository.findByTenantCodeAndUserLogin(
+                accountEntity.getTenant().getCode(), 
+                userLogin
+        ).orElseGet(() -> {
+            // Create new login in acc_logins
+            LoginEntity newLogin = new LoginEntity();
+            newLogin.setTenant(accountEntity.getTenant());
+            newLogin.setUserLogin(userLogin);
+            newLogin.setFullName(userLogin); // Default to userLogin if no fullName provided
+            newLogin.setIsDeleted(false);
+            return loginRepository.save(newLogin);
+        });
+
+        // Create account login binding
+        AccountLoginEntity accountLoginEntity = new AccountLoginEntity();
+        accountLoginEntity.setTenant(accountEntity.getTenant());
+        accountLoginEntity.setClient(accountEntity.getClient());
+        accountLoginEntity.setAccount(accountEntity);
+        accountLoginEntity.setUserLogin(userLogin);
+        accountLoginEntity.setLogin(loginEntity);
+        accountLoginEntity.setDefault(Boolean.TRUE.equals(login.getIsDefault()));
+
+        AccountLoginEntity savedEntity = accountLoginRepository.save(accountLoginEntity);
+        return accountLoginMapper.toDto(savedEntity);
+    }
+*/
 }
