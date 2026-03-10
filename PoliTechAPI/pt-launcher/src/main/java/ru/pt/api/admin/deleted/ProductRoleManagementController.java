@@ -1,4 +1,4 @@
-package ru.pt.api.admin;
+package ru.pt.api.admin.deleted;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @RestController
 @SecurityRequirement(name = "bearerAuth")
-@RequestMapping("/api/admin/product-roles")
+@RequestMapping("/api/deleted/admin/product-roles")
 public class ProductRoleManagementController extends SecuredController {
 
     private final AccountService accountService;

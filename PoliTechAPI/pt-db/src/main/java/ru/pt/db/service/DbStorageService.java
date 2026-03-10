@@ -46,7 +46,7 @@ public class DbStorageService implements StorageService {
     private final PolicyRepository policyRepository;
     private final SecurityContextHelper securityContextHelper;
     private final PolicyIndexRepository policyIndexRepository;
-    private final PolicyProjectionService policyProjectionService;
+    
     private final PolicyMapper policyMapper;
     private final PolicyReport policyReport;
     private final AuthorizationService authService;
@@ -71,6 +71,9 @@ public class DbStorageService implements StorageService {
         var index = policyMapper.policyIndexFromDTO(policy, userData);
 
         index.setId(id);
+        String idPath = policyIndexRepository.findAccountIdPath(index.getUserAccountId())
+                .orElseThrow(() -> new NotFoundException("Account path not found for accountId: " + index.getUserAccountId()));
+        index.setIdPath(idPath);
         policyIndexRepository.save(index);
 
         var policyData = new PolicyData();
@@ -292,7 +295,13 @@ public class DbStorageService implements StorageService {
             .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
         Long accountId = userData.getActingAccountId();
 
+        // Есть права на получения списка договоров
         authService.check(userData, AuthZ.ResourceType.POLICY, null, accountId, AuthZ.Action.LIST);
+
+        if ( authService.userHasPermition(userData, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST) ) {
+            // это тестировщик
+            return policyReport.findPoliciesByAccountPath(userData.getAccountPath(), "dev" , qstr);
+        }
 
         return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
 

@@ -14,30 +14,30 @@ public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
     Optional<LoginEntity> findByUserLogin(@Param("userLogin") String userLogin);
 
     /**
-     * Поиск логина по userLogin и tenant ID
+     * Поиск логина по userLogin и tenant code
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.userLogin = :userLogin")
+    @Query("SELECT l FROM LoginEntity l JOIN TenantEntity t ON l.tid = t.id WHERE t.code = :tenantCode AND l.userLogin = :userLogin")
     Optional<LoginEntity> findByTenantCodeAndUserLogin(@Param("tenantCode") String tenantCode, @Param("userLogin") String userLogin);
 
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.id = :accountId")
+    @Query("SELECT l FROM LoginEntity l JOIN TenantEntity t ON l.tid = t.id WHERE t.code = :tenantCode AND l.id = :accountId")
     Optional<LoginEntity> findByTenantCodeAndAccountId(@Param("tenantCode") String tenantCode, @Param("accountId") Long accountId);
 
     /**
      * Получить все логины для тенанта
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode ORDER BY l.createdAt DESC")
+    @Query("SELECT l FROM LoginEntity l JOIN TenantEntity t ON l.tid = t.id WHERE t.code = :tenantCode ORDER BY l.createdAt DESC")
     List<LoginEntity> findByTenantCode(@Param("tenantCode") String tenantCode);
 
     /**
-     * Получить логин по ID и tenant ID
+     * Получить логин по ID и tenant code
      */
-    @Query("SELECT l FROM LoginEntity l WHERE l.id = :id AND l.tenantEntity.code = :tenantCode")
+    @Query("SELECT l FROM LoginEntity l JOIN TenantEntity t ON l.tid = t.id WHERE l.id = :id AND t.code = :tenantCode")
     Optional<LoginEntity> findByIdAndTenantCode(@Param("id") Long id, @Param("tenantCode") String tenantCode);
 
     /**
      * Проверка существования логина для тенанта
      */
-    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l WHERE l.tenantEntity.code = :tenantCode AND l.userLogin = :userLogin")
+    @Query("SELECT COUNT(l) > 0 FROM LoginEntity l JOIN TenantEntity t ON l.tid = t.id WHERE t.code = :tenantCode AND l.userLogin = :userLogin")
     boolean existsByTenantCodeAndUserLogin(@Param("tenantCode") String tenantCode, @Param("userLogin") String userLogin);
 
 }

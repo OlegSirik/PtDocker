@@ -54,8 +54,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.accountTokenRepository = accountTokenRepository;
     }
 
-    // TODO create method public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    // without requestContext for initial load and testing
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -138,12 +136,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountId);
         } 
         if (accountTokenEntity != null) {
-            userDetails = UserDetailsImpl.build(accountTokenEntity, productRoles, actingAccountId);
+            userDetails = UserDetailsImpl.build(accountTokenEntity, accountEntity, productRoles, actingAccountId);
         } 
 
         return userDetails;
     }
 
+    public UserDetailsImpl impersonateSysAdmin(UserDetailsImpl user, String newTenant) {
+        if ("SYS_ADMIN".equals(user.getUserRole())) {
+            
+            if (newTenant != null && !newTenant.isEmpty()) {
+                user.setImpersonatedTenantCode(newTenant); 
+                AccountEntity tenantAccount = accountRepository.findTenantAccount(newTenant).orElseThrow(() -> new UsernameNotFoundException("Tenant account not found for tenant: " + newTenant));
+                
+                user.setActingAccountId(tenantAccount.getId());
+                user.setImpersonatedTenantCode(newTenant);
+            }
+        }
+        return user;
+    }
     /**
      * Получает все роли продуктов для аккаунта
      */

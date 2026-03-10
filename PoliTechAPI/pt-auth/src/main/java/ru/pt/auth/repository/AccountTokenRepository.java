@@ -23,40 +23,32 @@ public interface AccountTokenRepository extends JpaRepository<AccountTokenEntity
            "WHERE al.userLogin = :userLogin")
     List<AccountTokenEntity> findByUserLogin(@Param("userLogin") String userLogin);
 */
-    @Query("SELECT at FROM AccountTokenEntity at " +
-           "WHERE at.token = :token AND at.clientEntity.id = :clientId")
+    @Query("SELECT at FROM AccountTokenEntity at WHERE at.token = :token AND at.clientId = :clientId")
     Optional<AccountTokenEntity> findByTokenAndClientId(@Param("token") String token,
                                                         @Param("clientId") Long clientId);
 
-    @Query("SELECT at FROM AccountTokenEntity at " +
-           "WHERE at.token = :token AND at.accountEntity.id = :accountId")
+    @Query("SELECT at FROM AccountTokenEntity at WHERE at.token = :token AND at.accountId = :accountId")
     Optional<AccountTokenEntity> findByTokenAndAccountId(@Param("token") String token,
                                                          @Param("accountId") Long accountId);
 
-    @Query("SELECT at FROM AccountTokenEntity at " +
-           "WHERE at.token = :token AND at.tenantEntity.code = :tenantCode")
+    @Query("SELECT at FROM AccountTokenEntity at JOIN TenantEntity t ON at.tid = t.id WHERE at.token = :token AND t.code = :tenantCode")
     Optional<AccountTokenEntity> findByTokenAndTenantCode(@Param("token") String token,
                                                          @Param("tenantCode") String tenantCode);
 
-    @Query("SELECT at FROM AccountTokenEntity at " +
-           "LEFT JOIN FETCH at.clientEntity " +
-           "LEFT JOIN FETCH at.accountEntity " +
-           "WHERE at.token = :token AND at.tenantEntity.code = :tenantCode")
+    @Query("SELECT at FROM AccountTokenEntity at JOIN TenantEntity t ON at.tid = t.id WHERE at.token = :token AND t.code = :tenantCode")
     Optional<AccountTokenEntity> findByTokenAndTenantCodeWithClientAndAccount(
             @Param("token") String token,
             @Param("tenantCode") String tenantCode);
 
-            @Query("SELECT at FROM AccountTokenEntity at " +
-            "LEFT JOIN FETCH at.clientEntity " +
-            "LEFT JOIN FETCH at.accountEntity " +
-            "WHERE at.tenantEntity.code = :tenantCode AND at.clientEntity.clientId = :clientAuthId AND at.accountEntity.id = :accountId")
-     Optional<AccountTokenEntity> findByAll4Fields(
+    @Query("SELECT at FROM AccountTokenEntity at " +
+           "JOIN TenantEntity t ON at.tid = t.id " +
+           "JOIN ClientEntity c ON at.clientId = c.id " +
+           "WHERE t.code = :tenantCode AND c.clientId = :clientAuthId AND at.accountId = :accountId")
+    Optional<AccountTokenEntity> findByAll4Fields(
               @Param("tenantCode") String tenantCode,
               @Param("clientAuthId") String clientAuthId,
-              //@Param("token") String token,
-              @Param("accountId") Long accountId
-       );
-             
-    @Query("SELECT at FROM AccountTokenEntity at WHERE at.accountEntity.Id = :accountId")
+              @Param("accountId") Long accountId);
+
+    @Query("SELECT at FROM AccountTokenEntity at WHERE at.accountId = :accountId")
     Optional<List<AccountTokenEntity>> findByAccountId(@Param("accountId") Long accountId);
 }

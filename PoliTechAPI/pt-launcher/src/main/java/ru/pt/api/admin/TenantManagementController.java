@@ -34,23 +34,22 @@ public class TenantManagementController extends SecuredController {
     }
 
     /**
-     * SYS_ADMIN: Получить список всех tenant
+     * Получить список всех tenant
      * GET /api/v1/{tenantCode}/admin/tenants
      */
 
     @GetMapping
-    //@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
+    
     public ResponseEntity<List<Tenant>> getTenants() {
         List<Tenant> tenants = tenantService.getTenants();
         return ResponseEntity.ok(tenants);
     }
 
     /**
-     * SYS_ADMIN: Создание нового tenant
+     * Создание нового tenant
      * POST /api/v1/{tenantCode}/admin/tenants
      */
     @PostMapping
-    //@PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
     public ResponseEntity<Tenant> createTenant(
             @PathVariable String tenantCode,
             @RequestBody Tenant tenantDto) {
@@ -59,11 +58,10 @@ public class TenantManagementController extends SecuredController {
     }
 
     /**
-     * SYS_ADMIN: Создание нового tenant
+     * Изменить tenant
      * POST /api/v1/{tenantCode}/admin/tenants
      */
     @PutMapping("/{tid}")
-    @PreAuthorize("hasRole('SYS_ADMIN') or hasRole('TNT_ADMIN')")
     public ResponseEntity<Tenant> updateTenant(
             @PathVariable String tenantCode,
             @RequestBody Tenant tenantDto) {
@@ -73,7 +71,7 @@ public class TenantManagementController extends SecuredController {
     }
 
     /**
-     * SYS_ADMIN: Удаление tenant (soft delete)
+     * Удаление tenant (soft delete)
      * DELETE /api/v1/{tenantCode}/admin/tenants/{tenantResourceId}
      */
     @DeleteMapping("/{tid}")
@@ -84,6 +82,7 @@ public class TenantManagementController extends SecuredController {
         return ResponseEntity.noContent().build();
     }
 
+    
 
 }
 

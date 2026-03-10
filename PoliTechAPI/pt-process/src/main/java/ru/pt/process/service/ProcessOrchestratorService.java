@@ -471,8 +471,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         var product = productService.getProductByCode(productCode, iAmTester);
         logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
-        authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.SELL);
-        authorizationService.checkProductAction(user, Long.valueOf(product.getId()), AuthZ.Action.SELL);
+        if (!iAmTester) {
+            authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.SELL);
+            authorizationService.checkProductAction(user, Long.valueOf(product.getId()), AuthZ.Action.SELL);
+        }
 
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);

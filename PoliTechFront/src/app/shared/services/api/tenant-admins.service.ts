@@ -25,7 +25,7 @@ export interface TenantAdmin {
 
 export class TenantAdminService extends BaseApiService<TenantAdmin> {
   constructor(http: HttpClient, env: EnvService, authService: AuthService) {
-    super(http, env, 'admins/roles', authService);
+    super(http, env, 'admin/admins/members', authService);
   }
 
   /** Получить TNT admins по tenant code */
@@ -34,20 +34,20 @@ export class TenantAdminService extends BaseApiService<TenantAdmin> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '/sys_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=sys_admin', { headers });
   }
   
   getTntADmins(tenantCode: string): Observable<TenantAdmin[]> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '/tnt_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=tnt_admin', { headers });
   }
 
   getProductAdmins(tenantCode: string): Observable<TenantAdmin[]> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '/product_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=product_admin', { headers });
   }
 }

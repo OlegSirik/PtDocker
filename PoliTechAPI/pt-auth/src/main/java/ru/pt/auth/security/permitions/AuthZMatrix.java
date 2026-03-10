@@ -52,7 +52,8 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.TENANT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.TENANT_ADMIN, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.CLIENT, AuthZ.Action.ALL),
-            formatPermission(AuthZ.ResourceType.CLIENT_PRODUCTS, AuthZ.Action.VIEW)
+            formatPermission(AuthZ.ResourceType.CLIENT_PRODUCTS, AuthZ.Action.VIEW),
+            formatPermission(AuthZ.ResourceType.ACCOUNT, AuthZ.Action.ALL)
         ));
         ROLE_PERMISSIONS.put(AuthZ.Role.TNT_ADMIN, Set.of(
             formatPermission(AuthZ.ResourceType.TENANT, AuthZ.Action.ALL),
@@ -93,7 +94,9 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.CONTRACT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.POLICY_ADDON, AuthZ.Action.ALL),
 
-            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST)
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST),
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.LIST)
+            
         ));
 
         ROLE_PERMISSIONS.put(AuthZ.Role.ACCOUNT, Set.of(

@@ -95,4 +95,6 @@ public interface AuthenticatedUser {
      * @return true if user can perform the action
      */
     boolean canPerformAction(String productCode, String action);
+
+    String getAccountPath();
 }

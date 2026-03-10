@@ -15,17 +15,14 @@ public class AccountTokenEntity {
     @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tid", nullable = false)
-    private TenantEntity tenantEntity;
+    @Column(name = "tid", nullable = false)
+    private Long tid;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
-    private ClientEntity clientEntity;
+    @Column(name = "client_id", nullable = false)
+    private Long clientId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private AccountEntity accountEntity;
+    @Column(name = "account_id", nullable = false)
+    private Long accountId;
 
     @Column(name = "token", nullable = false)
     private String token;
@@ -50,28 +47,28 @@ public class AccountTokenEntity {
         this.id = id;
     }
 
-    public TenantEntity getTenant() {
-        return tenantEntity;
+    public Long getTid() {
+        return tid;
     }
 
-    public void setTenant(TenantEntity tenantEntity) {
-        this.tenantEntity = tenantEntity;
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 
-    public ClientEntity getClient() {
-        return clientEntity;
+    public Long getClientId() {
+        return clientId;
     }
 
-    public void setClient(ClientEntity clientEntity) {
-        this.clientEntity = clientEntity;
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
     }
 
-    public AccountEntity getAccount() {
-        return accountEntity;
+    public Long getAccountId() {
+        return accountId;
     }
 
-    public void setAccount(AccountEntity accountEntity) {
-        this.accountEntity = accountEntity;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 
     public String getToken() {

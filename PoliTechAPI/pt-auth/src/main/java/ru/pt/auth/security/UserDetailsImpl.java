@@ -4,6 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountLoginEntity;
 import ru.pt.auth.entity.AccountTokenEntity;
 
@@ -30,6 +31,7 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
     private final Long tenantId;
     private final Long accountId;
     private final String accountName;
+    private final String accountPath;
     private final Long clientId;
     private final String clientName;
     private final String userRole;
@@ -40,11 +42,12 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
     private final boolean accountNonLocked;
     private final boolean credentialsNonExpired;
     private String impersonatedTenantCode;  
-    private final Long actingAccountId;  // вершина для дерева доступа, отличается от Id листа account роли
+    private Long actingAccountId;  // вершина для дерева доступа, отличается от Id листа account роли
 
     public UserDetailsImpl(Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
-                          String userRole, Set<String> productRoles, boolean isDefault, Long actingAccountId) {
+                          String userRole, Set<String> productRoles, boolean isDefault, Long actingAccountId,
+                            String accountPath) {
         this.id = id;
         this.username = username;
         this.tenantCode = tenantCode;
@@ -61,6 +64,7 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
         this.accountNonLocked = true;
         this.credentialsNonExpired = true;
         this.actingAccountId = actingAccountId;
+        this.accountPath = accountPath; 
     }
 
     public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
@@ -80,26 +84,25 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
             productRoles, //Set<String> productRoles
             accountLoginEntity.getDefault() //boolean isDefault
             , actingAccountId
+            , accountLoginEntity.getAccount().getIdPath()
         );
     }
 
-    public static UserDetailsImpl build(AccountTokenEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
-        /*Long id, String username, String tenantCode, Long tenantId,
-                          Long accountId, String accountName, Long clientId, String clientName,
-                          String userRole, Set<String> productRoles, boolean isDefault */
+    public static UserDetailsImpl build(AccountTokenEntity tokenEntity, AccountEntity accountEntity, Set<String> productRoles, Long actingAccountId) {
         return new UserDetailsImpl(
-            accountLoginEntity.getId(),   //Long id
-            accountLoginEntity.getToken(), //String username
-            accountLoginEntity.getTenant().getCode(), //String tenantCode
-            accountLoginEntity.getTenant().getId(), //Long tenantId
-            accountLoginEntity.getAccount().getId(), //Long accountId
-            accountLoginEntity.getAccount().getName(), //String accountName
-            accountLoginEntity.getClient().getId(), //Long clientId
-            accountLoginEntity.getClient().getName(), //String clientName
-            accountLoginEntity.getAccount().getNodeType().getValue(), //String userRole
-            productRoles, //Set<String> productRoles
-            true, // accountLoginEntity.getDefault() //boolean isDefault
+            tokenEntity.getId(),
+            tokenEntity.getToken(),
+            accountEntity.getTenant().getCode(),
+            accountEntity.getTenant().getId(),
+            accountEntity.getId(),
+            accountEntity.getName(),
+            accountEntity.getClient().getId(),
+            accountEntity.getClient().getName(),
+            accountEntity.getNodeType().getValue(),
+            productRoles,
+            true,
             actingAccountId
+            , null//.getAccount().getIdPath()
         );
     }
 
@@ -207,6 +210,10 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
         return this.actingAccountId;
     }
 
+    public void setActingAccountId(Long actingAccountId) {
+        this.actingAccountId = actingAccountId;
+    }
+
     @Override
     public boolean hasProductRole(String productRole) {
         return productRoles.stream()
@@ -226,6 +233,10 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
 
     public void setImpersonatedTenantCode(String impersonatedTenantCode) {
         this.impersonatedTenantCode = impersonatedTenantCode;
+    }
+
+    public String getAccountPath() {
+        return this.accountPath;
     }
 }
 

@@ -3,7 +3,6 @@ package ru.pt.auth.utils;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Login;
 import ru.pt.auth.entity.LoginEntity;
-import ru.pt.auth.entity.TenantEntity;
 
 @Component
 public class LoginMapper {
@@ -16,11 +15,8 @@ public class LoginMapper {
         LoginEntity entity = new LoginEntity();
         entity.setId(dto.getId());
 
-        // Tenant
         if (dto.getTid() != null) {
-            TenantEntity tenant = new TenantEntity();
-            tenant.setId(dto.getTid());
-            entity.setTenant(tenant);
+            entity.setTid(dto.getTid());
         }
 
         entity.setUserLogin(dto.getUserLogin());
@@ -37,7 +33,7 @@ public class LoginMapper {
 
         Login dto = new Login();
         dto.setId(entity.getId());
-        dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
+        dto.setTid(entity.getTid() != null ? entity.getTid() : null);
         dto.setUserLogin(entity.getUserLogin());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

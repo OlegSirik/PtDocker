@@ -1,25 +1,18 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.CreateLoginRequest;
-import ru.pt.api.admin.dto.LoginResponse;
 import ru.pt.api.admin.dto.UpdateLoginRequest;
 import ru.pt.api.security.SecuredController;
-import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.model.LoginDto;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.LoginManagementService;
 
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Контроллер для управления пользователями (логинами)
@@ -44,11 +37,20 @@ public class LoginManagementController extends SecuredController {
     }
 
     /**
+     * ublic record LoginDto(
+    Long id,
+    Long clientId,
+    String clientCode,
+    String userLogin,
+    String fullName,
+    String position
+) {}
+
+
      * Создание пользователя (логина)
      * POST /api/v1/{tenantCode}/logins
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN''GROUP_ADMIN')")
     public ResponseEntity<LoginDto> createLogin(
             @PathVariable String tenantCode,
             @RequestBody CreateLoginRequest request) {
@@ -66,7 +68,6 @@ public class LoginManagementController extends SecuredController {
      * PATCH /tnts/{tenantCode}/logins/{loginId}
      */
     @PatchMapping("/{loginId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<LoginDto> updateLogin(
             @PathVariable String tenantCode,
             @PathVariable Long loginId,
@@ -86,7 +87,6 @@ public class LoginManagementController extends SecuredController {
      * PATCH /tnts/{tenantCode}/logins/{loginId}
      */
     @PutMapping("/{loginId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'CLIENT_ADMIN', 'GROUP_ADMIN', 'SALES')")
     public ResponseEntity<LoginDto> updateLoginFull(
             @PathVariable String tenantCode,
             @PathVariable Long loginId,
@@ -106,7 +106,6 @@ public class LoginManagementController extends SecuredController {
      * GET /tnts/{tenantCode}/logins
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN')")
     public ResponseEntity<List<LoginDto>> getLogins(@PathVariable String tenantCode) {
             return ResponseEntity.ok(loginManagementService.getLoginsByTenant(tenantCode));
     }
@@ -116,7 +115,6 @@ public class LoginManagementController extends SecuredController {
      * DELETE /api/v1/{tenantCode}/auth/logins/{loginId}
      */
     @DeleteMapping("/{loginId}")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN', 'TNT_ADMIN', 'GROUP_ADMIN')")
     public ResponseEntity<Map<String, Object>> deleteLogin(
             @PathVariable String tenantCode,
             @PathVariable Long loginId) {
@@ -124,26 +122,5 @@ public class LoginManagementController extends SecuredController {
             return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Преобразование LoginEntity в LoginResponse
-     */
-    private LoginResponse convertToResponse(LoginEntity login) {
-        LoginResponse response = new LoginResponse();
-        response.setId(String.valueOf(login.getId()));
-        response.setTenantCode(login.getTenant().getCode());
-        response.setUserLogin(login.getUserLogin());
-        response.setFullName(login.getFullName());
-        response.setPosition(login.getPosition());
-        response.setIsDeleted(login.getIsDeleted());
-
-        if (login.getCreatedAt() != null) {
-            response.setCreatedAt(login.getCreatedAt().format(ISO_FORMATTER));
-        }
-        if (login.getUpdatedAt() != null) {
-            response.setUpdatedAt(login.getUpdatedAt().format(ISO_FORMATTER));
-        }
-
-        return response;
-    }
 }
 

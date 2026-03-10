@@ -38,6 +38,23 @@ public interface AccountService {
     List<Account> getAccounts(Long parentId);
 
     /**
+     * Get child accounts, optionally filtered by node type.
+     * @param parentId parent account id
+     * @param nodeType optional filter (e.g. GROUP, ACCOUNT, SUB)
+     * @return list of child accounts
+     */
+    List<Account> getChildren(Long parentId, String nodeType);
+
+    /**
+     * Create a child account of the given type under the parent.
+     * @param name child account name
+     * @param nodeType type (e.g. GROUP, ACCOUNT, SUB)
+     * @param parentId parent account id
+     * @return created account
+     */
+    Account createChild(String name, String nodeType, Long parentId);
+
+    /**
      * Создать субаккаунт
      * @param name имя субаккаунта
      * @param parentId идентификатор родительского аккаунта

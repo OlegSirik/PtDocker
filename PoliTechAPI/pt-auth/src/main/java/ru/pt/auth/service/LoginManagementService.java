@@ -74,7 +74,7 @@ public class LoginManagementService {
 
         // Шаг 4: Создание записи в таблице acc_logins
         LoginEntity login = new LoginEntity();
-        login.setTenant(tenant);
+        login.setTid(tenant.getId());
         login.setUserLogin(userLogin);
         login.setFullName(fullName);
         login.setPosition(position);

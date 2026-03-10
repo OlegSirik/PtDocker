@@ -36,6 +36,9 @@ public class ProductRoleEntity {
     @JoinColumn(name = "role_account_id", nullable = false)
     private AccountEntity roleAccountEntity;
 
+    @Column(name = "id_path", nullable = false, length = 300)
+    private String idPath;
+
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
@@ -115,6 +118,14 @@ public class ProductRoleEntity {
 
     public void setRoleAccount(AccountEntity roleAccountEntity) {
         this.roleAccountEntity = roleAccountEntity;
+    }
+
+    public String getIdPath() {
+        return idPath;
+    }
+
+    public void setIdPath(String idPath) {
+        this.idPath = idPath;
     }
 
     public Boolean getDeleted() {

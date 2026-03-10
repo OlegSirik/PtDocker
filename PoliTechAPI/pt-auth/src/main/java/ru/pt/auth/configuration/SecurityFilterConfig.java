@@ -10,6 +10,7 @@ import ru.pt.auth.security.filter.TenantResolutionFilter;
 import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.security.filter.IdentityResolutionFilter;
 import ru.pt.auth.security.filter.AccountResolutionFilter;
+import ru.pt.auth.security.UserDetailsServiceImpl;
 import ru.pt.auth.security.filter.ContextCleanupFilter;
 import ru.pt.auth.security.filter.TenantImpersonationFilter;
 import ru.pt.auth.security.strategy.IdentitySourceStrategy;
@@ -65,8 +66,9 @@ public class SecurityFilterConfig {
 
     @Bean
     public TenantImpersonationFilter tenantImpersonationFilter(
-            SecurityConfigurationProperties securityConfigurationProperties
+            SecurityConfigurationProperties securityConfigurationProperties,
+            UserDetailsServiceImpl userDetailsServiceImpl
     ) {
-        return new TenantImpersonationFilter(securityConfigurationProperties);
+        return new TenantImpersonationFilter(securityConfigurationProperties, userDetailsServiceImpl);
     }
 }

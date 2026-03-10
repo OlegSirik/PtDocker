@@ -56,6 +56,9 @@ public class PolicyIndexEntity {
     @Column(name = "client_account_id")
     private Long clientAccountId;
 
+    @Column(name = "id_path", nullable = false, length = 300)
+    private String idPath;
+
     @Column(name = "version_status", length = 30)
     private String versionStatus;
 
@@ -198,6 +201,14 @@ public class PolicyIndexEntity {
 
     public void setClientAccountId(Long clientAccountId) {
         this.clientAccountId = clientAccountId;
+    }
+
+    public String getIdPath() {
+        return idPath;
+    }
+
+    public void setIdPath(String idPath) {
+        this.idPath = idPath;
     }
 
     public String getVersionStatus() {

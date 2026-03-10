@@ -57,9 +57,9 @@ public class AccountTokenServiceImpl implements AccountTokenService {
         
         AccountTokenEntity tokenEntity = new AccountTokenEntity();
         tokenEntity.setToken(token);
-        tokenEntity.setTenant(clientAccount.getTenant());
-        tokenEntity.setClient(clientAccount.getClient());
-        tokenEntity.setAccount(clientAccount);
+        tokenEntity.setTid(clientAccount.getTenant().getId());
+        tokenEntity.setClientId(clientAccount.getClient().getId());
+        tokenEntity.setAccountId(clientAccount.getId());
 
         AccountTokenEntity savedToken = accountTokenRepository.save(tokenEntity);
         return accountTokenMapper.toDto(savedToken);

@@ -10,6 +10,7 @@ import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.AccountLogin;
 import ru.pt.api.dto.auth.AccountToken;
 import ru.pt.api.dto.auth.ProductRole;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.model.AdminResponse;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.auth.AccountLoginService;
@@ -19,6 +20,8 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.admin.AdminManagementService;
 
 import java.util.List;
+
+//import ru.pt.api.admin.deleted.AdminManagementController;
 
 /**
  * Контроллер для управления аккаунтами
@@ -57,6 +60,76 @@ public class AccountManagementController extends SecuredController {
         this.adminManagementService = adminManagementService;
     }
 
+    /**
+     * public record Account(
+        Long id,
+        Long tid,
+        Long clientId,
+        Long parentId,
+        String nodeType,
+        String name
+        ) {}
+     */
+
+    /**
+     * Get /v1/{tenantCode}/admin/accounts/{accountId}/children?nodeType=
+     */
+    @GetMapping("/{accountId}/children")
+    public ResponseEntity<List<Account>> getAccountChildren(
+            @PathVariable String tenantCode,
+            @PathVariable Long accountId,
+            @RequestParam(required = false) String nodeType) {
+        List<Account> children = accountService.getChildren(accountId, nodeType);
+        return ResponseEntity.ok(children);
+    }
+
+    /**
+     * POST /v1/{tenantCode}/admin/accounts/{accountId}/children
+     * Body: { "name": "...", "nodeType": "GROUP"|"ACCOUNT"|"SUB" }
+     */
+    @PostMapping("/{accountId}/children")
+    public ResponseEntity<Account> postAccountChildren(
+            @PathVariable String tenantCode,
+            @PathVariable Long accountId,
+            @RequestBody CreateAccountChild request) {
+        Account account = accountService.createChild(request.name(), request.nodeType(), accountId);
+        return new ResponseEntity<>(account, HttpStatus.CREATED);
+    }
+
+    /**
+     * AccountLogin - 
+       private Long id;
+       private Long tid;
+        private Long clientId;
+        private Long accountId;
+        private String userLogin;
+        private Boolean isDefault;
+        private String userRole;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    */
+
+    /*
+    Список доступных ролей = nodeType 
+    */
+    /*
+    * get /accounts/{id}/membbers?nodeType=SYS_ADMIN
+    * post /accounts/{id}/members { nodeType=ADMIN, login="login"}
+    */
+    
+    /*
+    Список доступных ролей = nodeType 
+    *
+    @GetMapping("/{accountId}/members")
+    public ResponseEntity<List<AccountUser>> getAccountMembers(
+            @PathVariable String tenantCode,
+            @PathVariable Long accountId,
+            @RequestParam(required = false) String nodeType) {
+        List<AccountUser> members = accountService.getMembers(accountId, nodeType);
+        return ResponseEntity.ok(children);
+    }
+    */
+    /***************/
 
     /** Get /v1/{tenantCode}/admin/accounts/{accuntId}
     */
@@ -107,10 +180,11 @@ public class AccountManagementController extends SecuredController {
      * Get GROUP_ADMIN users for a group
      * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins
      */
+    // ToDo delete this method
     @GetMapping("/{accountId}/group_admins")
     public ResponseEntity<List<AdminResponse>> getGroupAdmins(
             @PathVariable String tenantCode, @PathVariable Long accountId) {
-        List<AdminResponse> admins = adminManagementService.getGroupAdmins(accountId);
+        List<AdminResponse> admins = adminManagementService.getAccountMembers( accountId, UserRole.GROUP_ADMIN.toString() );
         return ResponseEntity.ok(admins);
     }
 
@@ -122,7 +196,7 @@ public class AccountManagementController extends SecuredController {
     public ResponseEntity<AdminResponse> addGroupAdmin(
             @PathVariable String tenantCode, @PathVariable Long accountId,
             @RequestBody AddGroupAdminRequest request) {
-        AdminResponse admin = adminManagementService.addGroupAdminToGroup(accountId, request.getUserLogin());
+        AdminResponse admin = adminManagementService.setAccountMember(accountId, UserRole.GROUP_ADMIN.toString(), request.getUserLogin());
         return new ResponseEntity<>(admin, HttpStatus.CREATED);
     }
 
@@ -147,7 +221,7 @@ public class AccountManagementController extends SecuredController {
     public ResponseEntity<Void> deleteGroupAdmin(
             @PathVariable String tenantCode, @PathVariable Long accountId,
             @PathVariable Long accountLoginId) {
-        adminManagementService.deleteGroupAdmin(accountLoginId);
+        adminManagementService.deleteAccountMember(accountId, accountLoginId);
         return ResponseEntity.noContent().build();
     }
 
@@ -194,34 +268,6 @@ public class AccountManagementController extends SecuredController {
         accountTokenService.deleteToken(accountId, token);
         return ResponseEntity.noContent().build();
     }
-
-   /*  
-    @GetMapping("/{accountId}/roles/{rolename}")
-    public ResponseEntity<List<AdminResponse>> getAccountLogins(
-            @PathVariable String tenantCode, 
-            @PathVariable Long accountId) {
-        List<AccountLogin> logins = accountLoginService.getLoginsByAccountId(accountId);
-        return ResponseEntity.ok(logins);
-    }
-
-    @PostMapping("/{accountId}/group_admin")
-    public ResponseEntity<AccountLogin> createLogin(
-            @PathVariable String tenantCode, 
-            @PathVariable Long accountId, 
-            @RequestBody AccountLogin login) {
-        AccountLogin createdLogin = accountLoginService.createLogin(accountId, login);
-        return new ResponseEntity<>(createdLogin, HttpStatus.CREATED);
-    }
-
-    @DeleteMapping("/{accountId}/group_admin/{id}")
-    public ResponseEntity<Void> deleteLogin(
-            @PathVariable String tenantCode, 
-            @PathVariable Long accountId, 
-            @PathVariable String userLogin) {
-        accountLoginService.deleteLogin(accountId, userLogin);
-        return ResponseEntity.noContent().build();
-    }
-   */
 
     /**
      * Get all logins for the account
@@ -332,6 +378,10 @@ public class AccountManagementController extends SecuredController {
     }
 
     // DTO Classes
+    public static record CreateAccountChild(String name, String nodeType) {} 
+
+    public static record AccountUser(Long id, String role, String login, String name, String position) {}
+
     public static class CreateAccountRequest {
         private Long parentAccountId;
         private String name;

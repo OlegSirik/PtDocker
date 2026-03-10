@@ -93,8 +93,8 @@ public class ClientService implements ClientSecurityConfigService {
             e.getDefaultAccountId(),
             e.getTenant().getId(),
             e.getName(),
-            AuthType.valueOf(e.getAuthType()),
-            ClientAuthType.valueOf(e.getAuthLevel())
+            e.getAuthType() != null ? AuthType.valueOf(e.getAuthType()) : null,
+            e.getAuthLevel() != null ? ClientAuthType.valueOf(e.getAuthLevel()) : null
         );
     }
 
@@ -132,15 +132,18 @@ public class ClientService implements ClientSecurityConfigService {
 
         AccountEntity account = AccountEntity.clientAccount(clientEntity, tenantAccount);
         account.setId(saved.getId());
+        account.setIdPath(tenantAccount.getIdPath() + "." + account.getId());
         AccountEntity savedAccount = accountRepository.save(account);
 
         // default account
         AccountEntity defAccount = AccountEntity.createAccount(savedAccount, "Default account for client", AccountNodeType.ACCOUNT);
         defAccount.setId(accountRepository.getNextAccountId());
+        defAccount.setIdPath(savedAccount.getIdPath() + "." + defAccount.getId());
         AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
         AccountEntity admin_account = AccountEntity.createAccount(savedDefAccount, null, AccountNodeType.GROUP_ADMIN);
         admin_account.setId(accountRepository.getNextAccountId());
+        admin_account.setIdPath(savedDefAccount.getIdPath() + "." + admin_account.getId());
         accountRepository.save(admin_account);
 
         saved.setDefaultAccountId(savedDefAccount.getId());

@@ -17,7 +17,7 @@
     </div>
 
     <!-- Tabs for Tables -->
-    <mat-tab-group>
+    <mat-tab-group mat-align-tabs="start">
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
       <mat-tab label="Группы пользователей">
         <mat-card class="datatable-card">

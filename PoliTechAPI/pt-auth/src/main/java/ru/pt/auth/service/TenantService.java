@@ -113,6 +113,8 @@ public class TenantService implements TenantSecurityConfigService {
 
         // Создаем tenant account
         AccountEntity tenantAccount = AccountEntity.tenantAccount(savedTenant);
+        // root path is just its own id
+        tenantAccount.setIdPath(tenantAccount.getId().toString());
         AccountEntity savedTenantAccount = accountRepository.save(tenantAccount);
 
         logger.info("Tenant '{}' created by SYS_ADMIN", tenant.getName());
@@ -122,25 +124,30 @@ public class TenantService implements TenantSecurityConfigService {
         ClientEntity savedClient = clientRepository.save(client);
 
         AccountEntity clientAccount = AccountEntity.clientAccount(savedClient, savedTenantAccount);
+        clientAccount.setIdPath(savedTenantAccount.getIdPath() + "." + clientAccount.getId());
         AccountEntity savedClientAccount = accountRepository.save(clientAccount);
 
 
         if ( tenant.isSystem()) {
             AccountEntity sysAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.SYS_ADMIN);
             sysAdminAccount.setId(getNextId());
+            sysAdminAccount.setIdPath(savedClientAccount.getIdPath() + "." + sysAdminAccount.getId());
             accountRepository.save(sysAdminAccount);
         } else {
             AccountEntity tntAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.TNT_ADMIN);
             tntAdminAccount.setId(getNextId());
+            tntAdminAccount.setIdPath(savedClientAccount.getIdPath() + "." + tntAdminAccount.getId());
             accountRepository.save(tntAdminAccount);
         }
 
         AccountEntity productAdminAccount = AccountEntity.createAccount(savedClientAccount, null, AccountNodeType.PRODUCT_ADMIN);
         productAdminAccount.setId(getNextId());
+        productAdminAccount.setIdPath(savedClientAccount.getIdPath() + "." + productAdminAccount.getId());
         accountRepository.save(productAdminAccount);
 
         AccountEntity defaultClientAccount = AccountEntity.createAccount(savedClientAccount, "Default account for client", AccountNodeType.ACCOUNT);
         defaultClientAccount.setId(getNextId());
+        defaultClientAccount.setIdPath(savedClientAccount.getIdPath() + "." + defaultClientAccount.getId());
         AccountEntity savedDefaultClientAccount = accountRepository.save(defaultClientAccount);
 
         savedClient.setDefaultAccountId(savedDefaultClientAccount.getId());

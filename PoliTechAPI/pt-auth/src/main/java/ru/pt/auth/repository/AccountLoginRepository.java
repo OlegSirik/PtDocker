@@ -142,7 +142,10 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
 
     @Query("SELECT al FROM AccountLoginEntity al " +
            "LEFT JOIN FETCH al.loginEntity l " +
-           "WHERE al.accountEntity.id = :accountId " +
+           "JOIN FETCH al.tenantEntity t " +
+           "JOIN FETCH al.clientEntity c " +
+           "JOIN FETCH al.accountEntity aa " +
+           "WHERE aa.id = :accountId " +
            "AND (l IS NULL OR l.isDeleted = false)")
     List<AccountLoginEntity> findByAccountEntityId(@Param("accountId") Long accountId);
 }

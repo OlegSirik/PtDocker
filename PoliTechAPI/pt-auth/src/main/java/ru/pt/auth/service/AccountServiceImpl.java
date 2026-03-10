@@ -98,7 +98,38 @@ public class AccountServiceImpl implements AccountService {
             AuthZ.Action.LIST);
 
         return accountDataService.getAccounts(parentId);
-    } 
+    }
+
+    @Override
+    public List<Account> getChildren(Long parentId, String nodeType) {
+        authService.check(
+            getCurrentUser(),
+            AuthZ.ResourceType.ACCOUNT,
+            parentId.toString(),
+            parentId,
+            AuthZ.Action.LIST);
+
+        if (nodeType == null || nodeType.isBlank()) {
+            return accountDataService.getChildAccounts(parentId);
+        }
+        return accountDataService.getChildAccountsByType(parentId, nodeType);
+    }
+
+    @Override
+    @Transactional
+    public Account createChild(String name, String nodeType, Long parentId) {
+        if (name == null || name.isBlank()) {
+            throw new BadRequestException("Name is required");
+        }
+        if (nodeType == null || nodeType.isBlank()) {
+            throw new BadRequestException("Node type is required");
+        }
+        AccountNodeType accountNodeType = AccountNodeType.fromString(nodeType.toUpperCase());
+        if (accountNodeType == null) {
+            throw new BadRequestException("Invalid node type: " + nodeType);
+        }
+        return createAccount(accountNodeType, name, parentId);
+    }
 
     @Override
     @Transactional
@@ -167,6 +198,7 @@ public class AccountServiceImpl implements AccountService {
             newRole.setClient(account.getClient());
             newRole.setAccount(account);
             newRole.setRoleAccount(account);
+            newRole.setIdPath(account.getIdPath());
             newRole.setId(null);
             productRoleRepository.save(newRole);
         }
@@ -228,6 +260,7 @@ public class AccountServiceImpl implements AccountService {
         role.setAccount(account);
         role.setRoleProductId(roleProductId);
         role.setRoleAccount(roleAccount);
+        role.setIdPath(account.getIdPath());
         role.setCanRead(canRead != null && canRead);
         role.setCanQuote(canQuote != null && canQuote);
         role.setCanPolicy(canPolicy != null && canPolicy);
@@ -384,6 +417,13 @@ public class AccountServiceImpl implements AccountService {
         try {
             AccountEntity account = AccountEntity.createAccount(parentAccount, name, accountNodeType);
             account.setId(accountRepository.getNextAccountId());
+            // Calculate hierarchical id_path from parent
+            String parentPath = parentAccount.getIdPath();
+            String newPath = (parentPath == null || parentPath.isBlank())
+                    ? account.getId().toString()
+                    : parentPath + "." + account.getId();
+            account.setIdPath(newPath);
+
             AccountEntity savedAccount = accountRepository.save(account);
             return accountMapper.toDto(savedAccount);
         } catch (IllegalArgumentException e) {

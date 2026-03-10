@@ -42,6 +42,9 @@ public class AccountEntity {
     @Column(name = "name", length = 250)
     private String name;
 
+    @Column(name = "id_path", length = 300)
+    private String idPath;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -55,9 +58,6 @@ public class AccountEntity {
 
     @OneToMany(mappedBy = "accountEntity", cascade = CascadeType.ALL)
     private List<AccountLoginEntity> accountLoginEntities = new ArrayList<>();
-
-    @OneToMany(mappedBy = "accountEntity", cascade = CascadeType.ALL)
-    private List<AccountTokenEntity> accountTokenEntities = new ArrayList<>();
 
     // constructors, getters, setters
     public AccountEntity() {}
@@ -118,6 +118,14 @@ public class AccountEntity {
         this.name = name;
     }
 
+    public String getIdPath() {
+        return idPath;
+    }
+
+    public void setIdPath(String idPath) {
+        this.idPath = idPath;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -150,14 +158,6 @@ public class AccountEntity {
         this.accountLoginEntities = accountLoginEntities;
     }
 
-    public List<AccountTokenEntity> getAccountTokens() {
-        return accountTokenEntities;
-    }
-
-    public void setAccountTokens(List<AccountTokenEntity> accountTokenEntities) {
-        this.accountTokenEntities = accountTokenEntities;
-    }
-
     // --- Конструктор для фабрик ---
     private AccountEntity(Long id,TenantEntity tenant, ClientEntity client, AccountEntity parent,
         AccountNodeType nodeType, String name) {
@@ -171,7 +171,6 @@ public class AccountEntity {
         this.updatedAt = LocalDateTime.now();
         this.productRoleEntities = new ArrayList<>();
         this.accountLoginEntities = new ArrayList<>();
-        this.accountTokenEntities = new ArrayList<>();
     }
 
 
@@ -227,6 +226,11 @@ public class AccountEntity {
         AccountNodeType.PRODUCT_ADMIN, Collections.emptySet()
     );
 
+    public static boolean nodeTypeHasChildren(AccountNodeType nodeType) {
+        if (nodeType == AccountNodeType.ACCOUNT) return false;
+        Set<AccountNodeType> allowed = ALLOWED_CHILD_TYPES.getOrDefault(nodeType, Collections.emptySet());
+        return !allowed.isEmpty();
+    }
     /**
      * Creates an account of the given type under the parent account.
      * Validates hierarchy via ALLOWED_CHILD_TYPES, then creates the entity.

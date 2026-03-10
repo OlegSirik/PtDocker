@@ -22,6 +22,9 @@ public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, 
 
     Optional<PolicyIndexEntity> findByPaymentOrderId(String paymentOrderId);
 
+    @Query(value = "SELECT a.id_path FROM acc_accounts a WHERE a.id = :accountId", nativeQuery = true)
+    Optional<String> findAccountIdPath(@Param("accountId") Long accountId);
+
     @Query(value = """
         WITH RECURSIVE account_tree AS (
             SELECT id FROM acc_accounts WHERE id = :accountId

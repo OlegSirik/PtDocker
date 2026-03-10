@@ -2,6 +2,7 @@ package ru.pt.auth.security.filter;
 
 import ru.pt.auth.configuration.SecurityConfigurationProperties;
 import ru.pt.auth.security.UserDetailsImpl;
+import ru.pt.auth.security.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,8 +15,11 @@ import java.io.IOException;
 
 public class TenantImpersonationFilter extends AbstractSecurityFilter {
 
-    public TenantImpersonationFilter(SecurityConfigurationProperties securityProperties) {
+    private final UserDetailsServiceImpl userDetailsServiceImpl; 
+
+    public TenantImpersonationFilter(SecurityConfigurationProperties securityProperties, UserDetailsServiceImpl userDetailsServiceImpl) {
         super(securityProperties);
+        this.userDetailsServiceImpl = userDetailsServiceImpl;
     }
 
     @Override
@@ -50,7 +54,8 @@ public class TenantImpersonationFilter extends AbstractSecurityFilter {
         if ("SYS_ADMIN".equals(user.getUserRole())) {
             String impersonatedTenant = request.getHeader("X-Imp-Tenant");
             if (impersonatedTenant != null && !impersonatedTenant.isEmpty()) {
-                user.setImpersonatedTenantCode(impersonatedTenant); 
+                //user.setImpersonatedTenantCode(impersonatedTenant); 
+                user = userDetailsServiceImpl.impersonateSysAdmin(user, impersonatedTenant);
             }
         }
         chain.doFilter(request, response);

@@ -75,7 +75,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
         ).orElseGet(() -> {
             // Create new login in acc_logins
             LoginEntity newLogin = new LoginEntity();
-            newLogin.setTenant(accountEntity.getTenant());
+            newLogin.setTid(accountEntity.getTenant().getId());
             newLogin.setUserLogin(userLogin);
             newLogin.setFullName(userLogin); // Default to userLogin if no fullName provided
             newLogin.setIsDeleted(false);
@@ -147,56 +147,4 @@ public class AccountLoginServiceImpl implements AccountLoginService {
     }
 
 
-/*     public AccountLogin createAccountLogin(Long accountId, String login, boolean isDefault) {
-        if (login == null || login.isEmpty()) {
-            throw new BadRequestException("Login cannot be null or empty");
-        }
-
-        String userLogin = login.trim();
-
-        // Authorization check
-        authService.check(
-            getCurrentUser(),
-            AuthZ.ResourceType.LOGIN,
-            userLogin,
-            accountId,
-            AuthZ.Action.MANAGE
-        );
-
-        // Check if login already exists for this account
-        if (loginExists(accountId, userLogin)) {
-            throw new BadRequestException("Нарушение уникальности. Такой Login уже привязан к аккаунту");
-        }
-
-        Account account = accountService.getAccountById(accountId);
-        // Get account entity
-        if (account == null) {throw new NotFoundException("Account not found: " + accountId)) };
-
-        // Check if login exists in acc_logins, create if not
-        LoginEntity loginEntity = loginRepository.findByTenantCodeAndUserLogin(
-                accountEntity.getTenant().getCode(), 
-                userLogin
-        ).orElseGet(() -> {
-            // Create new login in acc_logins
-            LoginEntity newLogin = new LoginEntity();
-            newLogin.setTenant(accountEntity.getTenant());
-            newLogin.setUserLogin(userLogin);
-            newLogin.setFullName(userLogin); // Default to userLogin if no fullName provided
-            newLogin.setIsDeleted(false);
-            return loginRepository.save(newLogin);
-        });
-
-        // Create account login binding
-        AccountLoginEntity accountLoginEntity = new AccountLoginEntity();
-        accountLoginEntity.setTenant(accountEntity.getTenant());
-        accountLoginEntity.setClient(accountEntity.getClient());
-        accountLoginEntity.setAccount(accountEntity);
-        accountLoginEntity.setUserLogin(userLogin);
-        accountLoginEntity.setLogin(loginEntity);
-        accountLoginEntity.setDefault(Boolean.TRUE.equals(login.getIsDefault()));
-
-        AccountLoginEntity savedEntity = accountLoginRepository.save(accountLoginEntity);
-        return accountLoginMapper.toDto(savedEntity);
-    }
-*/
 }

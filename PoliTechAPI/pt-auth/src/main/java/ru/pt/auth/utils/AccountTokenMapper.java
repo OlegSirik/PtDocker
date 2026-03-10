@@ -16,9 +16,9 @@ public class AccountTokenMapper {
 
         AccountToken dto = new AccountToken();
         dto.setId(entity.getId());
-        dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
-        dto.setClientId(entity.getClient() != null ? entity.getClient().getId() : null);
-        dto.setAccountId(entity.getAccount() != null ? entity.getAccount().getId() : null);
+        dto.setTid(entity.getTid());
+        dto.setClientId(entity.getClientId());
+        dto.setAccountId(entity.getAccountId());
         dto.setToken(entity.getToken());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
@@ -42,6 +42,9 @@ public class AccountTokenMapper {
 
         AccountTokenEntity entity = new AccountTokenEntity();
         entity.setId(dto.getId());
+        entity.setTid(dto.getTid());
+        entity.setClientId(dto.getClientId());
+        entity.setAccountId(dto.getAccountId());
         entity.setToken(dto.getToken());
         entity.setCreatedAt(dto.getCreatedAt());
         entity.setUpdatedAt(dto.getUpdatedAt());

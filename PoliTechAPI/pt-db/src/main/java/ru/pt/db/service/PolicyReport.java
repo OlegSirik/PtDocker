@@ -76,6 +76,46 @@ public class PolicyReport {
         );
     }
 
+    private static final String POLICY_REPORT_SQL2 = """
+        
+        SELECT 
+            p.public_id::text,
+            p.draft_id,
+            p.policy_nr,
+            p.product_code,
+            p.create_date,
+            p.issue_date,
+            p.payment_date,
+            p.start_date,
+            p.end_date,
+            p.policy_status, 
+            p.user_account_id,
+            p.client_account_id,
+            p.version_status,
+            p.payment_order_id,
+            p.ph_digest,
+            p.io_digest,
+            p.premium::text,
+            p.agent_kv_percent::text,
+            p.agent_kv_amount::text,
+            p.user_login
+        FROM policy_index p
+        WHERE ( p.policy_nr LIKE ? OR p.ph_digest LIKE ? )
+        AND p.id_path LIKE ?
+        AND p.version_status = ?
+        ORDER BY p.policy_nr
+        LIMIT 100
+        """;
+
+    public List<QuoteDto> findPoliciesByAccountPath(String accountPath, String environment , String qstr) {
+        String like = "%" + (qstr != null ? qstr : "") + "%";
+        return jdbcTemplate.query(
+            POLICY_REPORT_SQL2,
+            new QuoteRowMapper(),
+            like, like, accountPath, environment
+        );
+    }
+
     private static class QuoteRowMapper implements RowMapper<QuoteDto> {
 
         @Override

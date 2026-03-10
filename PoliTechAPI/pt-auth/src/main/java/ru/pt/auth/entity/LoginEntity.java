@@ -5,8 +5,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "acc_logins",
@@ -17,9 +15,8 @@ public class LoginEntity {
     @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tid", nullable = false)
-    private TenantEntity tenantEntity;
+    @Column(name = "tid", nullable = false)
+    private Long tid;
 
     @Column(name = "user_login", nullable = false)
     private String userLogin;
@@ -44,8 +41,6 @@ public class LoginEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "loginEntity", cascade = CascadeType.ALL)
-    private List<AccountLoginEntity> accountLoginEntities = new ArrayList<>();
 
     // constructors, getters, setters
     public LoginEntity() {}
@@ -58,12 +53,12 @@ public class LoginEntity {
         this.id = id;
     }
 
-    public TenantEntity getTenant() {
-        return tenantEntity;
+    public Long getTid() {
+        return this.tid;
     }
 
-    public void setTenant(TenantEntity tenantEntity) {
-        this.tenantEntity = tenantEntity;
+    public void setTid(Long tid) {
+        this.tid = tid;
     }
 
     public String getUserLogin() {
@@ -122,11 +117,4 @@ public class LoginEntity {
         this.updatedAt = updatedAt;
     }
 
-    public List<AccountLoginEntity> getAccountLogins() {
-        return accountLoginEntities;
-    }
-
-    public void setAccountLogins(List<AccountLoginEntity> accountLoginEntities) {
-        this.accountLoginEntities = accountLoginEntities;
-    }
 }
