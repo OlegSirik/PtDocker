@@ -16,14 +16,17 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ru.pt.api.dto.auth.Tenant;
 import ru.pt.auth.utils.TenantMapper;
+import ru.pt.api.service.auth.TenantConfig;
+
 @Service
-public class TenantService implements TenantSecurityConfigService {
+public class TenantService implements TenantSecurityConfigService, TenantConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
 
@@ -250,6 +253,40 @@ public class TenantService implements TenantSecurityConfigService {
             null,
             null,
             null
+        );
+    }
+
+    @Override
+    public Tenant getTenant(String tenantCode) {
+        TenantEntity entity = tenantRepository.findByCode(tenantCode)
+            .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantCode));
+        return new Tenant(
+            entity.getId(),
+            entity.getName(),
+            entity.getDeleted(),
+            entity.getAuthType(),
+            entity.getStorageType(),
+            entity.getCode(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
+            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>()
+        );
+    }
+
+    @Override
+    public Tenant getTenantById(Long tenantId) {
+        TenantEntity entity = tenantRepository.findById(tenantId)
+            .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
+        return new Tenant(
+            entity.getId(),
+            entity.getName(),
+            entity.getDeleted(),
+            entity.getAuthType(),
+            entity.getStorageType(),
+            entity.getCode(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
+            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>()
         );
     }
 }

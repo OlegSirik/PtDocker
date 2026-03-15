@@ -1,5 +1,7 @@
 package ru.pt.files.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -12,23 +14,21 @@ public class FileEntity {
     @SequenceGenerator(name = "pt_files_seq", sequenceName = "pt_files_seq", allocationSize = 1)
     private Long id;
 
-    @Column(name = "file_type", nullable = false, length = 30)
-    private String fileType;
+    @Column(name = "public_id")
+    private String publicId;
 
-    @Column(name = "file_desc", nullable = false, length = 300)
-    private String fileDesc;
+    @Column(name = "filename", length = 512)
+    private String filename;
 
-    @Column(name = "product_code", nullable = false, length = 30)
-    private String productCode;
+    @Column(name = "content_type", length = 255)
+    private String contentType;
 
-    @Column(name = "package_code", nullable = false)
-    private Integer packageCode;
+    @Column(name = "size")
+    private Long size;
 
     @Column(name = "file_body")
     private byte[] fileBody;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean deleted = false;
 
     @Column(name = "tid", nullable = false)
     private Long tid;
@@ -41,36 +41,36 @@ public class FileEntity {
         this.id = id;
     }
 
-    public String getFileType() {
-        return fileType;
+    public String getPublicId() {
+        return publicId;
     }
 
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
     }
 
-    public String getFileDesc() {
-        return fileDesc;
+    public String getFilename() {
+        return filename;
     }
 
-    public void setFileDesc(String fileDesc) {
-        this.fileDesc = fileDesc;
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
-    public String getProductCode() {
-        return productCode;
+    public String getContentType() {
+        return contentType;
     }
 
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
-    public Integer getPackageCode() {
-        return packageCode;
+    public Long getSize() {
+        return size;
     }
 
-    public void setPackageCode(Integer packageCode) {
-        this.packageCode = packageCode;
+    public void setSize(Long size) {
+        this.size = size;
     }
 
     public byte[] getFileBody() {
@@ -79,14 +79,6 @@ public class FileEntity {
 
     public void setFileBody(byte[] fileBody) {
         this.fileBody = fileBody;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
     }
 
     public Long getTid() {

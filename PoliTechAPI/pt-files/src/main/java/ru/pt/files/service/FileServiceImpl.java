@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,34 +26,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.transaction.Transactional;
+import ru.pt.api.dto.auth.Tenant;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
+import ru.pt.api.dto.file.FileDownload;
 import ru.pt.api.dto.file.FileModel;
+import ru.pt.api.dto.file.FileStorageType;
+import ru.pt.api.dto.file.StorageProperty;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.file.FileService;
+import ru.pt.api.service.file.FileStorage;
+import ru.pt.auth.repository.TenantRepository;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
 import java.io.FileInputStream;
+import lombok.RequiredArgsConstructor;
+
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.TenantConfig;
+import ru.pt.api.service.auth.AuthorizationService;
 
 @Service
+@RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
+
 
     private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
 
     private final FileRepository fileRepository;
     private final SecurityContextHelper securityContextHelper;
     private final TextDocumentView textDocumentView;
+    private final List<FileStorage> storages;
+    private final TenantConfig tenantConfig;
+    private final AuthorizationService authorizationService;
 
-    public FileServiceImpl(FileRepository fileRepository, SecurityContextHelper securityContextHelper, TextDocumentView textDocumentView) {
-        this.fileRepository = fileRepository;
-        this.securityContextHelper = securityContextHelper; 
-        this.textDocumentView = textDocumentView;
-    }
 
     private static final String FONT_CLASSPATH = "fonts/calibri.ttf";
 
@@ -126,83 +139,69 @@ public class FileServiceImpl implements FileService {
         return getCurrentUser().getTenantId();
     }
 
-    // pt_files will contain only id and fileDate. Other columns should be removed
-    // ToDo remove this method
     @Transactional
     @Override
-    public FileModel createMeta(String fileType, String fileDesc, String productCode, Integer packageCode) {
-        FileEntity e = new FileEntity();
-        e.setFileType(fileType);
-        e.setFileDesc(fileDesc);
-        e.setProductCode(productCode);
-        e.setPackageCode(packageCode);
-        e.setDeleted(false);
-        e.setTid(getCurrentTenantId());
-        var saved = fileRepository.save(e);
-        var model = new FileModel();
-        model.setId(saved.getId());
-        model.setFileDescription(saved.getFileDesc());
-        model.setDeleted(saved.isDeleted());
-        model.setFileType(model.getFileType());
-        model.setProductCode(saved.getProductCode());
-        model.setPackageCode(saved.getPackageCode());
-        return model;
-    }
+    public Long uploadFile(String tenantCode, InputStream file, String filename, String contentType, Long size) {
+        /* Файлы сохраняются в теннате, поэтому проверяем что это доступный тенант для юзера */
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.FILE, null, getCurrentTenantId(), AuthZ.Action.MANAGE);
+        Tenant tenant = tenantConfig.getTenant(tenantCode);
 
-    @Transactional
-    @Override
-    public void uploadBody(Long id, byte[] file) {
-        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        entity.setFileBody(file);
-        fileRepository.save(entity);
-    }
+        Map<String, String> storageConfig = tenant.storageConfig();
+        if (storageConfig.containsKey(StorageProperty.MAX_SIZE.getValue())) {
+            Long maxSize = Long.parseLong(storageConfig.get(StorageProperty.MAX_SIZE.getValue()));
+            if (size > maxSize) {
+                throw new UnprocessableEntityException("File size is too large");
+            }
+        }
 
-    @Transactional
-    @Override
-    public Long uploadFile(Long tid, byte[] file) {
         FileEntity entity = new FileEntity();
-        entity.setTid(tid);
-        entity.setFileBody(file);
-        entity.setDeleted(false);
         entity.setTid(getCurrentTenantId());
+        entity.setPublicId(UUID.randomUUID().toString());
+        entity.setFilename(filename);
+        entity.setContentType(contentType);
+        entity.setSize(size);
         var saved = fileRepository.save(entity);
+
+        FileStorage storage = resolve(tenant);
+        storage.store(entity.getTid(), entity.getPublicId(), tenant.storageConfig(), file);
+
         return saved.getId();
     }
 
     @Override
-    public List<Map<String, Object>> list(String productCode) {
-        List<Object[]> rows = fileRepository.listSummaries(getCurrentTenantId(), productCode);
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (Object[] r : rows) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", r[0]);
-            m.put("fileType", r[1]);
-            m.put("fileDescription", r[2]);
-            m.put("productCode", r[3]);
-            m.put("packageCode", r[4]);
-            result.add(m);
-        }
-        return result;
-    }
-
-    @Override
-    public byte[] download(Long id) {
+    public FileDownload downloadFile(Long id) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
-        if (entity.getFileBody() == null) {
-            throw new UnprocessableEntityException("File body is empty");
+        Tenant tenant = tenantConfig.getTenantById(entity.getTid());
+
+        /* Файлы загружаются из тенната, поэтому проверяем что это доступный тенант для юзера */
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.FILE, null, tenant.id(), AuthZ.Action.VIEW);
+        
+        FileStorage storage = resolve(tenant);
+
+        try (InputStream inputStream = storage.load(entity.getPublicId(), tenant.storageConfig())) {
+           
+            String filename = entity.getFilename() != null ? entity.getFilename() : "download";
+            String contentType = entity.getContentType() != null ? entity.getContentType() : "application/octet-stream";
+            return new FileDownload(inputStream, filename, contentType, entity.getSize());
+        } catch (IOException e) {
+            throw new InternalServerErrorException("Failed to download file", e);
         }
-        return entity.getFileBody();
     }
+
 
     @Transactional
     @Override
-    public void softDelete(Long id) {
+    public void delete(Long id) {
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
-        entity.setDeleted(true);
-        fileRepository.save(entity);
+        // ToDo checj Auth
+        Tenant tenant = tenantConfig.getTenantById( entity.getTid());
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.FILE, null, tenant.id(), AuthZ.Action.MANAGE);
+
+        FileStorage storage = resolve(tenant);   
+        storage.delete(entity.getPublicId(), tenant.storageConfig());
+        fileRepository.delete(entity);
     }
 
     @Override
@@ -279,61 +278,25 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-
-    /*     @Override
-    public byte[] process_old(Long id, VariableContext keyValues) {
-        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        if (entity.getFileBody() == null) {
-            throw new IllegalArgumentException("File body is empty");
-        }
-
-        try (PDDocument doc = Loader.loadPDF( entity.getFileBody())) {
-            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
-            if (form != null) {
-                //form.getFields().forEach(System.out::println);
-
-                for (Map.Entry<String, Object> e : keyValues.entrySet()) {
-                    //String key = e.getKey();
-                    //String value = e.getValue();
-
-                    PDField field = form.getField(e.getKey());
-                    if (field != null) {
-                        System.out.println(e.getKey() + " " + e.getValue());
-                        try {
-                            field.setValue(e.getValue().toString());
-                        } catch (Exception ex) {
-                            System.out.println(ex.getMessage());
-                        }
-                    }
-                }
-                form.flatten();
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            doc.save(out);
-            return out.toByteArray();
-        } catch (IOException ex) {
-            throw new InternalServerErrorException("Failed to process PDF", ex);
-        }
-    }
-    */
-
     @Override
     public byte[] getFile(Integer fileId, VariableContext keyValues) {
 
-        //String productCode = JsonPath.parse(keyValues.get("product")).read("$.code");
-        //String packageCode = keyValues.get("packageCode");
-        
-        //String fileId = keyValues.get("fileId");
-        // TODO проверить что версия продукта сохраняется в keyValues !!!!!!!!
         if (fileId == null) {
             throw new NotFoundException("File ID is not found");
         }
 
-//        FileEntity entity = fileRepository.findActiveByFileTypeAndProductCodeAndPackageCode(fileType, productCode, Integer.parseInt(packageCode))
-//                .orElseThrow(() -> new IllegalArgumentException("File not found"));
-//        return process(entity.getId(), keyValues);
         return process(fileId.longValue(), keyValues);
     }
 
+    private FileStorage resolve(Tenant tenant) {
+
+        String type = tenant.storageType();
+        logger.debug("Resolving storage for tenant: {}, type: {}", tenant.code(), type);
+        for (FileStorage storage : storages) {
+            if (storage.supports(FileStorageType.valueOf(type))) {
+                return storage;
+            }
+        }
+        throw new NotFoundException("Storage not found for tenant: " + tenant.code());
+    }
 }

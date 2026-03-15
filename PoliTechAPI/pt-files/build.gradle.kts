@@ -27,6 +27,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-core:6.5.6")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-mail")
+    // MinIO client
+    implementation("io.minio:minio:8.5.7")
     // TODO version remove/const
     implementation("com.jayway.jsonpath:json-path:2.9.0")
     // PDF Processing

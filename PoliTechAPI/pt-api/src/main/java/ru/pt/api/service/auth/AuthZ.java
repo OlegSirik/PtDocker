@@ -19,7 +19,8 @@ public final class AuthZ {
         LOGIN,
         POLICY,
         POLICY_ADDON,
-        CONTRACT
+        CONTRACT,
+        FILE
     }
 
     /** Действия */

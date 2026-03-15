@@ -109,7 +109,7 @@ public class ApplicationInitializer implements ApplicationRunner {
         AccountEntity account = accountRepository.findAdminAccount("sys", "sys", AccountNodeType.SYS_ADMIN).orElse(null);
         if (account != null) {
             setSecurityContext(account.getId());
-            initDemoTenant();
+            //initDemoTenant();
         } else {
             logger.warn("System admin account not found. Skipping tenant initialization.");
         }
@@ -260,7 +260,7 @@ public class ApplicationInitializer implements ApplicationRunner {
 
     /**
      * Creates the "demo" tenant if it doesn't exist.
-     */
+     *
     @Transactional
     private void initDemoTenant() {
         String demoTenantCode = "demo";
@@ -291,4 +291,5 @@ public class ApplicationInitializer implements ApplicationRunner {
             logger.error("Failed to create demo tenant: {}", e.getMessage(), e);
         }
     }   
+    */
 }

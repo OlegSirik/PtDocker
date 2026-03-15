@@ -1303,9 +1303,9 @@ export class ProductComponent implements OnInit {
       if (selectedFile) {
         const fileName = selectedFile.name; // File name includes extension (e.g., "document.pdf")
         console.log(fileName);
-        this.filesService.uploadFileWithResponse(selectedFile, fileName).subscribe({
+        this.filesService.uploadFile(selectedFile).subscribe({
           next: (response) => {
-            file.fileId = response.id;
+            file.fileId = typeof response.id === 'string' ? parseInt(response.id, 10) : response.id;
             file.fileName = fileName;
             this.updateFilesTable();
             this.updateChanges();
@@ -1321,8 +1321,23 @@ export class ProductComponent implements OnInit {
     input.click();
   }
 
-  downloadFile(file: BusinessLineFile): void {
-  
+  downloadFile(file: PackageFile): void {
+    if (!file.fileId) {
+      this.snackBar.open('Файл не загружен', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.filesService.downloadFile(file.fileId).subscribe({
+      next: ({ blob, filename }) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename || file.fileName || 'download';
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.snackBar.open('Файл скачан', 'Закрыть', { duration: 2000 });
+      },
+      error: () => this.snackBar.open('Ошибка скачивания файла', 'Закрыть', { duration: 3000 })
+    });
   }
 
   

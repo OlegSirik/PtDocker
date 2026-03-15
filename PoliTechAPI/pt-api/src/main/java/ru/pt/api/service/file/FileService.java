@@ -1,5 +1,8 @@
 package ru.pt.api.service.file;
 
+import java.io.InputStream;
+
+import ru.pt.api.dto.file.FileDownload;
 import ru.pt.api.dto.file.FileModel;
 
 import java.util.List;
@@ -14,53 +17,26 @@ import ru.pt.domain.model.VariableContext;
 public interface FileService {
 
     /**
-     * Создать метаданные файла
-     *
-     * @param fileType    тип файла
-     * @param fileDesc    описание файла
-     * @param productCode код продукта
-     * @param packageCode код пакета
-     * @return модель файла
-     */
-    FileModel createMeta(String fileType, String fileDesc, String productCode, Integer packageCode);
-
-    /**
-     * Загрузить содержимое файла
-     *
-     * @param id   идентификатор файла
-     * @param file массив байт с содержимым
-     */
-    void uploadBody(Long id, byte[] file);
-
-    /**
      * Загрузить содержимое файла
      * @param tid идентификатор тенанта
      * @param file массив байт с содержимым
      */
-    Long uploadFile(Long tid, byte[] file);
-
-    /**
-     * Получить список файлов по продукту
-     *
-     * @param productCode код продукта
-     * @return список описаний файлов
-     */
-    List<Map<String, Object>> list(String productCode);
+    Long uploadFile(String tenantCode, InputStream file, String filename, String contentType, Long size);
 
     /**
      * Скачать файл
      *
      * @param id идентификатор файла
-     * @return файл в виде массива байт
+     * @return содержимое, имя файла и content-type
      */
-    byte[] download(Long id);
+    FileDownload downloadFile(Long id);
 
     /**
      * Мягко удалить файл
      *
      * @param id идентификатор файла
      */
-    void softDelete(Long id);
+    void delete(Long id);
 
     /**
      * Обработать файл с параметрами

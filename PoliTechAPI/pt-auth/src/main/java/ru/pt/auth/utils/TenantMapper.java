@@ -19,7 +19,9 @@ public class TenantMapper {
         entity.setCreatedAt(dto.createdAt());
         entity.setUpdatedAt(dto.updatedAt());
         entity.setAuthType(dto.authType());
+        entity.setStorageType(dto.storageType());
         entity.setCode(dto.code());
+        entity.setStorageConfig(dto.storageConfig());
         return entity;
     }
 
@@ -32,9 +34,11 @@ public class TenantMapper {
                 entity.getName(), 
                 entity.getDeleted(), 
                 entity.getAuthType(),
+                entity.getStorageType(),
                 entity.getCode(),
                 entity.getCreatedAt(), 
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getStorageConfig()
             );
     }
 

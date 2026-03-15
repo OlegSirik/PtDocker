@@ -2,9 +2,13 @@ package ru.pt.auth.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "acc_tenants")
@@ -35,6 +39,14 @@ public class TenantEntity {
 
     @Column(name = "auth_type", length = 20)
     private String authType;
+
+    @Column(name = "storage_type", length = 20)
+    private String storageType;
+
+    @Column(name = "storage_config", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, String> storageConfig = new HashMap<>();
+
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -89,6 +101,18 @@ public class TenantEntity {
     public String getAuthType() {return authType;}
 
     public void setAuthType(String authType) {this.authType = authType;}
+
+    public String getStorageType() {return storageType;}
+
+    public void setStorageType(String storageType) {this.storageType = storageType;}
+
+    public Map<String, String> getStorageConfig() {
+        return storageConfig;
+    }
+
+    public void setStorageConfig(Map<String, String> storageConfig) {
+        this.storageConfig = storageConfig != null ? storageConfig : new HashMap<>();
+    }
 
     public boolean isSystem() {return SYS_TENANT_CODE.equals(code);}
 

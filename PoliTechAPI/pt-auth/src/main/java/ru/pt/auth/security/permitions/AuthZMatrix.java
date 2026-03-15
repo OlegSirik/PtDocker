@@ -95,8 +95,9 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.POLICY_ADDON, AuthZ.Action.ALL),
 
             formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST),
-            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.LIST)
-            
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.LIST),
+
+            formatPermission(AuthZ.ResourceType.FILE, AuthZ.Action.ALL)
         ));
 
         ROLE_PERMISSIONS.put(AuthZ.Role.ACCOUNT, Set.of(
