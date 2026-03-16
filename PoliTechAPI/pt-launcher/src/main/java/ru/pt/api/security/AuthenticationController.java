@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.SetPasswordRequest;
 import ru.pt.api.dto.auth.Principal;
 import ru.pt.api.service.auth.AccountService;
+import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.identity.ExternalJwtAuthenticator;
+import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.LoginRequest;
 import ru.pt.auth.model.TokenRequest;
 import ru.pt.auth.model.TokenResponse;
@@ -17,7 +20,7 @@ import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.service.LoginManagementService;
-import ru.pt.auth.service.SimpleAuthService;
+import ru.pt.auth.service.TenantService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,9 +39,10 @@ public class AuthenticationController {
 
     private final SecurityContextHelper securityContextHelper;
     private final JwtTokenUtil jwtTokenUtil;
-    private final SimpleAuthService simpleAuthService;
     private final LoginManagementService loginManagementService;
     private final AccountService accountService;
+    private final TenantService tenantService;
+    private final List<ExternalJwtAuthenticator> externalAuthenticators;
 
     /**
      * Получить информацию о текущем пользователе через @AuthenticationPrincipal
@@ -133,12 +137,52 @@ public class AuthenticationController {
                     .body(new TokenResponse(null, "Password is required"));
         }
 
-        String token = simpleAuthService.authenticate(
-                tCode,
-                request.getUserLogin(),
-                request.getPassword(),
-                request.getClientId() 
-        );
+        TenantEntity tenant = tenantService.findByCode(tCode)
+                .orElse(null);
+        if (tenant == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new TokenResponse(null, "Tenant not found"));
+        }
+
+        AuthType authType;
+        try {
+            authType = tenant.getAuthType() != null
+                    ? AuthType.valueOf(tenant.getAuthType())
+                    : AuthType.LOCAL_JWT;
+        } catch (IllegalArgumentException ex) {
+            authType = AuthType.LOCAL_JWT;
+        }
+        final AuthType resolvedAuthType = authType;
+
+        if (externalAuthenticators == null || externalAuthenticators.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new TokenResponse(null, "No password authenticators configured"));
+        }
+
+        var cfg = tenant.getAuthConfig();
+        ExternalJwtAuthenticator authenticator = externalAuthenticators.stream()
+                .filter(a -> a.supports(resolvedAuthType, cfg))
+                .findFirst()
+                .orElse(null);
+
+        if (authenticator == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new TokenResponse(null, "No password authenticator for authType=" + resolvedAuthType));
+        }
+
+        String token;
+        try {
+            token = authenticator.authenticate(
+                    tenant.getCode(),
+                    request.getClientId(),
+                    request.getUserLogin(),
+                    request.getPassword(),
+                    cfg
+            );
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new TokenResponse(null, ex.getMessage()));
+        }
 
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

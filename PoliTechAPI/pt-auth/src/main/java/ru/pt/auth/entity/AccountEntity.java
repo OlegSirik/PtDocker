@@ -215,7 +215,7 @@ public class AccountEntity {
     private static final Map<AccountNodeType, Set<AccountNodeType>> ALLOWED_CHILD_TYPES = Map.of(
         AccountNodeType.TENANT, Set.of(AccountNodeType.CLIENT),
         AccountNodeType.CLIENT, Set.of(AccountNodeType.GROUP, AccountNodeType.ACCOUNT, AccountNodeType.SYS_ADMIN,
-            AccountNodeType.TNT_ADMIN, AccountNodeType.CLIENT_ADMIN, AccountNodeType.PRODUCT_ADMIN),
+            AccountNodeType.TNT_ADMIN, AccountNodeType.GROUP_ADMIN, AccountNodeType.PRODUCT_ADMIN),
         AccountNodeType.GROUP, Set.of(AccountNodeType.GROUP, AccountNodeType.ACCOUNT, AccountNodeType.GROUP_ADMIN),
         AccountNodeType.ACCOUNT, Set.of(AccountNodeType.SUB),
         AccountNodeType.SUB, Collections.emptySet(),

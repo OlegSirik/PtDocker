@@ -47,6 +47,10 @@ public class TenantEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, String> storageConfig = new HashMap<>();
 
+    @Column(name = "auth_config", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, String> authConfig = new HashMap<>();
+
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -112,6 +116,14 @@ public class TenantEntity {
 
     public void setStorageConfig(Map<String, String> storageConfig) {
         this.storageConfig = storageConfig != null ? storageConfig : new HashMap<>();
+    }
+
+    public Map<String, String> getAuthConfig() {
+        return authConfig;
+    }
+
+    public void setAuthConfig(Map<String, String> authConfig) {
+        this.authConfig = authConfig != null ? authConfig : new HashMap<>();
     }
 
     public boolean isSystem() {return SYS_TENANT_CODE.equals(code);}

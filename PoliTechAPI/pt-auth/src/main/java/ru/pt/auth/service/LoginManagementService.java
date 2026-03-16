@@ -10,10 +10,13 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.LoginEntity;
 import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.identity.IdentityProvider;
+import ru.pt.auth.identity.IdentityProviderRegistry;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.service.admin.AdminPermissionHelper;
 import ru.pt.auth.model.LoginDto;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,17 +35,19 @@ public class LoginManagementService {
     private final AccountLoginRepository accountLoginRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminPermissionHelper adminPermissionHelper;
+    private final IdentityProviderRegistry identityProviderRegistry;
 
     public LoginManagementService(LoginRepository loginRepository,
-                                 TenantService tenantService,
-                                 AccountLoginRepository accountLoginRepository,
-                                 AdminPermissionHelper adminPermissionHelper
-    ) {
+                                  TenantService tenantService,
+                                  AccountLoginRepository accountLoginRepository,
+                                  AdminPermissionHelper adminPermissionHelper,
+                                  IdentityProviderRegistry identityProviderRegistry) {
         this.loginRepository = loginRepository;
         this.tenantService = tenantService;
         this.accountLoginRepository = accountLoginRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.adminPermissionHelper = adminPermissionHelper;
+        this.identityProviderRegistry = identityProviderRegistry;
     }
 
     /**
@@ -81,6 +86,13 @@ public class LoginManagementService {
         login.setIsDeleted(false);
 
         LoginEntity savedLogin = loginRepository.save(login);
+
+        // Попытаться синхронизировать пользователя с IdP в зависимости от AuthType тенанта.
+        // Если провайдера нет — шаг тихо пропускается.
+        IdentityProvider provider = identityProviderRegistry.forTenant(tenant);
+        if (provider != null) {
+            provider.createUser(tenant, savedLogin);
+        }
 
         logger.info("Created login for user '{}' in tenant '{}'", userLogin, tntCode);
 
