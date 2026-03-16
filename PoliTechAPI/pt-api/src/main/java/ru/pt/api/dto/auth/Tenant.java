@@ -12,5 +12,6 @@ public record Tenant(
     String code,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    Map<String, String> storageConfig
+    Map<String, String> storageConfig,
+    Map<String, String> authConfig
 ) { }

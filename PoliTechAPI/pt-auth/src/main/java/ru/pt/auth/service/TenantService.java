@@ -11,6 +11,7 @@ import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.entity.*;
 import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.TenantSecurityConfig;
+import ru.pt.auth.model.AuthProperties;
 import ru.pt.auth.repository.*;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
@@ -246,11 +247,18 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
     }
 
     private TenantSecurityConfig mapToDomain(TenantEntity e) {
+        var authCfg = e.getAuthConfig();
+        String issuer = null;
+        String jwksUri = null;
+        if (authCfg != null && !authCfg.isEmpty()) {
+            issuer = authCfg.get(AuthProperties.ISSUER.value());
+            jwksUri = authCfg.get(AuthProperties.JWKS_URI.value());
+        }
         return new TenantSecurityConfig(
             e.getCode(),
             AuthType.valueOf(e.getAuthType()),
-            null,
-            null,
+            issuer,
+            jwksUri,
             null,
             null
         );
@@ -269,7 +277,8 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
             entity.getCode(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>()
+            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>(),
+            entity.getAuthConfig() != null ? entity.getAuthConfig() : new HashMap<>()
         );
     }
 
@@ -286,7 +295,8 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
             entity.getCode(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>()
+            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>(),
+            entity.getAuthConfig() != null ? entity.getAuthConfig() : new HashMap<>()
         );
     }
 }

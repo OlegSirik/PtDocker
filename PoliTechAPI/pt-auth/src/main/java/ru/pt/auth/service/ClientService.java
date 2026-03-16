@@ -2,7 +2,6 @@ package ru.pt.auth.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientAuthType;
 import ru.pt.api.dto.auth.ClientConfiguration;
@@ -16,6 +15,8 @@ import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.entity.*;
+import ru.pt.auth.identity.IdentityProvider;
+import ru.pt.auth.identity.IdentityProviderRegistry;
 import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
@@ -41,6 +42,7 @@ public class ClientService implements ClientSecurityConfigService {
     private final AccountService accountService;
     private final ProductService productService;
     private final AuthorizationService authorizationService;
+    private final IdentityProviderRegistry identityProviderRegistry;
 
     public ClientService(
             ClientRepository clientRepository,
@@ -50,7 +52,8 @@ public class ClientService implements ClientSecurityConfigService {
             SecurityContextHelper securityContextHelper,
             AccountService accountService,
             ProductService productService,
-            AuthorizationService authorizationService) {
+            AuthorizationService authorizationService,
+            IdentityProviderRegistry identityProviderRegistry) {
         this.clientRepository = clientRepository;
         this.accountLoginRepository = accountLoginRepository;
         this.accountRepository = accountRepository;
@@ -60,6 +63,7 @@ public class ClientService implements ClientSecurityConfigService {
         this.accountService = accountService;
         this.productService = productService;
         this.authorizationService = authorizationService;
+        this.identityProviderRegistry = identityProviderRegistry;
     }
 
     public Optional<ClientEntity> findByClientId(String clientId) {
@@ -141,17 +145,22 @@ public class ClientService implements ClientSecurityConfigService {
         defAccount.setIdPath(savedAccount.getIdPath() + "." + defAccount.getId());
         AccountEntity savedDefAccount = accountRepository.save(defAccount);
 
-        AccountEntity admin_account = AccountEntity.createAccount(savedDefAccount, null, AccountNodeType.GROUP_ADMIN);
+        AccountEntity admin_account = AccountEntity.createAccount(savedAccount, null, AccountNodeType.GROUP_ADMIN);
         admin_account.setId(accountRepository.getNextAccountId());
-        admin_account.setIdPath(savedDefAccount.getIdPath() + "." + admin_account.getId());
+        admin_account.setIdPath(savedAccount.getIdPath() + "." + admin_account.getId());
         accountRepository.save(admin_account);
 
         saved.setDefaultAccountId(savedDefAccount.getId());
         saved = clientRepository.save(saved);
 
-         
-        Client clientDto = clientMapper.toDto(saved);
-        return clientDto;
+        // Попытаться синхронизировать клиента с IdP в зависимости от AuthType тенанта.
+        // Если провайдера нет — шаг тихо пропускается.
+        IdentityProvider provider = identityProviderRegistry.forTenant(tenant);
+        if (provider != null) {
+            provider.createClient(tenant, saved);
+        }
+
+        return clientMapper.toDto(saved);
     }
 
     /**

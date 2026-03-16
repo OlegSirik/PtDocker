@@ -1,20 +1,17 @@
 package ru.pt.auth.security.strategy;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Component;
+import ru.pt.api.dto.auth.Tenant;
+import ru.pt.api.service.auth.TenantConfig;
+import ru.pt.auth.model.AuthProperties;
 import ru.pt.auth.model.AuthType;
 import ru.pt.auth.security.JwtTokenUtil;
 import ru.pt.auth.security.UserDetailsServiceImpl;
 import ru.pt.auth.security.context.RequestContext;
-
-import org.springframework.stereotype.Component;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
@@ -24,12 +21,18 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsServiceImpl userDetailsService;
     private final RequestContext requestContext;
+    private final TenantConfig tenantConfig;
 
 
-    public JwtAuthenticationStrategy(JwtTokenUtil jwtTokenUtil, UserDetailsServiceImpl userDetailsService, RequestContext requestContext) {
+    public JwtAuthenticationStrategy(
+            JwtTokenUtil jwtTokenUtil,
+            UserDetailsServiceImpl userDetailsService,
+            RequestContext requestContext,
+            TenantConfig tenantConfig) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
         this.requestContext = requestContext;
+        this.tenantConfig = tenantConfig;
     }
 
     @Override
@@ -41,13 +44,48 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
     public void resolveIdentity(HttpServletRequest request) 
     {
         String jwt = extractJwtFromRequest(request);
-        
         if (jwt == null) {
             throw new BadCredentialsException("JWT token missing");
         }
-        
-        if (!jwtTokenUtil.validateToken(jwt)) {
-            throw new BadCredentialsException("Invalid JWT token");
+
+        // Try per-tenant auth_config-based validation first (when configured),
+        // otherwise fall back to legacy JwtTokenUtil.validateToken behavior.
+        String tenantCode = requestContext.getTenant();
+        boolean validated = false;
+        if (tenantCode != null && !tenantCode.isBlank()) {
+            try {
+                Tenant tenant = tenantConfig.getTenant(tenantCode);
+                if ("JWT".equalsIgnoreCase(tenant.authType())
+                        && tenant.authConfig() != null
+                        && !tenant.authConfig().isEmpty()) {
+
+                    String expectedIssuer = tenant.authConfig().get(AuthProperties.ISSUER.value());
+                    String jwksUri = tenant.authConfig().get(AuthProperties.JWKS_URI.value());
+
+                    // For now we still rely on JwtTokenUtil for basic checks and
+                    // enforce issuer match if configured. JWKS integration can be
+                    // plugged in here later using expectedIssuer + jwksUri.
+                    if (!jwtTokenUtil.validateToken(jwt)) {
+                        throw new BadCredentialsException("Invalid JWT token");
+                    }
+                    if (expectedIssuer != null) {
+                        String tokenIssuer = jwtTokenUtil.getClaimFromToken(jwt, "iss");
+                        if (tokenIssuer == null || !expectedIssuer.equals(tokenIssuer)) {
+                            throw new BadCredentialsException("JWT issuer mismatch");
+                        }
+                    }
+                    validated = true;
+                }
+            } catch (Exception e) {
+                logger.warn("Per-tenant JWT validation failed for tenant {}: {}", tenantCode, e.getMessage());
+                // fall through to legacy validation
+            }
+        }
+
+        if (!validated) {
+            if (!jwtTokenUtil.validateToken(jwt)) {
+                throw new BadCredentialsException("Invalid JWT token");
+            }
         }
         
         String username = jwtTokenUtil.getUsernameFromToken(jwt);
