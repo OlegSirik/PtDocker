@@ -51,8 +51,11 @@ export class DashboardService {
     return this.http.get<DashboardChartResponse>(`${this.authService.baseApiUrl}/dashboard/chart`, { params });
   }
 
-  getCards(): Observable<DashboardCardsResponse> {
-    return this.http.get<DashboardCardsResponse>(`${this.authService.baseApiUrl}/dashboard/cards`);
+  getCards(from?: string, to?: string): Observable<DashboardCardsResponse> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<DashboardCardsResponse>(`${this.authService.baseApiUrl}/dashboard/cards`, { params });
   }
 
   getChartByProducts(from?: string, to?: string): Observable<DashboardBarResponse> {

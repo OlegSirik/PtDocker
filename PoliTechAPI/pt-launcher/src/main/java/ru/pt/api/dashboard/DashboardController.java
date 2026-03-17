@@ -42,8 +42,14 @@ public class DashboardController extends SecuredController {
     }
 
     @GetMapping("/cards")
-    public ResponseEntity<DashboardCardsResponse> getCards(@PathVariable String tenantCode) {
-        return ResponseEntity.ok(dashboardService.getCards());
+    public ResponseEntity<DashboardCardsResponse> getCards(
+        @PathVariable String tenantCode,
+        @RequestParam(name = "from", required = false) String from,
+        @RequestParam(name = "to", required = false) String to
+    ) {
+        LocalDate fromDate = parseDate(from);
+        LocalDate toDate = parseDate(to);
+        return ResponseEntity.ok(dashboardService.getCards(fromDate, toDate));
     }
 
     @GetMapping("/chart-by-products")
