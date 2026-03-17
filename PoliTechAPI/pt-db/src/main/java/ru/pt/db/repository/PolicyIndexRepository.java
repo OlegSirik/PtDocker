@@ -58,4 +58,115 @@ public interface PolicyIndexRepository extends JpaRepository<PolicyIndexEntity, 
         ORDER BY p.policy_nr
         """, nativeQuery = true)
     List<Object[]> findPoliciesByAccountIdRecursive(@Param("accountId") Long accountId, @Param("qstr") String qstr);
+
+    @Query(value = """
+        SELECT 
+            count(*)                         AS sales_count,
+            coalesce(sum(premium), 0)        AS total_sales,
+            coalesce(sum(agent_kv_amount),0) AS agent_commission
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        """, nativeQuery = true)
+    List<Object[]> getDashboardCardsAggregates(@Param("from") java.time.LocalDate from,
+                                               @Param("to") java.time.LocalDate to,
+                                               @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            product_code                    AS label,
+            count(*)                        AS sales_count,
+            coalesce(sum(premium), 0)       AS total_sales
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        GROUP BY product_code
+        ORDER BY total_sales DESC
+        """, nativeQuery = true)
+    List<Object[]> getDashboardByProducts(@Param("from") java.time.LocalDate from,
+                                          @Param("to") java.time.LocalDate to,
+                                          @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            c.name                          AS label,
+            count(*)                        AS sales_count,
+            coalesce(sum(premium), 0)       AS total_sales
+        FROM policy_index p
+        JOIN acc_clients c ON p.client_account_id = c.id
+        WHERE p.start_date::date >= coalesce(:from, p.start_date::date)
+          AND p.start_date::date <= coalesce(:to,   p.start_date::date)
+          AND p.id_path LIKE :idPathPrefix
+        GROUP BY c.name
+        ORDER BY total_sales DESC
+        """, nativeQuery = true)
+    List<Object[]> getDashboardByClients(@Param("from") java.time.LocalDate from,
+                                         @Param("to") java.time.LocalDate to,
+                                         @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            start_date::date                AS period,
+            count(*)                        AS sales_count,
+            coalesce(sum(premium), 0)       AS total_sales
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        GROUP BY start_date::date
+        ORDER BY start_date::date
+        """, nativeQuery = true)
+    List<Object[]> getDailyChart(@Param("from") java.time.LocalDate from,
+                                 @Param("to") java.time.LocalDate to,
+                                 @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            date_trunc('week', start_date)::date AS period,
+            count(*)                              AS sales_count,
+            coalesce(sum(premium), 0)             AS total_sales
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        GROUP BY date_trunc('week', start_date)::date
+        ORDER BY period
+        """, nativeQuery = true)
+    List<Object[]> getWeeklyChart(@Param("from") java.time.LocalDate from,
+                                  @Param("to") java.time.LocalDate to,
+                                  @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            date_trunc('month', start_date)::date AS period,
+            count(*)                               AS sales_count,
+            coalesce(sum(premium), 0)              AS total_sales
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        GROUP BY date_trunc('month', start_date)::date
+        ORDER BY period
+        """, nativeQuery = true)
+    List<Object[]> getMonthlyChart(@Param("from") java.time.LocalDate from,
+                                   @Param("to") java.time.LocalDate to,
+                                   @Param("idPathPrefix") String idPathPrefix);
+
+    @Query(value = """
+        SELECT 
+            date_trunc('year', start_date)::date AS period,
+            count(*)                              AS sales_count,
+            coalesce(sum(premium), 0)             AS total_sales
+        FROM policy_index
+        WHERE start_date::date >= coalesce(:from, start_date::date)
+          AND start_date::date <= coalesce(:to,   start_date::date)
+          AND id_path LIKE :idPathPrefix
+        GROUP BY date_trunc('year', start_date)::date
+        ORDER BY period
+        """, nativeQuery = true)
+    List<Object[]> getYearlyChart(@Param("from") java.time.LocalDate from,
+                                  @Param("to") java.time.LocalDate to,
+                                  @Param("idPathPrefix") String idPathPrefix);
 }

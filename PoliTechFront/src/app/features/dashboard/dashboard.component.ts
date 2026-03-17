@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
   DashboardService,
   DashboardCard,
@@ -35,7 +36,8 @@ import {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatTabsModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -44,6 +46,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private dashboardService = inject(DashboardService);
 
   @ViewChild('chartCanvas') chartCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('overviewProductsChartCanvas') overviewProductsChartCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('overviewClientsChartCanvas') overviewClientsChartCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('productsChartCanvas') productsChartCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('clientsChartCanvas') clientsChartCanvas?: ElementRef<HTMLCanvasElement>;
 
@@ -57,7 +61,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   loadingCards = false;
   loadingProductsChart = false;
   loadingClientsChart = false;
+  activeTabIndex = 0;
   private chartInstance: Chart | null = null;
+  private overviewProductsChartInstance: Chart | null = null;
+  private overviewClientsChartInstance: Chart | null = null;
   private productsChartInstance: Chart | null = null;
   private clientsChartInstance: Chart | null = null;
   private viewReady = false;
@@ -81,12 +88,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.viewReady = true;
     this.scheduleRender();
+    this.scheduleRenderOverviewProducts();
+    this.scheduleRenderOverviewClients();
     this.scheduleRenderProducts();
     this.scheduleRenderClients();
   }
 
   ngOnDestroy(): void {
     this.destroyChart();
+    this.destroyOverviewProductsChart();
+    this.destroyOverviewClientsChart();
     this.destroyProductsChart();
     this.destroyClientsChart();
   }
@@ -120,6 +131,18 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadAll();
   }
 
+  onTabChange(index: number): void {
+    this.activeTabIndex = index;
+    if (index === 0) {
+      this.scheduleRenderOverviewProducts();
+      this.scheduleRenderOverviewClients();
+    } else if (index === 1) {
+      this.scheduleRenderProducts();
+    } else if (index === 2) {
+      this.scheduleRenderClients();
+    }
+  }
+
   private loadAll(): void {
     this.loadChart();
     this.loadCards();
@@ -148,7 +171,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadCards(): void {
     this.loadingCards = true;
-    this.dashboardService.getCards().subscribe({
+    this.dashboardService.getCards(this.dateFrom || undefined, this.dateTo || undefined).subscribe({
       next: (response) => {
         this.cards = response.cards || [];
         this.loadingCards = false;
@@ -207,6 +230,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.viewReady) return;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => this.renderProductsChart());
+    });
+  }
+
+  private scheduleRenderOverviewProducts(): void {
+    if (!this.viewReady) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this.renderOverviewProductsChart());
+    });
+  }
+
+  private scheduleRenderOverviewClients(): void {
+    if (!this.viewReady) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this.renderOverviewClientsChart());
     });
   }
 
@@ -280,6 +317,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!parent || parent.clientWidth === 0) return null;
 
     const labels = points.map((p) => p.label);
+    const countData = points.map((p) => Number(p.amount));
     const sumData = points.map((p) => Number(p.sum));
 
     return new Chart(canvas, {
@@ -288,20 +326,28 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         labels,
         datasets: [
           {
-            label: 'Сумма',
-            data: sumData,
-            backgroundColor: 'rgba(63, 81, 181, 0.6)',
+            label: 'count(*)',
+            data: countData,
+            backgroundColor: 'rgba(63, 81, 181, 0.55)',
             borderColor: '#3f51b5',
+            borderWidth: 1
+          },
+          {
+            label: 'sum(amount)',
+            data: sumData,
+            backgroundColor: 'rgba(255, 152, 0, 0.55)',
+            borderColor: '#ff9800',
             borderWidth: 1
           }
         ]
       },
       options: {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: true } },
         scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 } }
+          x: { beginAtZero: true, ticks: { precision: 0 } }
         }
       }
     });
@@ -313,6 +359,30 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.productsChartInstance = this.renderBarChart(
       this.productsChartCanvas.nativeElement,
       this.productsChartPoints
+    );
+  }
+
+  private getTop5BySum(points: DashboardBarPoint[]): DashboardBarPoint[] {
+    return [...points]
+      .sort((a, b) => Number(b.sum) - Number(a.sum))
+      .slice(0, 5);
+  }
+
+  private renderOverviewProductsChart(): void {
+    if (!this.overviewProductsChartCanvas) return;
+    this.destroyOverviewProductsChart();
+    this.overviewProductsChartInstance = this.renderBarChart(
+      this.overviewProductsChartCanvas.nativeElement,
+      this.getTop5BySum(this.productsChartPoints)
+    );
+  }
+
+  private renderOverviewClientsChart(): void {
+    if (!this.overviewClientsChartCanvas) return;
+    this.destroyOverviewClientsChart();
+    this.overviewClientsChartInstance = this.renderBarChart(
+      this.overviewClientsChartCanvas.nativeElement,
+      this.getTop5BySum(this.clientsChartPoints)
     );
   }
 
@@ -336,6 +406,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.productsChartInstance) {
       this.productsChartInstance.destroy();
       this.productsChartInstance = null;
+    }
+  }
+
+  private destroyOverviewProductsChart(): void {
+    if (this.overviewProductsChartInstance) {
+      this.overviewProductsChartInstance.destroy();
+      this.overviewProductsChartInstance = null;
+    }
+  }
+
+  private destroyOverviewClientsChart(): void {
+    if (this.overviewClientsChartInstance) {
+      this.overviewClientsChartInstance.destroy();
+      this.overviewClientsChartInstance = null;
     }
   }
 

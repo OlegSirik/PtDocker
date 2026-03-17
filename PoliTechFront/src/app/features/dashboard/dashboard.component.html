@@ -15,63 +15,107 @@
     <button mat-raised-button color="primary" (click)="onShow()">Показать</button>
   </div>
 
-  <div class="cards-grid">
-    <mat-card class="stat-card" *ngFor="let card of cards">
-      <mat-card-content>
-        <div class="stat-title">{{ card.title }}</div>
-        <div class="stat-value">
-          {{ card.value }}
-          <span class="stat-unit" *ngIf="card.unit">{{ card.unit }}</span>
+  <mat-tab-group [selectedIndex]="activeTabIndex" (selectedTabChange)="onTabChange($event.index)">
+    <mat-tab label="Overview">
+      <div class="tab-content">
+        <div class="cards-grid">
+          <mat-card class="stat-card" *ngFor="let card of cards">
+            <mat-card-content>
+              <div class="stat-title">{{ card.title }}</div>
+              <div class="stat-value">
+                {{ card.value }}
+                <span class="stat-unit" *ngIf="card.unit">{{ card.unit }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
 
-  <mat-card class="datatable-card">
-    <mat-card-content>
-      <div class="table-header">
-        <h3>Продажи по периодам</h3>
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Продажи по периодам</h3>
+            </div>
+
+            <div *ngIf="loadingChart" class="loading">Загрузка...</div>
+            <div class="chart-wrapper" *ngIf="!loadingChart && chartPoints.length">
+              <canvas #chartCanvas></canvas>
+            </div>
+            <div *ngIf="!loadingChart && !chartPoints.length" class="empty-state">
+              Нет данных для графика
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <div class="charts-row">
+          <mat-card class="chart-card half-width">
+            <mat-card-content>
+              <div class="table-header">
+                <h3>Продажи по продуктам (Top 5)</h3>
+              </div>
+              <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
+              <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
+                <canvas #overviewProductsChartCanvas></canvas>
+              </div>
+              <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
+                Нет данных для графика
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card half-width">
+            <mat-card-content>
+              <div class="table-header">
+                <h3>Продажи по клиентам (Top 5)</h3>
+              </div>
+              <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
+              <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
+                <canvas #overviewClientsChartCanvas></canvas>
+              </div>
+              <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">
+                Нет данных для графика
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
+    </mat-tab>
 
-      <div *ngIf="loadingChart" class="loading">Загрузка...</div>
-      <div class="chart-wrapper" *ngIf="!loadingChart && chartPoints.length">
-        <canvas #chartCanvas></canvas>
+    <mat-tab label="Sales by products">
+      <div class="tab-content">
+        <mat-card class="chart-card full-width">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Sales by products</h3>
+            </div>
+            <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
+            <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
+              <canvas #productsChartCanvas></canvas>
+            </div>
+            <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
+              Нет данных для графика
+            </div>
+          </mat-card-content>
+        </mat-card>
       </div>
-      <div *ngIf="!loadingChart && !chartPoints.length" class="empty-state">
-        Нет данных для графика
+    </mat-tab>
+
+    <mat-tab label="Sales by clients">
+      <div class="tab-content">
+        <mat-card class="chart-card full-width">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Sales by clients</h3>
+            </div>
+            <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
+            <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
+              <canvas #clientsChartCanvas></canvas>
+            </div>
+            <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">
+              Нет данных для графика
+            </div>
+          </mat-card-content>
+        </mat-card>
       </div>
-    </mat-card-content>
-  </mat-card>
-
-  <div class="charts-row">
-    <mat-card class="chart-card half-width">
-      <mat-card-content>
-        <div class="table-header">
-          <h3>Продажи по продуктам</h3>
-        </div>
-        <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
-        <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
-          <canvas #productsChartCanvas></canvas>
-        </div>
-        <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
-          Нет данных для графика
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="chart-card half-width">
-      <mat-card-content>
-        <div class="table-header">
-          <h3>Продажи по клиентам</h3>
-        </div>
-        <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
-        <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
-          <canvas #clientsChartCanvas></canvas>
-        </div>
-        <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">
-          Нет данных для графика
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>
