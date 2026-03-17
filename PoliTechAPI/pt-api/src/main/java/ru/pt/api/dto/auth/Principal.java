@@ -17,5 +17,7 @@ public record Principal(
     Collection<? extends GrantedAuthority> authorities,
     Boolean isDefault,
     Long accountId,
+    Long actingAccountId,
+    String accountPath,
     List<PrincipalAccount> accounts
 ) {}

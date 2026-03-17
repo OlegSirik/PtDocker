@@ -3,15 +3,39 @@
     <h1 class="page-title">Dashboard</h1>
   </div>
 
+<!--
+<mat-form-field>
+  <input matInput [matDatepicker]="picker" placeholder="Choose a date">
+  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+</mat-form-field>  
+-->
+
   <div class="filter-row">
     <mat-form-field appearance="outline" class="filter-field">
       <mat-label>Дата с</mat-label>
-      <input matInput type="date" [(ngModel)]="dateFrom" />
+      <input
+        matInput
+        [matDatepicker]="fromPicker"
+        [value]="dateFrom"
+        (dateChange)="onFromDateChange($event.value)"
+      />
+      <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+      <mat-datepicker #fromPicker></mat-datepicker>
     </mat-form-field>
+
     <mat-form-field appearance="outline" class="filter-field">
       <mat-label>Дата по</mat-label>
-      <input matInput type="date" [(ngModel)]="dateTo" />
+      <input
+        matInput
+        [matDatepicker]="toPicker"
+        [value]="dateTo"
+        (dateChange)="onToDateChange($event.value)"
+      />
+      <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+      <mat-datepicker #toPicker></mat-datepicker>
     </mat-form-field>
+
     <button mat-raised-button color="primary" (click)="onShow()">Показать</button>
   </div>
 

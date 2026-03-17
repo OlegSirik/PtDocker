@@ -70,6 +70,8 @@ public class AuthenticationController {
             userDetails.getAuthorities(),
             userDetails.isDefault(),
             userDetails.getAccountId(),
+            userDetails.getActingAccountId(),
+            userDetails.getAccountPath(),
             principalAccounts
         );
 

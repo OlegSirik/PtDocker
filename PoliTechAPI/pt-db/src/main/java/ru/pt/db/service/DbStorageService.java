@@ -303,7 +303,8 @@ public class DbStorageService implements StorageService {
             return policyReport.findPoliciesByAccountPath(userData.getAccountPath(), "dev" , qstr);
         }
 
-        return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
+//        return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
+        return policyReport.findPoliciesByAccountPath(userData.getAccountPath(), "prod" , qstr);
 
     }
 

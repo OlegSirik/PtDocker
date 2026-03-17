@@ -109,10 +109,11 @@ public class PolicyReport {
 
     public List<QuoteDto> findPoliciesByAccountPath(String accountPath, String environment , String qstr) {
         String like = "%" + (qstr != null ? qstr : "") + "%";
+        String likePath = "%" + (accountPath != null ? accountPath : "") + "%";
         return jdbcTemplate.query(
             POLICY_REPORT_SQL2,
             new QuoteRowMapper(),
-            like, like, accountPath, environment
+            like, like, likePath, environment
         );
     }
 

@@ -130,13 +130,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 throw new ForbiddenException("Недопустимый тип узла для авторизации");
         }
 
+        AccountEntity actingAccountEntity = accountRepository.findByTenantCodeAndId(tenantCode, actingAccountId)
+            .orElseThrow(() -> new UsernameNotFoundException("Account not found with id: " + accountId));
+
         // Создаем UserDetails без пароля (JWT авторизация)
         UserDetails userDetails = null;
         if (accountLoginEntity != null) {
-            userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountId);
+            userDetails = UserDetailsImpl.build(accountLoginEntity, productRoles, actingAccountEntity);
         } 
         if (accountTokenEntity != null) {
-            userDetails = UserDetailsImpl.build(accountTokenEntity, accountEntity, productRoles, actingAccountId);
+            userDetails = UserDetailsImpl.build(accountTokenEntity, accountEntity, productRoles, actingAccountEntity);
         } 
 
         return userDetails;

@@ -67,7 +67,7 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
         this.accountPath = accountPath; 
     }
 
-    public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, Long actingAccountId) {
+    public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, AccountEntity actingAccountEntity) {
         /*Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
                           String userRole, Set<String> productRoles, boolean isDefault */
@@ -83,12 +83,12 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
             accountLoginEntity.getAccount().getNodeType().getValue(), //String userRole
             productRoles, //Set<String> productRoles
             accountLoginEntity.getDefault() //boolean isDefault
-            , actingAccountId
-            , accountLoginEntity.getAccount().getIdPath()
+            , actingAccountEntity.getId()
+            , actingAccountEntity.getIdPath()
         );
     }
 
-    public static UserDetailsImpl build(AccountTokenEntity tokenEntity, AccountEntity accountEntity, Set<String> productRoles, Long actingAccountId) {
+    public static UserDetailsImpl build(AccountTokenEntity tokenEntity, AccountEntity accountEntity, Set<String> productRoles, AccountEntity actingAccountEntity) {
         return new UserDetailsImpl(
             tokenEntity.getId(),
             tokenEntity.getToken(),
@@ -101,8 +101,8 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
             accountEntity.getNodeType().getValue(),
             productRoles,
             true,
-            actingAccountId
-            , null//.getAccount().getIdPath()
+            actingAccountEntity.getId(),
+            actingAccountEntity.getIdPath()
         );
     }
 

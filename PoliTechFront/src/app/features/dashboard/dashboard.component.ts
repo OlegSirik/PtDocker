@@ -7,6 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import {
   DashboardService,
   DashboardCard,
@@ -37,7 +39,9 @@ import {
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatTabsModule
+    MatTabsModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -112,6 +116,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private formatDate(d: Date): string {
     return d.toISOString().slice(0, 10);
+  }
+
+  onFromDateChange(date: Date | null): void {
+    if (!date) return;
+    this.dateFrom = this.formatDate(date);
+  }
+
+  onToDateChange(date: Date | null): void {
+    if (!date) return;
+    this.dateTo = this.formatDate(date);
   }
 
   /** Вычисляет период по диапазону дат: <31 дн → day, <180 дн → week, <366 дн → month, иначе → year */
@@ -192,11 +206,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.productsChartPoints = response.points || [];
           this.loadingProductsChart = false;
           this.scheduleRenderProducts();
+          if (this.activeTabIndex === 0) {
+            this.scheduleRenderOverviewProducts();
+          }
         },
         error: () => {
           this.productsChartPoints = [];
           this.loadingProductsChart = false;
           this.scheduleRenderProducts();
+          if (this.activeTabIndex === 0) {
+            this.scheduleRenderOverviewProducts();
+          }
         }
       });
   }
@@ -210,11 +230,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.clientsChartPoints = response.points || [];
           this.loadingClientsChart = false;
           this.scheduleRenderClients();
+          if (this.activeTabIndex === 0) {
+            this.scheduleRenderOverviewClients();
+          }
         },
         error: () => {
           this.clientsChartPoints = [];
           this.loadingClientsChart = false;
           this.scheduleRenderClients();
+          if (this.activeTabIndex === 0) {
+            this.scheduleRenderOverviewClients();
+          }
         }
       });
   }
