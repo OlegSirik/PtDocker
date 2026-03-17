@@ -316,6 +316,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const parent = canvas.parentElement;
     if (!parent || parent.clientWidth === 0) return null;
 
+    // Делаем график выше при большом количестве строк,
+    // чтобы уместить все подписи и бары
+    const rowHeight = 28; // px на одну строку
+    const minHeight = 260;
+    const dynamicHeight = Math.max(minHeight, points.length * rowHeight);
+    canvas.style.height = `${dynamicHeight}px`;
+
     const labels = points.map((p) => p.label);
     const countData = points.map((p) => Number(p.amount));
     const sumData = points.map((p) => Number(p.sum));
@@ -347,7 +354,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         maintainAspectRatio: false,
         plugins: { legend: { display: true } },
         scales: {
-          x: { beginAtZero: true, ticks: { precision: 0 } }
+          x: { beginAtZero: true, ticks: { precision: 0 } },
+          y: { ticks: { autoSkip: false } }
         }
       }
     });
