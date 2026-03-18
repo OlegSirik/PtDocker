@@ -1,7 +1,8 @@
 package ru.pt.auth.service;
 
 import lombok.RequiredArgsConstructor;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.auth.Account;
 import ru.pt.api.dto.auth.ProductRole;
@@ -27,6 +28,8 @@ import org.springframework.stereotype.Component;
 @Transactional(readOnly = true)
 public class AccountDataService implements AccountProductRoles, AccountHierarchyProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(AccountDataService.class);
+
     private final AccountRepository accountRepository;
     private final ProductRoleRepository productRoleRepository;
     private final AccountMapper accountMapper;
@@ -39,6 +42,9 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
     @Override
     public ProductRole getProductRole(Long accountId, Long productId) {
         List<Map<String, Object>> productRoles = productRoleRepository.findProductRoleForAccountId(accountId, productId);
+        if (log.isTraceEnabled()) {
+            log.trace("getProductRole(accountId={}, productId={}) -> {} raw roles", accountId, productId, productRoles.size());
+        }
         if (productRoles.isEmpty()) {
             return null;
         }
@@ -55,6 +61,9 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
     public List<ProductRole> getProductRolesByAccountIdRaw(Long accountId) {
         List<Map<String, Object>> roles = productRoleRepository.findAllProductRolesByAccountId(accountId);
         Set<String> processedProducts = new HashSet<>();
+        if (log.isTraceEnabled()) {
+            log.trace("getProductRolesByAccountIdRaw(accountId={}) -> {} raw roles", accountId, roles.size());
+        }
 
         return roles.stream()
                 .filter(role -> processedProducts.add(String.valueOf(role.get("roleProductCode"))))
@@ -65,6 +74,9 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
     @Override
     public List<Account> getPathToRoot(Long accountId) {
         List<AccountEntity> list = accountRepository.findPathByAccountId(accountId);
+        if (log.isTraceEnabled()) {
+            log.trace("getPathToRoot(accountId={}) -> {} entities", accountId, list.size());
+        }
         // convert List<AccountEntity> to List<Account>
         return list.stream()
                 .map(accountMapper::toDto)
@@ -73,7 +85,11 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
 
     @Override
     public boolean isParent(Long parent, Long child) {
-        return accountRepository.iCanSeeResource(parent, child);
+        boolean result = accountRepository.iCanSeeResource(parent, child);
+        if (log.isTraceEnabled()) {
+            log.trace("isParent(parent={}, child={}) -> {}", parent, child, result);
+        }
+        return result;
     }
 
     /**
@@ -81,6 +97,9 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
      */
     public List<Account> getChildAccounts(Long parentId) {
         List<AccountEntity> accounts = accountRepository.findByParentId(parentId);
+        if (log.isTraceEnabled()) {
+            log.trace("getChildAccounts(parentId={}) -> {} entities", parentId, accounts.size());
+        }
         return accounts.stream()
                 .map(accountMapper::toDto)
                 .toList();
@@ -90,9 +109,15 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
      * Get child accounts filtered by node type
      */
     public List<Account> getChildAccountsByType(Long parentId, String nodeType) {
-        return getChildAccounts(parentId).stream()
+        List<Account> allChildren = getChildAccounts(parentId);
+        List<Account> filtered = allChildren.stream()
                 .filter(account -> nodeType.equals(account.nodeType()))
                 .toList();
+        if (log.isTraceEnabled()) {
+            log.trace("getChildAccountsByType(parentId={}, nodeType={}) -> {} accounts (from {} children)",
+                parentId, nodeType, filtered.size(), allChildren.size());
+        }
+        return filtered;
     }
 
     /**

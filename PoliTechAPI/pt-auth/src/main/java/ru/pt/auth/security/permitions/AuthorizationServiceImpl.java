@@ -1,6 +1,8 @@
 package ru.pt.auth.security.permitions;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import ru.pt.api.dto.auth.ProductRole;
@@ -19,6 +21,8 @@ import ru.pt.auth.service.AccountDataService;
 @RequiredArgsConstructor
 public class AuthorizationServiceImpl implements AuthorizationService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthorizationServiceImpl.class);
+
     private final AccountDataService accountDataService;
     private final AccountProductRoles accountProductRoles;
 
@@ -30,12 +34,21 @@ public class AuthorizationServiceImpl implements AuthorizationService {
             Long resourceAccountId,
             AuthZ.Action action
     ) {
-        
+
+        if (log.isTraceEnabled()) {
+            log.trace("check(userId={}, role={}, resourceType={}, resourceId={}, resourceAccountId={}, action={})",
+                    user.getId(), user.getUserRole(), resourceType, resourceId, resourceAccountId, action);
+        }
+
         Long actingAccountId = user.getActingAccountId();
 
         // Account hierarchy check (SQL)
         if (resourceAccountId != null) {
             if (!accountDataService.isParent(actingAccountId, resourceAccountId)) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Access denied by hierarchy: actingAccountId={} !> resourceAccountId={}",
+                            actingAccountId, resourceAccountId);
+                }
                 throw new ForbiddenException("Нет доступа к ресурсу");
             }
         }
@@ -51,6 +64,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         // Permission check
         // Для продукта проверка что user может выполнять такую операцию. 
         if (!AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
+            if (log.isTraceEnabled()) {
+                log.trace("Access denied by role matrix: role={}, resourceType={}, action={}",
+                        user.getUserRole(), resourceType, action);
+            }
             throw new ForbiddenException(
                     "Access denied: %s %s %s"
                             .formatted(AuthZ.Role.valueOf(user.getUserRole()),resourceType, action)
@@ -75,7 +92,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     public boolean userHasPermition(AuthenticatedUser user,
         AuthZ.ResourceType resourceType,
         AuthZ.Action action) {
-        return AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
+        boolean result = AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
+        if (log.isTraceEnabled()) {
+            log.trace("userHasPermition(userId={}, role={}, resourceType={}, action={}) -> {}",
+                    user.getId(), user.getUserRole(), resourceType, action, result);
+        }
+        return result;
     }
 
 
@@ -89,15 +111,26 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
         ProductRole productRole = accountProductRoles.getProductRole(actingAccountId, productId);
         if (productRole == null) {
+            if (log.isTraceEnabled()) {
+                log.trace("checkProductAction: no ProductRole found for actingAccountId={}, productId={}",
+                        actingAccountId, productId);
+            }
             throw new ForbiddenException(
                 "Нет прав на действие %s для продукта %s"
                         .formatted(action, productId));
         }
-        if (action == AuthZ.Action.VIEW) { return productRole.canRead(); }
-        if (action == AuthZ.Action.QUOTE) { return productRole.canQuote(); }
-        if (action == AuthZ.Action.SELL) { return productRole.canPolicy(); }
+        boolean result;
+        if (action == AuthZ.Action.VIEW) { result = productRole.canRead(); }
+        else if (action == AuthZ.Action.QUOTE) { result = productRole.canQuote(); }
+        else if (action == AuthZ.Action.SELL) { result = productRole.canPolicy(); }
+        else { result = false; }
 
-        return false;
+        if (log.isTraceEnabled()) {
+            log.trace("checkProductAction(userId={}, actingAccountId={}, productId={}, action={}) -> {}",
+                    user.getId(), actingAccountId, productId, action, result);
+        }
+
+        return result;
         /*
         record ProductRole(
     Long id,
