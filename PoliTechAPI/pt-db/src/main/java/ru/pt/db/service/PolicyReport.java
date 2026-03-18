@@ -1,5 +1,7 @@
 package ru.pt.db.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -20,6 +22,8 @@ import java.util.List;
  */
 @Repository
 public class PolicyReport {
+
+    private static final Logger log = LoggerFactory.getLogger(PolicyReport.class);
 
     private static final String POLICY_REPORT_SQL = """
         WITH RECURSIVE account_tree AS (
@@ -69,6 +73,9 @@ public class PolicyReport {
      */
     public List<QuoteDto> findPoliciesByAccountRecursive(long accountId, String qstr) {
         String like = "%" + (qstr != null ? qstr : "") + "%";
+        if (log.isTraceEnabled()) {
+            log.trace("findPoliciesByAccountRecursive(accountId={}, qstr='{}', like='{}')", accountId, qstr, like);
+        }
         return jdbcTemplate.query(
             POLICY_REPORT_SQL,
             new Object[]{accountId, like, like},
@@ -109,7 +116,11 @@ public class PolicyReport {
 
     public List<QuoteDto> findPoliciesByAccountPath(String accountPath, String environment , String qstr) {
         String like = "%" + (qstr != null ? qstr : "") + "%";
-        String likePath = "%" + (accountPath != null ? accountPath : "") + "%";
+        String likePath = (accountPath != null ? accountPath : "") + "%";
+        if (log.isTraceEnabled()) {
+            log.trace("findPoliciesByAccountPath(accountPath='{}', environment='{}', qstr='{}', like='{}', likePath='{}')",
+                accountPath, environment, qstr, like, likePath);
+        }
         return jdbcTemplate.query(
             POLICY_REPORT_SQL2,
             new QuoteRowMapper(),
