@@ -1,0 +1,76 @@
+.tree-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Остаток ширины строки (всё кроме code / actions) */
+th.col-name,
+td.col-name {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.tree-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 0;
+}
+
+.tree-name-toggle-slot {
+  flex-shrink: 0;
+}
+
+.tree-name-body {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.name-cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+th.col-code,
+td.col-code {
+  width: 150px;
+  max-width: 150px;
+  box-sizing: border-box;
+  text-align: end;
+  vertical-align: middle;
+}
+
+th.col-actions,
+td.col-actions {
+  width: 100px;
+  max-width: 100px;
+  box-sizing: border-box;
+  text-align: end;
+  vertical-align: middle;
+}
+
+.toggle-btn {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+}
+
+.toggle-placeholder {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+}

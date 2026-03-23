@@ -15,6 +15,7 @@ public class ProductMapper {
         product.setName(entity.getName());
         product.setDevVersionNo(entity.getDevVersionNo());
         product.setProdVersionNo(entity.getProdVersionNo());
+        product.setInsCompanyId(entity.getInsCompanyId());
         product.setDeleted(entity.isDeleted());
 
         return product;

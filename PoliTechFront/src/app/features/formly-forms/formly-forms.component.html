@@ -1,6 +1,6 @@
 <div class="formly-forms-container">
   <div class="page-header">
-    <h1 class="page-title">Product Form</h1>
+    <h1 class="page-title">{{ policy.productCode }}</h1>
     <div class="header-actions">
       <button mat-raised-button color="accent" class="cancel-button" (click)="onCancel()">
         <mat-icon>arrow_back</mat-icon>
@@ -23,14 +23,31 @@
           <h3>Договор страхования {{ policy.policyNumber }}</h3>
           <!-- First Line: id, product -->
           <div class="display-flex" style="gap: 12px;">
+<!---
             <mat-form-field appearance="outline" class="form-field flex-1">
               <mat-label>ID</mat-label>
               <input matInput [(ngModel)]="policy.id" name="id" readonly>
             </mat-form-field>
+
             <mat-form-field appearance="outline" class="form-field flex-2">
               <mat-label>Product</mat-label>
               <input matInput [(ngModel)]="policy.productCode" name="productCode" readonly>
             </mat-form-field>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <mat-form-field appearance="outline" class="form-field ">
+              <mat-label>Status</mat-label>
+              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
+            </mat-form-field>
+          </div>
+
+            -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <mat-form-field appearance="outline" class="form-field ">
+              <mat-label>Status</mat-label>
+              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
+            </mat-form-field>
+          </div>
           </div>
           <!-- Second Line: startDate, endDate, waitingPeriod, policyTerm -->
           <div class="display-flex" style="gap: 12px;">
@@ -72,17 +89,11 @@
         <!-- Right Column: 40% width -->
         <div style="width: 40%; height: 100%; background-color: white; padding-left: 20px;padding-right: 20px;">
           <h3>Премия и статус договора</h3>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <mat-form-field appearance="outline" class="form-field ">
-              <mat-label>Status</mat-label>
-              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
-            </mat-form-field>
-          </div>
           <div style="display: flex; flex-direction: column; gap: 12px;">  
-            <mat-form-field appearance="outline" class="form-field ">
-              <mat-label>Premium</mat-label>
-              <input matInput [(ngModel)]="policy.premium" name="premium" readonly>
-            </mat-form-field>
+            <div class="premium-block">
+              <span class="premium-label">Premium</span>
+              <span class="premium-value">{{ formatPremium(policy.premium) }}</span>
+            </div>
           </div>
         </div>
       </div>

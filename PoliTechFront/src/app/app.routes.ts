@@ -15,6 +15,7 @@ import {ClientEditComponent} from './features/admin-panel/client-edit/client-edi
 import { CommissionEditPageComponent } from './features/admin-panel/commission-edit/commission-edit.component';
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 import { SpListComponent } from './features/add-ons/sp-list/sp-list.component';
+import { InsCompanyEditComponent } from './features/ins-company/ins-company-edit.component';
 import { SpProviderComponent } from './features/add-ons/sp-provider/sp-provider.component';
 import { PricelistEditComponent } from './features/add-ons/pricelist-edit/pricelist-edit.component';
 import { TenantGuard } from './shared/guards/tenant.guard';
@@ -39,6 +40,8 @@ export const routes: Routes = [
   { path: 'lob-edit', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'lob-edit/:id', component: BusinessLineEditComponent, canActivate: [authGuard] },
   { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
+  { path: 'admin/ins-company/edit', component: InsCompanyEditComponent, canActivate: [authGuard] },
+  { path: 'admin/ins-company/:id', component: InsCompanyEditComponent, canActivate: [authGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'product/:id/version/:versionNo', component: ProductComponent, canActivate: [authGuard] },
   { path: 'product/new', component: ProductComponent, canActivate: [authGuard] },

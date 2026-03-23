@@ -24,5 +24,16 @@ public interface IdentityProvider {
      * Может быть no-op для некоторых AuthType.
      */
     void createUser(TenantEntity tenant, LoginEntity login);
+
+    /**
+     * Установить пароль пользователя в IdP (если требуется), например после смены пароля в БД.
+     * По умолчанию — no-op для AuthType без внешнего IdP.
+     *
+     * @param newPassword пароль в открытом виде (как ввёл администратор)
+     * @param temporary если true — IdP может потребовать смену пароля при следующем входе
+     */
+    default void setUserPassword(TenantEntity tenant, LoginEntity login, String newPassword, boolean temporary) {
+        // no-op
+    }
 }
 

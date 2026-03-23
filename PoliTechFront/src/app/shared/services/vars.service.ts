@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import type { TreeTableFlatRow, TreeTableSourceRow } from '../models/tree-table.models';
 
 export interface LobVar {
   varCode: string;
@@ -320,5 +321,11 @@ export class VarsService {
   ): Observable<void> {
     const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes/${encodeURIComponent(code)}`;
     return this.http.delete<void>(url);
+  }
+
+  getTree(productId?: number): Observable<TreeTableSourceRow[]> {
+    const id = productId === undefined ? -1 : productId;
+    const url = `${this.schemaUrl('box')}/tree?productId=${id}`;
+    return this.http.get<TreeTableSourceRow[]>(url);
   }
 }

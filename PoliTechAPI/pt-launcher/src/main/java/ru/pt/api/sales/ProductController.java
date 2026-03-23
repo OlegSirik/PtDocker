@@ -36,12 +36,16 @@ public class ProductController extends SecuredController {
         this.productService = productService;
     }
 
+    /**
+     * Список продуктов. Фильтр по страховой: {@code GET .../products?insComp={insComp}}.
+     */
     @GetMapping
     public List<Product> list(
             @PathVariable String tenantCode,
+            @RequestParam(required = false) Long insComp,
             @AuthenticationPrincipal UserDetailsImpl user) {
         //requireAdmin(user);
-        return productService.listSummaries();
+        return productService.listSummaries(insComp);
     }
 
     @PostMapping

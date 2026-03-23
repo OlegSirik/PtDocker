@@ -1,3 +1,4 @@
+
 <div class="product-container">
   <div class="page-header">
     <h1 class="page-title">Настройка продукта: {{ product.name || 'Новый продукт' }}<span *ngIf="currentPackage"> - {{ currentPackage.name }}</span></h1>
@@ -57,16 +58,32 @@
           </mat-card-header>
           <mat-card-content>
             <div class="form-row">
+<!----
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>ID</mat-label>
                 <input matInput [value]="product.id || ''" readonly>
               </mat-form-field>
+--->              
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>LOB</mat-label>
                 <input matInput [value]="product.lob" readonly>
-
-
               </mat-form-field>
+
+              <mat-form-field class="form-field" appearance="outline">
+                <mat-label>Страховая компания</mat-label>
+                <mat-select
+                  [(ngModel)]="product.insCompanyId"
+                  (ngModelChange)="updateChanges()"
+                  [disabled]="product.versionStatus === 'PROD'"
+                  [compareWith]="compareInsCompanyIds"
+                >
+                  <mat-option [value]="null">— не выбрано —</mat-option>
+                  @for (c of insCompanies; track c.id) {
+                    <mat-option [value]="c.id">{{ c.name }} ({{ c.code }})</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
             </div>
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
@@ -653,7 +670,49 @@
       </div>
     </mat-tab>
 
-
+    <mat-tab label="Дерево">
+      <div class="tab-content">
+        <mat-card class="data-card">
+          <mat-card-header>
+            <mat-card-title>Иерархия (демо)</mat-card-title>
+            <mat-card-subtitle>Mock-данные для компонента tree-table</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <app-tree-table [rows]="treeTableData" [displayedColumns]="treeTableDisplayedColumns">
+              <ng-template #actionsCell let-item>
+                <span class="tree-table-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Удалить: ' + item.name"
+                    color="warn"
+                    (click)="onTreeTableDelete(item); $event.stopPropagation()"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Изменить: ' + item.name"
+                    (click)="onTreeTableEdit(item); $event.stopPropagation()"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Создать дочерний элемент для: ' + item.name"
+                    (click)="onTreeTableCreate(item); $event.stopPropagation()"
+                  >
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </span>
+              </ng-template>
+            </app-tree-table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
 
   </mat-tab-group>
 </div>

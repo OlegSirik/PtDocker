@@ -42,6 +42,9 @@ import { FilesService, FileTemplate } from '../../shared/services/api/files.serv
 import { AuthService } from '../../shared/services/auth.service';
 import { TestRequestService } from '../../shared/services/api/test-request.service';
 import { VarsService } from '../../shared/services/vars.service';
+import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
+import { TreeTableComponent } from '../../shared/components/tree-table';
+import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 
 @Component({
     selector: 'app-product',
@@ -59,7 +62,8 @@ import { VarsService } from '../../shared/services/vars.service';
         MatTableModule,
         MatPaginatorModule,
         MatDialogModule,
-        MatBadgeModule
+        MatBadgeModule,
+        TreeTableComponent,
     ],
     templateUrl: './product.component.html',
     styleUrls: ['./product.component.scss']
@@ -86,6 +90,30 @@ export class ProductComponent implements OnInit {
 
   isNewRecord = false;
   hasChanges = false;
+
+  /** Демо-данные для вкладки с иерархической таблицей */
+  mockTreeTableRows: TreeTableSourceRow[] = [
+    { id: 1, parent_id: null, order_nr: 1, name: 'Продукт (корень)', code: 'PROD' },
+    { id: 2, parent_id: 1, order_nr: 1, name: 'Пакет «Базовый»', code: 'PKG_BASE' },
+    { id: 3, parent_id: 1, order_nr: 2, name: 'Пакет «Премиум»', code: 'PKG_PREM' },
+    { id: 4, parent_id: 2, order_nr: 1, name: 'Покрытие риска A', code: 'COV_A' },
+    { id: 5, parent_id: 2, order_nr: 2, name: 'Покрытие риска B', code: 'COV_B' },
+    { id: 6, parent_id: 3, order_nr: 1, name: 'Расширенное покрытие', code: 'COV_X' },
+    { id: 7, parent_id: 6, order_nr: 1, name: 'Покрытие риска A', code: 'COV_A' },
+    { id: 8, parent_id: 7, order_nr: 2, name: 'Покрытие риска B', code: 'COV_B' },
+  ];
+  treeTableData: TreeTableSourceRow[] = [];
+  treeTableDisplayedColumns = ['name', 'code', 'actions'];
+
+  /** Справочник страховых компаний (выбор ins_company_id) */
+  insCompanies: InsuranceCompanyDto[] = [];
+
+  /** Сравнение значений mat-select для null / id */
+  compareInsCompanyIds = (a: number | null | undefined, b: number | null | undefined): boolean => {
+    const na = a == null ? null : Number(a);
+    const nb = b == null ? null : Number(b);
+    return na === nb;
+  };
 
   // Dropdown options
   lobOptions: string[] = [];
@@ -175,11 +203,21 @@ export class ProductComponent implements OnInit {
     private filesService: FilesService,
     private testRequestService: TestRequestService,
     private varsService: VarsService,
+    private insCompanyService: InsCompanyService,
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     const versionNo = this.route.snapshot.paramMap.get('versionNo');
+
+    this.insCompanyService.list().subscribe({
+      next: (list) => {
+        this.insCompanies = list ?? [];
+      },
+      error: () => {
+        this.insCompanies = [];
+      },
+    });
 
     this.loadProduct(id ? parseInt(id) : undefined, versionNo ? parseInt(versionNo) : undefined).pipe(
       switchMap((product) => {
@@ -194,6 +232,24 @@ export class ProductComponent implements OnInit {
         this.updateTables();
       })
     ).subscribe();
+
+    this.varsService.getTree(this.product.id!).subscribe(data => {
+      this.treeTableData = data;
+    });
+  }
+
+  /** Действия вкладки «Дерево» (подключите API при готовности) */
+  onTreeTableEdit(node: TreeTableSourceRow): void {
+    this.snackBar.open(`Изменить: ${node.name} (${node.code})`, 'OK', { duration: 3500 });
+  }
+
+  onTreeTableDelete(node: TreeTableSourceRow): void {
+    this.snackBar.open(`Удалить: ${node.name} (${node.code})`, 'OK', { duration: 3500 });
+  }
+
+  /** Создание дочернего узла относительно выбранной строки */
+  onTreeTableCreate(parent: TreeTableSourceRow): void {
+    this.snackBar.open(`Создать дочерний для: ${parent.name} (${parent.code})`, 'OK', { duration: 3500 });
   }
 
   loadLob(lob: string): Observable<BusinessLineEdit> {

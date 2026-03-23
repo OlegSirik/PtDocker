@@ -20,7 +20,9 @@ public final class AuthZ {
         POLICY,
         POLICY_ADDON,
         CONTRACT,
-        FILE
+        FILE,
+        /** Страховые компании (справочник) */
+        INS_COMPANY
     }
 
     /** Действия */

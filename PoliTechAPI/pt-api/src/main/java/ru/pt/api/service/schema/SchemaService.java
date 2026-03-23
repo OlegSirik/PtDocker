@@ -3,6 +3,7 @@ package ru.pt.api.service.schema;
 import ru.pt.api.dto.schema.AttributeDefDto;
 import ru.pt.api.dto.schema.EntityDefDto;
 import ru.pt.api.dto.schema.SectionDto;
+import ru.pt.api.dto.schema.SchemaTreeDto;
 
 import java.util.List;
 
@@ -29,4 +30,7 @@ public interface SchemaService {
     AttributeDefDto createAttribute(Long tid, String contractCode, String sectionCode, String entityCode, AttributeDefDto dto);
     AttributeDefDto updateAttribute(Long tid, String contractCode, String sectionCode, String entityCode, String code, AttributeDefDto dto);
     void deleteAttribute(Long tid, String contractCode, String sectionCode, String entityCode, String code);
+
+    // Tree
+    List<SchemaTreeDto> getTree(Long tid, Integer productId);
 }

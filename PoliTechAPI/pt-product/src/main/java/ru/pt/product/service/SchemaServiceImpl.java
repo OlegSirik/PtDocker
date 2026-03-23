@@ -9,6 +9,7 @@ import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.schema.AttributeDefDto;
 import ru.pt.api.dto.schema.EntityDefDto;
 import ru.pt.api.dto.schema.SectionDto;
+import ru.pt.api.dto.schema.SchemaTreeDto;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -22,11 +23,14 @@ import ru.pt.product.repository.ContractModelRepository;
 import ru.pt.product.repository.ContractSectionRepository;
 import ru.pt.product.repository.EntityDefRepository;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.service.product.ProductService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +42,7 @@ public class SchemaServiceImpl implements SchemaService {
     private final AttributeDefRepository attributeDefRepository;
     private final AuthorizationService authorizationService;
     private final SecurityContextHelper securityContextHelper;
+    private final ProductService productService;
 
     private AuthenticatedUser getCurrentUser() {
         return securityContextHelper.getCurrentUser()
@@ -434,4 +439,40 @@ public class SchemaServiceImpl implements SchemaService {
         }
     }
 
+    // ========== TREE ==========
+
+    @Override
+    @Transactional
+    public List<SchemaTreeDto> getTree(Long tid, Integer productId) { //String contractCode) {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.LIST);
+       
+        List<SchemaTreeDto> tree = new ArrayList<>();
+
+        String contractCode = "box1";
+
+        ContractModelEntity model = getContractModel(tid, contractCode);
+        tree.add(new SchemaTreeDto(model.getId(), null, 0, model.getName(), model.getCode()));
+
+        List<ContractSectionEntity> sections = contractSectionRepository.findByTidAndModelId(tid, model.getId());
+        for (ContractSectionEntity section : sections) {
+            tree.add(new SchemaTreeDto(section.getId(), model.getId(), null, section.getName(), section.getCode()));
+
+            List<EntityDefEntity> entities = entityDefRepository.findByTidAndSectionId(tid, section.getId());
+            for (EntityDefEntity entity : entities) {
+                tree.add(new SchemaTreeDto(entity.getId(), section.getId(), null, entity.getName(), entity.getCode()));
+
+                List<AttributeDefEntity> attributes = attributeDefRepository.findByTidAndEntityId(tid, entity.getId());
+                for (AttributeDefEntity attribute : attributes) {
+                    tree.add(new SchemaTreeDto(attribute.getId(), entity.getId(), null, attribute.getName(), attribute.getCode()));
+                }
+        
+            }
+    
+        }
+
+        ProductVersionModel product = productService.getProduct(120, true);
+        // product.getVars().forEach(var -> {
+        return tree;
+    }
 }

@@ -55,12 +55,12 @@ public class KeycloakPasswordGrantAuthenticator implements ExternalJwtAuthentica
                 ? issuer + "protocol/openid-connect/token"
                 : issuer + "/protocol/openid-connect/token";
 
-        String passwordClientId = config.get(AuthProperties.ADMIN_CLIENT_ID.value());
-        String passwordClientSecret = config.get(AuthProperties.ADMIN_CLIENT_SECRET.value());
+        //String passwordClientId = config.get(AuthProperties.ADMIN_CLIENT_ID.value());
+        //String passwordClientSecret = config.get(AuthProperties.ADMIN_CLIENT_SECRET.value());
 
-        if (passwordClientId == null || passwordClientSecret == null) {
-            throw new IllegalStateException("Missing client credentials in auth_config for tenant " + tenantCode);
-        }
+        //if (passwordClientId == null || passwordClientSecret == null) {
+        //    throw new IllegalStateException("Missing client credentials in auth_config for tenant " + tenantCode);
+        //}
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -69,8 +69,11 @@ public class KeycloakPasswordGrantAuthenticator implements ExternalJwtAuthentica
         body.add("grant_type", "password");
         body.add("username", login);
         body.add("password", password);
-        body.add("client_id", passwordClientId);
-        body.add("client_secret", passwordClientSecret);
+        
+        //body.add("client_id", "admin-cli");
+        body.add("client_id", clientId);
+        //body.add("client_id", passwordClientId);
+        //body.add("client_secret", passwordClientSecret);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 

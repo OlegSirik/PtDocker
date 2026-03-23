@@ -37,4 +37,8 @@ public class ProductEntity {
     @Column(name = "tid", nullable = false)
     private Long tId;
 
+    /** Справочник страховых компаний (pt_insurance_company.id), может быть NULL */
+    @Column(name = "ins_company_id")
+    private Long insCompanyId;
+
 }

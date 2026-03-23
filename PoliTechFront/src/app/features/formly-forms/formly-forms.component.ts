@@ -109,6 +109,25 @@ export class FormlyFormsComponent implements OnInit {
     'actions'
   ];
 
+  /** Премия как текст: жирный размер задаётся в .premium-value; формат «999 999.00». */
+  formatPremium(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    const n =
+      typeof value === 'number'
+        ? value
+        : Number(String(value).replace(/\s/g, '').replace(',', '.'));
+    if (Number.isNaN(n)) {
+      return String(value);
+    }
+    const negative = n < 0;
+    const abs = Math.abs(n);
+    const [intRaw, frac = '00'] = abs.toFixed(2).split('.');
+    const intSpaced = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (negative ? '-' : '') + intSpaced + '.' + frac;
+  }
+
   constructor(
     private fb: FormBuilder,
     private renderer: Renderer2,

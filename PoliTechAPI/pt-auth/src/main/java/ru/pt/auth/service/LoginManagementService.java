@@ -124,6 +124,16 @@ public class LoginManagementService {
         login.setPassword(hashedPassword);
         loginRepository.save(login);
 
+        // Попытаться синхронизировать пользователя с IdP в зависимости от AuthType тенанта.
+        // Если провайдера нет — шаг тихо пропускается.
+        TenantEntity tenant = tenantService.findByCode(tntCode)
+                .orElseThrow(() -> new NotFoundException("Tenant with code '" + tntCode + "' not found"));
+
+        IdentityProvider provider = identityProviderRegistry.forTenant(tenant);
+        if (provider != null) {
+            provider.setUserPassword(tenant, login, password, false);
+        }
+
         logger.info("Password set for user '{}'", userLogin);
     }
 

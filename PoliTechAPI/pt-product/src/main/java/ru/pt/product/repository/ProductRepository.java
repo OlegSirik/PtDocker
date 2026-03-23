@@ -16,8 +16,14 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     @Query("select p from ProductEntity p where p.tId = :tId and p.code = :code and p.isDeleted = false")
     Optional<ProductEntity> findByCode(@Param("tId") Long tId, @Param("code") String code);
 
-    @Query("select p.id as id, p.lob as lob, p.code as code, p.name as name, p.prodVersionNo as prodVersionNo, p.devVersionNo as devVersionNo from ProductEntity p where p.tId = :tId and p.isDeleted = false order by p.code")
-    List<Object[]> listActiveSummaries(@Param("tId") Long tId);
+    @Query("""
+            select p.id, p.lob, p.code, p.name, p.prodVersionNo, p.devVersionNo, p.insCompanyId
+            from ProductEntity p
+            where p.tId = :tId and p.isDeleted = false
+              and (:insComp is null or p.insCompanyId = :insComp)
+            order by p.code
+            """)
+    List<Object[]> listActiveSummaries(@Param("tId") Long tId, @Param("insComp") Long insComp);
 
     @Query(
         """

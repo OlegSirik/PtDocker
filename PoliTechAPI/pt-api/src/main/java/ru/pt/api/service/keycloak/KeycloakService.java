@@ -4,6 +4,8 @@ import ru.pt.api.dto.keycloak.KeycloakClientResponse;
 import ru.pt.api.dto.keycloak.KeycloakUserResponse;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service for managing Keycloak clients and users via REST API
@@ -18,7 +20,17 @@ public interface KeycloakService {
      * @param redirectUris List of valid redirect URIs
      * @return KeycloakClientResponse with client details and secret
      */
-    KeycloakClientResponse createConfidentialClient(String clientId, String clientName, List<String> redirectUris);
+    KeycloakClientResponse createConfidentialClient(Map<String, String> authConfig, String clientId, String clientName, List<String> redirectUris);
+    
+    /**
+     * Create a new public client in Keycloak
+     * 
+     * @param clientId Client ID (e.g., "client_123")
+     * @param clientName Client name
+     * @param redirectUris List of valid redirect URIs
+     * @return KeycloakClientResponse with client details and secret
+     */
+    KeycloakClientResponse createPublicClient(Map<String, String> authConfig, String clientId, String clientName, List<String> redirectUris);
     
     /**
      * Regenerate client secret
@@ -26,7 +38,7 @@ public interface KeycloakService {
      * @param keycloakClientId Keycloak internal client UUID
      * @return New client secret
      */
-    String regenerateClientSecret(String keycloakClientId);
+    String regenerateClientSecret(Map<String, String> authConfig, String keycloakClientId);
     
     /**
      * Create user with password authentication
@@ -37,7 +49,7 @@ public interface KeycloakService {
      * @param emailVerified Whether email should be marked as verified
      * @return KeycloakUserResponse with user details
      */
-    KeycloakUserResponse createUserWithPassword(String username, String email, String password, boolean emailVerified);
+    KeycloakUserResponse createUserWithPassword(Map<String, String> authConfig, String username, String email, String password, boolean emailVerified);
     
     /**
      * Create user with email OTP (passwordless)
@@ -47,14 +59,14 @@ public interface KeycloakService {
      * @param email Email address
      * @return KeycloakUserResponse with user details
      */
-    KeycloakUserResponse createUserWithEmailOtp(String username, String email);
+    KeycloakUserResponse createUserWithEmailOtp(Map<String, String> authConfig, String username, String email);
     
     /**
      * Send email verification to user
      * 
      * @param keycloakUserId Keycloak internal user UUID
      */
-    void sendVerificationEmail(String keycloakUserId);
+    void sendVerificationEmail(Map<String, String> authConfig, String keycloakUserId);
     
     /**
      * Enable or disable user
@@ -62,19 +74,31 @@ public interface KeycloakService {
      * @param keycloakUserId Keycloak internal user UUID
      * @param enabled Whether user should be enabled
      */
-    void setUserEnabled(String keycloakUserId, boolean enabled);
+    void setUserEnabled(Map<String, String> authConfig, String keycloakUserId, boolean enabled);
+
+    /**
+     * Установить пароль существующему пользователю Keycloak (internal user id).
+     *
+     * @param temporary если true — пользователь должен сменить пароль при первом входе
+     */
+    void updateUserPassword(Map<String, String> authConfig, String keycloakUserId, String password, boolean temporary);
+
+    /**
+     * Найти internal id пользователя Keycloak по username (точное совпадение, Admin API).
+     */
+    Optional<String> findUserIdByUsername(Map<String, String> authConfig, String username);
     
     /**
      * Delete client from Keycloak
      * 
      * @param keycloakClientId Keycloak internal client UUID
      */
-    void deleteClient(String keycloakClientId);
+    void deleteClient(Map<String, String> authConfig, String keycloakClientId);
     
     /**
      * Delete user from Keycloak
      * 
      * @param keycloakUserId Keycloak internal user UUID
      */
-    void deleteUser(String keycloakUserId);
+    void deleteUser(Map<String, String> authConfig, String keycloakUserId);
 }

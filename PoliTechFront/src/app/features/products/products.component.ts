@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, Inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, Inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
 
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,10 +19,12 @@ import { ProductService, Product, BusinessLineService } from '../../shared';
 import { Observable } from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import { AuthService } from '../../shared/services/auth.service';
+import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
 
 @Component({
     selector: 'app-products',
     imports: [
+    CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -37,10 +41,13 @@ import { AuthService } from '../../shared/services/auth.service';
 })
 export class ProductsComponent implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
   private svc = inject(ProductsService);
   private snack = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
+  private insCompanyService = inject(InsCompanyService);
 
 
   products: ProductList[] = [];
@@ -48,6 +55,14 @@ export class ProductsComponent implements OnInit {
   searchText = '';
   pageSize = 25;
   pageIndex = 0;
+
+  /** Страховые компании */
+  insCompanies: InsuranceCompanyDto[] = [];
+  insCompaniesDisplayedColumns: string[] = ['id', 'name', 'status', 'actions'];
+  loadingInsCompanies = false;
+
+  /** Выбранная СК из query ?insComp= — фильтр списка продуктов */
+  selectedInsCompId: number | null = null;
 
   get filteredProducts(): ProductList[] {
     const s = this.searchText.trim().toLowerCase();
@@ -65,11 +80,23 @@ export class ProductsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadProducts();
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const raw = params.get('insComp');
+        if (raw == null || raw === '') {
+          this.selectedInsCompId = null;
+        } else {
+          const n = Number(raw);
+          this.selectedInsCompId = Number.isFinite(n) ? n : null;
+        }
+        this.loadProducts();
+      });
+    this.loadInsuranceCompanies();
   }
 
   loadProducts(): void {
-    this.svc.getProducts().subscribe(products => {
+    this.svc.getProducts(this.selectedInsCompId).subscribe((products) => {
       this.products = products;
     });
   }
@@ -126,6 +153,87 @@ export class ProductsComponent implements OnInit {
   onPageChange(event: PageEvent): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
+  }
+
+  loadInsuranceCompanies(): void {
+    this.loadingInsCompanies = true;
+    this.insCompanyService.list().subscribe({
+      next: (list) => {
+        this.insCompanies = list;
+        this.loadingInsCompanies = false;
+      },
+      error: () => {
+        this.loadingInsCompanies = false;
+        this.snack.open('Не удалось загрузить страховые компании', 'OK', { duration: 3000 });
+      },
+    });
+  }
+
+  addInsuranceCompany(): void {
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'ins-company', 'edit']);
+  }
+
+  editInsuranceCompany(row: InsuranceCompanyDto, event?: Event): void {
+    event?.stopPropagation();
+    if (row.id == null) return;
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'ins-company', String(row.id)]);
+  }
+
+  /** Клик по строке СК: переключить фильтр продуктов (?insComp=id); повторный клик по той же — сброс. */
+  onInsuranceCompanyRowClick(row: InsuranceCompanyDto): void {
+    if (row.id == null) return;
+    const id = Number(row.id);
+    const next =
+      this.selectedInsCompId != null && this.selectedInsCompId === id ? null : id;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { insComp: next },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  clearInsCompFilter(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { insComp: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  selectedInsCompanyName(): string | null {
+    if (this.selectedInsCompId == null) return null;
+    const c = this.insCompanies.find((x) => x.id != null && Number(x.id) === this.selectedInsCompId);
+    return c?.name ?? null;
+  }
+
+  deleteInsuranceCompany(row: InsuranceCompanyDto, event?: Event): void {
+    event?.stopPropagation();
+    if (row.id == null) return;
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { message: `Удалить страховую компанию «${row.name}»?` },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.insCompanyService.delete(row.id!).subscribe({
+          next: () => {
+            this.loadInsuranceCompanies();
+            this.snack.open('Удалено', 'OK', { duration: 2000 });
+          },
+          error: () => {
+            this.snack.open('Ошибка при удалении', 'OK', { duration: 2500 });
+          },
+        });
+      }
+    });
+  }
+
+  getInsStatusClass(status: string | undefined): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'suspended') return 'status-suspended';
+    return 'status-active';
   }
 }
 

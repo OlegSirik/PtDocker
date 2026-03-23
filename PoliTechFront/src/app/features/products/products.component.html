@@ -3,6 +3,72 @@
     <h1 class="page-title">Продукты</h1>
   </div>
 
+  <mat-card class="datatable-card ins-companies-card">
+    <mat-card-content>
+      <div class="button-section">
+        <button mat-raised-button color="primary" class="add-button" type="button" (click)="addInsuranceCompany()">
+          <mat-icon>add</mat-icon>
+          Создать
+        </button>
+      </div>
+
+      <div class="table-header">
+        <h3>Страховые компании</h3>
+      </div>
+
+      <div *ngIf="loadingInsCompanies" class="loading-ins">Загрузка...</div>
+
+      <table
+        *ngIf="!loadingInsCompanies"
+        mat-table
+        [dataSource]="insCompanies"
+        class="business-table ins-companies-table"
+      >
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
+          <td mat-cell *matCellDef="let c" class="col-id">{{ c.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef class="col-name">Название</th>
+          <td mat-cell *matCellDef="let c" class="col-name">{{ c.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
+          <td mat-cell *matCellDef="let c" class="col-status">
+            <span class="status-badge" [ngClass]="getInsStatusClass(c.status)">
+              {{ c.status || '—' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
+          <td mat-cell *matCellDef="let c" align="end" class="col-actions">
+            <div class="action-buttons">
+              <button mat-icon-button type="button" color="primary" (click)="editInsuranceCompany(c, $event)" [attr.aria-label]="'Изменить ' + c.name">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" color="warn" (click)="deleteInsuranceCompany(c, $event)" [attr.aria-label]="'Удалить ' + c.name">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="insCompaniesDisplayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: insCompaniesDisplayedColumns"
+          (click)="onInsuranceCompanyRowClick(row)"
+          class="clickable-row"
+          [class.ins-company-row-selected]="selectedInsCompId != null && row.id != null && selectedInsCompId === +row.id"
+        ></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
   <mat-card class="datatable-card">
     <mat-card-content>
       <div class="button-section">
@@ -13,7 +79,15 @@
       </div>
 
       <div class="table-header">
-        <h3>Список продуктов</h3>
+        <div class="products-table-title">
+          <h3>Список продуктов</h3>
+          @if (selectedInsCompId != null) {
+            <span class="ins-comp-filter-chip">
+              {{ selectedInsCompanyName() || ('ID ' + selectedInsCompId) }}
+              <button mat-stroked-button type="button" class="chip-clear" (click)="clearInsCompFilter()">Сбросить</button>
+            </span>
+          }
+        </div>
         <mat-form-field class="search-field" appearance="outline">
           <mat-label>Поиск</mat-label>
           <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск">
@@ -83,4 +157,5 @@
       </mat-paginator>
     </mat-card-content>
   </mat-card>
+
 </div>

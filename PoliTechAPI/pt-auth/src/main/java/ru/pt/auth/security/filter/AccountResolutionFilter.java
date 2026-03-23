@@ -96,9 +96,20 @@ public class AccountResolutionFilter extends AbstractSecurityFilter {
             .filter(s -> s.supports(aType))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No AuthenticationStrategy for " + config.authType()));
-
+    
+        String accountId = request.getHeader("X-Account-Id");
+        if (accountId != null && !accountId.isEmpty()) {
+            try {
+                Long.parseLong(accountId);
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("X-Account-Id must be a number");
+            }
+        }
+        requestContext.setAccount(accountId);
+    
         try {
             strategy.resolveIdentity(request);
+
             accountResolverService.resolveAccounts();
             
             filterChain.doFilter(request, response);

@@ -39,6 +39,37 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      .products-table-title {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        h3 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 500;
+        }
+
+        .ins-comp-filter-chip {
+          display: inline-flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+          font-size: 14px;
+          color: $gray-700;
+
+          .chip-clear {
+            min-height: 28px;
+            line-height: 28px;
+            padding: 0 10px;
+            font-size: 12px;
+          }
+        }
+      }
 
       h3 {
         margin: 0;
@@ -89,6 +120,82 @@
 
     mat-paginator {
       border-top: 1px solid #e0e0e0;
+    }
+
+    &.ins-companies-card {
+      .button-section {
+        @include card-base;
+        @include flex-end;
+        padding: $spacing-md;
+        margin-bottom: $spacing-lg;
+        background-color: $gray-50;
+
+        .add-button {
+          @include button-primary;
+          @include flex-center;
+          gap: $spacing-sm;
+          min-width: 150px;
+        }
+      }
+
+      .table-header {
+        margin-bottom: 16px;
+
+        h3 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 500;
+        }
+      }
+
+      .loading-ins {
+        padding: 20px;
+        text-align: center;
+        color: #666;
+      }
+
+      .business-table.ins-companies-table {
+        .col-id {
+          width: 100px;
+          min-width: 100px;
+        }
+
+        .col-name {
+          width: 100%;
+        }
+
+        .col-status {
+          width: 120px;
+          min-width: 120px;
+        }
+
+        .col-actions {
+          width: 120px;
+          min-width: 120px;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .status-active {
+          background-color: #4caf50 !important;
+          color: white !important;
+        }
+
+        .status-suspended {
+          background-color: #ff9800 !important;
+          color: white !important;
+        }
+
+        tr.ins-company-row-selected {
+          background-color: rgba(63, 81, 181, 0.12);
+        }
+      }
     }
   }
 }

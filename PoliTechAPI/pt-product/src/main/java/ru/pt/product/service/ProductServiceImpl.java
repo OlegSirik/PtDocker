@@ -24,6 +24,7 @@ import ru.pt.product.entity.AttributeDefEntity;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 
+import ru.pt.product.repository.InsuranceCompanyRepository;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
 import ru.pt.product.utils.JsonExampleBuilder;
@@ -62,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
     private final AuthorizationService authService;
     private final CalculatorService calculatorService;
     private final AttributeDefRepository attributeDefRepository;
+    private final InsuranceCompanyRepository insuranceCompanyRepository;
 
     // Constructor with @Lazy to break circular dependency with CalculatorService
     public ProductServiceImpl(
@@ -74,7 +76,8 @@ public class ProductServiceImpl implements ProductService {
             SecurityContextHelper securityContextHelper,
             AuthorizationService authService,
             @Lazy CalculatorService calculatorService,
-            AttributeDefRepository attributeDefRepository) {
+            AttributeDefRepository attributeDefRepository,
+            InsuranceCompanyRepository insuranceCompanyRepository) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.lobService = lobService;
@@ -85,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
         this.authService = authService;
         this.calculatorService = calculatorService;
         this.attributeDefRepository = attributeDefRepository;
+        this.insuranceCompanyRepository = insuranceCompanyRepository;
     }
 
     /**
@@ -112,8 +116,16 @@ public class ProductServiceImpl implements ProductService {
         authService.check(user, ResourceType.PRODUCT, resourceId, resourceAccountId, action);
     }
 
+    private void assertInsCompanyBelongsToTenant(Long insCompanyId) {
+        if (insCompanyId == null) {
+            return;
+        }
+        insuranceCompanyRepository.findByTidAndId(getCurrentTenantId(), insCompanyId)
+                .orElseThrow(() -> new BadRequestException("Insurance company not found for tenant: " + insCompanyId));
+    }
+
     @Override
-    public List<Product> listSummaries() {
+    public List<Product> listSummaries(Long insComp) {
 
         authService.check(
             getCurrentUser(), 
@@ -122,7 +134,7 @@ public class ProductServiceImpl implements ProductService {
             null,   // resourceAccountId - list all
             Action.LIST);
 
-        return productRepository.listActiveSummaries(getCurrentTenantId()).stream()
+        return productRepository.listActiveSummaries(getCurrentTenantId(), insComp).stream()
                 .map(r -> {
                     Product product = new Product();
                     product.setId((Integer) r[0]);
@@ -131,6 +143,7 @@ public class ProductServiceImpl implements ProductService {
                     product.setName((String) r[3]);
                     product.setProdVersionNo((Integer) r[4]);
                     product.setDevVersionNo((Integer) r[5]);
+                    product.setInsCompanyId((Long) r[6]);
                     product.setDeleted(false);
                     return product;
                 })
@@ -282,10 +295,18 @@ public class ProductServiceImpl implements ProductService {
     public ProductVersionModel getVersion(Integer id, Integer versionNo) {
         checkProductAccess(Action.VIEW, String.valueOf(id));
         try {
+            ProductEntity productEntity = productRepository.findById(getCurrentTenantId(), id)
+                    .orElseThrow(() -> new NotFoundException("Product not found"));
             ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
                     .orElse(null);
-
-            return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            if (pv == null) {
+                throw new NotFoundException("Version not found");
+            }
+            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            model.setInsCompanyId(productEntity.getInsCompanyId());
+            return model;
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new NotFoundException("Version not found");
         }
@@ -317,6 +338,7 @@ public class ProductServiceImpl implements ProductService {
 
         productVersionModel.setVersionNo(newVersion);
         productVersionModel.setVersionStatus("DEV");
+        productVersionModel.setInsCompanyId(product.getInsCompanyId());
 
         productVersionModel = syncCoversVars(productVersionModel);
 
@@ -360,7 +382,9 @@ public class ProductServiceImpl implements ProductService {
 
         newProductVersionModel = syncCoversVars(newProductVersionModel);
 
-
+        assertInsCompanyBelongsToTenant(newProductVersionModel.getInsCompanyId());
+        product.setInsCompanyId(newProductVersionModel.getInsCompanyId());
+        productRepository.save(product);
 
         String newProductVersionJson;
         try {
@@ -586,7 +610,9 @@ public class ProductServiceImpl implements ProductService {
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
-            return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            model.setInsCompanyId(entity.getInsCompanyId());
+            return model;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -611,7 +637,9 @@ public class ProductServiceImpl implements ProductService {
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
-            return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            model.setInsCompanyId(entity.getInsCompanyId());
+            return model;
         } catch (JsonProcessingException e) {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
@@ -629,7 +657,9 @@ public class ProductServiceImpl implements ProductService {
         var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
                 .orElseThrow();
         try {
-            return objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+            model.setInsCompanyId(entity.getInsCompanyId());
+            return model;
         } catch (JsonProcessingException e) {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }

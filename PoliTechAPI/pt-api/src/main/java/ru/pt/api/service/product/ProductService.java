@@ -12,10 +12,11 @@ import java.util.Map;
  */
 public interface ProductService {
     /**
-     * Получить все продукты
-     * @return список описаний продуктов
+     * Получить продукты текущего тенанта.
+     *
+     * @param insComp id страховой компании ({@code pt_insurance_company.id}); {@code null} — все продукты
      */
-    List<Product> listSummaries();
+    List<Product> listSummaries(Long insComp);
 
     /**
      * Создать продукт

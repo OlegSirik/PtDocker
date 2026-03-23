@@ -10,6 +10,8 @@ export interface Product {
   lob: string;
   code: string;
   name: string;
+  /** pt_insurance_company.id; опционально */
+  insCompanyId?: number | null;
   versionNo: number;
   versionStatus?: string;
   phType?: string;

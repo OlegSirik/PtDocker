@@ -1,0 +1,134 @@
+<div class="ins-company-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ isNewRecord ? 'Новая страховая компания' : 'Страховая компания: ' + (company.name || '') }}</h1>
+    <div class="header-actions">
+      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
+      <button mat-raised-button color="primary" class="header-btn save-btn" (click)="save()" [disabled]="loading">
+        <mat-icon>save</mat-icon>
+        Сохранить
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="data-card">
+    <mat-card-header>
+      <mat-card-title>Основные данные</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading && !isNewRecord" class="loading">Загрузка...</div>
+      <div *ngIf="!(loading && !isNewRecord)">
+        <div class="form-row">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>ID</mat-label>
+            <input matInput [value]="company.id ?? ''" readonly />
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Код</mat-label>
+            <input matInput [(ngModel)]="company.code" required maxlength="30" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Название</mat-label>
+            <input matInput [(ngModel)]="company.name" required maxlength="300" />
+          </mat-form-field>
+
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Статус</mat-label>
+            <mat-select [(ngModel)]="company.status">
+              <mat-option value="active">active</mat-option>
+              <mat-option value="suspended">suspended</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+        </div>
+
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="data-card" *ngIf="isNewRecord || !loading">
+    <mat-card-header>
+      <mat-card-title>Реквизиты и контакты</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Краткое наименование</mat-label>
+          <input matInput [(ngModel)]="company.shortName" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Полное наименование</mat-label>
+          <input matInput [(ngModel)]="company.fullName" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>ЕГРЮЛ / реестр</mat-label>
+          <input matInput [(ngModel)]="company.egr" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Почтовый адрес</mat-label>
+          <input matInput [(ngModel)]="company.postalAddress" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field form-field-full" appearance="outline">
+          <mat-label>Юридический адрес</mat-label>
+          <input matInput [(ngModel)]="company.legalAddress" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Телефон</mat-label>
+          <input matInput [(ngModel)]="company.phone" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>E-mail</mat-label>
+          <input matInput [(ngModel)]="company.mail" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>ИНН</mat-label>
+          <input matInput [(ngModel)]="company.inn" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>КПП</mat-label>
+          <input matInput [(ngModel)]="company.kpp" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>ОКПО</mat-label>
+          <input matInput [(ngModel)]="company.okpo" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>ОГРН</mat-label>
+          <input matInput [(ngModel)]="company.ogrn" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Расчётный счёт</mat-label>
+          <input matInput [(ngModel)]="company.account" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Банк</mat-label>
+          <input matInput [(ngModel)]="company.bank" />
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>БИК</mat-label>
+          <input matInput [(ngModel)]="company.bic" />
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Корр. счёт</mat-label>
+          <input matInput [(ngModel)]="company.corrAccount" />
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

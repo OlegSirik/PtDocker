@@ -22,6 +22,10 @@ public class ProductVersionModel {
     @JsonProperty("name")
     private String name;
 
+    /** pt_insurance_company.id; опционально */
+    @JsonProperty("insCompanyId")
+    private Long insCompanyId;
+
     @JsonProperty("versionNo")
     private Integer versionNo;
 
@@ -88,6 +92,14 @@ public class ProductVersionModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getInsCompanyId() {
+        return insCompanyId;
+    }
+
+    public void setInsCompanyId(Long insCompanyId) {
+        this.insCompanyId = insCompanyId;
     }
 
     public List<PvPackage> getPackages() {

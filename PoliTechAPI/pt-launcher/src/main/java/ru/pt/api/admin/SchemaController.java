@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.schema.AttributeDefDto;
 import ru.pt.api.dto.schema.EntityDefDto;
 import ru.pt.api.dto.schema.SectionDto;
+import ru.pt.api.dto.schema.SchemaTreeDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.schema.SchemaService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -227,4 +228,35 @@ public class SchemaController extends SecuredController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * GET /admin/schema/{contract_code}/tree?productId={productId}
+     * Return Tree of sections, entities and attributes for current tid and contract code
+     */
+    @GetMapping("/tree")
+    public ResponseEntity<List<SchemaTreeDto>> getTree(
+            @PathVariable String tenantCode,
+            @PathVariable String contractCode,
+            @RequestParam Integer productId) {
+        Long tid = getCurrentTenantId();
+        List<SchemaTreeDto> tree = schemaService.getTree(tid, productId);
+        return ResponseEntity.ok(tree);
+    }
+
+    /* 
+    public static record SchemaTreeDto(
+        Long id,
+        Long parent_id,
+        Integer order_nr,
+        String name,
+        String code
+    ) {
+        public SchemaTreeDto(Long id, Long parent_id, Integer order_nr, String name, String code) {
+            this.id = id;
+            this.parent_id = parent_id;
+            this.order_nr = order_nr;
+            this.name = name;
+            this.code = code;
+        }
+    }
+    */
 }

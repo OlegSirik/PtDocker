@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, tap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { AuthService } from './auth.service';
 
 export interface ProductList {
@@ -56,12 +56,22 @@ export class ProductsService {
     }
   ];
 
-  getProducts(): Observable<ProductList[]> {
+  /**
+   * GET .../admin/products?insComp={id} — фильтр по страховой компании (опционально).
+   */
+  getProducts(insComp?: number | null): Observable<ProductList[]> {
     if (!this.http) {
       throw new Error('HttpClient is not initialized');
     }
 
-    return this.http.get<ProductList[]>(`${this.authService.baseApiUrl}/admin/products`).pipe(
+    let params = new HttpParams();
+    if (insComp != null && !Number.isNaN(Number(insComp))) {
+      params = params.set('insComp', String(insComp));
+    }
+
+    return this.http
+      .get<ProductList[]>(`${this.authService.baseApiUrl}/admin/products`, { params })
+      .pipe(
       tap(data => {
         if (Array.isArray(data) && data.length !== 0) {
           this.mockData = data;

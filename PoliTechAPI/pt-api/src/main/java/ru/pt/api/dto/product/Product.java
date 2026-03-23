@@ -16,5 +16,7 @@ public class Product {
     private String name;
     private Integer prodVersionNo;
     private Integer devVersionNo;
+    /** pt_insurance_company.id, может быть null */
+    private Long insCompanyId;
     private boolean isDeleted = false;
 }
