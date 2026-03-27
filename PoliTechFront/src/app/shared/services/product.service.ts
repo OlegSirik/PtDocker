@@ -48,6 +48,8 @@ export interface PolicyVar {
   varType: string;
   varCdm: string;
   varNr: number;
+  varRefCode?: string;
+  isTarifFactor?: boolean;
 }
 
 export interface QuoteValidator {

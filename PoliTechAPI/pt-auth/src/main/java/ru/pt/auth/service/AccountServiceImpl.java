@@ -433,8 +433,20 @@ public class AccountServiceImpl implements AccountService {
 
     /*
     * Используется только для ролевых экаунтов типа админов. Где всегда один узел определенного типа.
-    * для account, sub вернет первую любую. 
+    * для account, sub вернет первую любую.
     */
+    @Override
+    public Account getRoleAccount(String accountNodeType, Long parentId) {
+        AccountNodeType type = AccountNodeType.fromString(accountNodeType);
+        if (type == null) {
+            throw new BadRequestException("Unknown account node type: " + accountNodeType);
+        }
+        return getRoleAccount(type, parentId);
+    }
+
+    /**
+     * Внутренняя перегрузка по enum (pt-auth).
+     */
     public Account getRoleAccount(AccountNodeType accountNodeType, Long parentId) {
         authService.check(
             getCurrentUser(), 
@@ -460,4 +472,5 @@ public class AccountServiceImpl implements AccountService {
         return account;
     }
 
+ 
 }

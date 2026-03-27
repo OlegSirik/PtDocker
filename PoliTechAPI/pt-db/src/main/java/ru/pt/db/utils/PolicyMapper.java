@@ -120,7 +120,7 @@ public class PolicyMapper {
         index.setVersionStatus(policy.getProcessList().getProductVersionStatus());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());
-//        index.setInsCompany(policy.getInsCompany());
+        index.setInsCompany(processList.getInsCompanyCode());
         
         index.setPhDigest(phDigest);
         index.setIoDigest(ioDigest);

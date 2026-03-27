@@ -768,7 +768,7 @@ public class ProductServiceImpl implements ProductService {
         pvVar.setVarType(entity.getVarType());
         pvVar.setVarValue(entity.getVarValue());
         pvVar.setVarCdm(entity.getVarCdm());
-        pvVar.setVarNr(entity.getNr().toString());
+        pvVar.setVarNr(entity.getVarOrd() != null ? entity.getVarOrd().toString() : "0");
         
         // Map varDataType string to enum
         if (entity.getVarDataType() != null) {

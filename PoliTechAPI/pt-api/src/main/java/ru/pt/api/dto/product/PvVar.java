@@ -29,6 +29,12 @@ public class PvVar {
     @JsonProperty("varNr")
     private String varNr;
 
+    @JsonProperty("varRefCode")
+    private String varRefCode;
+    
+    @JsonProperty("isTarifFactor")
+    private boolean isTarifFactor = false;
+    
     // Constructors
     public PvVar() {}
 
@@ -123,6 +129,20 @@ public class PvVar {
 
     public void setVarNr(String varNr) {
         this.varNr = varNr;
+    }
+
+    public String getVarRefCode() {
+        return varRefCode;
+    }
+    public void setVarRefCode(String varRefCode) {
+        this.varRefCode = varRefCode;
+    }
+
+    public boolean isTarifFactor() {
+        return isTarifFactor;
+    }
+    public void setTarifFactor(boolean isTarifFactor) {
+        this.isTarifFactor = isTarifFactor;
     }
 
     public static PvVar varSumInsured(String coverCode) {

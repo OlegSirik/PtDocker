@@ -68,8 +68,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import ru.pt.api.dto.product.InsuranceCompanyDto;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.mapper.InsurerMapper;
 
 import java.math.BigDecimal;
 
@@ -77,7 +79,7 @@ import ru.pt.api.dto.addon.PolicyAddOnDto;
 import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
-
+import ru.pt.api.service.product.InsCompanyService;
 
 @Service
 @RequiredArgsConstructor
@@ -104,7 +106,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final TextDocumentView textDocumentView;
     private final AuthorizationService authorizationService;
     private final CommissionService commissionService;
-    
+    private final InsCompanyService insCompanyService;
+
     private final PolicyAddOnService policyAddOnService;
     /**
      * Get current authenticated user from security context.
@@ -309,9 +312,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 3. Получить продукт
         ProductVersionModel product;
         String productCode = policyDTO.getProductCode();
-        logger.debug("Fetching product. productCode={}", productCode);
-
-        
+        logger.debug("Fetching product. productCode={}", productCode);        
 
         try {
             // Для тестера ghjlern d cnfnect дев
@@ -349,6 +350,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             throw new UnprocessableEntityException(errorModel);
         }
 
+        // 4.1 Получить страховщика
+        InsuranceCompanyDto insCompany = insCompanyService.get(product.getInsCompanyId());
+        policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
 
         // 4.5 Проверить желаемую комиссию агента
         CommissionDto commissionDTO = new CommissionDto();
@@ -479,6 +483,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);
 
+        // 4.1 Получить страховщика
+        InsuranceCompanyDto insCompany = insCompanyService.get(product.getInsCompanyId());
+        policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
+
         // 4.5 Проверить желаемую комиссию агента
         CommissionDto commissionDTO = new CommissionDto();
         if (policyDTO.getCommission()!=null) { commissionDTO = policyDTO.getCommission(); };
@@ -554,7 +562,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
-
+        policyDTO.getProcessList().setInsCompanyCode(insCompanyService.get(product.getInsCompanyId()).getCode());
 
         // 12. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);

@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, inject } from '@angular/core';
+import { Component, OnInit, Inject, inject, ViewChild } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,10 +12,24 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { BusinessLineEditService, BusinessLineEdit, BusinessLineVar, BusinessLineCover, BusinessLineFile } from '../../shared';
+import {
+  BusinessLineEditService,
+  BusinessLineEdit,
+  BusinessLineVar,
+  BusinessLineCover,
+  BusinessLineFile,
+  SCHEMA_TREE_VAR_CDM_PREFIX,
+} from '../../shared';
 import {JsonPipe} from '@angular/common';
 import { VarsService } from '../../shared/services/vars.service';
+import {
+  TreeTableComponent,
+  type TreeTableChildCreatePayload,
+  isObjectVarTypeRow,
+} from '../../shared/components/tree-table';
+import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
@@ -32,12 +46,16 @@ import { AuthService } from '../../shared/services/auth.service';
     MatSnackBarModule,
     MatDialogModule,
     MatTabsModule,
-    MatPaginatorModule
-],
+    MatPaginatorModule,
+    MatSlideToggleModule,
+    TreeTableComponent,
+  ],
     templateUrl: './business-line-edit.component.html',
     styleUrls: ['./business-line-edit.component.scss']
 })
 export class BusinessLineEditComponent implements OnInit {
+  @ViewChild('schemaTreeTable') schemaTreeTable?: TreeTableComponent;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private svc = inject(BusinessLineEditService);
@@ -60,8 +78,21 @@ export class BusinessLineEditComponent implements OnInit {
 
   exampleJsonText = '';
 
+  /** Строки дерева схемы: только проекция узлов {@link #isSchemaTreeMpVar} из mpVars. */
+  treeTableData: TreeTableSourceRow[] = [];
+  treeTableDisplayedColumns: string[] = ['name', 'code', 'actions'];
+
+  /** Показывать узлы схемы с isDeleted (режим восстановления). */
+  showDeletedSchemaTree = false;
+
+  readonly isObjectVarTypeRow = isObjectVarTypeRow;
+
   get paginatedVars(): BusinessLineVar[] {
-    return this.businessLine.mpVars.filter(v => v.varType == 'MAGIC' || v.varType == 'VAR' || v.varType == 'CONST');
+    return this.businessLine.mpVars.filter(
+      (v) =>
+        !this.isSchemaTreeMpVar(v) &&
+        (v.varType == 'MAGIC' || v.varType == 'VAR' || v.varType == 'CONST'),
+    );
   }
 
   get paginatedCovers(): BusinessLineCover[] {
@@ -136,7 +167,6 @@ export class BusinessLineEditComponent implements OnInit {
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('id');
-    console.log('code=',code);
 
     this.varService.getAllVars();
     
@@ -154,6 +184,7 @@ export class BusinessLineEditComponent implements OnInit {
         */
 
         this.businessLine = doc;
+        this.syncTreeTableFromMpVars();
         /*
         this.businessLine = {
           ...doc,
@@ -174,15 +205,168 @@ export class BusinessLineEditComponent implements OnInit {
       });
     } else {
       this.isNewRecord = true;
-      this.businessLine.mpVars = this.varService.getAllVars();
+      this.businessLine.mpVars = [];
       this.updateChanges();
+      this.loadSchemaTreeIntoMpVarsForNewRecord();
     }
-    console.error(this.isNewRecord);
-    console.error(this.businessLine);
   }
 
   updateChanges(): void {
     this.hasChanges = !this.originalBusinessLine || JSON.stringify(this.businessLine) !== JSON.stringify(this.originalBusinessLine);
+  }
+
+  /** Узел дерева схемы в mpVars помечается varCdm {@link SCHEMA_TREE_VAR_CDM_PREFIX}. */
+  private isSchemaTreeMpVar(v: BusinessLineVar): boolean {
+    return !!v.varCdm?.startsWith(SCHEMA_TREE_VAR_CDM_PREFIX);
+  }
+
+  /** Новый документ: GET attributes → все строки кладём в mpVars как узлы схемы. */
+  private loadSchemaTreeIntoMpVarsForNewRecord(): void {
+    this.varService.loadAttributes('INSURANCE_CONTRACT').subscribe({
+      next: (data) => {
+        this.businessLine.mpVars = (data ?? []).map((row) => this.treeSourceRowToMpVar(row));
+        this.syncTreeTableFromMpVars();
+        this.updateChanges();
+      },
+      error: () => {
+        this.businessLine.mpVars = [];
+        this.syncTreeTableFromMpVars();
+        this.updateChanges();
+      },
+    });
+  }
+
+  private treeSourceRowToMpVar(row: TreeTableSourceRow): BusinessLineVar {
+    // Маркер узла схемы в mpVars — только префикс schemaTree (см. isSchemaTreeMpVar); не подставлять varCdm из API.
+    const varCdm = `${SCHEMA_TREE_VAR_CDM_PREFIX}${row.id}`;
+    return {
+      id: row.id,
+      parent_id: row.parent_id ?? undefined,
+      varCode: row.varCode,
+      varName: row.varName,
+      varType: row.varType ?? 'STRING',
+      varPath: row.varPath ?? '',
+      varDataType: row.varDataType ?? 'STRING',
+      varValue: row.varValue ?? '',
+      varNr: row.varNr ?? 0,
+      varCdm,
+      varList: row.varList,
+      isSystem: row.isSystem,
+      isDeleted: false,
+    };
+  }
+
+  private mpVarToTreeSourceRow(v: BusinessLineVar): TreeTableSourceRow {
+    return {
+      id: v.id!,
+      parent_id: v.parent_id ?? null,
+      varNr: v.varNr ?? 0,
+      varName: v.varName,
+      varCode: v.varCode,
+      varType: v.varType,
+      varDataType: v.varDataType,
+      isSystem: v.isSystem,
+      isDeleted: !!v.isDeleted,
+      varList: v.varList,
+      varPath: v.varPath ?? '',
+      varValue: v.varValue ?? '',
+      varCdm: v.varCdm ?? '',
+    };
+  }
+
+  /** Таблица дерева строится только из mpVars (существующий документ или после loadAttributes). */
+  private syncTreeTableFromMpVars(): void {
+    this.treeTableData = this.businessLine.mpVars
+      .filter((v) => this.isSchemaTreeMpVar(v) && (this.showDeletedSchemaTree || !v.isDeleted))
+      .map((v) => this.mpVarToTreeSourceRow(v));
+  }
+
+  onShowDeletedSchemaChange(): void {
+    this.syncTreeTableFromMpVars();
+  }
+
+  /** Восстановить узел и цепочку родителей в mpVars (isDeleted = false). */
+  onSchemaTreeRestoreNode(node: TreeTableSourceRow): void {
+    let id: number | null | undefined = node.id;
+    while (id != null) {
+      const v = this.businessLine.mpVars.find((x) => x.id === id);
+      if (!v) break;
+      if (this.isSchemaTreeMpVar(v)) {
+        v.isDeleted = false;
+      }
+      id = v.parent_id ?? null;
+    }
+    this.syncTreeTableFromMpVars();
+    this.updateChanges();
+  }
+
+  /** Синхронизация правок из tree-table / диалога обратно в mpVars. */
+  onSchemaTreeRowUpdated(row: TreeTableSourceRow): void {
+    const v = this.businessLine.mpVars.find((x) => x.id === row.id);
+    if (!v || !this.isSchemaTreeMpVar(v)) return;
+    v.varDataType = row.varDataType ?? v.varDataType;
+    v.varList = row.varList;
+    v.varName = row.varName;
+    v.varCode = row.varCode;
+    v.varType = row.varType ?? v.varType;
+    v.varPath = row.varPath ?? v.varPath;
+    v.varValue = row.varValue ?? v.varValue;
+    this.syncTreeTableFromMpVars();
+    this.updateChanges();
+  }
+
+  onSchemaTreeChildCreate(payload: TreeTableChildCreatePayload<TreeTableSourceRow>): void {
+    const id = this.nextMpVarId();
+    const d = payload.draft;
+    const newVar: BusinessLineVar = {
+      id,
+      parent_id: payload.parentId,
+      varCode: d.varCode.trim(),
+      varName: d.varName.trim(),
+      varType: d.varType ?? 'STRING',
+      varPath: d.varPath ?? '',
+      varDataType: d.varDataType ?? 'STRING',
+      varValue: d.varValue ?? '',
+      varNr: d.varNr ?? 0,
+      varCdm: `${SCHEMA_TREE_VAR_CDM_PREFIX}${id}`,
+      varList: d.varList,
+      isSystem: false,
+      isDeleted: false,
+    };
+    this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
+    this.syncTreeTableFromMpVars();
+    this.updateChanges();
+  }
+
+  private nextMpVarId(): number {
+    const ids = this.businessLine.mpVars.map((v) => v.id).filter((x): x is number => x != null && Number.isFinite(x));
+    return ids.length ? Math.max(...ids) + 1 : 1;
+  }
+
+  onTreeTableEdit(node: TreeTableSourceRow): void {
+    this.schemaTreeTable?.openEditRowDialog(node);
+  }
+
+  onTreeTableDelete(node: TreeTableSourceRow): void {
+    const markSchemaBranchDeleted = (parentId: number): void => {
+      for (const x of this.businessLine.mpVars) {
+        if (!this.isSchemaTreeMpVar(x) || x.parent_id !== parentId) continue;
+        x.isDeleted = true;
+        if (x.id != null) markSchemaBranchDeleted(x.id);
+      }
+    };
+    const v = this.businessLine.mpVars.find((x) => x.id === node.id);
+    if (v && this.isSchemaTreeMpVar(v)) {
+      v.isDeleted = true;
+    }
+    markSchemaBranchDeleted(node.id);
+    this.syncTreeTableFromMpVars();
+    this.snack.open(`Скрыто из дерева: ${node.varName} (${node.varCode})`, 'OK', { duration: 3500 });
+    this.updateChanges();
+  }
+
+  onTreeTableCreate(parent: TreeTableSourceRow): void {
+    this.schemaTreeTable?.openCreateChildDialog(parent);
   }
 
   phTypeChanged(): void {
@@ -198,8 +382,6 @@ export class BusinessLineEditComponent implements OnInit {
 
     this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
     this.updateChanges();
-
-
   }
 
   ioChanged(): void {
@@ -228,49 +410,22 @@ export class BusinessLineEditComponent implements OnInit {
     }
 
     if (this.isNewRecord) {
-      this.svc.create(this.businessLine).subscribe(saved => {
-        this.businessLine = saved
+      this.svc.create(this.businessLine).subscribe((saved) => {
+        this.businessLine = saved;
+        this.syncTreeTableFromMpVars();
         this.updateChanges();
         this.snack.open('Сохранено', 'OK', { duration: 2000 });
-      })
+      });
     } else {
-      this.svc.update(this.businessLine.id, this.businessLine).subscribe(saved => {
+      this.svc.update(this.businessLine.id, this.businessLine).subscribe((saved) => {
         this.businessLine = saved;
         this.isNewRecord = false;
+        this.syncTreeTableFromMpVars();
         this.updateChanges();
         this.snack.open('Сохранено', 'OK', { duration: 2000 });
-      })
+      });
     }
- /*
-    const dataToSave = {
-      ...this.businessLine,
-      mpPhType: this.businessLine.mpPhType || '',
-      mpInsObjectType: this.businessLine.mpInsObjectType || ''
-    };
-    this.svc.saveBusinessLine(dataToSave).subscribe(saved => {
-      // Normalize mpFiles property names (filename -> fileName)
-      const normalizedFiles = (saved.mpFiles || []).map((file: any) => ({
-        fileCode: file.fileCode,
-        fileName: file.fileName || ''
-      }));
 
-      this.businessLine = {
-        ...saved,
-        mpPhType: saved.mpPhType || '',
-        mpInsObjectType: saved.mpInsObjectType || '',
-        mpFiles: normalizedFiles
-      };
-      this.originalBusinessLine = {
-        ...saved,
-        mpPhType: saved.mpPhType || '',
-        mpInsObjectType: saved.mpInsObjectType || '',
-        mpFiles: normalizedFiles
-      };
-      this.isNewRecord = false;
-      this.updateChanges();
-      this.snack.open('Сохранено', 'OK', { duration: 2000 });
-    });
-    */
   }
 
   addVar(): void {
@@ -287,7 +442,6 @@ export class BusinessLineEditComponent implements OnInit {
           varCdm: res.varPath };
         this.businessLine.mpVars = [...this.businessLine.mpVars, model];
         this.updateChanges();
-
     });
   }
 
@@ -363,6 +517,7 @@ export class BusinessLineEditComponent implements OnInit {
             jsonData.id = -1;
             this.businessLine = { ...this.businessLine, ...jsonData };
             this.updateChanges();
+            this.syncTreeTableFromMpVars();
             this.snack.open('JSON файл загружен успешно', 'Закрыть', { duration: 2000 });
           } catch (error) {
             console.error('Error parsing JSON:', error);

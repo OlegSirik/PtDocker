@@ -6,6 +6,9 @@ import { VarsService } from './vars.service';
 import { BaseApiService } from './api/base-api.service';
 import { EnvService } from './env.service';
 
+/** Префикс {@link BusinessLineVar.varCdm} для узлов дерева схемы (loadAttributes → mpVars). */
+export const SCHEMA_TREE_VAR_CDM_PREFIX = 'schemaTree.';
+
 export interface BusinessLineVar {
   varCode: string;
   varType: string;
@@ -15,6 +18,11 @@ export interface BusinessLineVar {
   varValue: string;
   varNr: number;
   varCdm: string;
+  id?: number;
+  parent_id?: number;
+  varList?: string;
+  isSystem?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface BusinessLineCover {

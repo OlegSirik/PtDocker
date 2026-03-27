@@ -19,13 +19,13 @@ import java.util.List;
 @RestController
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin/commissions")
-public class CommissionController extends SecuredController {
+public class CommissionController  {
 
     private final CommissionService commissionService;
 
-    public CommissionController(SecurityContextHelper securityContextHelper,
+    public CommissionController(
                                CommissionService commissionService) {
-        super(securityContextHelper);
+        
         this.commissionService = commissionService;
     }
 

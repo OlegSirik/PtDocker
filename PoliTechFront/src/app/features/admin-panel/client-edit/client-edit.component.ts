@@ -14,13 +14,89 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ClientsService, Client, ClientConfiguration, ClientProduct } from '../../../shared/services/api/clients.service';
+import {
+  ClientsService,
+  Client,
+  ClientConfiguration,
+  ClientMember,
+  ClientProduct,
+} from '../../../shared/services/api/clients.service';
 import { CommissionService, Commission } from '../../../shared/services/api/commission.service';
 import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ProductService } from '../../../shared/services/product.service';
 import { ProductList } from '../../../shared/services/products.service';
 import { ACTION_OPTIONS } from '../commission-edit/commission-edit.component';
+
+@Component({
+  selector: 'app-add-client-admin-dialog',
+  standalone: true,
+  imports: [MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule],
+  template: `
+    <h2 mat-dialog-title>{{ data.title || 'Добавить администратора' }}</h2>
+    <mat-dialog-content>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Логин</mat-label>
+        <input matInput [(ngModel)]="userLogin" name="userLogin" autocomplete="off" />
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Отменить</button>
+      <button mat-raised-button color="primary" [disabled]="!userLogin.trim()" (click)="submit()">Добавить</button>
+    </mat-dialog-actions>
+  `,
+  styles: [
+    `
+      .full-width {
+        width: 100%;
+        margin-top: 8px;
+      }
+    `,
+  ],
+})
+export class AddClientAdminDialogComponent {
+  userLogin = '';
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { title?: string },
+    private dialogRef: MatDialogRef<AddClientAdminDialogComponent, string | null>,
+  ) {}
+
+  submit(): void {
+    const v = this.userLogin?.trim();
+    if (!v) return;
+    this.dialogRef.close(v);
+  }
+}
+
+@Component({
+  selector: 'app-view-client-member-dialog',
+  standalone: true,
+  imports: [MatDialogModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>Администратор</h2>
+    <mat-dialog-content class="view-content">
+      <p><strong>Логин:</strong> {{ data.member.userLogin }}</p>
+      <p><strong>ФИО:</strong> {{ data.member.fullName || '—' }}</p>
+      <p><strong>Должность:</strong> {{ data.member.position || '—' }}</p>
+      <p><strong>Роль (узел):</strong> {{ data.member.userRole || '—' }}</p>
+      <p><strong>ID:</strong> {{ data.member.id }}</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Отменить</button>
+    </mat-dialog-actions>
+  `,
+  styles: [
+    `
+      .view-content p {
+        margin: 8px 0;
+      }
+    `,
+  ],
+})
+export class ViewClientMemberDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { member: ClientMember }) {}
+}
 
 @Component({
   selector: 'app-client-edit',
@@ -39,7 +115,7 @@ import { ACTION_OPTIONS } from '../commission-edit/commission-edit.component';
     MatCheckboxModule,
     MatTableModule,
     MatTabsModule,
-    MatDialogModule
+    MatDialogModule,
   ],
   templateUrl: './client-edit.component.html',
   styleUrls: ['./client-edit.component.scss']
@@ -84,6 +160,14 @@ export class ClientEditComponent implements OnInit {
   loadingCommissions = false;
   commissionColumns: string[] = ['agdNumber', 'action', 'rateValue', 'commissionMinRate', 'commissionMaxRate', 'minAmount', 'maxAmount', 'fixedAmount', 'actions'];
 
+  /** Вкладка «Админы» — GET members?role=group_admin */
+  readonly clientAdminRoleQuery = 'group_admin';
+  readonly clientAdminRolePost = 'GROUP_ADMIN';
+
+  clientAdmins: ClientMember[] = [];
+  loadingAdmins = false;
+  adminColumns: string[] = ['id', 'userLogin', 'fullName', 'position', 'actions'];
+
   ngOnInit(): void {
 
     const clientId = this.route.snapshot.paramMap.get('client-id') || this.route.snapshot.paramMap.get('id');
@@ -105,6 +189,7 @@ export class ClientEditComponent implements OnInit {
           this.updateChanges();
           this.loadProductsList();
           this.loadClientProducts();
+          this.loadClientAdmins();
         },
         error: (error) => {
           console.error('Error loading client:', error);
@@ -418,6 +503,82 @@ export class ClientEditComponent implements OnInit {
     const found = ACTION_OPTIONS.find(o => o.value === action);
     return found?.label ?? action;
   }
+
+  loadClientAdmins(): void {
+    if (!this.client.id) {
+      this.clientAdmins = [];
+      return;
+    }
+    this.loadingAdmins = true;
+    this.clientsService.getClientMembers(this.client.id, this.clientAdminRoleQuery).subscribe({
+      next: (list) => {
+        this.clientAdmins = list ?? [];
+        this.loadingAdmins = false;
+      },
+      error: () => {
+        this.snack.open('Ошибка при загрузке администраторов', 'OK', { duration: 2500 });
+        this.clientAdmins = [];
+        this.loadingAdmins = false;
+      },
+    });
+  }
+
+  openAddAdminDialog(): void {
+    if (!this.client.id) return;
+    const ref = this.dialog.open(AddClientAdminDialogComponent, {
+      width: '420px',
+      data: { title: 'Добавить администратора' },
+    });
+    ref.afterClosed().subscribe((login: string | null | undefined) => {
+      if (!login?.trim() || !this.client.id) return;
+      this.loadingAdmins = true;
+      this.clientsService
+        .addClientMember(this.client.id, {
+          role: this.clientAdminRolePost,
+          userLogin: login.trim(),
+        })
+        .subscribe({
+          next: () => {
+            this.snack.open('Администратор добавлен', 'OK', { duration: 2000 });
+            this.loadClientAdmins();
+          },
+          error: () => {
+            this.snack.open('Ошибка при добавлении', 'OK', { duration: 2500 });
+            this.loadingAdmins = false;
+          },
+        });
+    });
+  }
+
+  onAdminRowClick(row: ClientMember): void {
+    this.dialog.open(ViewClientMemberDialogComponent, {
+      width: '440px',
+      data: { member: row },
+    });
+  }
+
+  deleteAdmin(row: ClientMember, event: Event): void {
+    event.stopPropagation();
+    if (!this.client.id || row.id == null) return;
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { message: `Удалить администратора «${row.userLogin}»?` },
+    });
+    dialogRef.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.loadingAdmins = true;
+      this.clientsService.deleteClientMember(this.client.id!, row.id).subscribe({
+        next: () => {
+          this.snack.open('Удалено', 'OK', { duration: 2000 });
+          this.loadClientAdmins();
+        },
+        error: () => {
+          this.snack.open('Ошибка при удалении', 'OK', { duration: 2500 });
+          this.loadingAdmins = false;
+        },
+      });
+    });
+  }
 }
 
 @Component({
@@ -491,4 +652,3 @@ export class AddProductDialogComponent {
     this.dialogRef.close(this.selectedProductId);
   }
 }
-

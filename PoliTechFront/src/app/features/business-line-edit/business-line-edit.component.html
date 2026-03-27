@@ -35,12 +35,34 @@
               <input matInput [(ngModel)]="businessLine.mpName" (ngModelChange)="updateChanges()">
             </mat-form-field>
           </div>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Тип страхователя</mat-label>
+              <mat-select [(ngModel)]="businessLine.mpPhType" name="mpPhType" (ngModelChange)="phTypeChanged()">
+                <mat-option value="person">физик</mat-option>
+                <mat-option value="organization">юрик</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Тип объекта страхования</mat-label>
+              <mat-select [(ngModel)]="businessLine.mpInsObjectType" name="mpInsObjectType" (ngModelChange)="ioChanged()">
+                <mat-option value="person">Физ.лицо</mat-option>
+                <mat-option value="device">Техника</mat-option>
+                <mat-option value="property">Имущество</mat-option>
+                <mat-option value="avia-ns">Авиаперевозки НС</mat-option>
+                <mat-option value="Car">Car</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
 
-    <!-- Policy Holder Tab -->
+    <!-- Policy Holder Tab 
     <mat-tab label="Страхователь">
       <mat-card class="datatable-card">
         <mat-card-header>
@@ -98,8 +120,8 @@
         </mat-card-content>
       </mat-card>
     </mat-tab>
-
-    <!-- Policy io Tab -->
+  -->
+    <!-- Policy io Tab --
     <mat-tab label="Объект страхования">
       <mat-card class="datatable-card">
         <mat-card-header>
@@ -160,8 +182,70 @@
         </mat-card-content>
       </mat-card>
     </mat-tab>
+  -->
+  <mat-tab label="Схема договора">
+    <mat-card class="datatable-card">
+      <mat-card-header>
+        <mat-card-title>Схема договора</mat-card-title>
+        <mat-card-subtitle>Схема договора, используется для хранения договора и передачи договора по АПИ.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="schema-tree-toolbar">
+          <mat-slide-toggle
+            [(ngModel)]="showDeletedSchemaTree"
+            (ngModelChange)="onShowDeletedSchemaChange()"
+          >
+            Показывать скрытые
+          </mat-slide-toggle>
+        </div>
+        <app-tree-table
+          #schemaTreeTable
+          [rows]="treeTableData"
+          [displayedColumns]="treeTableDisplayedColumns"
+          [showDeleted]="showDeletedSchemaTree"
+          (rowSoftDeleted)="onTreeTableDelete($event)"
+          (rowVarUpdated)="onSchemaTreeRowUpdated($event)"
+          (rowChildCreate)="onSchemaTreeChildCreate($event)"
+        >
+          <ng-template #actionsCell let-item>
+            <span class="tree-table-actions">
+              @if (item.isDeleted) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  color="primary"
+                  [attr.aria-label]="'Вернуть в дерево: ' + item.varName"
+                  (click)="onSchemaTreeRestoreNode(item); $event.stopPropagation()"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
+              } @else {
+                <button
+                  mat-icon-button
+                  type="button"
+                  [disabled]="isObjectVarTypeRow(item)"
+                  [attr.aria-label]="'Изменить: ' + item.varName"
+                  (click)="onTreeTableEdit(item); $event.stopPropagation()"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Создать дочерний элемент для: ' + item.varName"
+                  (click)="onTreeTableCreate(item); $event.stopPropagation()"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
+              }
+            </span>
+          </ng-template>
+        </app-tree-table>
+      </mat-card-content>
+    </mat-card>
+  </mat-tab>
 
-      <!-- Covers Tab -->
+  <!-- Covers Tab -->
       <mat-tab label="Покрытия">
         <mat-card class="datatable-card">
           <mat-card-header>
@@ -318,6 +402,7 @@
         </mat-card-content>
       </mat-card>
     </mat-tab>
+
 
   </mat-tab-group>
 </div> 

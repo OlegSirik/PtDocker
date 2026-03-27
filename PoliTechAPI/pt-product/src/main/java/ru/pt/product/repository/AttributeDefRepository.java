@@ -9,33 +9,24 @@ import ru.pt.product.entity.AttributeDefEntity;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Доступ к строкам {@code mt_attribute_def} (дерево атрибутов схемы / LobVar в БД).
+ * Бизнес-логика остаётся в {@link ru.pt.api.service.schema.SchemaService}.
+ */
 public interface AttributeDefRepository extends JpaRepository<AttributeDefEntity, Long> {
-    List<AttributeDefEntity> findByTidAndEntityId(Long tid, Long entityId);
-    Optional<AttributeDefEntity> findByEntityIdAndCode(Long entityId, String code);
-    Optional<AttributeDefEntity> findByEntityIdAndName(Long entityId, String name);
-    List<AttributeDefEntity> findByEntityId(Long entityId);
 
-    /**
-     * Find all attribute definitions for a given tenant and contract model code.
-     *
-     * Equivalent SQL:
-     * <pre>
-     *   select t1.*
-     *   from mt_attribute_def t1
-     *   join mt_entity_def t2 on t1.entity_id = t2.id
-     *   join mt_contract_section t3 on t2.section_id = t3.id
-     *   join mt_contract_model t4 on t3.model_id = t4.id
-     *   where t4.tid = :tid and t4.code = :modelCode
-     * </pre>
-     */
-    @Query(value = """
-            select t1.*
-            from mt_attribute_def t1
-            join mt_entity_def t2 on t1.entity_id = t2.id
-            join mt_contract_section t3 on t2.section_id = t3.id
-            join mt_contract_model t4 on t3.model_id = t4.id
-            where t4.tid = :tid and t4.code = :modelCode
-            """, nativeQuery = true)
-    List<AttributeDefEntity> findByTenantAndModelCode(@Param("tid") Long tid,
-                                                      @Param("modelCode") String modelCode);
+
+    List<AttributeDefEntity> findByTenantIdAndDocumentId(Long tenantId, String documentId);
+    List<AttributeDefEntity> findByTenantId(Long tenantId);
+    
+    Optional<AttributeDefEntity> findByTenantIdAndId(Long tenantId, Long id);
+
+    boolean existsByTenantIdAndDocumentIdAndVarCode(Long tenantId, String documentId, String varCode);
+
+    boolean existsByIdAndTenantIdAndDocumentId(Long id, Long tenantId, String documentId);
+
+    /** {@code modelCode} — то же, что {@code document_id} в {@code mt_attribute_def}. */
+    @Query("SELECT a FROM AttributeDefEntity a WHERE a.tenantId = :tenantId AND a.documentId = :modelCode")
+    List<AttributeDefEntity> findByTenantAndModelCode(@Param("tenantId") Long tenantId, @Param("modelCode") String modelCode);
+
 }

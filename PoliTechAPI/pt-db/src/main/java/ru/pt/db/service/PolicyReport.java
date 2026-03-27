@@ -105,7 +105,8 @@ public class PolicyReport {
             p.premium::text,
             p.agent_kv_percent::text,
             p.agent_kv_amount::text,
-            p.user_login
+            p.user_login,
+            p.ins_company
         FROM policy_index p
         WHERE ( p.policy_nr LIKE ? OR p.ph_digest LIKE ? )
         AND p.id_path LIKE ?
@@ -140,12 +141,13 @@ public class PolicyReport {
 
             String issueTimezone = ZoneId.systemDefault().getId();
 
+            String insCompany = rs.getString(21);
             return new QuoteDto(
                 rs.getString(1),                 // id
                 rs.getString(2),                 // draftId
                 rs.getString(3),                 // policyNr
                 rs.getString(4),                 // productCode
-                "VSK",                            // insCompany (not present)
+                insCompany,                      // insCompany
                 createDate,                      // createDate
                 issueDate,                       // issueDate
                 issueTimezone,                   // issueTimezone

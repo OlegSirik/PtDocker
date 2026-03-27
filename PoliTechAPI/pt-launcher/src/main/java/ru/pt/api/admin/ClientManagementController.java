@@ -6,12 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ProductRole;
-import ru.pt.api.security.SecuredController;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.ClientService;
-
+import lombok.RequiredArgsConstructor;
+import ru.pt.auth.service.admin.AdminManagementService;
 import java.util.List;
-
+import ru.pt.auth.entity.UserRole;
+import ru.pt.auth.model.AdminResponse;
+import ru.pt.api.service.auth.AccountService;
 
 
 /**
@@ -22,17 +23,14 @@ import java.util.List;
  * tenantCode: pt, vsk, msg
  */
 @RestController
+@RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin/clients")
-public class ClientManagementController extends SecuredController {
+public class ClientManagementController {
 
     private final ClientService clientService;
-
-    public ClientManagementController(SecurityContextHelper securityContextHelper,
-                                      ClientService clientService) {
-        super(securityContextHelper);
-        this.clientService = clientService;
-    }
+    private final AdminManagementService adminManagementService;
+    private final AccountService accountService;
 
     /**
      * TNT_ADMIN: Создание нового клиента (приложения)
@@ -45,7 +43,6 @@ public class ClientManagementController extends SecuredController {
         Client newClient = clientService.createClient(request);
         return ResponseEntity.ok(newClient); 
     }
-
 
     /**
      * TNT_ADMIN: Получить список всех клиентов
@@ -66,7 +63,6 @@ public class ClientManagementController extends SecuredController {
         return ResponseEntity.ok(client);
     }
 
-
     @PutMapping("/{clientId}")
     public ResponseEntity<Client> updateClient(@PathVariable Long clientId, @RequestBody Client request) {  
         Client updatedClient = clientService.updateClient(request);
@@ -76,7 +72,6 @@ public class ClientManagementController extends SecuredController {
     /**
      * Client products
      */
-
     @GetMapping("/{clientId}/products")
     public ResponseEntity<List<ProductRole>> listClientProducts
         ( @PathVariable Long clientId
@@ -103,6 +98,52 @@ public class ClientManagementController extends SecuredController {
         return ResponseEntity.accepted().build();
     }
     
-    
-}
+    @GetMapping("/{clientId}/members")
+    public ResponseEntity<List<AdminResponse>> getClientMembers(
+            @PathVariable String tenantCode,
+            @PathVariable Long clientId,
+        @RequestParam(required = false) String role
+    ) {
+        Client client = clientService.getClientById(clientId);
+        if (client.getClientAccountId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<AdminResponse> members = adminManagementService.getAccountMembers( client.getClientAccountId(), role == null ? null : UserRole.valueOf(role.toUpperCase()).toString() );
+        return ResponseEntity.ok(members);
+    }
 
+    @PostMapping("/{clientId}/members")
+    public ResponseEntity<AdminResponse> addMember(
+            @PathVariable Long clientId,
+            @RequestBody AddMemberRequest request) {
+        Client client = clientService.getClientById(clientId);
+        if (client.getClientAccountId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        AdminResponse member = adminManagementService.setAccountMember(
+                client.getClientAccountId(), request.role(), request.userLogin());
+        return ResponseEntity.ok(member);
+    }
+
+    /**
+     * {@code accountId} — из {@link AdminResponse#accountId()} (ролевой узел, например GROUP_ADMIN).
+     */
+    @DeleteMapping("/{clientId}/members/{memberId}")
+    public ResponseEntity<Void> deleteMember(
+            @PathVariable Long clientId,
+            @PathVariable Long memberId ) {
+        Client client = clientService.getClientById(clientId);
+        if (client.getClientAccountId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        var account = accountService.getRoleAccount("GROUP_ADMIN", client.getClientAccountId());
+        if (account == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        adminManagementService.deleteAccountMember(
+            account.id(), memberId);
+        return ResponseEntity.noContent().build();
+    }
+
+    public record AddMemberRequest(String role, String userLogin) {}
+}

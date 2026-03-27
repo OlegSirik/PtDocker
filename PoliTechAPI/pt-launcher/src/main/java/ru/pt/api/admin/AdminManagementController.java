@@ -1,4 +1,4 @@
-package ru.pt.api.admin.deleted;
+package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 

@@ -448,7 +448,9 @@
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="packagesDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;" (click)="showFiles(row, getPackageIndex(row))" class="clickable-row" [class.selected-row]="selectedPackageIndex === getPackageIndex(row)"></tr>
+              <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;" (click)="showFiles(row, getPackageIndex(row))" 
+              class="clickable-row" 
+              [class.selected-row]="selectedPackageIndex === getPackageIndex(row)"></tr>
             </table>
           </mat-card-content>
         </mat-card>
@@ -665,50 +667,6 @@
                 <textarea matInput [(ngModel)]="testResponseText" rows="35" readonly placeholder="JSON response"></textarea>
               </mat-form-field>
             </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="Дерево">
-      <div class="tab-content">
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Иерархия (демо)</mat-card-title>
-            <mat-card-subtitle>Mock-данные для компонента tree-table</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <app-tree-table [rows]="treeTableData" [displayedColumns]="treeTableDisplayedColumns">
-              <ng-template #actionsCell let-item>
-                <span class="tree-table-actions">
-                  <button
-                    mat-icon-button
-                    type="button"
-                    [attr.aria-label]="'Удалить: ' + item.name"
-                    color="warn"
-                    (click)="onTreeTableDelete(item); $event.stopPropagation()"
-                  >
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    type="button"
-                    [attr.aria-label]="'Изменить: ' + item.name"
-                    (click)="onTreeTableEdit(item); $event.stopPropagation()"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    type="button"
-                    [attr.aria-label]="'Создать дочерний элемент для: ' + item.name"
-                    (click)="onTreeTableCreate(item); $event.stopPropagation()"
-                  >
-                    <mat-icon>add</mat-icon>
-                  </button>
-                </span>
-              </ng-template>
-            </app-tree-table>
           </mat-card-content>
         </mat-card>
       </div>

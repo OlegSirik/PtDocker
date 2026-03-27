@@ -68,12 +68,17 @@ public class PolicyDTO {
     @JsonProperty("statusCode")
     private String statusCode;
 
+    @JsonProperty("insCompanyId")
+    private Long insCompanyId;
+
     private ProcessList processList;
 
     private CommissionDto commission;
 
     private List<PolicyAddOnDto> options;
     // Constructors
+    private Insurer insurer;
+
     public PolicyDTO() {
         this.additionalAttributes = new HashMap<>();
     }
@@ -81,7 +86,8 @@ public class PolicyDTO {
     public PolicyDTO(String draftId, String productCode, String waitingPeriod, String policyTerm,
                   ZonedDateTime startDate, ZonedDateTime endDate, ZonedDateTime issueDate,
                   String installmentType,
-                  List<InsuredObject> insuredObjects
+                  List<InsuredObject> insuredObjects,
+                  Long insCompanyId
 ) {
         this();
         this.draftId = draftId;
@@ -93,6 +99,7 @@ public class PolicyDTO {
         this.issueDate = issueDate;
         this.installmentType = installmentType;
         this.insuredObjects = insuredObjects;
+        this.insCompanyId = insCompanyId;
     }
 
     // Getters and Setters
@@ -110,6 +117,14 @@ public class PolicyDTO {
 
     public void setProductCode(String productCode) {
         this.productCode = productCode;
+    }
+
+    public Long getInsCompanyId() {
+        return insCompanyId;
+    }
+
+    public void setInsCompanyId(Long insCompanyId) {
+        this.insCompanyId = insCompanyId;
     }
 
     public String getWaitingPeriod() {
@@ -268,6 +283,14 @@ public class PolicyDTO {
 
     public String getPublicId() {
         return this.publicId;
+    }
+
+    public Insurer getInsurer() {
+        return this.insurer;
+    }
+
+    public void setInsurer(Insurer insurer) {
+        this.insurer = insurer;
     }
 
 }

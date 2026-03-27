@@ -228,7 +228,7 @@ public class CommissionServiceImpl implements CommissionService {
                             requestedCommissionRate, config.getCommissionMinRate(), config.getCommissionMaxRate());
                 }
             }
-            comAmount = premium.multiply(rate);
+            comAmount = premium.multiply(rate).divide(new BigDecimal(100), 2, RoundingMode.UP);
             log.trace("calculateCommission: calculated by rate, rate={}, premium={}, comAmount(before rounding)={}", rate, premium, comAmount);
         }
         

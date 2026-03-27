@@ -9,6 +9,7 @@ public class ProcessList {
     private String productVersionStatus; //prod or dev
     private String phDigest;
     private String ioDigest;
+    private String insCompanyCode;
     private Map<String, Object> vars = new HashMap<>();
 
     public static String QUOTE = "quote";
@@ -21,6 +22,7 @@ public class ProcessList {
         this.currentOperation = currentOperation;
         this.phDigest = "";
         this.ioDigest = "";
+        this.insCompanyCode = "";
     }
 
     public String getCurrentOperation() {
@@ -61,5 +63,12 @@ public class ProcessList {
 
     public String getProductVersionStatus(){
         return this.productVersionStatus;
+    }
+    public String getInsCompanyCode(){
+        return this.insCompanyCode;
+    }
+
+    public void setInsCompanyCode(String insCompanyCode){
+        this.insCompanyCode = insCompanyCode;
     }
 }

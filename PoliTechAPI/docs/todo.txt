@@ -1,0 +1,38 @@
+CREATE TABLE mt_attribute_def2 (
+    id BIGINT PRIMARY KEY,
+    parent_id BIGINT REFERENCES mt_attribute_def(id),
+    
+    -- Мультитенантность и идентификация документа
+    tenant_id BIGINT NOT NULL,
+    document_id VARCHAR(30) NOT NULL, -- идентификатор типа документа (например, 'INSURANCE_CONTRACT')
+    var_code VARCHAR(50) NOT NULL,
+    var_name VARCHAR(300) NOT NULL,
+    var_path VARCHAR(500) NOT NULL, -- путь в JSON: "premiumCalculation.fixedAmount"
+    var_ord BIGINT NOT NULL DEFAULT 0,
+    
+    -- Типы метаданных
+    var_type VARCHAR(30) NOT NULL ,
+	-- CHECK (var_type IN ('OBJECT', 'ARRAY', 'FIELD', 'MAGIC')),
+    -- OBJECT: вложенный объект
+    -- ARRAY: массив элементов
+    -- FIELD: простое поле (лист)
+    -- MAGIC: вычисляемое/виртуальное поле
+    
+    -- Кардинальность
+    var_cardinality VARCHAR(10) NOT NULL DEFAULT 'SINGLE' CHECK (var_cardinality IN ('SINGLE', 'MULTIPLE')),
+    
+    -- Тип значения (для FIELD)
+    var_data_type VARCHAR(20) NOT NULL ,
+	-- CHECK (var_data_type IN (
+    --    'STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'DATE', 'DATETIME', 'TIME', 
+    --    'JSON', 'ENUM', 'UUID', 'DECIMAL', 'BIGINT'
+    --)),
+    
+    -- Значения по умолчанию и ограничения
+    var_value VARCHAR(500), -- изменено с var_value на var_default_value для ясности
+    
+    -- Уникальность в рамках tenant + document + var_code
+    CONSTRAINT uk_attribute_def UNIQUE(tenant_id, document_id, var_code)
+);
+
+create sequence mt_attribute_def2_seq

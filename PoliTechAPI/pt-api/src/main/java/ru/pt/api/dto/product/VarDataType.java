@@ -4,5 +4,6 @@ public enum VarDataType {
     STRING,
     NUMBER,
     DATE,
-    TIME
+    TIME,
+    OBJECT
 }

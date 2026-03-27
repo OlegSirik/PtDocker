@@ -135,4 +135,14 @@ public interface AccountService {
      * @return список аккаунтов от acting account до указанного
      */
     List<Account> getPathToRoot(Long accountId);
+
+    /**
+     * Найти дочерний «ролевой» аккаунт заданного типа под родителем (первый подходящий).
+     * Обычно для узлов администраторов (например {@code GROUP_ADMIN}).
+     *
+     * @param accountNodeType имя типа узла ({@code AccountNodeType#name()})
+     * @param parentId идентификатор родительского аккаунта
+     * @return найденный аккаунт или {@code null}
+     */
+    Account getRoleAccount(String accountNodeType, Long parentId);
 }

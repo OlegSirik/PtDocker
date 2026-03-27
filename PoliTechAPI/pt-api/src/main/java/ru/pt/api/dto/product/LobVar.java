@@ -4,42 +4,53 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Builder;
 
 @Setter
+@Getter
+@AllArgsConstructor
+@Builder
 public class LobVar {
 
-    @Getter
     @JsonProperty("varDataType")
     private VarDataType varDataType;
-
-    // Getters and Setters
-    @Getter
     @JsonProperty("varCode")
     private String varCode;
 
-    @Getter
     @JsonProperty("varName")
     private String varName;
 
-    @Getter
     @JsonProperty("varPath")
     private String varPath;
 
-    @Getter
     @JsonProperty("varType")
     private String varType;
 
     @JsonProperty("varValue")
     private String varValue = "";
-
-    @Getter
+    
     @JsonProperty("varCdm")
     private String varCdm;
 
-    @Getter
     @JsonProperty("varNr")
     private String varNr;
 
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("parent_id")
+    private Long parent_id;
+
+    @JsonProperty("varList")
+    private String varList;
+
+    @JsonProperty("isSystem")
+    private boolean isSystem;
+
+    @JsonProperty("isDeleted")
+    private boolean isDeleted;
 
     // Constructors
     public LobVar() {

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap, catchError, delay, map } from 'rxjs/operators';
@@ -42,6 +42,19 @@ export interface Client {
     isDeleted: boolean;
 }
 
+/** Ответ GET .../clients/{id}/members (как AdminResponse на бэкенде) */
+export interface ClientMember {
+  id: number;
+  tid?: number;
+  tenantCode?: string;
+  clientId?: number;
+  accountId: number;
+  userLogin: string;
+  userRole?: string;
+  fullName?: string;
+  position?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -69,5 +82,27 @@ export class ClientsService extends BaseApiService<Client> {
   /** Удалить запись */
   revokeProduct(id: string | number, grantId: string | number): Observable<void> {
     return this.http.delete<void>(this.getUrl(id) + "/products/" + grantId);
-  }  
+  }
+
+  /** Участники аккаунта клиента (например GROUP_ADMIN): GET .../members?role=group_admin */
+  getClientMembers(clientId: string | number, role?: string): Observable<ClientMember[]> {
+    let params = new HttpParams();
+    if (role != null && role !== '') {
+      params = params.set('role', role);
+    }
+    return this.http.get<ClientMember[]>(this.getUrl(clientId) + '/members', { params });
+  }
+
+  /** Добавить участника: POST body { role, userLogin } */
+  addClientMember(
+    clientId: string | number,
+    body: { role: string; userLogin: string }
+  ): Observable<ClientMember> {
+    return this.http.post<ClientMember>(this.getUrl(clientId) + '/members', body);
+  }
+
+  /** Удалить привязку участника (бэкенд сам находит ролевой аккаунт GROUP_ADMIN). */
+  deleteClientMember(clientId: string | number, memberId: string | number): Observable<void> {
+    return this.http.delete<void>(this.getUrl(clientId) + '/members/' + memberId);
+  }
 }

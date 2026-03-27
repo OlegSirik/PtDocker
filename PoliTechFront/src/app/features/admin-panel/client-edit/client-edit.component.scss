@@ -94,6 +94,15 @@
       .col-actions { width: 100px; min-width: 100px; }
     }
 
+    &.admins-table {
+      .col-id { width: 80px; min-width: 80px; }
+      .col-login { width: 160px; min-width: 140px; }
+      .col-name { width: 100%; }
+      .col-position { width: 140px; min-width: 120px; }
+      .col-role { width: 120px; min-width: 100px; }
+      .col-actions { width: 72px; min-width: 72px; }
+    }
+
     &.commissions-table {
       .col-agd { width: 100px; min-width: 100px; }
       .col-action { width: 100px; min-width: 100px; }
@@ -150,7 +159,8 @@
     color: #666;
   }
 
-  .products-table .clickable-row {
+  .products-table .clickable-row,
+  .admins-table .clickable-row {
     cursor: pointer;
     &:hover {
       background-color: rgba(0, 0, 0, 0.04);

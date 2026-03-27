@@ -1,67 +1,86 @@
 package ru.pt.product.service;
 
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
-import ru.pt.api.dto.schema.AttributeDefDto;
-import ru.pt.api.dto.schema.EntityDefDto;
-import ru.pt.api.dto.schema.SectionDto;
-import ru.pt.api.dto.schema.SchemaTreeDto;
+import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.schema.SchemaService;
+import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.service.TenantService;
 import ru.pt.product.entity.AttributeDefEntity;
 import ru.pt.product.entity.ContractModelEntity;
-import ru.pt.product.entity.ContractSectionEntity;
-import ru.pt.product.entity.EntityDefEntity;
 import ru.pt.product.repository.AttributeDefRepository;
 import ru.pt.product.repository.ContractModelRepository;
-import ru.pt.product.repository.ContractSectionRepository;
-import ru.pt.product.repository.EntityDefRepository;
-import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.api.dto.product.ProductVersionModel;
-import ru.pt.api.service.product.ProductService;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class SchemaServiceImpl implements SchemaService {
 
+    /**
+     * Как в SQL: {@code ORDER BY parent_id NULLS FIRST, var_ord NULLS LAST, id}.
+     */
+    private static final Comparator<AttributeDefEntity> SCHEMA_TREE_ORDER = Comparator
+            .comparing((AttributeDefEntity e) -> e.getParentId() != null)
+            .thenComparing(AttributeDefEntity::getParentId, Comparator.nullsFirst(Long::compareTo))
+            .thenComparing(e -> e.getVarOrd() != null ? e.getVarOrd() : Long.MAX_VALUE)
+            .thenComparing(AttributeDefEntity::getId);
+
     private final ContractModelRepository contractModelRepository;
-    private final ContractSectionRepository contractSectionRepository;
-    private final EntityDefRepository entityDefRepository;
     private final AttributeDefRepository attributeDefRepository;
     private final AuthorizationService authorizationService;
     private final SecurityContextHelper securityContextHelper;
-    private final ProductService productService;
+    private final TenantService tenantService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private AuthenticatedUser getCurrentUser() {
         return securityContextHelper.getCurrentUser()
                 .orElseThrow(() -> new ForbiddenException("User not authenticated"));
     }
 
-    private ContractModelEntity getContractModel(Long tid, String contractCode) {
-        return contractModelRepository.findByTidAndCode(tid, contractCode)
-                .orElseThrow(() -> new NotFoundException("Contract model not found: " + contractCode));
+    private Long tenantIdFromCode(String tenantCode) {
+        return tenantService.getTenant(tenantCode).id();
     }
 
-    private ContractSectionEntity getContractSection(Long tid, Long modelId, String sectionCode) {
-        return contractSectionRepository.findByModelIdAndCode(modelId, sectionCode)
-                .orElseThrow(() -> new NotFoundException("Section not found: " + sectionCode));
+    private void assertNodeInSchema(Long nodeId, Long tid, String documentId) {
+        if (!attributeDefRepository.existsByIdAndTenantIdAndDocumentId(nodeId, tid, documentId)) {
+            throw new NotFoundException("Schema node not found: " + nodeId);
+        }
     }
 
-    private EntityDefEntity getEntityDef(Long tid, Long sectionId, String entityCode) {
-        return entityDefRepository.findBySectionIdAndCode(sectionId, entityCode)
-                .orElseThrow(() -> new NotFoundException("Entity not found: " + entityCode));
+    private static long parseVarOrd(String varNr) {
+        if (varNr == null || varNr.isBlank()) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(varNr.trim());
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
+
+    private static String varDataTypeToDb(VarDataType t) {
+        return t == null ? VarDataType.STRING.name() : t.name();
     }
 
     private void validateCode(String code, String fieldName) {
@@ -73,6 +92,51 @@ public class SchemaServiceImpl implements SchemaService {
         }
     }
 
+    private static LobVar toLobVar(AttributeDefEntity e) {
+        VarDataType vdt = null;
+        if (e.getVarDataType() != null && !e.getVarDataType().isBlank()) {
+            try {
+                vdt = VarDataType.valueOf(e.getVarDataType().trim().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+                vdt = VarDataType.STRING;
+            }
+        }
+        return LobVar.builder()
+                .id(e.getId())
+                .parent_id(e.getParentId())
+                .varNr(e.getVarOrd() != null ? e.getVarOrd().toString() : null)
+                .varCode(e.getVarCode())
+                .varName(e.getVarName())
+                .varType(e.getVarType())
+                .varDataType(vdt)
+                .varList(e.getVarList())
+                .isSystem(e.isSystem())
+                .varPath(e.getVarPath())
+                .varCdm(e.getVarCdm())
+                .varValue(e.getVarValue() != null ? e.getVarValue() : "")
+                .isDeleted(false)
+                .build();
+    }
+
+    private static void applyLobVarToEntity(LobVar v, AttributeDefEntity e) {
+        e.setParentId(v.getParent_id());
+        e.setVarCode(v.getVarCode());
+        e.setVarName(v.getVarName());
+        e.setVarPath(v.getVarPath());
+        e.setVarOrd(parseVarOrd(v.getVarNr()));
+        e.setVarType(v.getVarType());
+        e.setVarDataType(varDataTypeToDb(v.getVarDataType()));
+        e.setVarValue(v.getVarValue());
+        e.setVarList(v.getVarList());
+        e.setVarCdm(v.getVarCdm());
+        e.setSystem(v.isSystem());
+        String displayName = v.getVarName() == null ? null
+                : (v.getVarName().length() > 250 ? v.getVarName().substring(0, 250) : v.getVarName());
+        e.setCode(v.getVarCode());
+        e.setName(displayName);
+    }
+
+    @Override
     @Transactional
     public void newTenantCreated(Long tid) {
         if (tid == null) {
@@ -81,398 +145,200 @@ public class SchemaServiceImpl implements SchemaService {
 
         final Long templateTid = 1L;
 
-        // Maps from old to new IDs
-        Map<Long, Long> modelIdMap = new HashMap<>();
-        Map<Long, Long> sectionIdMap = new HashMap<>();
-        Map<Long, Long> entityIdMap = new HashMap<>();
-
-        // 1. Copy contract models (mt_contract_model)
         List<ContractModelEntity> templateModels = contractModelRepository.findByTid(templateTid);
         for (ContractModelEntity templateModel : templateModels) {
             ContractModelEntity newModel = new ContractModelEntity();
             newModel.setTid(tid);
             newModel.setCode(templateModel.getCode());
             newModel.setName(templateModel.getName());
-
-            ContractModelEntity savedModel = contractModelRepository.save(newModel);
-            modelIdMap.put(templateModel.getId(), savedModel.getId());
+            contractModelRepository.save(newModel);
         }
 
-        // 2. Copy sections (mt_contract_section)
-        for (Map.Entry<Long, Long> modelEntry : modelIdMap.entrySet()) {
-            Long oldModelId = modelEntry.getKey();
-            Long newModelId = modelEntry.getValue();
+        List<AttributeDefEntity> templateAttrs = attributeDefRepository.findByTenantId(templateTid);
+        if (templateAttrs.isEmpty()) {
+            return;
+        }
 
-            List<ContractSectionEntity> templateSections = contractSectionRepository.findByModelId(oldModelId);
-            for (ContractSectionEntity templateSection : templateSections) {
-                ContractSectionEntity newSection = new ContractSectionEntity();
-                newSection.setTid(tid);
-                newSection.setModelId(newModelId);
-                newSection.setCode(templateSection.getCode());
-                newSection.setName(templateSection.getName());
-                newSection.setPath(templateSection.getPath());
-
-                ContractSectionEntity savedSection = contractSectionRepository.save(newSection);
-                sectionIdMap.put(templateSection.getId(), savedSection.getId());
+        Map<Long, List<AttributeDefEntity>> childrenByParent = new HashMap<>();
+        List<AttributeDefEntity> roots = new ArrayList<>();
+        for (AttributeDefEntity a : templateAttrs) {
+            if (a.getParentId() == null) {
+                roots.add(a);
+            } else {
+                childrenByParent.computeIfAbsent(a.getParentId(), k -> new ArrayList<>()).add(a);
             }
         }
 
-        // 3. Copy entities (mt_entity_def)
-        for (Map.Entry<Long, Long> sectionEntry : sectionIdMap.entrySet()) {
-            Long oldSectionId = sectionEntry.getKey();
-            Long newSectionId = sectionEntry.getValue();
-
-            List<EntityDefEntity> templateEntities = entityDefRepository.findBySectionId(oldSectionId);
-            for (EntityDefEntity templateEntity : templateEntities) {
-                EntityDefEntity newEntity = new EntityDefEntity();
-                newEntity.setTid(tid);
-                newEntity.setSectionId(newSectionId);
-                newEntity.setCode(templateEntity.getCode());
-                newEntity.setName(templateEntity.getName());
-                newEntity.setPath(templateEntity.getPath());
-                newEntity.setCardinality(templateEntity.getCardinality());
-
-                EntityDefEntity savedEntity = entityDefRepository.save(newEntity);
-                entityIdMap.put(templateEntity.getId(), savedEntity.getId());
+        ArrayDeque<AttributeDefEntity> queue = new ArrayDeque<>(roots);
+        List<AttributeDefEntity> bfsOrder = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            AttributeDefEntity node = queue.removeFirst();
+            bfsOrder.add(node);
+            List<AttributeDefEntity> ch = childrenByParent.get(node.getId());
+            if (ch != null) {
+                queue.addAll(ch);
+            }
+        }
+        Set<Long> seenIds = new HashSet<>();
+        for (AttributeDefEntity x : bfsOrder) {
+            seenIds.add(x.getId());
+        }
+        for (AttributeDefEntity a : templateAttrs) {
+            if (seenIds.add(a.getId())) {
+                bfsOrder.add(a);
             }
         }
 
-        // 4. Copy attributes (mt_attribute_def)
-        for (Map.Entry<Long, Long> entityEntry : entityIdMap.entrySet()) {
-            Long oldEntityId = entityEntry.getKey();
-            Long newEntityId = entityEntry.getValue();
-
-            List<AttributeDefEntity> templateAttributes = attributeDefRepository.findByEntityId(oldEntityId);
-            for (AttributeDefEntity templateAttr : templateAttributes) {
-                AttributeDefEntity newAttr = new AttributeDefEntity();
-                newAttr.setTid(tid);
-                newAttr.setEntityId(newEntityId);
-                newAttr.setCode(templateAttr.getCode());
-                newAttr.setName(templateAttr.getName());
-                newAttr.setPath(templateAttr.getPath());
-                newAttr.setNr(templateAttr.getNr());
-                newAttr.setVarCode(templateAttr.getVarCode());
-                newAttr.setVarName(templateAttr.getVarName());
-                newAttr.setVarPath(templateAttr.getVarPath());
-                newAttr.setVarType(templateAttr.getVarType());
-                newAttr.setVarValue(templateAttr.getVarValue());
-                newAttr.setVarCdm(templateAttr.getVarCdm());
-                newAttr.setVarDataType(templateAttr.getVarDataType());
-
-                attributeDefRepository.save(newAttr);
-            }
+        Map<Long, Long> oldToNewId = new HashMap<>();
+        for (AttributeDefEntity t : bfsOrder) {
+            Long newParentId = t.getParentId() == null ? null : oldToNewId.get(t.getParentId());
+            AttributeDefEntity n = copyAttributeForTenant(t, tid, newParentId);
+            AttributeDefEntity saved = attributeDefRepository.save(n);
+            oldToNewId.put(t.getId(), saved.getId());
         }
     }
 
-    // ========== SECTIONS ==========
+    private static AttributeDefEntity copyAttributeForTenant(AttributeDefEntity t, Long newTid, Long newParentId) {
+        AttributeDefEntity n = new AttributeDefEntity();
+        n.setTenantId(newTid);
+        n.setDocumentId(t.getDocumentId());
+        n.setParentId(newParentId);
+        n.setVarCode(t.getVarCode());
+        n.setVarName(t.getVarName());
+        n.setVarPath(t.getVarPath());
+        n.setVarOrd(t.getVarOrd() != null ? t.getVarOrd() : 0L);
+        n.setVarType(t.getVarType());
+        n.setVarCardinality(t.getVarCardinality() != null ? t.getVarCardinality() : "SINGLE");
+        n.setVarDataType(t.getVarDataType());
+        n.setVarValue(t.getVarValue());
+        n.setVarCdm(t.getVarCdm());
+        n.setVarList(t.getVarList());
+        n.setCode(t.getCode());
+        n.setName(t.getName());
+        n.setSystem(t.isSystem());
+        return n;
+    }
 
     @Override
-    @Transactional
-    public List<SectionDto> getSections(Long tid, String contractCode) {
+    @Transactional(readOnly = true)
+    public List<LobVar> getAttributes(String tenantCode, String contractCode) {
         AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.LIST);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        return contractSectionRepository.findByTidAndModelId(tid, model.getId()).stream()
-                .map(s -> new SectionDto(s.getCode(), s.getName()))
+        Long tid = tenantIdFromCode(tenantCode);
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tid, AuthZ.Action.LIST);
+
+        List<AttributeDefEntity> rows =
+                attributeDefRepository.findByTenantIdAndDocumentId(tid, contractCode);
+        rows.sort(SCHEMA_TREE_ORDER);
+        return rows.stream()
+                .map(SchemaServiceImpl::toLobVar)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public SectionDto createSection(Long tid, String contractCode, SectionDto dto) {
+    public void addAttribute(String tenantCode, String contractCode, LobVar lobVar) {
         AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        validateCode(dto.getCode(), "Section");
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        
-        if (contractSectionRepository.findByModelIdAndCode(model.getId(), dto.getCode()).isPresent()) {
-            throw new BadRequestException("Section with code " + dto.getCode() + " already exists");
+        Long tid = tenantIdFromCode(tenantCode);
+        String documentId = contractCode;
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tid, AuthZ.Action.MANAGE);
+
+        if (lobVar == null) {
+            throw new BadRequestException("Body is required");
         }
-        
-        ContractSectionEntity entity = new ContractSectionEntity();
-        entity.setTid(tid);
-        entity.setModelId(model.getId());
-        entity.setCode(dto.getCode());
-        entity.setName(dto.getName());
-        entity.setPath(dto.getCode());
-        
-        ContractSectionEntity saved = contractSectionRepository.save(entity);
-        return new SectionDto(saved.getCode(), saved.getName());
-    }
-
-    @Override
-    @Transactional
-    public SectionDto updateSection(Long tid, String contractCode, String code, SectionDto dto) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity entity = getContractSection(tid, model.getId(), code);
-        
-        // Only name can be updated
-        entity.setName(dto.getName());
-        ContractSectionEntity saved = contractSectionRepository.save(entity);
-        return new SectionDto(saved.getCode(), saved.getName());
-    }
-
-    @Override
-    @Transactional
-    public void deleteSection(Long tid, String contractCode, String code) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), code);
-        
-        // Check if child records exist
-        if (!entityDefRepository.findBySectionId(section.getId()).isEmpty()) {
-            throw new BadRequestException("Delete child record first");
+        validateCode(lobVar.getVarCode(), "Attribute");
+        if (lobVar.getVarName() == null || lobVar.getVarName().isBlank()) {
+            throw new BadRequestException("varName cannot be empty");
         }
-        
-        try {
-            contractSectionRepository.delete(section);
-        } catch (Exception e) {
-            throw new BadRequestException("Delete child record first");
+        if (lobVar.getVarPath() == null || lobVar.getVarPath().isBlank()) {
+            throw new BadRequestException("varPath cannot be empty");
         }
-    }
-
-    // ========== ENTITIES ==========
-
-    @Override
-    @Transactional
-    public List<EntityDefDto> getEntities(Long tid, String contractCode, String sectionCode) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.LIST);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        
-        return entityDefRepository.findByTidAndSectionId(tid, section.getId()).stream()
-                .map(e -> new EntityDefDto(e.getCode(), e.getName()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public EntityDefDto createEntity(Long tid, String contractCode, String sectionCode, EntityDefDto dto) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        validateCode(dto.getCode(), "Entity");
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        
-        if (entityDefRepository.findBySectionIdAndCode(section.getId(), dto.getCode()).isPresent()) {
-            throw new BadRequestException("Entity with code " + dto.getCode() + " already exists");
+        if (lobVar.getVarType() == null || lobVar.getVarType().isBlank()) {
+            throw new BadRequestException("varType cannot be empty");
         }
-        
-        EntityDefEntity entity = new EntityDefEntity();
-        entity.setTid(tid);
-        entity.setSectionId(section.getId());
-        entity.setCode(dto.getCode());
-        entity.setName(dto.getName());
-        entity.setPath(sectionCode + "." + dto.getCode());
-        entity.setCardinality("SINGLE"); // default
-        
-        EntityDefEntity saved = entityDefRepository.save(entity);
-        return new EntityDefDto(saved.getCode(), saved.getName());
-    }
 
-    @Override
-    @Transactional
-    public EntityDefDto updateEntity(Long tid, String contractCode, String sectionCode, String code, EntityDefDto dto) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), code);
-        
-        // Only name can be updated
-        entity.setName(dto.getName());
-        EntityDefEntity saved = entityDefRepository.save(entity);
-        return new EntityDefDto(saved.getCode(), saved.getName());
-    }
-
-    @Override
-    @Transactional
-    public void deleteEntity(Long tid, String contractCode, String sectionCode, String code) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), code);
-        
-        // Check if child records exist
-        if (!attributeDefRepository.findByEntityId(entity.getId()).isEmpty()) {
-            throw new BadRequestException("Delete child record first");
+        if (lobVar.getParent_id() != null) {
+            assertNodeInSchema(lobVar.getParent_id(), tid, documentId);
         }
-        
-        try {
-            entityDefRepository.delete(entity);
-        } catch (Exception e) {
-            throw new BadRequestException("Delete child record first");
+
+        AttributeDefEntity e = new AttributeDefEntity();
+        e.setTenantId(tid);
+        e.setDocumentId(documentId);
+        e.setVarCardinality("SINGLE");
+        applyLobVarToEntity(lobVar, e);
+        AttributeDefEntity saved = attributeDefRepository.save(e);
+        lobVar.setId(saved.getId());
+    }
+
+    @Override
+    @Transactional
+    public void updateAttribute(String tenantCode, String contractCode, LobVar lobVar) {
+        AuthenticatedUser user = getCurrentUser();
+        Long tid = tenantIdFromCode(tenantCode);
+        String documentId = contractCode;
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tid, AuthZ.Action.MANAGE);
+
+        if (lobVar == null || lobVar.getId() == null) {
+            throw new BadRequestException("id is required");
         }
-    }
+        assertNodeInSchema(lobVar.getId(), tid, documentId);
 
-    // ========== ATTRIBUTES ==========
-
-    @Override
-    @Transactional
-    public List<AttributeDefDto> getAttributes(Long tid, String contractCode, String sectionCode, String entityCode) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.LIST);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), entityCode);
-        
-        return attributeDefRepository.findByTidAndEntityId(tid, entity.getId()).stream()
-                .map(a -> new AttributeDefDto(
-                        a.getCode(),
-                        a.getName(),
-                        a.getVarDataType(),
-                        a.getNr(),
-                        a.getVarCode(),
-                        a.getVarValue()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public AttributeDefDto createAttribute(Long tid, String contractCode, String sectionCode, String entityCode, AttributeDefDto dto) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        validateCode(dto.getCode(), "Attribute");
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), entityCode);
-        
-        if (attributeDefRepository.findByEntityIdAndCode(entity.getId(), dto.getCode()).isPresent()) {
-            throw new BadRequestException("Attribute with code " + dto.getCode() + " already exists");
-        }
-        
-        AttributeDefEntity attributeEntity = new AttributeDefEntity();
-        attributeEntity.setTid(tid);
-        attributeEntity.setEntityId(entity.getId());
-        attributeEntity.setCode(dto.getCode());
-        attributeEntity.setName(dto.getName());
-
-        String attributePath = sectionCode + "." + entityCode + "." + dto.getCode();
-        attributeEntity.setPath(attributePath);
-
-        Long nr = dto.getNr() != null ? dto.getNr() : 1L;
-        attributeEntity.setNr(nr);
-
-        String varCode = dto.getVarCode() != null ? dto.getVarCode() : dto.getCode();
-        attributeEntity.setVarCode(varCode);
-        attributeEntity.setVarName(dto.getName());
-        attributeEntity.setVarPath(attributePath);
-        attributeEntity.setVarType("IN");
-        attributeEntity.setVarValue(dto.getVarValue());
-        attributeEntity.setVarCdm(attributePath);
-        attributeEntity.setVarDataType(dto.getDataType());
-
-        AttributeDefEntity saved = attributeDefRepository.save(attributeEntity);
-
-        return new AttributeDefDto(
-                saved.getCode(),
-                saved.getName(),
-                saved.getVarDataType(),
-                saved.getNr(),
-                saved.getVarCode(),
-                saved.getVarValue()
-        );
-    }
-
-    @Override
-    @Transactional
-    public AttributeDefDto updateAttribute(Long tid, String contractCode, String sectionCode, String entityCode, String code, AttributeDefDto dto) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), entityCode);
-        AttributeDefEntity attributeEntity = attributeDefRepository.findByEntityIdAndCode(entity.getId(), code)
-                .orElseThrow(() -> new NotFoundException("Attribute not found: " + code));
-        
-        // Only name (and derived varName) can be updated
-        attributeEntity.setName(dto.getName());
-        attributeEntity.setVarName(dto.getName());
-        AttributeDefEntity saved = attributeDefRepository.save(attributeEntity);
-
-        return new AttributeDefDto(
-                saved.getCode(),
-                saved.getName(),
-                saved.getVarDataType(),
-                saved.getNr(),
-                saved.getVarCode(),
-                saved.getVarValue()
-        );
-    }
-
-    @Override
-    @Transactional
-    public void deleteAttribute(Long tid, String contractCode, String sectionCode, String entityCode, String code) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.MANAGE);
-        
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        ContractSectionEntity section = getContractSection(tid, model.getId(), sectionCode);
-        EntityDefEntity entity = getEntityDef(tid, section.getId(), entityCode);
-        AttributeDefEntity attributeEntity = attributeDefRepository.findByEntityIdAndCode(entity.getId(), code)
-                .orElseThrow(() -> new NotFoundException("Attribute not found: " + code));
-        
-        try {
-            attributeDefRepository.delete(attributeEntity);
-        } catch (Exception e) {
-            throw new BadRequestException("Delete child record first");
-        }
-    }
-
-    // ========== TREE ==========
-
-    @Override
-    @Transactional
-    public List<SchemaTreeDto> getTree(Long tid, Integer productId) { //String contractCode) {
-        AuthenticatedUser user = getCurrentUser();
-        authorizationService.check(user, AuthZ.ResourceType.CONTRACT, null, null, AuthZ.Action.LIST);
-       
-        List<SchemaTreeDto> tree = new ArrayList<>();
-
-        String contractCode = "box1";
-
-        ContractModelEntity model = getContractModel(tid, contractCode);
-        tree.add(new SchemaTreeDto(model.getId(), null, 0, model.getName(), model.getCode()));
-
-        List<ContractSectionEntity> sections = contractSectionRepository.findByTidAndModelId(tid, model.getId());
-        for (ContractSectionEntity section : sections) {
-            tree.add(new SchemaTreeDto(section.getId(), model.getId(), null, section.getName(), section.getCode()));
-
-            List<EntityDefEntity> entities = entityDefRepository.findByTidAndSectionId(tid, section.getId());
-            for (EntityDefEntity entity : entities) {
-                tree.add(new SchemaTreeDto(entity.getId(), section.getId(), null, entity.getName(), entity.getCode()));
-
-                List<AttributeDefEntity> attributes = attributeDefRepository.findByTidAndEntityId(tid, entity.getId());
-                for (AttributeDefEntity attribute : attributes) {
-                    tree.add(new SchemaTreeDto(attribute.getId(), entity.getId(), null, attribute.getName(), attribute.getCode()));
-                }
-        
+        if (lobVar.getParent_id() != null) {
+            if (lobVar.getParent_id().equals(lobVar.getId())) {
+                throw new BadRequestException("parent_id cannot equal id");
             }
-    
+            assertNodeInSchema(lobVar.getParent_id(), tid, documentId);
         }
 
-        ProductVersionModel product = productService.getProduct(120, true);
-        // product.getVars().forEach(var -> {
-        return tree;
+        validateCode(lobVar.getVarCode(), "Attribute");
+        if (lobVar.getVarName() == null || lobVar.getVarName().isBlank()) {
+            throw new BadRequestException("varName cannot be empty");
+        }
+        if (lobVar.getVarPath() == null || lobVar.getVarPath().isBlank()) {
+            throw new BadRequestException("varPath cannot be empty");
+        }
+        if (lobVar.getVarType() == null || lobVar.getVarType().isBlank()) {
+            throw new BadRequestException("varType cannot be empty");
+        }
+
+        AttributeDefEntity e = attributeDefRepository.findById(lobVar.getId())
+                .orElseThrow(() -> new NotFoundException("Schema node not found: " + lobVar.getId()));
+        if (!tid.equals(e.getTenantId()) || !documentId.equals(e.getDocumentId())) {
+            throw new NotFoundException("Schema node not found: " + lobVar.getId());
+        }
+        applyLobVarToEntity(lobVar, e);
+        attributeDefRepository.save(e);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAttribute(String tenantCode, String contractCode, LobVar lobVar) {
+        AuthenticatedUser user = getCurrentUser();
+        Long tid = tenantIdFromCode(tenantCode);
+        String documentId = contractCode;
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tid, AuthZ.Action.MANAGE);
+
+        if (lobVar == null || lobVar.getId() == null) {
+            throw new BadRequestException("id is required");
+        }
+        assertNodeInSchema(lobVar.getId(), tid, documentId);
+
+        int n = entityManager.createNativeQuery("""
+                WITH RECURSIVE sub AS (
+                    SELECT id FROM mt_attribute_def
+                    WHERE id = :rootId AND tenant_id = :tid AND document_id = :docId
+                    UNION ALL
+                    SELECT c.id FROM mt_attribute_def c
+                    INNER JOIN sub p ON c.parent_id = p.id
+                    WHERE c.tenant_id = :tid AND c.document_id = :docId
+                )
+                DELETE FROM mt_attribute_def WHERE id IN (SELECT id FROM sub)
+                """)
+                .setParameter("rootId", lobVar.getId())
+                .setParameter("tid", tid)
+                .setParameter("docId", documentId)
+                .executeUpdate();
+        if (n == 0) {
+            throw new NotFoundException("Schema node not found: " + lobVar.getId());
+        }
     }
 }

@@ -13,19 +13,40 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule, type MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import type { TreeTableFlatRow, TreeTableSourceRow } from '../../models/tree-table.models';
+import { isObjectVarTypeRow, type TreeTableFlatRow, type TreeTableSourceRow } from '../../models/tree-table.models';
+import { TreeTableRowEditDialogComponent } from './tree-table-row-edit-dialog.component';
 
+/** Черновик дочернего узла после диалога «Создать»; id задаёт родитель. */
+export interface TreeTableChildCreatePayload<T extends TreeTableSourceRow = TreeTableSourceRow> {
+  parentId: number;
+  draft: T;
+}
+
+/**
+ * `T` — тип строки: задайте свой интерфейс как `extends TreeTableSourceRow` и типизируйте массив `[rows]` в родителе.
+ */
 @Component({
   selector: 'app-tree-table',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
+  ],
   templateUrl: './tree-table.component.html',
   styleUrl: './tree-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRow> {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly dialog = inject(MatDialog);
 
   /** Исходные строки (плоский список с parent_id) */
   @Input({ required: true }) set rows(value: T[] | null | undefined) {
@@ -49,11 +70,39 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
   /** Разрешить множественное раскрытие (если false - раскрывается только один узел) */
   @Input() multipleExpanded = true;
 
+  /**
+   * Если true, строки с {@link TreeTableSourceRow.isDeleted} участвуют в дереве (иначе скрываются).
+   */
+  @Input() set showDeleted(value: boolean) {
+    this._showDeleted = !!value;
+    this.childrenCache.clear();
+    this.rebuildFlat();
+    this.cdr.markForCheck();
+  }
+  get showDeleted(): boolean {
+    return this._showDeleted;
+  }
+  private _showDeleted = false;
+
+  /**
+   * Для строк с {@link TreeTableSourceRow.varType} ≠ OBJECT по клику открывается диалог редактирования метаданных.
+   */
+  @Input() enableVarEditDialog = true;
+
   /** Событие при раскрытии/сворачивании узла */
   @Output() expandedChange = new EventEmitter<{ node: T; expanded: boolean }>();
   
   /** Событие при клике на строку */
   @Output() rowClick = new EventEmitter<T>();
+
+  /** После сохранения в диалоге редактирования переменной (только если {@link enableVarEditDialog} и не OBJECT) */
+  @Output() rowVarUpdated = new EventEmitter<T>();
+
+  /** После сохранения в диалоге создания дочернего узла (id в {@code draft} игнорируйте — задайте в родителе) */
+  @Output() rowChildCreate = new EventEmitter<TreeTableChildCreatePayload<T>>();
+
+  /** После {@link markRowDeleted}: строка помечена {@link TreeTableSourceRow.isDeleted} и скрыта из дерева */
+  @Output() rowSoftDeleted = new EventEmitter<T>();
 
   @ContentChild('actionsCell') actionsCellTpl?: TemplateRef<{ $implicit: T; row: TreeTableFlatRow<T> }>;
   @ContentChild('nameCell') nameCellTpl?: TemplateRef<{ $implicit: T; row: TreeTableFlatRow<T> }>;
@@ -176,7 +225,100 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     return this.expandedIds.has(row.data.id);
   }
 
+
   trackById = (_: number, row: TreeTableFlatRow<T>) => row.data.id;
+
+  /** Для шаблона: переключатели не показываем на узлах OBJECT */
+  isObjectVarTypeRow = isObjectVarTypeRow;
+
+
+  onBuiltInDeleteClick(node: T, event: MouseEvent): void {
+    event.stopPropagation();
+    if (node.isSystem === true) {
+      return;
+    }
+    this.markRowDeleted(node);
+  }
+
+  /** Диалог редактирования строки (не для узлов OBJECT и не для isDeleted). */
+  openEditRowDialog(row: T): void {
+    if (!this.enableVarEditDialog || isObjectVarTypeRow(row) || row.isDeleted) {
+      return;
+    }
+    const ref = this.dialog.open(TreeTableRowEditDialogComponent, {
+      width: '520px',
+      data: {
+        mode: 'edit',
+        row: { ...row },
+        parentId: row.parent_id,
+        codeReadonly: row.isSystem === true,
+      },
+    });
+    ref.afterClosed().subscribe((res?: TreeTableSourceRow) => {
+      if (!res) return;
+      Object.assign(row, {
+        varCode: res.varCode,
+        varName: res.varName,
+        varType: res.varType,
+        varDataType: res.varDataType,
+        varList: res.varList,
+        varPath: res.varPath,
+        varValue: res.varValue,
+      });
+      this.rowVarUpdated.emit(row);
+      this.cdr.markForCheck();
+    });
+  }
+
+  /** Диалог создания дочернего узла. */
+  openCreateChildDialog(parent: T): void {
+    if (!this.enableVarEditDialog || parent.isDeleted) {
+      return;
+    }
+    const empty: TreeTableSourceRow = {
+      id: 0,
+      parent_id: parent.id,
+      varNr: 0,
+      varName: '',
+      varCode: '',
+      varPath: '',
+      varValue: '',
+      varCdm: '',
+      varType: 'STRING',
+      varDataType: 'STRING',
+    };
+    const ref = this.dialog.open(TreeTableRowEditDialogComponent, {
+      width: '520px',
+      data: { mode: 'create', row: empty, parentId: parent.id },
+    });
+    ref.afterClosed().subscribe((res?: TreeTableSourceRow) => {
+      if (!res) return;
+      this.rowChildCreate.emit({ parentId: parent.id, draft: res as T });
+      this.cdr.markForCheck();
+    });
+  }
+
+  /** Мягкое удаление: {@code isDeleted = true}, строка и её поддерево исчезают из таблицы */
+  markRowDeleted(node: T): void {
+    node.isDeleted = true;
+    this.expandedIds.delete(node.id);
+    this.markDescendantsDeleted(node.id);
+    this.closeDescendants(node.id);
+    this.rebuildFlat();
+    this.rowSoftDeleted.emit(node);
+    this.cdr.markForCheck();
+  }
+
+  /** Пометить {@code isDeleted} у всех прямых и косвенных потомков {@code parentId}. */
+  private markDescendantsDeleted(parentId: number): void {
+    for (const row of this._rows) {
+      if (row.parent_id === parentId) {
+        row.isDeleted = true;
+        this.expandedIds.delete(row.id);
+        this.markDescendantsDeleted(row.id);
+      }
+    }
+  }
 
   /**
    * Обновление данных с сохранением состояния раскрытия
@@ -220,7 +362,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
   }
 
   /**
-   * Дети одного родителя отсортированы по order_nr.
+   * Дети одного родителя отсортированы по varNr.
    * parentKey: null — корневой уровень (parent_id null / undefined / 0 при отсутствии родителя в данных)
    */
   private buildChildrenMap(rows: T[]): Map<string, T[]> {
@@ -228,6 +370,9 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     const idSet = new Set(rows.map((r) => r.id));
 
     for (const row of rows) {
+      if (!this._showDeleted && row.isDeleted) {
+        continue;
+      }
       const key = this.parentKey(row.parent_id, idSet);
       const list = byParent.get(key) ?? [];
       list.push(row);
@@ -243,7 +388,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     }
     
     for (const [, list] of byParent) {
-      list.sort((a, b) => (a.order_nr ?? 0) - (b.order_nr ?? 0));
+      list.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
     }
     return byParent;
   }

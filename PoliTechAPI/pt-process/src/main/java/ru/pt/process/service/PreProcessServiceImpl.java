@@ -49,7 +49,8 @@ public class PreProcessServiceImpl implements PreProcessService {
         logger.info("Applying product metadata. productCode={}", productVersionModel.getCode());
         
         policy.setProductVersion(productVersionModel.getVersionNo());
-
+        policy.setInsCompanyId(productVersionModel.getInsCompanyId());
+        
         normalizePolicyDates( policy,  productVersionModel);
 
         var insuredObject = policy.getInsuredObjects().get(0);

@@ -6,6 +6,17 @@
   max-width: 1200px;
   margin: 0 auto;
 
+  .tree-table-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    vertical-align: middle;
+  }
+
+  .schema-tree-toolbar {
+    margin-bottom: 12px;
+  }
+
   .page-header {
     display: flex;
     justify-content: space-between;

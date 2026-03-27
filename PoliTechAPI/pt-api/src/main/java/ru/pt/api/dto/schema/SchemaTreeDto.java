@@ -4,14 +4,13 @@ public record SchemaTreeDto(
     Long id,
     Long parent_id,
     Integer order_nr,
+    String code,
     String name,
-    String code
-) {
-    public SchemaTreeDto(Long id, Long parent_id, Integer order_nr, String name, String code) {
-        this.id = id;
-        this.parent_id = parent_id;
-        this.order_nr = order_nr;
-        this.name = name;
-        this.code = code;
-    }
-}
+    String varType,
+    String varDataType,
+    String varList,
+    boolean isSystem,
+    String varPath,
+    String varCdm,
+    String varValue
+) {}

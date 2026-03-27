@@ -14,12 +14,8 @@ import ru.pt.api.service.auth.AccountProductRoles;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.AttributeDefEntity;
 import ru.pt.product.entity.ContractModelEntity;
-import ru.pt.product.entity.ContractSectionEntity;
-import ru.pt.product.entity.EntityDefEntity;
 import ru.pt.product.repository.AttributeDefRepository;
 import ru.pt.product.repository.ContractModelRepository;
-import ru.pt.product.repository.ContractSectionRepository;
-import ru.pt.product.repository.EntityDefRepository;
 import ru.pt.api.service.db.ReferenceDataService;
 
 import java.math.BigDecimal;
@@ -41,8 +37,6 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     private final LobService lobService;
     private final SecurityContextHelper securityContextHelper;
     private final ContractModelRepository contractModelRepository;
-    private final ContractSectionRepository contractSectionRepository;
-    private final EntityDefRepository entityDefRepository;
     private final AttributeDefRepository attributeDefRepository;
     private final ReferenceDataService referenceDataService;
 
@@ -119,19 +113,8 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .orElseThrow(() -> new NotFoundException("Contract model not found: " + MODEL_CODE));
         metadata.setTitle(model.getName());
 
-        List<ContractSectionEntity> sections = contractSectionRepository.findByModelId(model.getId());
-        metadata.setSections(sections.stream()
-                .map(s -> new FormSection(s.getCode(), s.getName()))
-                .toList());
-
-        List<FormEntity> entities = new ArrayList<>();
-        for (ContractSectionEntity section : sections) {
-            List<EntityDefEntity> sectionEntities = entityDefRepository.findBySectionId(section.getId());
-            for (EntityDefEntity entity : sectionEntities) {
-                entities.add(new FormEntity(entity.getCode(), section.getCode(), entity.getName()));
-            }
-        }
-        metadata.setEntities(entities);
+        metadata.setSections(List.of());
+        metadata.setEntities(List.of());
 
         List<AttributeDefEntity> attributes = attributeDefRepository.findByTenantAndModelCode(tenantId, MODEL_CODE);
         Map<String, AttributeDefEntity> attrByVarCdm = attributes.stream()

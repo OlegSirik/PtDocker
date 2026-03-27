@@ -3,6 +3,10 @@
   table-layout: fixed;
 }
 
+tr.clickable-row.tree-row-deleted {
+  opacity: 0.55;
+}
+
 /* Остаток ширины строки (всё кроме code / actions) */
 th.col-name,
 td.col-name {
@@ -49,11 +53,29 @@ td.col-code {
 
 th.col-actions,
 td.col-actions {
-  width: 100px;
-  max-width: 100px;
+  width: 200px;
+  min-width: 200px;
+  max-width: none;
   box-sizing: border-box;
   text-align: end;
   vertical-align: middle;
+}
+
+.tree-actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.tree-action-toggle {
+  transform: scale(0.85);
+  margin: 0 2px;
+}
+
+.tree-action-delete {
+  flex-shrink: 0;
 }
 
 .toggle-btn {

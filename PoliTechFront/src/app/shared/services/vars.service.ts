@@ -3,7 +3,81 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import type { TreeTableFlatRow, TreeTableSourceRow } from '../models/tree-table.models';
+import {
+  isObjectVarTypeRow,
+  mapSchemaTreeApiToSourceRows,
+  type SchemaTreeApiRow,
+  type TreeTableFlatRow,
+  type TreeTableSourceRow,
+} from '../models/tree-table.models';
+
+/**
+ * Помечает строки дерева {@link TreeTableSourceRow.isDeleted}.
+ *
+ * - Для узлов с {@link TreeTableSourceRow.varType} ≠ OBJECT действует фильтр по {@code varCode} (как раньше).
+ * - Узлы OBJECT не сравниваются с {@code filter} по коду; остаются только если есть хотя бы один
+ *   «живой» потомок. OBJECT без детей или с полностью отфильтрованными детьми скрываются.
+ */
+export function filterTree(rows: TreeTableSourceRow[], filter: string[]): TreeTableSourceRow[] {
+  const filterSet = new Set(filter);
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const childrenByParent = new Map<number, TreeTableSourceRow[]>();
+
+  for (const r of rows) {
+    const pid = r.parent_id;
+    if (pid != null) {
+      let list = childrenByParent.get(pid);
+      if (!list) {
+        list = [];
+        childrenByParent.set(pid, list);
+      }
+      list.push(r);
+    }
+  }
+
+  const survivesMemo = new Map<number, boolean>();
+
+  function survives(id: number): boolean {
+    const cached = survivesMemo.get(id);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const row = byId.get(id);
+    if (!row) {
+      survivesMemo.set(id, false);
+      return false;
+    }
+
+    const children = childrenByParent.get(id) ?? [];
+
+    if (isObjectVarTypeRow(row)) {
+      if (children.length === 0) {
+        survivesMemo.set(id, false);
+        return false;
+      }
+      const ok = children.some((c) => survives(c.id));
+      survivesMemo.set(id, ok);
+      return ok;
+    }
+
+    if (!filterSet.has(row.varCode)) {
+      survivesMemo.set(id, false);
+      return false;
+    }
+    if (children.length === 0) {
+      survivesMemo.set(id, true);
+      return true;
+    }
+    const ok = children.some((c) => survives(c.id));
+    survivesMemo.set(id, ok);
+    return ok;
+  }
+
+  for (const r of rows) {
+    r.isDeleted = !survives(r.id);
+  }
+  return rows;
+}
 
 export interface LobVar {
   varCode: string;
@@ -13,29 +87,13 @@ export interface LobVar {
   varDataType: string;
   varValue: string;
   varCdm: string;
-  varNr: number;
-}
-
-/** Section from schema API */
-export interface SchemaSection {
-  code: string;
-  name: string;
-}
-
-/** Entity definition from schema API */
-export interface SchemaEntity {
-  code: string;
-  name: string;
-}
-
-/** Attribute definition from schema API */
-export interface SchemaAttribute {
-  code?: string;
-  name: string;
-  dataType?: string;
-  nr?: number;
-  varCode?: string;
-  varValue?: string;
+  /** С API может прийти числом или строкой (Jackson / LobVar). */
+  varNr?: string | number;
+  id: number;
+  parent_id: number | null;
+  varList: string | null;
+  isSystem: boolean;
+  isDeleted: boolean;
 }
 
 @Injectable({
@@ -249,83 +307,42 @@ export class VarsService {
     return `${this.authService.baseApiUrl}/admin/schema/${contractModel}`;
   }
 
-  /**
-   * Load sections for a contract model.
-   * GET /api/v1/{tenant}/admin/schema/{contractCode}/sections
-   */
-  loadSections(contractModel: string = 'box'): Observable<SchemaSection[]> {
-    const url = `${this.schemaUrl(contractModel)}/sections`;
-    return this.http.get<SchemaSection[]>(url);
-  }
 
   /**
-   * Load entities for a section.
-   * GET /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/entities
+   * Дерево атрибутов схемы договора (бывший GET …/tree).
+   * GET /api/v1/{tenant}/admin/schema/{contractCode}/attributes
    */
-  loadEntities(contractModel: string, sectionCode: string): Observable<SchemaEntity[]> {
-    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/entities`;
-    return this.http.get<SchemaEntity[]>(url);
-  }
-
-  /**
-   * Load attributes for an entity.
-   * GET /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes
-   */
-  loadAttributes(
-    contractModel: string,
-    sectionCode: string,
-    entityCode: string
-  ): Observable<SchemaAttribute[]> {
-    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes`;
-    return this.http.get<SchemaAttribute[]>(url);
+  loadAttributes(contractModel: string): Observable<TreeTableSourceRow[]> {
+    const url = `${this.schemaUrl(contractModel)}/attributes`;
+    return this.http
+      .get<SchemaTreeApiRow[]>(url)
+      .pipe(map(mapSchemaTreeApiToSourceRows));
   }
 
   /**
    * Create attribute.
-   * POST /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes
+   * POST /api/v1/{tenant}/admin/schema/{contractCode}/attributes
    */
-  createAttribute(
-    contractModel: string,
-    sectionCode: string,
-    entityCode: string,
-    body: SchemaAttribute
-  ): Observable<SchemaAttribute> {
-    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes`;
-    return this.http.post<SchemaAttribute>(url, body);
+  createAttribute(contractModel: string, body: LobVar): Observable<LobVar> {
+    const url = `${this.schemaUrl(contractModel)}/attributes`;
+    return this.http.post<LobVar>(url, body);
   }
 
   /**
-   * Update attribute (only name can be updated on API).
-   * PUT /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes/{code}
+   * Update attribute.
+   * PUT /api/v1/{tenant}/admin/schema/{contractCode}/attributes
    */
-  updateAttribute(
-    contractModel: string,
-    sectionCode: string,
-    entityCode: string,
-    code: string,
-    body: SchemaAttribute
-  ): Observable<SchemaAttribute> {
-    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes/${encodeURIComponent(code)}`;
-    return this.http.put<SchemaAttribute>(url, body);
+  updateAttribute(contractModel: string, body: LobVar): Observable<LobVar> {
+    const url = `${this.schemaUrl(contractModel)}/attributes`;
+    return this.http.put<LobVar>(url, body);
   }
 
   /**
-   * Delete attribute.
-   * DELETE /api/v1/{tenant}/admin/schema/{contractCode}/{sectionCode}/{entityCode}/attributes/{code}
+   * Delete attribute (тело — идентификация узла, как на бэкенде).
+   * DELETE /api/v1/{tenant}/admin/schema/{contractCode}/attributes
    */
-  deleteAttribute(
-    contractModel: string,
-    sectionCode: string,
-    entityCode: string,
-    code: string
-  ): Observable<void> {
-    const url = `${this.schemaUrl(contractModel)}/${sectionCode}/${entityCode}/attributes/${encodeURIComponent(code)}`;
-    return this.http.delete<void>(url);
-  }
-
-  getTree(productId?: number): Observable<TreeTableSourceRow[]> {
-    const id = productId === undefined ? -1 : productId;
-    const url = `${this.schemaUrl('box')}/tree?productId=${id}`;
-    return this.http.get<TreeTableSourceRow[]>(url);
+  deleteAttribute(contractModel: string, body: LobVar): Observable<void> {
+    const url = `${this.schemaUrl(contractModel)}/attributes`;
+    return this.http.delete<void>(url, { body });
   }
 }
