@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import ru.pt.api.dto.refs.RecordStatus;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -12,6 +14,6 @@ import lombok.NoArgsConstructor;
 public class ProviderDto {
     private Long id;
     private String name;
-    private String status;  // ACTIVE, SUSPENDED
+    private RecordStatus recordStatus;
     private String executionMode;  // LOCAL, API
 }

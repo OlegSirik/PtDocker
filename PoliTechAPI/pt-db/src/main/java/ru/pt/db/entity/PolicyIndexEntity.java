@@ -27,7 +27,7 @@ public class PolicyIndexEntity {
     private String policyNumber;
 
     @Column(name = "version_no")
-    private Integer versionNo;
+    private Long versionNo;
 
     @Column(name = "top_version")
     private Boolean topVersion;
@@ -73,7 +73,7 @@ public class PolicyIndexEntity {
     private String insCompany;
 
     @Column(name = "product_version_no", nullable = false)
-    private Integer productVersionNo = 1;
+    private Long productVersionNo = 1L;
 
     @Column(name = "ph_digest", length = 250)
     private String phDigest;
@@ -123,11 +123,11 @@ public class PolicyIndexEntity {
         this.policyNumber = policyNumber;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 
@@ -247,11 +247,11 @@ public class PolicyIndexEntity {
         this.insCompany = insCompany;
     }
 
-    public Integer getProductVersionNo() {
+    public Long getProductVersionNo() {
         return productVersionNo;
     }
 
-    public void setProductVersionNo(Integer productVersionNo) {
+    public void setProductVersionNo(Long productVersionNo) {
         this.productVersionNo = productVersionNo;
     }
 

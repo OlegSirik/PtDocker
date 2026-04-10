@@ -12,9 +12,9 @@ public class ProductEntity {
 
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_products_seq")
-    @SequenceGenerator(name = "pt_products_seq", sequenceName = "pt_products_seq", allocationSize = 1)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
+    private Long id;
 
     @Column(name = "lob", nullable = false, length = 30)
     private String lob;
@@ -26,13 +26,13 @@ public class ProductEntity {
     private String name;
 
     @Column(name = "prod_version_no")
-    private Integer prodVersionNo;
+    private Long prodVersionNo;
 
     @Column(name = "dev_version_no")
-    private Integer devVersionNo;
+    private Long devVersionNo;
 
-    @Column(name = "isDeleted", nullable = false)
-    private boolean isDeleted = false;
+    @Column(name = "record_status", nullable = false)
+    private String recordStatus = "ACTIVE";
 
     @Column(name = "tid", nullable = false)
     private Long tId;

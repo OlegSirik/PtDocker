@@ -38,4 +38,5 @@ public class InsuranceCompanyDto {
     private String bank;
     private String bic;
     private String corrAccount;
+    private String displayName;
 }

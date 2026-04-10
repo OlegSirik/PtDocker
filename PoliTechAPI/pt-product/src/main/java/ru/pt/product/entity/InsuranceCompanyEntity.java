@@ -11,15 +11,12 @@ import java.util.Map;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "pt_insurance_company",
-        uniqueConstraints = @UniqueConstraint(name = "pt_insurance_company_tid_code_uk", columnNames = {"tid", "code"})
-)
+@Table(name = "pt_insurance_company")
 public class InsuranceCompanyEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_ins_company_seq")
-    @SequenceGenerator(name = "pt_ins_company_seq", sequenceName = "pt_ins_company_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     private Long id;
 

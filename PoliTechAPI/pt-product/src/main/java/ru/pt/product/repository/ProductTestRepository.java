@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface ProductTestRepository extends JpaRepository<ProductTestEntity, ProductTestId> {
 
-    Optional<ProductTestEntity> findByProductIdAndVersionNo(Integer productId, Integer versionNo);
+    Optional<ProductTestEntity> findByProductIdAndVersionNo(Long productId, Long versionNo);
 }

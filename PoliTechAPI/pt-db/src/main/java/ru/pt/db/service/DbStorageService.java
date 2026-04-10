@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.lang.NonNull;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 
@@ -15,7 +14,6 @@ import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
-import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.db.StorageService;
@@ -26,11 +24,7 @@ import ru.pt.db.entity.PolicyIndexEntity;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
 import ru.pt.db.utils.PolicyMapper;
-import ru.pt.db.utils.PolicyProjectionService;
 
-import java.sql.Timestamp;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -110,30 +104,7 @@ public class DbStorageService implements StorageService {
         policyRepository.save(policyEntity);
     }
 
-    @Override
-    @Transactional
-    public PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber) {
-        /* 
-        return policyIndexRepository.findPolicyIndexEntityByPolicyNumber(policyNumber)
-                .map(idx -> {
-                    var uuid = idx.getPolicyId();
-                    policyRepository.deleteById(uuid);
-                    policyIndexRepository.deleteById(uuid);
 
-                    return save(policy, userData, version, uuid);
-                }).orElseThrow(() -> {
-                    ErrorModel errorModel = ErrorConstants.createErrorModel(
-                        404,
-                        ErrorConstants.policyNotFound(policyNumber),
-                        ErrorConstants.DOMAIN_STORAGE,
-                        ErrorConstants.REASON_NOT_FOUND,
-                        "policyNumber"
-                    );
-                    return new NotFoundException(errorModel);
-                });
-                */
-        throw new InternalServerErrorException("Policy update by policyNumber is not implemented");
-    }
 
     @Override
     public PolicyData getPolicyById(UUID policyId) {

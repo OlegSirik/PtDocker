@@ -25,6 +25,8 @@ import ru.pt.auth.utils.AccountLoginMapper;
 
 import java.util.List;
 
+import ru.pt.api.dto.refs.RecordStatus;
+
 /**
  * Сервис для работы с привязками пользователей к аккаунтам (таблица acc_account_logins)
  */
@@ -78,7 +80,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
             newLogin.setTid(accountEntity.getTenant().getId());
             newLogin.setUserLogin(userLogin);
             newLogin.setFullName(userLogin); // Default to userLogin if no fullName provided
-            newLogin.setIsDeleted(false);
+            newLogin.setRecordStatus(RecordStatus.ACTIVE.getValue());
             return loginRepository.save(newLogin);
         });
 
@@ -90,6 +92,7 @@ public class AccountLoginServiceImpl implements AccountLoginService {
         accountLoginEntity.setUserLogin(userLogin);
         accountLoginEntity.setLogin(loginEntity);
         accountLoginEntity.setDefault(Boolean.TRUE.equals(login.getIsDefault()));
+        //accountLoginEntity.setRecordStatus(login.recordStatus() != null ? login.recordStatus().getValue() : RecordStatus.ACTIVE.getValue());
 
         AccountLoginEntity savedEntity = accountLoginRepository.save(accountLoginEntity);
         return accountLoginMapper.toDto(savedEntity);

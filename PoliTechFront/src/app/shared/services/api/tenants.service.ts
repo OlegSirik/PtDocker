@@ -7,11 +7,17 @@ import { AuthService } from '../auth.service';
 import { BaseApiService } from './base-api.service';
 import { ClientsService, Client } from './clients.service';
 
+/** Matches backend `RecordStatus` JSON values. */
+export enum RecordStatus {
+  ACTIVE = 'ACTIVE',
+  DELETED = 'DELETED',
+}
+
 export interface Tenant {
     id?: number;
     name: string;
     code: string;
-    isDeleted: boolean;
+    recordStatus: string;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     authType?: string ;

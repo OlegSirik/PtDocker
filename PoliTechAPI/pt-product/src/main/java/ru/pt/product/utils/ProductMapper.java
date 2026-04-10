@@ -2,6 +2,7 @@ package ru.pt.product.utils;
 
 import org.springframework.stereotype.Service;
 import ru.pt.api.dto.product.Product;
+import ru.pt.api.dto.refs.RecordStatus;
 import ru.pt.product.entity.ProductEntity;
 
 @Service
@@ -16,7 +17,7 @@ public class ProductMapper {
         product.setDevVersionNo(entity.getDevVersionNo());
         product.setProdVersionNo(entity.getProdVersionNo());
         product.setInsCompanyId(entity.getInsCompanyId());
-        product.setDeleted(entity.isDeleted());
+        product.setRecordStatus(RecordStatus.fromValue(entity.getRecordStatus()));
 
         return product;
     }

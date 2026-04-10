@@ -31,7 +31,7 @@ public interface CommissionService {
     /**
      * Returns commission configuration for the given account and product, or null if not found.
      */
-    CommissionRateDto getProductCommission(Long accountId, Integer productId);
+    CommissionRateDto getProductCommission(Long accountId, Long productId);
 
     /**
      * Returns commission configuration by id.
@@ -46,15 +46,15 @@ public interface CommissionService {
     /**
      * Returns commission configurations filtered by accountId, productId (optional) and action (optional).
      */
-    List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, CommissionAction action);
+    List<CommissionRateDto> getConfigurations(Long accountId, Long productId, CommissionAction action);
 
     /* 
     * Проверяет, что запрашиваемая премия подходит
     */
-    boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action);
+    boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Long productId, CommissionAction action);
 
     /*
     *  Простой расчет коммиссии. Если requestedCommissionRate = null если не передавали коррекцию. 
     */
-    CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action, BigDecimal premium);
+    CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Long productId, CommissionAction action, BigDecimal premium);
 }

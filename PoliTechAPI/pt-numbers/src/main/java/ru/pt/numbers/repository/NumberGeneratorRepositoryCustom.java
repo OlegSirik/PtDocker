@@ -13,5 +13,7 @@ public interface NumberGeneratorRepositoryCustom {
      * @param id  generator id
      * @return new current_value, or null if no row was updated
      */
-    Integer incrementAndGetCurrentValue(Long tid, Integer id);
+//    Long incrementAndGetCurrentValue(Long tid, String code);
+    Long incrementAndGetCurrentValue(Long tid, Long id);
+
 }

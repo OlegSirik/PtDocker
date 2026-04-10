@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 
+import lombok.Data;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PolicyDTO {
@@ -28,6 +30,9 @@ public class PolicyDTO {
 
     @JsonProperty("productCode")
     private String productCode;
+
+    @JsonProperty("productName")
+    private String productName;
 
     @JsonProperty("waitingPeriod")
     private String waitingPeriod;
@@ -60,7 +65,7 @@ public class PolicyDTO {
     private String policyNumber;
 
     @JsonProperty("productVersion")
-    private Integer productVersion;
+    private Long productVersion;
 
     @JsonProperty("id")
     private String id;
@@ -99,7 +104,7 @@ public class PolicyDTO {
         this.issueDate = issueDate;
         this.installmentType = installmentType;
         this.insuredObjects = insuredObjects;
-        this.insCompanyId = insCompanyId;
+        //this.insCompanyId = insCompanyId;
     }
 
     // Getters and Setters
@@ -120,13 +125,13 @@ public class PolicyDTO {
     }
 
     public Long getInsCompanyId() {
-        return insCompanyId;
+            return insCompanyId;
     }
 
     public void setInsCompanyId(Long insCompanyId) {
         this.insCompanyId = insCompanyId;
     }
-
+    
     public String getWaitingPeriod() {
         return waitingPeriod;
     }
@@ -184,6 +189,14 @@ public class PolicyDTO {
         this.insuredObjects = insuredObjects;
     }
 
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     @JsonIgnore
     public Map<String, Object> getAdditionalAttributes() {
         return additionalAttributes;
@@ -227,11 +240,11 @@ public class PolicyDTO {
         this.policyNumber = policyNumber;
     }
 
-    public Integer getProductVersion() {
+    public Long getProductVersion() {
         return productVersion;
     }
 
-    public void setProductVersion(Integer productVersion) {
+    public void setProductVersion(Long productVersion) {
         this.productVersion = productVersion;
     }
 

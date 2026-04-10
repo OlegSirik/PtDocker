@@ -15,28 +15,26 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
 
    @Query("SELECT al FROM AccountLoginEntity al " +
           "WHERE al.tenantEntity.code = :tenantCode " +
-          "AND al.clientEntity.clientId = :authClientId " +
+          "AND al.clientEntity.authClientId = :authClientId " +
           "AND al.userLogin = :userLogin " +
-          "AND al.loginEntity.isDeleted = false " +
           "ORDER BY al.isDefault DESC, al.id")
     List<AccountLoginEntity> findByTenantCodeAndAuthClientIdAndLogin(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("userLogin") String userLogin);
          
     @Query("SELECT al FROM AccountLoginEntity al " +
     "WHERE al.tenantEntity.code = :tenantCode " +
-    "AND al.clientEntity.clientId = :authClientId " +
+    "AND al.clientEntity.authClientId = :authClientId " +
     "AND al.accountEntity.id = :accountId " +
-    "AND al.loginEntity.isDeleted = false " +
     "ORDER BY al.isDefault DESC, al.id")
     List<AccountLoginEntity> findByTenantCodeAndAuthClientIdAndAccountId(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("accountId") Long accountId);
 
 
-    @Query("SELECT al FROM AccountLoginEntity al WHERE al.clientEntity.clientId = :client AND al.loginEntity.userLogin = :login ORDER BY al.id")
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.clientEntity.authClientId = :client AND al.loginEntity.userLogin = :login ORDER BY al.id")
     List<AccountLoginEntity> findByClientAndLogin(@Param("client") String client, @Param("login") String login);
 
     @Query("SELECT al FROM AccountLoginEntity al WHERE al.userLogin = :userLogin ORDER BY al.id")
     List<AccountLoginEntity> findByUserLogin(@Param("userLogin") String userLogin);
 
-    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.clientEntity.clientId = :authClientId AND al.userLogin = :userLogin ORDER BY al.id")
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.clientEntity.authClientId = :authClientId AND al.userLogin = :userLogin ORDER BY al.id")
     List<AccountLoginEntity> findByTenantCodeAndClientIdAndUserLogin(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("userLogin") String userLogin);
 
     @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND  al.userLogin = :userLogin ORDER BY al.id")
@@ -46,28 +44,20 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
     Optional<AccountLoginEntity> findByUserLoginAndAccountId(@Param("userLogin") String userLogin,
                                                               @Param("accountId") Long accountId);
 
-    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.clientEntity.clientId = :authClientId AND al.userLogin = :userLogin AND al.accountEntity.id = :accountId")
+    @Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.clientEntity.authClientId = :authClientId AND al.userLogin = :userLogin AND al.accountEntity.id = :accountId")
     Optional<AccountLoginEntity> findByAll4Fields(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("userLogin") String userLogin, @Param("accountId") Long accountId);
-    /**
-     * Проверка существования записи для пользователя и клиента
-     */
-    //@Query("SELECT COUNT(al) > 0 FROM AccountLoginEntity al WHERE al.userLogin = :userLogin AND al.clientEntity.id = :clientId")
-    //boolean existsByUserLoginAndClientId(@Param("userLogin") String userLogin, @Param("clientId") Long clientId);
-
-    //@Query("SELECT al FROM AccountLoginEntity al WHERE al.tenantEntity.code = :tenantCode AND al.userRole = :userRole")
-    //List<AccountLoginEntity> findByTenantAndUserRole(@Param("tenantCode") String tenantCode, @Param("userRole") String userRole);
 
     @Query(value = "SELECT " +
             "al.id AS id, " +
             "al.tid AS tid, " +
-            "al.client_id AS clientId, " +
+            "al.auth_client_id AS authClientId, " +
             "al.account_id AS accountId, " +
             "al.user_login AS userLogin, " +
             "aa.node_type AS userRole, " +
             "lg.full_name AS fullName, " +
             "lg.position AS position " +
             "FROM acc_account_logins al " +
-            "JOIN acc_logins lg ON al.tid = lg.tid AND al.user_login = lg.user_login and lg.is_deleted = false " +
+            "JOIN acc_logins lg ON al.tid = lg.tid AND al.user_login = lg.user_login " +
             "JOIN acc_accounts aa ON al.account_id = aa.id " +
             "WHERE al.tid = (SELECT t.id FROM acc_tenants t WHERE t.code = :tenantCode) " +
             "AND aa.node_type = :userRole",
@@ -81,20 +71,21 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
             "JOIN FETCH al.clientEntity c " +
             "WHERE al.tenantEntity.code = :tenantCode " +
             "AND al.accountEntity.nodeType = :userRole " +
-            "AND lg.isDeleted = false")
+            "ORDER BY al.isDefault DESC, al.id")
+            
     List<AccountLoginEntity> findByTenantAndUserRole(@Param("tenantCode") String tenantCode, @Param("userRole") AccountNodeType userRole);
 
     @Query(value = "SELECT " +
             "al.id AS id, " +
             "al.tid AS tid, " +
-            "al.client_id AS clientId, " +
+            "al.auth_client_id AS authClientId, " +
             "al.account_id AS accountId, " +
             "al.user_login AS userLogin, " +
             "al.user_role AS userRole, " +
             "lg.full_name AS fullName, " +
             "lg.position AS position " +
             "FROM acc_account_logins al " +
-            "JOIN acc_logins lg ON al.tid = lg.tid AND al.user_login = lg.user_login and lg.is_deleted = false " +
+            "JOIN acc_logins lg ON al.tid = lg.tid AND al.user_login = lg.user_login " +
             "WHERE al.tid = (SELECT t.id FROM acc_tenants t WHERE t.code = :tenantCode) " +
             "AND al.id = :id",
            nativeQuery = true)
@@ -105,11 +96,11 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
      */
     @Query("SELECT al FROM AccountLoginEntity al " +
            "WHERE al.userLogin = :userLogin " +
-           "AND al.clientEntity.clientId = :clientId " +
+           "AND al.clientEntity.authClientId = :authClientId " +
            "AND al.tenantEntity.code = :tenantCode " +
-           "AND al.loginEntity.isDeleted = false")
-    Optional<AccountLoginEntity> findByUserLoginAndClientIdWithValidation(@Param("userLogin") String userLogin,
-                                                                           @Param("clientId") String clientId,
+           "AND al.loginEntity.recordStatus = 'ACTIVE'")
+    Optional<AccountLoginEntity> findByUserLoginAndAuthClientIdWithValidation(@Param("userLogin") String userLogin,
+                                                                           @Param("authClientId") String authClientId,
                                                                           @Param("tenantCode") String tenantCode);
 
     /**
@@ -125,7 +116,7 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
     @Query("SELECT al FROM AccountLoginEntity al " +
            "WHERE al.userLogin = :userLogin " +
            "AND al.tenantEntity.code = :tenantCode " +
-           "AND al.loginEntity.isDeleted = false")
+           "AND al.loginEntity.recordStatus = 'ACTIVE'")
     Optional<AccountLoginEntity> findByUserLoginAndTenantCode(@Param("userLogin") String userLogin,
                                                                @Param("tenantCode") String tenantCode);
 
@@ -146,6 +137,6 @@ public interface AccountLoginRepository extends JpaRepository<AccountLoginEntity
            "JOIN FETCH al.clientEntity c " +
            "JOIN FETCH al.accountEntity aa " +
            "WHERE aa.id = :accountId " +
-           "AND (l IS NULL OR l.isDeleted = false)")
+           "AND (l IS NULL OR l.recordStatus = 'ACTIVE')")
     List<AccountLoginEntity> findByAccountEntityId(@Param("accountId") Long accountId);
 }

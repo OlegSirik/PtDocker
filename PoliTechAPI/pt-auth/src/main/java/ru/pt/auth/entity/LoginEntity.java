@@ -7,12 +7,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "acc_logins",
-        uniqueConstraints = @UniqueConstraint(name = "acc_logins_uk", columnNames = {"user_login", "tid"}))
+@Table(name = "acc_logins")
 public class LoginEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_seq")
+    @SequenceGenerator(name = "acc_seq", sequenceName = "acc_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "tid", nullable = false)
@@ -30,8 +29,8 @@ public class LoginEntity {
     @Column(name = "position")
     private String position;
 
-    @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false;
+    @Column(name = "record_status", nullable = false)
+    private String recordStatus = "ACTIVE";
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -93,12 +92,12 @@ public class LoginEntity {
         this.position = position;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public LocalDateTime getCreatedAt() {

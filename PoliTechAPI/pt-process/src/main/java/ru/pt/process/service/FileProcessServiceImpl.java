@@ -85,7 +85,13 @@ public class FileProcessServiceImpl implements FileProcessService {
                     return new NotFoundException(errorModel);
                 });
 
-        var productVersion = productService.getProductByCodeAndVersionNo(policyIndex.getProductCode(), policyIndex.getProductVersionNo());
+        Long policyTid = policyIndex.getTid();
+        if (policyTid == null) {
+            throw new NotFoundException("Policy index has no tenant");
+        }
+        Long pvNo = policyIndex.getProductVersionNo();
+        var productVersion = productService.getProductByCodeAndVersionNo(
+                policyTid, policyIndex.getProductCode(), pvNo != null ? pvNo.longValue() : null);
         logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getProductVersionNo());
 
         List<PvVarDefinition> varDefinitions = 
@@ -109,7 +115,7 @@ public class FileProcessServiceImpl implements FileProcessService {
         Integer fileId = null;
 
         for (PvPackage pvPackage : productVersion.getPackages()) { 
-            if (pvPackage.getName().equals(packageNo)) {
+            if (pvPackage.getCode().toString().equals(packageNo)) {
                 for (PvFile pvFile : pvPackage.getFiles()) {
                     if (pvFile.getFileCode().equals(printFormType)) {
                         fileId = pvFile.getFileId();

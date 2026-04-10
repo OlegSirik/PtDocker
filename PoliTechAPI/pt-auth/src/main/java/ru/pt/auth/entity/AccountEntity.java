@@ -16,8 +16,6 @@ import java.util.Set;
 @Table(name = "acc_accounts")
 public class AccountEntity {
     @Id
-    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    //@SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

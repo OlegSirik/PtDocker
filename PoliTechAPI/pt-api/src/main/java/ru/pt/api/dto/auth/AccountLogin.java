@@ -65,7 +65,6 @@ public class AccountLogin {
     public void setIsDefault(Boolean isDefault) {
         this.isDefault = isDefault;
     }
-
     public String getUserRole() {
         return userRole;
     }
@@ -88,5 +87,5 @@ public class AccountLogin {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
+    }   
 }

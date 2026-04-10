@@ -45,11 +45,11 @@ public class ApiKeyIdentityStrategy implements IdentitySourceStrategy {
                 .orElseThrow(() -> new BadCredentialsException("Invalid API key"));
         var accountEntity = accountRepository.findById(tokenEntity.getAccountId())
                 .orElseThrow(() -> new BadCredentialsException("Account not found for API key"));
-        var clientAuthId = accountEntity.getClient().getClientId();
+        var clientAuthId = accountEntity.getClient().getAuthClientId();
 
         requestContext.setTenant(tenantCode);
         requestContext.setClient(clientAuthId);
-        requestContext.setAccount(String.valueOf(tokenEntity.getAccountId()));
+        requestContext.setAccount(tokenEntity.getAccountId());
         // No login for API key - account is resolved directly
     }
 }

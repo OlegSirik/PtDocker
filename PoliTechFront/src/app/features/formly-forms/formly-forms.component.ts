@@ -13,9 +13,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatOption } from "@angular/material/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, provideNativeDateAdapter } from '@angular/material/core';
 import type { Field } from './formly-forms.service';
 import { FormlyFormsService} from './formly-forms.service';
-import { Product, ProductService } from '../../shared/services/product.service';
+import { Product, ProductService, UiProductData } from '../../shared/services/product.service';
 import { BoxPolicy, BoxPolicyHolder, InsuredObject, Identifier, Address, Organization, Device, BoxIdentifier, BoxAddress, BoxOrganization, BoxDevice, Policy } from '../../shared/models/policy.models';
 import { BoxTravelSegment } from '../../shared/models/box/travel-segment-box.model';
 import { PolicyService } from '../../shared/services/policy.service';
@@ -25,6 +27,42 @@ import { PolicyService } from '../../shared/services/policy.service';
 interface LoV {
   value: string;
   viewValue: string;
+}
+
+/** ЧЧ:ММ (24 ч) для {@link HTMLInputElement.type} {@code time} (шаг по минутам). */
+function normalizeDepartureTimeToHHmm(raw: string | undefined): string {
+  if (!raw?.trim()) {
+    return '';
+  }
+  const s = raw.trim();
+  const m24 = /^(\d{1,2}):(\d{2})(?::\d{1,2})?(?:\.\d+)?$/.exec(s);
+  if (m24) {
+    const h = Number(m24[1]);
+    const min = Number(m24[2]);
+    if (Number.isFinite(h) && Number.isFinite(min) && h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+      return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    }
+  }
+  const m12 = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(s);
+  if (m12) {
+    let h = Number(m12[1]);
+    const min = Number(m12[2]);
+    const ap = m12[3].toUpperCase();
+    if (!Number.isFinite(h) || !Number.isFinite(min) || min < 0 || min > 59) {
+      return '';
+    }
+    if (ap === 'PM' && h !== 12) {
+      h += 12;
+    }
+    if (ap === 'AM' && h === 12) {
+      h = 0;
+    }
+    if (h < 0 || h > 23) {
+      return '';
+    }
+    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
+  return '';
 }
 
 @Component({
@@ -41,38 +79,100 @@ interface LoV {
     MatSelectModule,
     MatDividerModule,
     MatTableModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
   ]
 })
 export class FormlyFormsComponent implements OnInit {
 
+  lists: { [key: string]: { [key: string]: string } } = {};
 
-  // todo получать полный список с сервера через АПИ
-  io_device_typeCode : LoV[] = [
-    {value: 'SMARTPHONE', viewValue: 'Smartphone'},
-    {value: 'TABLET', viewValue: 'Tablet'},
-    {value: 'LAPTOP', viewValue: 'Laptop'},
-    {value: 'DESKTOP', viewValue: 'Desktop'},
-    {value: 'OTHER', viewValue: 'Other'}
-  ];
+  /**
+   * Значение для mat-datepicker (Date); в {@link BoxPerson.birthDate} хранится строка yyyy-MM-dd.
+   */
+  policyHolderBirthDateValue: Date | null = null;
 
-  ph_addr_typeCode : LoV[] = [
-    {value: 'REGISTRATION', viewValue: 'Registration'},
-    {value: 'RESIDENCE', viewValue: 'Residence'},
-    {value: 'OTHER', viewValue: 'Other'}
-  ];
+  /** mat-datepicker для {@link BoxIdentifier.dateIssue} / validUntil (в модели — строка yyyy-MM-dd). */
+  policyHolderDocDateIssueValue: Date | null = null;
+  policyHolderDocValidUntilValue: Date | null = null;
+
+  /** mat-datepicker для {@link BoxPolicy.startDate} / {@link BoxPolicy.endDate} (строка yyyy-MM-dd). */
+  policyStartDateValue: Date | null = null;
+  policyEndDateValue: Date | null = null;
+
+  /** Начальная позиция календаря, если дата рождения ещё не задана. */
+  readonly birthDatePickerFallbackStart = new Date(1990, 0, 1);
+
+  /** Календарь периода договора без сохранённой даты — текущий месяц. */
+  readonly policyPeriodDatePickerFallbackStart = new Date();
+
+  /** Открытие календаря документа без сохранённой даты — текущий месяц. */
+  readonly docDatePickerFallbackStart = new Date();
+
+  /**
+   * Пары для mat-select: ключ объекта lists — значение в полис, значение — подпись в UI.
+   */
+  listEntries(listKey: string): { value: string; label: string }[] {
+    const m = this.lists[listKey];
+    if (m && Object.keys(m).length > 0) {
+      return Object.entries(m).map(([value, label]) => ({ value, label }));
+    }
+    if (listKey === 'waitingPeriod' || listKey === 'policyTerm') {
+      const fromRule = this.periodRuleListEntries(this.product[listKey]);
+      if (fromRule.length) {
+        return fromRule;
+      }
+    }
+    const fallbacks: Record<string, { value: string; label: string }[]> = {
+      ph_gender: [
+        { value: 'M', label: 'Мужской' },
+        { value: 'F', label: 'Женский' },
+      ],
+      ph_isPublicOfficial: [
+        { value: 'true', label: 'Да' },
+        { value: 'false', label: 'Нет' },
+      ],
+    };
+    return fallbacks[listKey] ?? [];
+  }
+
+  /** Варианты для периода, если в {@link lists} ещё нет (тип LIST в продукте). */
+  private periodRuleListEntries(rule: { validatorType?: string; validatorValue?: string } | undefined): {
+    value: string;
+    label: string;
+  }[] {
+    if (!rule || String(rule.validatorType ?? '').toUpperCase() !== 'LIST' || !rule.validatorValue?.trim()) {
+      return [];
+    }
+    return rule.validatorValue
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((value) => ({ value, label: value }));
+  }
+
+  /**
+   * Если для периода в списке ровно один вариант, а в полисе значение пустое — подставить его
+   * (селект «Период охлаждения» / «Период страхования» виден только без даты начала/окончания).
+   */
+  private applySingleOptionForPeriodLists(): void {
+    if (!this.policy.startDate) {
+      const wp = this.listEntries('waitingPeriod');
+      if (wp.length === 1 && !(this.policy.waitingPeriod || '').trim()) {
+        this.policy.waitingPeriod = wp[0].value;
+      }
+    }
+    if (!this.policy.endDate) {
+      const pt = this.listEntries('policyTerm');
+      if (pt.length === 1 && !(this.policy.policyTerm || '').trim()) {
+        this.policy.policyTerm = pt[0].value;
+      }
+    }
+  }
 
   getLov(): LoV[] {
-    return this.ph_addr_typeCode;
-    const ret: LoV[] = [
-      {value: 'SMARTPHONE', viewValue: 'Smart- phone'},
-      {value: 'TABLET', viewValue: 'Tabletka'}];
-    return ret;
+    return this.getAdressTypes();
   }
-
-  getSelectValues(): string[] {
-      return ['Option 1', 'Option 2', 'Option 3'];
-  }
-
 
   onCancel() {
     throw new Error('Method not implemented.');
@@ -152,25 +252,20 @@ export class FormlyFormsComponent implements OnInit {
     this.loadProduct(parseInt(productId || '0'), parseInt(versionNo || '1'));
 
     //this.policy = this.policyService. .getMockPolicy();
-    this.productService.getTestRequestSave(parseInt(productId || '0'), parseInt(versionNo || '1')).subscribe({
-      next: (json: string) => {
+    this.productService.getUiProductData(parseInt(productId || '0')).subscribe({
+      next: (uiProductData: UiProductData) => {
         // Convert to string primitive if needed (handle both string and String wrapper)
-        const jsonString: string = typeof json === 'string' ? json : String(json);
-        
-        // Print JSON to console
-        //console.log('Received JSON:', jsonString);
-        //console.log('JSON length:', jsonString.length);
+        const jsonString: string = typeof uiProductData.jsonExample === 'string' ? uiProductData.jsonExample : String(uiProductData.jsonExample);
         
         try {
           // Parse JSON
           const parsedData = JSON.parse(jsonString);
-          console.log('Parsed JSON object:', parsedData);
-          
-          // Use BoxPolicy constructor to properly instantiate nested objects
           this.policy = new BoxPolicy(parsedData);
-          console.log('Converted to BoxPolicy:', this.policy);
+          this.syncPolicyHolderDatePickersFromModel();
           this.updateCoverageTable();
           this.updateTravelSegmentsTable();
+
+          this.lists = uiProductData.lists ?? {};
         } catch (parseError) {
           console.error('Error parsing JSON:', parseError);
           console.error('Invalid JSON string:', jsonString);
@@ -190,9 +285,12 @@ export class FormlyFormsComponent implements OnInit {
     if (id) {
       this.productService.getProduct(id, versionNo || 1).subscribe({
         next: (product) => {
-          this.product = product;
-          this.getAdressTypes();
+          this.product = {
+            ...product,
+            vars: (product.vars ?? []).filter((v) => !v.isDeleted),
+          };
           this.updateTables();
+          this.applySingleOptionForPeriodLists();
         },
         error: (error) => {
           console.error('Error loading product:', error);
@@ -209,32 +307,9 @@ export class FormlyFormsComponent implements OnInit {
     this.updateTravelSegmentsTable();
   }
 
-  /*
-  private applyStylesToField(wrapper: HTMLElement, config: any): void {
-    const matFormField = wrapper.querySelector('mat-form-field');
-    const input = wrapper.querySelector('input, textarea');
-    const label = wrapper.querySelector('mat-label');
-
-    // Применяем стили к input/textarea
-    if (input) {
-      Object.keys(config.style).forEach(styleKey => {
-        this.renderer.setStyle(input, styleKey, config.style[styleKey]);
-      });
-    }
-
-    // Меняем текст лейбла
-    if (label && config.label) {
-      this.renderer.setProperty(label, 'textContent', config.label);
-    }
-  }
-  */
   onSubmit() {
-    console.log("onSubmit-----------------------------------------------------------------------------");
-    console.log(this.policy);
     
     const plc = this.policyService.conversBox2Policy(this.policy);
-
-    console.log(plc);
 
     this.dialog.open(JsonViewDialog, {
       width: '800px',
@@ -256,6 +331,7 @@ export class FormlyFormsComponent implements OnInit {
         console.log('Fast Calc response:', response);
         // Convert Policy back to BoxPolicy
         this.policy = this.policyService.conversPolicy2Box(response);
+        this.syncPolicyHolderDatePickersFromModel();
         this.updateCoverageTable();
         this.snackBar.open('Расчет выполнен успешно', 'Закрыть', { duration: 3000 });
       },
@@ -278,6 +354,7 @@ export class FormlyFormsComponent implements OnInit {
         let boxPolicy = this.policyService.conversPolicy2Box(response);
         console.log('BoxPolicy:', boxPolicy);
         this.policy = boxPolicy;
+        this.syncPolicyHolderDatePickersFromModel();
         this.updateCoverageTable();
         this.snackBar.open('Политика сохранена успешно', 'Закрыть', { duration: 3000 });
       },
@@ -288,6 +365,103 @@ export class FormlyFormsComponent implements OnInit {
     });
   }
 
+  syncPolicyHolderDatePickersFromModel(): void {
+    this.policyHolderBirthDateValue = this.parseIsoDateStringToLocalDate(
+      this.policy?.policyHolder?.person?.birthDate,
+    );
+    const id = this.policy?.policyHolder?.identifiers;
+    this.policyHolderDocDateIssueValue = this.parseIsoDateStringToLocalDate(id?.dateIssue);
+    this.policyHolderDocValidUntilValue = this.parseIsoDateStringToLocalDate(id?.validUntil);
+    this.policyStartDateValue = this.parseIsoDateStringToLocalDate(this.policy?.startDate);
+    this.policyEndDateValue = this.parseIsoDateStringToLocalDate(this.policy?.endDate);
+  }
+
+  onPolicyHolderBirthDateChange(value: Date | null): void {
+    const p = this.policy?.policyHolder?.person;
+    if (!p) {
+      return;
+    }
+    if (!value) {
+      p.birthDate = '';
+      return;
+    }
+    p.birthDate = this.formatLocalDateToIsoDate(value);
+  }
+
+  onPolicyStartDateChange(value: Date | null): void {
+    if (!value) {
+      this.policy.startDate = '';
+      return;
+    }
+    this.policy.startDate = this.formatLocalDateToIsoDate(value);
+  }
+
+  onPolicyEndDateChange(value: Date | null): void {
+    if (!value) {
+      this.policy.endDate = '';
+      return;
+    }
+    this.policy.endDate = this.formatLocalDateToIsoDate(value);
+  }
+
+  onPolicyHolderDocDateIssueChange(value: Date | null): void {
+    const id = this.ensureIdentifier();
+    if (!value) {
+      id.dateIssue = '';
+      return;
+    }
+    id.dateIssue = this.formatLocalDateToIsoDate(value);
+  }
+
+  onPolicyHolderDocValidUntilChange(value: Date | null): void {
+    const id = this.ensureIdentifier();
+    if (!value) {
+      id.validUntil = '';
+      return;
+    }
+    id.validUntil = this.formatLocalDateToIsoDate(value);
+  }
+
+  private parseIsoDateStringToLocalDate(raw: string | undefined): Date | null {
+    if (!raw?.trim()) {
+      return null;
+    }
+    const s = raw.trim();
+    const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if (iso) {
+      const y = Number(iso[1]);
+      const m = Number(iso[2]) - 1;
+      const d = Number(iso[3]);
+      const dt = new Date(y, m, d);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+    const dt = new Date(s);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  private formatLocalDateToIsoDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  getShowStartDate(): boolean {
+    // если список для периода ожидания пустой то вводим дату
+    const wp = this.listEntries('waitingPeriod');
+    if (wp && wp.length === 1) {
+      return false;
+    }
+    return true;
+  }
+
+  getShowEndDate(): boolean {
+    const pt = this.listEntries('policyTerm');
+    if (pt && pt.length === 1) {
+      return false;
+    }
+    return true;
+  }
 
   getFieldVisible(fieldName: string): boolean {
     const found = this.product.vars.some(v => v.varCode === fieldName);
@@ -295,17 +469,8 @@ export class FormlyFormsComponent implements OnInit {
   }
 
   getFieldLabel(fieldName: string): string {
-    return this.product.vars.find(v => v.varCode === fieldName)?.varName || fieldName;
-  }
-
-  getDeviceTypeOptions(): {value: string, label: string}[] {
-    return [
-      {value: 'SMARTPHONE', label: 'Smartphone'},
-      {value: 'TABLET', label: 'Tablet'},
-      {value: 'LAPTOP', label: 'Laptop'},
-      {value: 'DESKTOP', label: 'Desktop'},
-      {value: 'OTHER', label: 'Other'}
-    ];
+    var v = this.product.vars.find(v => v.varCode === fieldName);
+    return v?.name || v?.varName || fieldName;
   }
 
   getShowOrganization(): boolean {
@@ -317,13 +482,13 @@ export class FormlyFormsComponent implements OnInit {
   }
 
   getShowIoDevice(): boolean {
-    return this.product.vars.some(v => v.varCdm && v.varCdm.startsWith("insuredObject.device"));
+    return this.product.vars.some(v => v.varCdm && v.varCdm.startsWith("insuredObjects.device"));
   }
 
   getShowIoTravelSegments(): boolean {
     return this.product.vars.some(v => v.varCdm && (
-      v.varCdm.startsWith("insuredObject.travelSegments") ||
-      v.varCdm.startsWith("insuredObject.travelSegment")
+      v.varCdm.startsWith("insuredObjects.travelSegments") ||
+      v.varCdm.startsWith("insuredObjects.travelSegment")
     ));
   }
 
@@ -333,16 +498,18 @@ export class FormlyFormsComponent implements OnInit {
   }
 
   getAdressTypes(): LoV[] {
-    const validator = this.product?.saveValidator?.find(
-      (v: any) => v.keyLeft === "ph_addr_typeCode" && v.ruleType === "IN_LIST"
-    );
-    let values: string[] = [];
-    if (validator && typeof validator.valueRight === 'string') {
-      values = validator.valueRight.split(',').map((s: string) => s.trim());
-      this.ph_addr_typeCode = values.map(value => ({value: value, viewValue: value}));
+    const fromLists = this.listEntries('ph_addr_typeCode');
+    if (fromLists.length) {
+      return fromLists.map(({ value, label }) => ({ value, viewValue: label }));
     }
-
-    return this.ph_addr_typeCode;
+    const validator = this.product?.saveValidator?.find(
+      (v: any) => v.keyLeft === 'ph_addr_typeCode' && v.ruleType === 'IN_LIST',
+    );
+    if (validator && typeof validator.valueRight === 'string') {
+      const values = validator.valueRight.split(',').map((s: string) => s.trim());
+      return values.map((value) => ({ value, viewValue: value }));
+    }
+    return [];
   }
 
   // Helper methods to ensure identifiers and addresses exist
@@ -434,44 +601,76 @@ export class FormlyFormsComponent implements OnInit {
 
 @Component({
   selector: 'app-travel-segment-dialog',
-  imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule],
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    FormsModule,
+  ],
+  providers: [provideNativeDateAdapter()],
   template: `
-    <h2 mat-dialog-title>{{ data.isNew ? 'Add Travel Segment' : 'Edit Travel Segment' }}</h2>
-    <div mat-dialog-content class="travel-segment-dialog">
-      <div class="row">
+    <h2 mat-dialog-title>{{ data.isNew ? 'Добавить перевозку' : 'Редактировать перевозку' }}</h2>
+    <div mat-dialog-content class="travel-segment-dialog" style="padding-top: 30px;">
+      <div class="row-full">
         <mat-form-field appearance="outline" class="field">
-          <mat-label>Ticket Nr</mat-label>
-          <input matInput [(ngModel)]="segment.ticketNr" name="ticketNr">
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Ticket Price</mat-label>
-          <input matInput [(ngModel)]="segment.ticketPrice" name="ticketPrice">
+          <mat-label>{{ getFieldLabel('io_ticketNr') }}</mat-label>
+          <input matInput [(ngModel)]="segment.ticketNr" name="ticketNr" />
         </mat-form-field>
       </div>
-      <div class="row">
+      <div class="row-full">
         <mat-form-field appearance="outline" class="field">
-          <mat-label>Departure Date</mat-label>
-          <input matInput [(ngModel)]="segment.departureDate" name="departureDate">
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Departure Time</mat-label>
-          <input matInput [(ngModel)]="segment.departureTime" name="departureTime">
+          <mat-label>{{ getFieldLabel('io_ticketPrice') }}</mat-label>
+          <input matInput [(ngModel)]="segment.ticketPrice" name="ticketPrice" />
         </mat-form-field>
       </div>
-      <div class="row">
+      <div class="row-2col">
         <mat-form-field appearance="outline" class="field">
-          <mat-label>Departure City</mat-label>
-          <input matInput [(ngModel)]="segment.departureCity" name="departureCity">
+          <mat-label>{{ getFieldLabel('io_departureDate') }}</mat-label>
+          <input
+            matInput
+            [matDatepicker]="departureDatePicker"
+            [(ngModel)]="departureDateValue"
+            (ngModelChange)="onDepartureDateChange($event)"
+            name="departureDate"
+          />
+          <mat-datepicker-toggle matSuffix [for]="departureDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker
+            #departureDatePicker
+            [restoreFocus]="false"
+            [startAt]="departureDateValue ?? departureDatePickerFallbackStart"
+          ></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline" class="field">
-          <mat-label>Arrival City</mat-label>
-          <input matInput [(ngModel)]="segment.arrivalCity" name="arrivalCity">
+          <mat-label>{{ getFieldLabel('io_departureTime') }}</mat-label>
+          <input
+            matInput
+            type="time"
+            step="60"
+            [(ngModel)]="segment.departureTime"
+            name="departureTime"
+          />
+        </mat-form-field>
+      </div>
+      <div class="row-full">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>{{ getFieldLabel('io_departureCity') }}</mat-label>
+          <input matInput [(ngModel)]="segment.departureCity" name="departureCity" />
+        </mat-form-field>
+      </div>
+      <div class="row-full">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>{{ getFieldLabel('io_arrivalCity') }}</mat-label>
+          <input matInput [(ngModel)]="segment.arrivalCity" name="arrivalCity" />
         </mat-form-field>
       </div>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="segment">Save</button>
+      <button mat-button mat-dialog-close>Отмена</button>
+      <button mat-raised-button color="primary" [mat-dialog-close]="segment">Сохранить</button>
     </div>
   `,
   styles: [`
@@ -481,10 +680,26 @@ export class FormlyFormsComponent implements OnInit {
       gap: 16px;
       min-width: 520px;
     }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    .row-full {
+      display: flex;
+      width: 100%;
+    }
+    .row-full > .field {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+    }
+    .row-2col {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
       gap: 16px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .row-2col > .field {
+      flex: 1 1 0;
+      min-width: 0;
     }
     .field {
       width: 100%;
@@ -494,11 +709,62 @@ export class FormlyFormsComponent implements OnInit {
 export class TravelSegmentDialog {
   segment: BoxTravelSegment;
 
+  /** Для mat-datepicker; в {@link BoxTravelSegment.departureDate} — строка yyyy-MM-dd. */
+  departureDateValue: Date | null = null;
+
+  readonly departureDatePickerFallbackStart = new Date();
+
   constructor(
     public dialogRef: MatDialogRef<TravelSegmentDialog>,
     @Inject(MAT_DIALOG_DATA) public data: { segment: BoxTravelSegment; isNew: boolean }
   ) {
     this.segment = data.segment ? new BoxTravelSegment(data.segment) : new BoxTravelSegment();
+    this.segment.departureTime = normalizeDepartureTimeToHHmm(this.segment.departureTime);
+    this.departureDateValue = this.parseIsoDateStringToLocalDate(this.segment.departureDate);
+  }
+
+  onDepartureDateChange(value: Date | null): void {
+    if (!value) {
+      this.segment.departureDate = '';
+      return;
+    }
+    this.segment.departureDate = this.formatLocalDateToIsoDate(value);
+  }
+
+  private parseIsoDateStringToLocalDate(raw: string | undefined): Date | null {
+    if (!raw?.trim()) {
+      return null;
+    }
+    const s = raw.trim();
+    const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if (iso) {
+      const y = Number(iso[1]);
+      const m = Number(iso[2]) - 1;
+      const d = Number(iso[3]);
+      const dt = new Date(y, m, d);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+    const dt = new Date(s);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  private formatLocalDateToIsoDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  getFieldLabel(fieldName: string): string {
+    const labels: Record<string, string> = {
+      io_ticketNr: 'Номер билета',
+      io_ticketPrice: 'Цена билета',
+      io_departureDate: 'Дата вылета',
+      io_departureTime: 'Время вылета',
+      io_departureCity: 'Город вылета',
+      io_arrivalCity: 'Город прилёта',
+    };
+    return labels[fieldName] ?? fieldName;
   }
 }
 

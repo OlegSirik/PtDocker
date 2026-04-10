@@ -8,7 +8,6 @@ public record ProductRole(
     Long roleProductId,
     String roleProductName,
     Long roleAccountId,
-    Boolean isDeleted,
     Boolean canRead,
     Boolean canQuote,
     Boolean canPolicy,

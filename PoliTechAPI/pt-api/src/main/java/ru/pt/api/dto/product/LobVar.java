@@ -1,6 +1,5 @@
 package ru.pt.api.dto.product;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +49,10 @@ public class LobVar {
     private boolean isSystem;
 
     @JsonProperty("isDeleted")
-    private boolean isDeleted;
+    private boolean isDeleted = false;
+
+    @JsonProperty("name")
+    private String name;
 
     // Constructors
     public LobVar() {
@@ -77,4 +79,25 @@ public class LobVar {
         if (varValue == null) varValue = "";
         return varValue;
     }
+
+    public boolean getIsSystem() {
+        return isSystem;
+    }
+    public void setIsSystem(boolean isSystem) {
+        this.isSystem = isSystem;
+    }
+
+    public boolean getIsDeleted() {
+        return this.isDeleted;
+    }
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }           
 }

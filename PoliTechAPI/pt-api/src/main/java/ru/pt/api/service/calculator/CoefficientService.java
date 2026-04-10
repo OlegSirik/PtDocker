@@ -17,7 +17,7 @@ public interface CoefficientService {
      * @param code код коэффициента
      * @return json представление таблицы коэффициентов
      */
-    List<CoefficientDataRow> getTable(Integer calculatorId, String code);
+    List<CoefficientDataRow> getTable(Long calculatorId, String code);
 
     /**
      * Заменить таблицу коэффициента
@@ -26,7 +26,7 @@ public interface CoefficientService {
      * @param tableJson новая таблица коэффициентов
      * @return сохраненная таблица
      */
-    List<CoefficientDataRow> replaceTable(Integer calculatorId, String code, List<CoefficientDataRow> tableJson);
+    List<CoefficientDataRow> replaceTable(Long calculatorId, String code, List<CoefficientDataRow> tableJson);
 
     /**
      * Получить значение коэффициента по заданным параметрам
@@ -36,7 +36,7 @@ public interface CoefficientService {
      * @param columns описание колонок коэффициента
      * @return значение коэффициента в виде строки
      */
-    String getCoefficientValue(Integer calculatorId,
+    String getCoefficientValue(Long calculatorId,
                                String coefficientCode,
                                VariableContext values,
                                List<CoefficientColumn> columns);
@@ -48,7 +48,7 @@ public interface CoefficientService {
      * @param coefficientCode код коэффициента
      * @return количество скопированных строк
      */
-    int copyCoefficient(Integer calculatorIdFrom, Integer calculatorIdTo, String coefficientCode);
+    int copyCoefficient(Long calculatorIdFrom, Long calculatorIdTo, String coefficientCode);
 
     /**
      * Получить SQL запрос для коэффициента с именами переменных вместо значений
@@ -57,7 +57,7 @@ public interface CoefficientService {
      * @param columns описание колонок коэффициента
      * @return SQL запрос в виде строки с именами переменных, или null если параметры невалидны
      */
-    String getSQL(Integer calculatorId,
+    String getSQL(Long calculatorId,
                   String coefficientCode,
                   List<CoefficientColumn> columns);
 

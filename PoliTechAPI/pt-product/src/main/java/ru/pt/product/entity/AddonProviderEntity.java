@@ -22,8 +22,8 @@ public class AddonProviderEntity {
     @Column(name = "name", nullable = false, length = 300)
     private String name;
 
-    @Column(name = "status", nullable = false, length = 30)
-    private String status;
+    @Column(name = "record_status", nullable = false, length = 30)
+    private String recordStatus;
 
     @Column(name = "execution_mode", nullable = false, length = 30)
     private String executionMode;

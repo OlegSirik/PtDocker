@@ -322,74 +322,97 @@
       </div>
     </mat-tab>
 
-    <!-- Policy Tab -->
-    <mat-tab label="Состав договора">
+    <mat-tab label="Схема договора">
       <div class="tab-content">
         <mat-card class="datatable-card">
+          <mat-card-header>
+            <mat-card-title>Схема договора</mat-card-title>
+            <mat-card-subtitle>
+              Иерархия переменных продукта (product.vars). Редактирование и скрытие узлов — только здесь; новые узлы не создаются.
+              @if (productTreeMutationsLocked) {
+                <span class="pv-vars-tree-readonly-hint"> Версия в проде — изменения дерева недоступны.</span>
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
           <mat-card-content>
-            <div class="table-header">
-              <h3>Атрибутивный состав договора</h3>
-              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-                <mat-form-field appearance="outline" style="width: 200px;">
-                  <mat-label>Filter</mat-label>
-                  <mat-select [(ngModel)]="policyFilter" (ngModelChange)="updatePolicyTable()">
-                    <mat-option value="policy">Договор</mat-option>
-                    <mat-option value="policyHolder">Страхователь</mat-option>
-                    <mat-option value="insuredObject">Объект страхования</mat-option>
-                    <mat-option value="coverage">Покрытия</mat-option>
-                    <mat-option value="strings">Шаблоны</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <button mat-raised-button color="accent" class="action-button" (click)="reloadPolicyVars()">
-                  <mat-icon>refresh</mat-icon>
+            <div class="pv-vars-tree-toolbar">
+              <mat-slide-toggle
+                [(ngModel)]="showDeletedProductTree"
+                (ngModelChange)="onShowDeletedProductTreeChange()"
+              >
+                Показывать скрытые
+              </mat-slide-toggle>
+              <span class="pv-vars-tree-expand-actions">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="productTreeTable?.expandAll()"
+                >
+                  Развернуть всё
                 </button>
-              </div>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="productTreeTable?.collapseAll()"
+                >
+                  Свернуть всё
+                </button>
+              </span>
             </div>
-
-            <table mat-table [dataSource]="paginatedPolicyVars" class="product-table">
-              <ng-container matColumnDef="category">
-                <th mat-header-cell *matHeaderCellDef>Объект</th>
-                <td mat-cell *matCellDef="let element">{{element.category}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="code">
-                <th mat-header-cell *matHeaderCellDef>Код атрибута</th>
-                <td mat-cell *matCellDef="let element">{{element.code}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Название</th>
-                <td mat-cell *matCellDef="let element">{{element.name}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="field">
-                <th mat-header-cell *matHeaderCellDef>Field</th>
-                <td mat-cell *matCellDef="let element">{{element.field}}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="showPolicyVarDetails(element); $event.stopPropagation()">
-                      <mat-icon>visibility</mat-icon>
+            <app-tree-table
+              #productTreeTable
+              [rows]="productTreeTableData"
+              [displayedColumns]="productTreeDisplayedColumns"
+              [showDeleted]="showDeletedProductTree"
+              [enableVarEditDialog]="false"
+              [disableBuiltInSoftDelete]="productTreeMutationsLocked"
+              (rowSoftDeleted)="onProductTreeSoftDeleted($event)"
+            >
+              <ng-template #nameCell let-item>
+                <span class="schema-tree-name-cell">
+                  @if (item.isTarifFactor) {
+                    <mat-icon
+                      class="pv-tree-tarif-icon"
+                      matTooltip="Тарифный фактор"
+                    >calculate</mat-icon>
+                  }
+                  <span class="schema-tree-name-text">{{ item.varName }}</span>
+                </span>
+              </ng-template>
+              <ng-template #actionsCell let-item>
+                <span class="tree-table-actions">
+                  @if (item.isDeleted) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      [disabled]="productTreeMutationsLocked"
+                      matTooltip="Вернуть в дерево"
+                      [attr.aria-label]="'Вернуть: ' + item.varName"
+                      (click)="onProductTreeRestoreNode(item); $event.stopPropagation()"
+                    >
+                      <mat-icon>add</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" (click)="deletePolicyVar(element, i); $event.stopPropagation()">
-                      <mat-icon>delete</mat-icon>
+                  } @else {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      [disabled]="productTreeMutationsLocked || isObjectVarTypeRow(item)"
+                      matTooltip="Редактировать переменную"
+                      [attr.aria-label]="'Изменить: ' + item.varName"
+                      (click)="openProductPvVarEditDialog(item); $event.stopPropagation()"
+                    >
+                      <mat-icon>edit</mat-icon>
                     </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="policyVarsDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;" (click)="showPolicyVarDetails(row)" class="clickable-row"></tr>
-            </table>
+                  }
+                </span>
+              </ng-template>
+            </app-tree-table>
           </mat-card-content>
         </mat-card>
       </div>
     </mat-tab>
 
-    <!-- Packages Tab -->
     <mat-tab label="Пакеты">
       <div class="tab-content">
         <!-- Packages Card -->
@@ -431,16 +454,16 @@
 
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element; let i = index">
+                <td mat-cell *matCellDef="let element">
                   <div class="action-buttons">
                     <button mat-button color="accent" class="action-button1" (click)="openCalculator(element); $event.stopPropagation()">
                       <mat-icon>calculator</mat-icon>
                       Калькулятор
                     </button>
-                    <button mat-button color="primary" class="action-button" (click)="editPackage(element, i); $event.stopPropagation()">
+                    <button mat-button color="primary" class="action-button" (click)="editPackage(element, getPackageIndex(element)); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" (click)="deletePackage(element, i); $event.stopPropagation()">
+                    <button mat-button color="warn" class="action-button" (click)="deletePackage(element, getPackageIndex(element)); $event.stopPropagation()">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -628,6 +651,65 @@
         }
       </div>
     </mat-tab>
+
+    <!-- Шаблоны для печати (vars с varCdm strings.*) -->
+    <mat-tab label="Шаблоны для печати">
+      <div class="tab-content">
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Шаблоны для печати</h3>
+              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
+                <button mat-raised-button color="accent" class="action-button" (click)="reloadPolicyVars()">
+                  <mat-icon>refresh</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <table mat-table [dataSource]="paginatedPolicyVars" class="product-table">
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Объект</th>
+                <td mat-cell *matCellDef="let element">{{element.category}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef>Код атрибута</th>
+                <td mat-cell *matCellDef="let element">{{element.code}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Название</th>
+                <td mat-cell *matCellDef="let element">{{element.name}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="field">
+                <th mat-header-cell *matHeaderCellDef>Field</th>
+                <td mat-cell *matCellDef="let element">{{element.field}}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>...</th>
+                <td mat-cell *matCellDef="let element; let i = index">
+                  <div class="action-buttons">
+                    <button mat-button color="primary" class="action-button" (click)="showPolicyVarDetails(element); $event.stopPropagation()">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-button color="warn" class="action-button" (click)="deletePolicyVar(element, i); $event.stopPropagation()">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="policyVarsDisplayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: policyVarsDisplayedColumns;" (click)="showPolicyVarDetails(row)" class="clickable-row"></tr>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Packages Tab -->
 
     <!-- Test Tab -->
     <mat-tab label="Test">

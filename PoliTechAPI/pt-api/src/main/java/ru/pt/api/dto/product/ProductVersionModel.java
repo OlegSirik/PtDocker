@@ -11,7 +11,7 @@ import java.util.List;
 public class ProductVersionModel {
 
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @JsonProperty("lob")
     private String lob;
@@ -27,7 +27,7 @@ public class ProductVersionModel {
     private Long insCompanyId;
 
     @JsonProperty("versionNo")
-    private Integer versionNo;
+    private Long versionNo;
 
     @JsonProperty("versionStatus")
     private String versionStatus;
@@ -62,11 +62,11 @@ public class ProductVersionModel {
     @JsonProperty("rules")
     private PvProductRules rules;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -110,11 +110,11 @@ public class ProductVersionModel {
         this.packages = packages;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 

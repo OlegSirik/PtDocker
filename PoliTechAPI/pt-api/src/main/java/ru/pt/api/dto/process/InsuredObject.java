@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class InsuredObject {
 
     @JsonProperty("packageCode")
-    private Integer packageCode;  // Тип число ???????
+    private String  packageCode;  // Тип число ???????
 
     @JsonProperty("covers")
     private List<Cover> covers;
@@ -36,7 +36,7 @@ public class InsuredObject {
     // Constructors
     public InsuredObject() {}
 
-    public InsuredObject(BigDecimal sumInsured, Integer packageCode, List<Cover> covers, String objectId) {
+    public InsuredObject(BigDecimal sumInsured, String packageCode, List<Cover> covers, String objectId) {
         
         this.sumInsured = sumInsured;
         this.packageCode = packageCode;
@@ -53,11 +53,11 @@ public class InsuredObject {
         this.sumInsured = sumInsured;
     }
 
-    public Integer getPackageCode() {
+    public String getPackageCode() {
         return packageCode;
     }
 
-    public void setPackageCode(Integer packageCode) {
+    public void setPackageCode(String packageCode) {
         this.packageCode = packageCode;
     }
 

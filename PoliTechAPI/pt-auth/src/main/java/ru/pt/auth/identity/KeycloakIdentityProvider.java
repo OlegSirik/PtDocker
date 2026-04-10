@@ -48,12 +48,12 @@ public class KeycloakIdentityProvider implements IdentityProvider {
 
         try {
             if (client.getAuthLevel().equalsIgnoreCase("CLIENT")) {
-                keycloakService.createConfidentialClient(cfg, client.getClientId(), client.getName(), List.of("*"));
+                keycloakService.createConfidentialClient(cfg, client.getAuthClientId(), client.getName(), List.of("*"));
             } else {
-                keycloakService.createPublicClient(cfg, client.getClientId(), client.getName(), List.of("*"));
+                keycloakService.createPublicClient(cfg, client.getAuthClientId(), client.getName(), List.of("*"));
             }
         } catch (Exception e) {
-            logger.warn("Failed to create client {} in Keycloak for tenant {}: {}", client.getClientId(), tenant.getCode(), e.getMessage());
+            logger.warn("Failed to create client {} in Keycloak for tenant {}: {}", client.getAuthClientId(), tenant.getCode(), e.getMessage());
             throw new InternalServerErrorException("Failed to create client in external IdP", e);
         }
     }

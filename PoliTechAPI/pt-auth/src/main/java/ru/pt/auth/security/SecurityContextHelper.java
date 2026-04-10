@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.dto.exception.UnauthorizedException;
 
 import java.util.Optional;
 
@@ -53,6 +54,9 @@ public class SecurityContextHelper {
         return Optional.empty();
     }
 
+    public AuthenticatedUser getCurrentUserOrThrow() {
+        return getAuthenticatedUser().orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+    }
     /**
      * Получает ID текущего пользователя
      */

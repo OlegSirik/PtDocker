@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Tenant;
+import ru.pt.api.dto.refs.TenantAuthType;
 import ru.pt.api.service.auth.TenantConfig;
 import ru.pt.auth.model.AuthProperties;
 import ru.pt.auth.model.AuthType;
@@ -49,7 +50,7 @@ public class KeycloakIdentityStrategy implements IdentitySourceStrategy {
 
         try {
             Tenant tenant = tenantConfig.getTenant(tenantCode);
-            if (!"KEYCLOAK".equalsIgnoreCase(tenant.authType())) {
+            if (!TenantAuthType.KEYCLOAK.equals(tenant.authType())) {
                 throw new BadCredentialsException("AuthType is not KEYCLOAK for tenant " + tenantCode);
             }
 

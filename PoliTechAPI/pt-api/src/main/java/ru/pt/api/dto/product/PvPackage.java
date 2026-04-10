@@ -9,7 +9,7 @@ import java.util.List;
 public class PvPackage {
 
     @JsonProperty("code")
-    private Integer code;
+    private String code;
 
     @JsonProperty("name")
     private String name;
@@ -20,11 +20,14 @@ public class PvPackage {
     @JsonProperty("files")
     private List<PvFile> files;
 
-    public Integer getCode() {
+    @JsonProperty("calculatorId")
+    private Long calculatorId;
+
+    public String getCode() {
         return code;
     }
 
-    public void setCode(Integer code) {
+    public void setCode(String code) {
         this.code = code;
     }
 
@@ -50,6 +53,14 @@ public class PvPackage {
 
     public void setFiles(List<PvFile> files) {
         this.files = files;
+    }
+
+    public Long getCalculatorId() {
+        return calculatorId;
+    }
+
+    public void setCalculatorId(Long calculatorId) {
+        this.calculatorId = calculatorId;
     }
 
 }

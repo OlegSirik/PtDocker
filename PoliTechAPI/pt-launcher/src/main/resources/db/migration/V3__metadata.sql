@@ -1,461 +1,550 @@
-CREATE TABLE IF NOT EXISTS pt_metadata(
-    var_Code varchar(50) not null primary key,
-    var_Name varchar(300) not null,
-    var_Path varchar(100),
-    var_Type varchar(20) not null,
-    var_Value varchar(500),
-    var_Cdm varchar(100) not null,
-    nr varchar(100) not null,
-    var_data_type varchar(10)
-);
+SET session_replication_role = 'replica';
 
-CREATE TABLE IF NOT EXISTS pt_refdata(
-    ref_code varchar(50),
-    md_Code varchar(50) not null,
-    md_Name varchar(100) not null,
-    primary key (ref_code, md_Code)
-);
+INSERT INTO mt_attribute_def VALUES (386, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_nciCode', 'Страховщик.нси код', 'insurer.organization.nciCode', 48, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.nciCode', NULL, 'nciCode', 'Нси код', false);
+INSERT INTO mt_attribute_def VALUES (393, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_dateIssue', 'Страховщик.документ.дата выдачи', 'insurer.identifiers[?(@.isPrimary)].dateIssue', 61, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.dateIssue', NULL, 'dateIssue', 'Дата выдачи', false);
+INSERT INTO mt_attribute_def VALUES (394, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_divisionCode', 'Страховщик.документ.код подразделения', 'insurer.identifiers[?(@.isPrimary)].divisionCode', 67, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.divisionCode', NULL, 'divisionCode', 'Код подразделения', false);
+INSERT INTO mt_attribute_def VALUES (395, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_validUntil', 'Страховщик.документ.действительно до', 'insurer.identifiers[?(@.isPrimary)].validUntil', 64, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.validUntil', NULL, 'validUntil', 'Действительно до', false);
+INSERT INTO mt_attribute_def VALUES (396, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_whom', 'Страховщик.документ.кем выдан', 'insurer.identifiers[?(@.isPrimary)].whom', 65, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.whom', NULL, 'whom', 'Кем выдан', false);
+INSERT INTO mt_attribute_def VALUES (398, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_countryCode', 'Страховщик.документ.страна выдачи документа', 'insurer.identifiers[?(@.isPrimary)].countryCode', 72, 'IN', 'SINGLE', 'STRING', 'RU', 'insurer.identifiers.countryCode', 'country2', 'countryCode', 'Страна выдачи документа', false);
+INSERT INTO mt_attribute_def VALUES (424, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_typeCode', 'io.документ.код типа документа', 'insuredObjects[0].identifiers[?(@.isPrimary)].typeCode', 55, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.typeCode', 'identifierType', 'typeCode', 'Код типа документа', false);
+INSERT INTO mt_attribute_def VALUES (425, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_serial', 'io.документ.серия документа', 'insuredObjects[0].identifiers[?(@.isPrimary)].serial', 57, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.serial', NULL, 'serial', 'Серия документа', false);
+INSERT INTO mt_attribute_def VALUES (420, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_whom', 'io.документ.кем выдан', 'insuredObjects[0].identifiers[?(@.isPrimary)].whom', 65, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.whom', NULL, 'whom', 'Кем выдан', false);
+INSERT INTO mt_attribute_def VALUES (410, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_building', 'Страховщик.адрес.строение', 'insurer.addresses[?(@.isPrimary)].building', 86, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.building', NULL, 'building', 'Строение', false);
+INSERT INTO mt_attribute_def VALUES (411, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_typeCode', 'Страховщик.адрес.тип адреса', 'insurer.addresses[?(@.isPrimary)].typeCode', 74, 'IN', 'SINGLE', 'STRING', 'REGISTRATION', 'insurer.addresses.typeCode', 'addressType', 'typeCode', 'Тип адреса', false);
+INSERT INTO mt_attribute_def VALUES (413, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_addressStr', 'Страховщик.адрес.адресная строка', 'insurer.addresses[?(@.isPrimary)].addressStr', 98, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.addressStr', NULL, 'addressStr', 'Адресная строка', false);
+INSERT INTO mt_attribute_def VALUES (414, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_city', 'Страховщик.адрес.город', 'insurer.addresses[?(@.isPrimary)].city', 79, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.city', NULL, 'city', 'Город', false);
+INSERT INTO mt_attribute_def VALUES (415, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_flat', 'Страховщик.адрес.квартира', 'insurer.addresses[?(@.isPrimary)].flat', 87, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.flat', NULL, 'flat', 'Квартира', false);
+INSERT INTO mt_attribute_def VALUES (392, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_bic', 'Страховщик.бик', 'insurer.organization.bic', 44, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.bic', NULL, 'bic', 'Бик', false);
+INSERT INTO mt_attribute_def VALUES (397, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_ext_id', 'Страховщик.документ.внешний id', 'insurer.identifiers[?(@.isPrimary)].ext_id', 70, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (416, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_addressStrEn', 'Страховщик.адрес.адресная строка англ', 'insurer.addresses[?(@.isPrimary)].addressStrEn', 99, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.addressStrEn', NULL, 'addressStrEn', 'Адресная строка англ', false);
+INSERT INTO mt_attribute_def VALUES (171, 341, 364, 'INSURANCE_CONTRACT', 'ph_isPublicOfficial', 'Страхователь.признак пдл', 'policyHolder.person.isPublicOfficial', 26, 'IN', 'SINGLE', 'STRING', '', 'policyHolder.person.isPublicOfficial', 'yesNo', 'ph_isPublicOfficial', 'Страхователь.признак пдл', false);
+INSERT INTO mt_attribute_def VALUES (406, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_house', 'Страховщик.адрес.дом', 'insurer.addresses[?(@.isPrimary)].house', 83, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.house', NULL, 'house', 'Дом', false);
+INSERT INTO mt_attribute_def VALUES (407, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_kladrId', 'Страховщик.адрес.код кладр', 'insurer.addresses[?(@.isPrimary)].kladrId', 93, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.kladrId', NULL, 'kladrId', 'Код кладр', false);
+INSERT INTO mt_attribute_def VALUES (408, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_zipCode', 'Страховщик.адрес.индекс', 'insurer.addresses[?(@.isPrimary)].zipCode', 92, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.zipCode', NULL, 'zipCode', 'Индекс', false);
+INSERT INTO mt_attribute_def VALUES (409, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_room', 'Страховщик.адрес.комната', 'insurer.addresses[?(@.isPrimary)].room', 89, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.room', NULL, 'room', 'Комната', false);
+INSERT INTO mt_attribute_def VALUES (422, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_countryCode', 'io.документ.страна выдачи документа', 'insuredObjects[0].identifiers[?(@.isPrimary)].countryCode', 72, 'IN', 'SINGLE', 'STRING', 'RU', 'insuredObjects.identifiers.countryCode', 'country2', 'countryCode', 'Страна выдачи документа', false);
+INSERT INTO mt_attribute_def VALUES (423, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_number', 'io.документ.номер документа', 'insuredObjects[0].identifiers[?(@.isPrimary)].number', 60, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.number', NULL, 'number', 'Номер документа', false);
+INSERT INTO mt_attribute_def VALUES (390, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_group', 'Страховщик.gруппа страхователя юл', 'insurer.organization.group', 46, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.group', NULL, 'group', 'Gруппа страхователя юл', false);
+INSERT INTO mt_attribute_def VALUES (391, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_country', 'Страховщик.код страны регистрации', 'insurer.organization.country', 35, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.country', 'country2', 'country', 'Код страны регистрации', false);
+INSERT INTO mt_attribute_def VALUES (350, 5, 364, 'INSURANCE_CONTRACT', 'io_addresses', 'Адрес', 'insuredObjects[0].addresses[?(@.isPrimary)]', 24, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.addresses', NULL, 'addresses', 'Адрес', false);
+INSERT INTO mt_attribute_def VALUES (352, 5, 364, 'INSURANCE_CONTRACT', 'io_property', 'Недвижимость', 'insuredObjects[0].property', 26, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.property', NULL, 'property', 'Недвижимость', false);
+INSERT INTO mt_attribute_def VALUES (354, 5, 364, 'INSURANCE_CONTRACT', 'io_riskFactors', 'Доп. риски', 'insuredObjects[0].riskFactors', 28, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.riskFactors', NULL, 'riskFactors', 'Доп. риски', false);
+INSERT INTO mt_attribute_def VALUES (353, 5, 364, 'INSURANCE_CONTRACT', 'io_travelSegments', 'Сегмент авиаперевозки', 'insuredObjects[0].travelSegments', 27, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.travelSegments', NULL, 'travelSegments', 'Сегмент авиаперевозки', false);
+INSERT INTO mt_attribute_def VALUES (351, 5, 364, 'INSURANCE_CONTRACT', 'io_device', 'Электронное устройство', 'insuredObjects[0].device', 25, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.device', NULL, 'device', 'Электронное устройство', false);
+INSERT INTO mt_attribute_def VALUES (349, 5, 364, 'INSURANCE_CONTRACT', 'io_identifiers', 'Документ', 'insuredObjects[0].identifiers[?(@.isPrimary)]', 23, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.identifiers', NULL, 'identifiers', 'Документ', false);
+INSERT INTO mt_attribute_def VALUES (356, 2, 364, 'INSURANCE_CONTRACT', 'pl_commission', 'Комиссия по договору', 'commission', 500, 'IN', 'SINGLE', 'OBJECT', NULL, 'commission', NULL, 'commission', 'Комиссия по договору', false);
+INSERT INTO mt_attribute_def VALUES (2, 1, 364, 'INSURANCE_CONTRACT', 'сommission', 'Агентская комиссия', 'сommission', 10, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'сommission', NULL, 'сommission', 'Агентская комиссия', false);
+INSERT INTO mt_attribute_def VALUES (381, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_legalForm', 'Страховщик.организационно-правовая форма', 'insurer.organization.legalForm', 40, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.legalForm', NULL, 'legalForm', 'Организационно-правовая форма', false);
+INSERT INTO mt_attribute_def VALUES (383, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_isResident', 'Страховщик.резидент рф юр.лица', 'insurer.organization.isResident', 45, 'IN', 'SINGLE', 'STRING', 'true', 'insurer.organization.isResident', 'yesNo', 'isResident', 'Резидент рф юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (384, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_kpp', 'Страховщик.кпп', 'insurer.organization.kpp', 41, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.kpp', NULL, 'kpp', 'Кпп', false);
+INSERT INTO mt_attribute_def VALUES (385, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_inn', 'Страховщик.инн юр.лица', 'insurer.organization.inn', 36, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.inn', NULL, 'inn', 'Инн юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (388, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_shortName', 'Страховщик.краткое наименование юр.лица', 'insurer.organization.shortName', 39, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.shortName', NULL, 'shortName', 'Краткое наименование юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (389, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_fullNameEn', 'Страховщик.полное наименование  юр.лица англ', 'insurer.organization.fullNameEn', 38, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.fullNameEn', NULL, 'fullNameEn', 'Полное наименование  юр.лица англ', false);
+INSERT INTO mt_attribute_def VALUES (3, 1, 364, 'INSURANCE_CONTRACT', 'insurer', 'Страховщик', 'insurer', 200, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insurer', NULL, 'insurer', 'Страховщик', false);
+INSERT INTO mt_attribute_def VALUES (399, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_number', 'Страховщик.документ.номер документа', 'insurer.identifiers[?(@.isPrimary)].number', 60, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.number', NULL, 'number', 'Номер документа', false);
+INSERT INTO mt_attribute_def VALUES (400, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_typeCode', 'Страховщик.документ.код типа документа', 'insurer.identifiers[?(@.isPrimary)].typeCode', 55, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.typeCode', 'identifierType', 'typeCode', 'Код типа документа', false);
+INSERT INTO mt_attribute_def VALUES (401, 358, 364, 'INSURANCE_CONTRACT', 'ic_doc_serial', 'Страховщик.документ.серия документа', 'insurer.identifiers[?(@.isPrimary)].serial', 57, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.identifiers.serial', NULL, 'serial', 'Серия документа', false);
+INSERT INTO mt_attribute_def VALUES (402, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_fiasId', 'Страховщик.адрес.код фиас', 'insurer.addresses[?(@.isPrimary)].fiasId', 95, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.fiasId', NULL, 'fiasId', 'Код фиас', false);
+INSERT INTO mt_attribute_def VALUES (403, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_street', 'Страховщик.адрес.улица', 'insurer.addresses[?(@.isPrimary)].street', 81, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.street', NULL, 'street', 'Улица', false);
+INSERT INTO mt_attribute_def VALUES (404, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_countryCode', 'Страховщик.адрес.код страны', 'insurer.addresses[?(@.isPrimary)].countryCode', 76, 'IN', 'SINGLE', 'STRING', 'RU', 'insurer.addresses.countryCode', 'country2', 'countryCode', 'Код страны', false);
+INSERT INTO mt_attribute_def VALUES (405, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_region', 'Страховщик.адрес.регион', 'insurer.addresses[?(@.isPrimary)].region', 77, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.region', NULL, 'region', 'Регион', false);
+INSERT INTO mt_attribute_def VALUES (234, 346, 364, 'INSURANCE_CONTRACT', 'io_isResident', 'Застрахованный.резидент рф', 'insuredObjects[0].person.isResident', 27, 'IN', 'SINGLE', 'STRING', 'true', 'insuredObjects.person.isResident', 'yesNo', 'isResident', 'Резидент рф', false);
+INSERT INTO mt_attribute_def VALUES (357, 3, 364, 'INSURANCE_CONTRACT', 'ic_organization', 'Юр.лицо', 'insurer.organization', 12, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insurer.organization', NULL, 'organization', 'Юр.лицо', false);
+INSERT INTO mt_attribute_def VALUES (358, 3, 364, 'INSURANCE_CONTRACT', 'ic_identifiers', 'Документ', 'insurer.identifiers[?(@.isPrimary)]', 13, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insurer.identifiers', NULL, 'identifiers', 'Документ', false);
+INSERT INTO mt_attribute_def VALUES (270, 351, 364, 'INSURANCE_CONTRACT', 'io_device_countryCode', 'Застрахованное ус-во. код страны', 'insuredObjects[0].device.countryCode', 118, 'IN', 'SINGLE', 'STRING', 'RU', 'insuredObjects.device.countryCode', 'country2', 'device_countryCode', 'Код страны', false);
+INSERT INTO mt_attribute_def VALUES (269, 351, 364, 'INSURANCE_CONTRACT', 'io_device_devicePrice', 'Застрахованное ус-во. цена', 'insuredObjects[0].device.devicePrice', 119, 'IN', 'SINGLE', 'NUMBER', '10000', 'insuredObjects.device.devicePrice', NULL, 'device_devicePrice', 'Цена', false);
+INSERT INTO mt_attribute_def VALUES (199, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_fiasId', 'Ph.адрес.код фиас', 'policyHolder.addresses[?(@.isPrimary)].fiasId', 95, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.fiasId', NULL, 'fiasId', 'Код фиас', false);
+INSERT INTO mt_attribute_def VALUES (254, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_flat', 'Io.адрес.квартира', 'insuredObjects[0].addresses[?(@.isPrimary)].flat', 88, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.flat', NULL, 'flat', 'Квартира', false);
+INSERT INTO mt_attribute_def VALUES (255, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_building', 'Io.адрес.строение', 'insuredObjects[0].addresses[?(@.isPrimary)].building', 85, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.building', NULL, 'building', 'Строение', false);
+INSERT INTO mt_attribute_def VALUES (177, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_ext_id', 'Страхователь.внешний id (юрик)', 'policyHolder.organization.ext_id', 47, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.ext_id', NULL, 'ext_id', 'Внешний id (юрик)', false);
+INSERT INTO mt_attribute_def VALUES (239, 347, 364, 'INSURANCE_CONTRACT', 'io_email', 'Застрахованный.email', 'insuredObjects[0].contacts.email', 51, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.contacts.email', NULL, 'email', 'Email', false);
+INSERT INTO mt_attribute_def VALUES (263, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_addressStrEn', 'Io.адрес.адресная строка англ', 'insuredObjects[0].addresses[?(@.isPrimary)].addressStrEn', 100, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.addressStrEn', NULL, 'addressStrEn', 'Адресная строка англ', false);
+INSERT INTO mt_attribute_def VALUES (159, 341, 364, 'INSURANCE_CONTRACT', 'ph_ext_id', 'Страхователь.внешний id', 'policyHolder.person.ext_id', 31, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (200, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_street', 'Ph.адрес.улица', 'policyHolder.addresses[?(@.isPrimary)].street', 81, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.street', NULL, 'street', 'Улица', false);
+INSERT INTO mt_attribute_def VALUES (220, 1, 364, 'INSURANCE_CONTRACT', 'pl_productCode', 'Код продукта', 'productCode', 1, 'IN', 'SINGLE', 'STRING', NULL, 'productCode', NULL, 'productCode', 'Код продукта', false);
+INSERT INTO mt_attribute_def VALUES (231, 346, 364, 'INSURANCE_CONTRACT', 'io_middleName', 'Застрахованный.отчество', 'insuredObjects[0].person.middleName', 6, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.middleName', NULL, 'middleName', 'Отчество', false);
+INSERT INTO mt_attribute_def VALUES (232, 346, 364, 'INSURANCE_CONTRACT', 'io_birthDate', 'Застрахованный.дата рождения', 'insuredObjects[0].person.birthDate', 8, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.birthDate', NULL, 'birthDate', 'Дата рождения', false);
+INSERT INTO mt_attribute_def VALUES (250, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_fiasId', 'Io.адрес.код фиас', 'insuredObjects[0].addresses[?(@.isPrimary)].fiasId', 96, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.fiasId', NULL, 'fiasId', 'Код фиас', false);
+INSERT INTO mt_attribute_def VALUES (251, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_kladrId', 'Io.адрес.код кладр', 'insuredObjects[0].addresses[?(@.isPrimary)].kladrId', 94, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.kladrId', NULL, 'kladrId', 'Код кладр', false);
+INSERT INTO mt_attribute_def VALUES (252, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_zipCode', 'Io.адрес.индекс', 'insuredObjects[0].addresses[?(@.isPrimary)].zipCode', 91, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.zipCode', NULL, 'zipCode', 'Индекс', false);
+INSERT INTO mt_attribute_def VALUES (253, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_room', 'Io.адрес.комната', 'insuredObjects[0].addresses[?(@.isPrimary)].room', 90, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.room', NULL, 'room', 'Комната', false);
+INSERT INTO mt_attribute_def VALUES (206, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_countryCode', 'Ph.адрес.код страны', 'policyHolder.addresses[?(@.isPrimary)].countryCode', 76, 'IN', 'SINGLE', 'STRING', 'RU', 'policyHolder.addresses.countryCode', 'country2', 'countryCode', 'Код страны', false);
+INSERT INTO mt_attribute_def VALUES (379, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_ext_id', 'Страховщик.внешний id (юрик)', 'insurer.organization.ext_id', 47, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.ext_id', NULL, 'ext_id', 'Внешний id (юрик)', false);
+INSERT INTO mt_attribute_def VALUES (380, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_fullName', 'Страховщик.полное наименование юр.лица', 'insurer.organization.fullName', 37, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.fullName', NULL, 'fullName', 'Полное наименование юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (382, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_ogrn', 'Страховщик.огрн', 'insurer.organization.ogrn', 42, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.ogrn', NULL, 'ogrn', 'Огрн', false);
+INSERT INTO mt_attribute_def VALUES (377, 360, 364, 'INSURANCE_CONTRACT', 'ic_phone', 'Страховщик.телефон', 'insurer.contacts.phone', 49, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.contacts.phone', NULL, 'phone', 'Телефон', false);
+INSERT INTO mt_attribute_def VALUES (378, 360, 364, 'INSURANCE_CONTRACT', 'ic_email', 'Страховщик.email', 'insurer.contacts.email', 52, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.contacts.email', NULL, 'email', 'Email', false);
+INSERT INTO mt_attribute_def VALUES (188, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_dateIssue', 'Ph.документ.дата выдачи', 'policyHolder.identifiers[?(@.isPrimary)].dateIssue', 61, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.dateIssue', NULL, 'dateIssue', 'Дата выдачи', false);
+INSERT INTO mt_attribute_def VALUES (189, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_divisionCode', 'Ph.документ.код подразделения', 'policyHolder.identifiers[?(@.isPrimary)].divisionCode', 67, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.divisionCode', NULL, 'divisionCode', 'Код подразделения', false);
+INSERT INTO mt_attribute_def VALUES (190, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_validUntil', 'Ph.документ.действительно до', 'policyHolder.identifiers[?(@.isPrimary)].validUntil', 64, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.validUntil', NULL, 'validUntil', 'Действительно до', false);
+INSERT INTO mt_attribute_def VALUES (191, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_whom', 'Ph.документ.кем выдан', 'policyHolder.identifiers[?(@.isPrimary)].whom', 65, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.whom', NULL, 'whom', 'Кем выдан', false);
+INSERT INTO mt_attribute_def VALUES (284, 352, 364, 'INSURANCE_CONTRACT', 'io_buildingArea', 'Имущество.площадь здания', 'insuredObjects[0].property.buildingArea', 127, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.buildingArea', NULL, 'buildingArea', 'Площадь здания', false);
+INSERT INTO mt_attribute_def VALUES (285, 352, 364, 'INSURANCE_CONTRACT', 'io_repairYear', 'Имущество.год ремонта', 'insuredObjects[0].property.repairYear', 126, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.property.repairYear', NULL, 'repairYear', 'Год ремонта', false);
+INSERT INTO mt_attribute_def VALUES (187, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_fullName', 'Страхователь.полное наименование юр.лица', 'policyHolder.organization.fullName', 37, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.fullName', NULL, 'fullName', 'Полное наименование юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (286, 352, 364, 'INSURANCE_CONTRACT', 'io_constructionYear', 'Имущество.год постройки', 'insuredObjects[0].property.constructionYear', 125, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.property.constructionYear', NULL, 'constructionYear', 'Год постройки', false);
+INSERT INTO mt_attribute_def VALUES (277, 352, 364, 'INSURANCE_CONTRACT', 'io_ceilingMaterial', 'Имущество.материал перекрытий', 'insuredObjects[0].property.ceilingMaterial', 123, 'IN', 'SINGLE', 'STRING', 'Смешанные', 'insuredObjects.property.ceilingMaterial', NULL, 'ceilingMaterial', 'Материал перекрытий', false);
+INSERT INTO mt_attribute_def VALUES (278, 352, 364, 'INSURANCE_CONTRACT', 'io_isNewBuilding', 'Имущество.новостройка', 'insuredObjects[0].property.isNewBuilding', 133, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.property.isNewBuilding', NULL, 'isNewBuilding', 'Новостройка', false);
+INSERT INTO mt_attribute_def VALUES (288, 352, 364, 'INSURANCE_CONTRACT', 'io_wallsMaterialOther', 'Имущество.материал стен другой', 'insuredObjects[0].property.wallsMaterialOther', 122, 'IN', 'SINGLE', 'STRING', 'Каменные, кирпичные', 'insuredObjects.property.wallsMaterialOther', NULL, 'wallsMaterialOther', 'Материал стен другой', false);
+INSERT INTO mt_attribute_def VALUES (1, NULL, 364, 'INSURANCE_CONTRACT', 'policy', 'Договор страхования', '*', 1, 'OBJECT', 'SINGLE', 'OBJECT', '', '*', NULL, 'policy', 'Договор страхования', false);
+INSERT INTO mt_attribute_def VALUES (287, 352, 364, 'INSURANCE_CONTRACT', 'io_ceilingMaterialOther', 'Имущество.материал перекрытий другой', 'insuredObjects[0].property.ceilingMaterialOther', 124, 'IN', 'SINGLE', 'STRING', 'Смешанные', 'insuredObjects.property.ceilingMaterialOther', NULL, 'ceilingMaterialOther', 'Материал перекрытий другой', false);
+INSERT INTO mt_attribute_def VALUES (267, 351, 364, 'INSURANCE_CONTRACT', 'io_device_typeCode', 'Застрахованное ус-во. код типа', 'insuredObjects[0].device.deviceTypeCode', 106, 'IN', 'SINGLE', 'STRING', 'PHONE', 'insuredObjects.device.deviceTypeCode', 'deviceType', 'device_typeCode', 'Код типа', false);
+INSERT INTO mt_attribute_def VALUES (258, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_region', 'Io.адрес.регион', 'insuredObjects[0].addresses[?(@.isPrimary)].region', 78, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.region', NULL, 'region', 'Регион', false);
+INSERT INTO mt_attribute_def VALUES (293, 352, 364, 'INSURANCE_CONTRACT', 'io_commissioningDate', 'Имущество.дата ввода в эксплуатацию', 'insuredObjects[0].property.commissioningDate', 135, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.property.commissioningDate', NULL, 'commissioningDate', 'Дата ввода в эксплуатацию', false);
+INSERT INTO mt_attribute_def VALUES (273, 351, 364, 'INSURANCE_CONTRACT', 'io_device_osVersion', 'Застрахованное ус-во. версия ос', 'insuredObjects[0].device.osVersion', 116, 'IN', 'SINGLE', 'STRING', '10', 'insuredObjects.device.osVersion', NULL, 'device_osVersion', 'Версия ос', false);
+INSERT INTO mt_attribute_def VALUES (240, 347, 364, 'INSURANCE_CONTRACT', 'io_phone', 'Застрахованный.телефон', 'insuredObjects[0].contacts.phone', 50, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.contacts.phone', NULL, 'phone', 'Телефон', false);
+INSERT INTO mt_attribute_def VALUES (281, 352, 364, 'INSURANCE_CONTRACT', 'io_wearCoefficient', 'Имущество.коэффициент износа', 'insuredObjects[0].property.wearCoefficient', 130, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.wearCoefficient', NULL, 'wearCoefficient', 'Коэффициент износа', false);
+INSERT INTO mt_attribute_def VALUES (238, 346, 364, 'INSURANCE_CONTRACT', 'io_age_end', 'Возраст застрахованного на дату окончания полиса', 'null', 140, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'age_end', 'Возраст застрахованного на дату окончания полиса', false);
+INSERT INTO mt_attribute_def VALUES (260, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_ext_id', 'Io.адрес.внешний id', 'insuredObjects[0].addresses[?(@.isPrimary)].ext_id', 102, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (412, 361, 364, 'INSURANCE_CONTRACT', 'ic_addr_ext_id', 'Страховщик.адрес.внешний id', 'insurer.addresses[?(@.isPrimary)].ext_id', 101, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.addresses.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (289, 352, 364, 'INSURANCE_CONTRACT', 'io_wallsMaterial', 'Имущество.материал стен', 'insuredObjects[0].property.wallsMaterial', 121, 'IN', 'SINGLE', 'STRING', 'Каменные, кирпичные', 'insuredObjects.property.wallsMaterial', NULL, 'wallsMaterial', 'Материал стен', false);
+INSERT INTO mt_attribute_def VALUES (216, 1, 364, 'INSURANCE_CONTRACT', 'gross_up_factor', 'Gross_up_factor 1/(1-kv)', 'null', 138, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'gross_up_factor', 'Gross_up_factor 1/(1-kv)', false);
+INSERT INTO mt_attribute_def VALUES (421, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_ext_id', 'io.документ.внешний id', 'insuredObjects[0].identifiers[?(@.isPrimary)].ext_id', 70, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (417, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_dateIssue', 'io.документ.дата выдачи', 'insuredObjects[0].identifiers[?(@.isPrimary)].dateIssue', 61, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.dateIssue', NULL, 'dateIssue', 'Дата выдачи', false);
+INSERT INTO mt_attribute_def VALUES (418, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_divisionCode', 'io.документ.код подразделения', 'insuredObjects[0].identifiers[?(@.isPrimary)].divisionCode', 67, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.divisionCode', NULL, 'divisionCode', 'Код подразделения', false);
+INSERT INTO mt_attribute_def VALUES (419, 349, 364, 'INSURANCE_CONTRACT', 'io_doc_validUntil', 'io.документ.действительно до', 'insuredObjects[0].identifiers[?(@.isPrimary)].validUntil', 64, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.identifiers.validUntil', NULL, 'validUntil', 'Действительно до', false);
+INSERT INTO mt_attribute_def VALUES (264, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_addressStr', 'Io.адрес.адресная строка', 'insuredObjects[0].addresses[?(@.isPrimary)].addressStr', 97, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.addressStr', NULL, 'addressStr', 'Адресная строка', false);
+INSERT INTO mt_attribute_def VALUES (282, 352, 364, 'INSURANCE_CONTRACT', 'io_buildingValue', 'Имущество.стоимость здания', 'insuredObjects[0].property.buildingValue', 129, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.buildingValue', NULL, 'buildingValue', 'Стоимость здания', false);
+INSERT INTO mt_attribute_def VALUES (192, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_ext_id', 'Ph.документ.внешний id', 'policyHolder.identifiers[?(@.isPrimary)].ext_id', 70, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (233, 346, 364, 'INSURANCE_CONTRACT', 'io_fullName', 'Застрахованный.полное фио', 'insuredObjects[0].person.fullName', 10, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.fullName', NULL, 'fullName', 'Полное фио', false);
+INSERT INTO mt_attribute_def VALUES (274, 351, 364, 'INSURANCE_CONTRACT', 'io_device_imei', 'Застрахованное ус-во. imei', 'insuredObjects[0].device.imei', 115, 'IN', 'SINGLE', 'STRING', '1234567890', 'insuredObjects.device.imei', NULL, 'device_imei', 'Imei', false);
+INSERT INTO mt_attribute_def VALUES (236, 346, 364, 'INSURANCE_CONTRACT', 'io_fullNameEn', 'Застрахованный.полное фио англ', 'insuredObjects[0].person.fullNameEn', 11, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.fullNameEn', NULL, 'fullNameEn', 'Полное фио англ', false);
+INSERT INTO mt_attribute_def VALUES (184, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_legalForm', 'Страхователь.организационно-правовая форма', 'policyHolder.organization.legalForm', 40, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.legalForm', NULL, 'legalForm', 'Организационно-правовая форма', false);
+INSERT INTO mt_attribute_def VALUES (256, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_house', 'Io.адрес.дом', 'insuredObjects[0].addresses[?(@.isPrimary)].house', 84, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.house', NULL, 'house', 'Дом', false);
+INSERT INTO mt_attribute_def VALUES (257, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_street', 'Io.адрес.улица', 'insuredObjects[0].addresses[?(@.isPrimary)].street', 82, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.street', NULL, 'street', 'Улица', false);
+INSERT INTO mt_attribute_def VALUES (182, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_ogrn', 'Страхователь.огрн', 'policyHolder.organization.ogrn', 42, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.ogrn', NULL, 'ogrn', 'Огрн', false);
+INSERT INTO mt_attribute_def VALUES (262, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_city', 'Io.адрес.город', 'insuredObjects[0].addresses[?(@.isPrimary)].city', 80, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.addresses.city', NULL, 'city', 'Город', false);
+INSERT INTO mt_attribute_def VALUES (235, 346, 364, 'INSURANCE_CONTRACT', 'io_ext_id', 'Застрахованный.внешний id', 'insuredObjects[0].person.ext_id', 33, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (214, 1, 364, 'INSURANCE_CONTRACT', 'pl_policyNumber', 'Номер договора', 'policyNumber', 5, 'IN', 'SINGLE', 'STRING', NULL, 'policyNumber', NULL, 'policyNumber', 'Номер договора', false);
+INSERT INTO mt_attribute_def VALUES (343, 4, 364, 'INSURANCE_CONTRACT', 'ph_organization', 'Юр.лицо', 'policyHolder.organization', 12, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'policyHolder.organization', NULL, 'organization', 'Юр.лицо', false);
+INSERT INTO mt_attribute_def VALUES (344, 4, 364, 'INSURANCE_CONTRACT', 'ph_identifiers', 'Документ', 'policyHolder.identifiers[?(@.isPrimary)]', 13, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'policyHolder.identifiers', NULL, 'identifiers', 'Документ', false);
+INSERT INTO mt_attribute_def VALUES (5, 1, 364, 'INSURANCE_CONTRACT', 'insuredObject', 'Объект страхования', 'insuredObject[0]', 400, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObject', NULL, 'insuredObject', 'Объект страхования', false);
+INSERT INTO mt_attribute_def VALUES (279, 352, 364, 'INSURANCE_CONTRACT', 'io_propertyLocation', 'Имущество.расположение имущества', 'insuredObjects[0].property.propertyLocation', 132, 'IN', 'SINGLE', 'STRING', 'В многоквартирном доме', 'insuredObjects.property.propertyLocation', NULL, 'propertyLocation', 'Расположение имущества', false);
+INSERT INTO mt_attribute_def VALUES (272, 351, 364, 'INSURANCE_CONTRACT', 'io_device_tradeMark', 'Застрахованное ус-во. торговая марка', 'insuredObjects[0].device.tradeMark', 108, 'IN', 'SINGLE', 'STRING', 'Samsung', 'insuredObjects.device.tradeMark', NULL, 'device_tradeMark', 'Торговая марка', false);
+INSERT INTO mt_attribute_def VALUES (271, 353, 364, 'INSURANCE_CONTRACT', 'io_legs', 'Количество перелетов', 'insuredObjects[0].travelSegments[*].count()', 56, 'IN', 'SINGLE', 'NUMBER', NULL, 'insuredObjects.travelSegments[*].count()', NULL, 'legs', 'Количество перелетов', false);
+INSERT INTO mt_attribute_def VALUES (225, 346, 364, 'INSURANCE_CONTRACT', 'io_citizenship', 'Застрахованный.гражданство', 'insuredObjects[0].person.citizenship', 15, 'IN', 'SINGLE', 'STRING', 'RU', 'insuredObjects.person.citizenship', 'country2', 'citizenship', 'Гражданство', false);
+INSERT INTO mt_attribute_def VALUES (360, 3, 364, 'INSURANCE_CONTRACT', 'ic_contacts', 'Контакты', 'insurer.contacts', 11, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insurer.contacts', NULL, 'contacts', 'Контакты', false);
+INSERT INTO mt_attribute_def VALUES (193, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_countryCode', 'Ph.документ.страна выдачи документа', 'policyHolder.identifiers[?(@.isPrimary)].countryCode', 72, 'IN', 'SINGLE', 'STRING', 'RU', 'policyHolder.identifiers.countryCode', 'country2', 'countryCode', 'Страна выдачи документа', false);
+INSERT INTO mt_attribute_def VALUES (213, 1, 364, 'INSURANCE_CONTRACT', 'pl_startDate', 'Дата начала действия договора', 'startDate', 23, 'IN', 'SINGLE', 'STRING', NULL, 'startDate', NULL, 'startDate', 'Дата начала действия договора', false);
+INSERT INTO mt_attribute_def VALUES (215, 1, 364, 'INSURANCE_CONTRACT', 'pl_endDate', 'Дата окончания договора', 'endDate', 29, 'IN', 'SINGLE', 'STRING', NULL, 'endDate', NULL, 'endDate', 'Дата окончания договора', false);
+INSERT INTO mt_attribute_def VALUES (361, 3, 364, 'INSURANCE_CONTRACT', 'ic_addresses', 'Адрес', 'insurer.addresses[?(@.isPrimary)]', 14, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insurer.addresses', NULL, 'addresses', 'Адрес', false);
+INSERT INTO mt_attribute_def VALUES (346, 5, 364, 'INSURANCE_CONTRACT', 'io_person', 'Физ.лицо', 'insuredObjects[0].person', 20, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.person', NULL, 'person', 'Физ.лицо', false);
+INSERT INTO mt_attribute_def VALUES (217, 1, 364, 'INSURANCE_CONTRACT', 'pl_TermDays', 'Срок полиса в днях', 'null', 144, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'TermDays', 'Срок полиса в днях', false);
+INSERT INTO mt_attribute_def VALUES (218, 1, 364, 'INSURANCE_CONTRACT', 'pl_TermMonths', 'Срок полиса в месяцах', 'null', 143, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'TermMonths', 'Срок полиса в месяцах', false);
+INSERT INTO mt_attribute_def VALUES (197, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_region', 'Ph.адрес.регион', 'policyHolder.addresses[?(@.isPrimary)].region', 77, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.region', NULL, 'region', 'Регион', false);
+INSERT INTO mt_attribute_def VALUES (160, 341, 364, 'INSURANCE_CONTRACT', 'ph_birthPlace', 'Страхователь.место рождения', 'policyHolder.person.birthPlace', 13, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.birthPlace', NULL, 'birthPlace', 'Место рождения', false);
+INSERT INTO mt_attribute_def VALUES (161, 341, 364, 'INSURANCE_CONTRACT', 'ph_fullNameEn', 'Страхователь.полное фио англ', 'policyHolder.person.fullNameEn', 12, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.fullNameEn', NULL, 'fullNameEn', 'Полное фио англ', false);
+INSERT INTO mt_attribute_def VALUES (201, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_house', 'Ph.адрес.дом', 'policyHolder.addresses[?(@.isPrimary)].house', 83, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.house', NULL, 'house', 'Дом', false);
+INSERT INTO mt_attribute_def VALUES (226, 346, 364, 'INSURANCE_CONTRACT', 'io_gender', 'Застрахованный.пол', 'insuredObjects[0].person.gender', 17, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.gender', 'gender', 'gender', 'Пол', false);
+INSERT INTO mt_attribute_def VALUES (227, 346, 364, 'INSURANCE_CONTRACT', 'io_familyState', 'Застрахованный.семейное положение', 'insuredObjects[0].person.familyState', 21, 'IN', 'SINGLE', 'STRING', 'SINGLE', 'insuredObjects.person.familyState', 'familyState', 'familyState', 'Семейное положение', false);
+INSERT INTO mt_attribute_def VALUES (228, 346, 364, 'INSURANCE_CONTRACT', 'io_isPublicOfficial', 'Застрахованный.признак пдл', 'insuredObjects[0].person.isPublicOfficial', 25, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.isPublicOfficial', 'yesNo', 'isPublicOfficial', 'Признак пдл', false);
+INSERT INTO mt_attribute_def VALUES (229, 346, 364, 'INSURANCE_CONTRACT', 'io_firstName', 'Застрахованный.имя', 'insuredObjects[0].person.firstName', 1, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.firstName', NULL, 'firstName', 'Имя', false);
+INSERT INTO mt_attribute_def VALUES (162, 341, 364, 'INSURANCE_CONTRACT', 'ph_fullName', 'Страхователь.полное фио', 'policyHolder.person.fullName', 9, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.fullName', NULL, 'fullName', 'Полное фио', false);
+INSERT INTO mt_attribute_def VALUES (294, 352, 364, 'INSURANCE_CONTRACT', 'io_propertyValue', 'Имущество.стоимость имущества', 'insuredObjects[0].property.propertyValue', 134, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.propertyValue', NULL, 'propertyValue', 'Стоимость имущества', false);
+INSERT INTO mt_attribute_def VALUES (196, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_number', 'Ph.документ.номер документа', 'policyHolder.identifiers[?(@.isPrimary)].number', 60, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.number', NULL, 'number', 'Номер документа', false);
+INSERT INTO mt_attribute_def VALUES (275, 351, 364, 'INSURANCE_CONTRACT', 'io_device_model', 'Застрахованное ус-во. модель', 'insuredObjects[0].device.model', 110, 'IN', 'SINGLE', 'STRING', 'Galaxy S21', 'insuredObjects.device.model', NULL, 'device_model', 'Модель', false);
+INSERT INTO mt_attribute_def VALUES (4, 1, 364, 'INSURANCE_CONTRACT', 'policyHolder', 'Страхователь', 'policyHolder', 300, 'OBJECT', 'SINGLE', 'OBJECT', '', 'policyHolder', NULL, 'policyHolder', 'Страхователь', false);
+INSERT INTO mt_attribute_def VALUES (222, 5, 364, 'INSURANCE_CONTRACT', 'io_sumInsured', 'Страховая сумма объекта страхования', 'insuredObjects[0].sumInsured', 19, 'IN', 'SINGLE', 'NUMBER', '100000', 'insuredObjects.sumInsured', NULL, 'sumInsured', 'Страховая сумма объекта страхования', false);
+INSERT INTO mt_attribute_def VALUES (164, 341, 364, 'INSURANCE_CONTRACT', 'ph_age_issue', 'Страхователь.возраст на дату выпуска договора', 'null', 142, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'age_issue', 'Возраст на дату выпуска договора', false);
+INSERT INTO mt_attribute_def VALUES (166, 341, 364, 'INSURANCE_CONTRACT', 'ph_birthDate', 'Страхователь.дата рождения', 'policyHolder.person.birthDate', 7, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.birthDate', NULL, 'birthDate', 'Дата рождения', false);
+INSERT INTO mt_attribute_def VALUES (230, 346, 364, 'INSURANCE_CONTRACT', 'io_lastName', 'Застрахованный.фамилия', 'insuredObjects[0].person.lastName', 4, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.lastName', NULL, 'lastName', 'Фамилия', false);
+INSERT INTO mt_attribute_def VALUES (237, 346, 364, 'INSURANCE_CONTRACT', 'io_age_issue', 'Возраст застрахованного на дату выпуска полиса', 'null', 139, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'age_issue', 'Возраст застрахованного на дату выпуска полиса', false);
+INSERT INTO mt_attribute_def VALUES (298, 353, 364, 'INSURANCE_CONTRACT', 'io_departureTime', 'Время вылета', 'insuredObjects[0].travelSegments[*].departureTime', 109, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.travelSegments[*].departureTime', NULL, 'departureTime', 'Время вылета', false);
+INSERT INTO mt_attribute_def VALUES (299, 353, 364, 'INSURANCE_CONTRACT', 'io_departureDate', 'Дата вылета', 'insuredObjects[0].travelSegments[*].departureDate', 107, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.travelSegments[*].departureDate', NULL, 'departureDate', 'Дата вылета', false);
+INSERT INTO mt_attribute_def VALUES (219, 1, 364, 'INSURANCE_CONTRACT', 'pl_issueDate', 'Дата выпуска договора', 'issueDate', 10, 'IN', 'SINGLE', 'STRING', NULL, 'issueDate', NULL, 'issueDate', 'Дата выпуска договора', false);
+INSERT INTO mt_attribute_def VALUES (212, 1, 364, 'INSURANCE_CONTRACT', 'pl_premium', 'Премия по договору', 'premium', 32, 'IN', 'SINGLE', 'STRING', NULL, 'premium', NULL, 'premium', 'Премия по договору', false);
+INSERT INTO mt_attribute_def VALUES (300, 353, 364, 'INSURANCE_CONTRACT', 'io_ticketNr', 'Номер билета', 'insuredObjects[0].travelSegments[*].ticketNr', 105, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.travelSegments[*].ticketNr', NULL, 'ticketNr', 'Номер билета', false);
+INSERT INTO mt_attribute_def VALUES (301, 354, 364, 'INSURANCE_CONTRACT', 'rf_sport5', 'Доп.риск спорт #5', 'insuredObjects[0].riskFactors.sport5', 149, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.sport5', NULL, 'sport5', 'Доп.риск спорт #5', false);
+INSERT INTO mt_attribute_def VALUES (302, 354, 364, 'INSURANCE_CONTRACT', 'rf_sport1', 'Доп.риск спорт #1', 'insuredObjects[0].riskFactors.sport1', 145, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.sport1', NULL, 'sport1', 'Доп.риск спорт #1', false);
+INSERT INTO mt_attribute_def VALUES (223, 5, 364, 'INSURANCE_CONTRACT', 'io_packageCode', 'Код пакета', 'insuredObjects[0].packageCode', 24, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.packageCode', NULL, 'packageCode', 'Код пакета', false);
+INSERT INTO mt_attribute_def VALUES (303, 354, 364, 'INSURANCE_CONTRACT', 'rf_sport3', 'Доп.риск спорт #3', 'insuredObjects[0].riskFactors.sport3', 147, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.sport3', NULL, 'sport3', 'Доп.риск спорт #3', false);
+INSERT INTO mt_attribute_def VALUES (194, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_typeCode', 'Ph.документ.код типа документа', 'policyHolder.identifiers[?(@.isPrimary)].typeCode', 55, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.typeCode', 'identifierType', 'typeCode', 'Код типа документа', false);
+INSERT INTO mt_attribute_def VALUES (348, 5, 364, 'INSURANCE_CONTRACT', 'io_organization', 'Юр.лицо', 'insuredObjects[0].organization', 22, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.organization', NULL, 'organization', 'Юр.лицо', false);
+INSERT INTO mt_attribute_def VALUES (221, 2, 364, 'INSURANCE_CONTRACT', 'pl_commRate', 'Процент кв по договору', 'appliedCommissionRate', 137, 'IN', 'SINGLE', 'NUMBER', NULL, 'appliedCommissionRate', NULL, 'commRate', 'Процент кв по договору', false);
+INSERT INTO mt_attribute_def VALUES (165, 341, 364, 'INSURANCE_CONTRACT', 'ph_familyState', 'Страхователь.семейное положение', 'policyHolder.person.familyState', 20, 'IN', 'SINGLE', 'STRING', 'SINGLE', 'policyHolder.person.familyState', 'familyState', 'familyState', 'Семейное положение', false);
+INSERT INTO mt_attribute_def VALUES (283, 352, 364, 'INSURANCE_CONTRACT', 'io_landArea', 'Имущество.площадь участка', 'insuredObjects[0].property.landArea', 128, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.landArea', NULL, 'landArea', 'Площадь участка', false);
+INSERT INTO mt_attribute_def VALUES (207, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_kladrId', 'Ph.адрес.код кладр', 'policyHolder.addresses[?(@.isPrimary)].kladrId', 93, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.kladrId', NULL, 'kladrId', 'Код кладр', false);
+INSERT INTO mt_attribute_def VALUES (208, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_zipCode', 'Ph.адрес.индекс', 'policyHolder.addresses[?(@.isPrimary)].zipCode', 92, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.zipCode', NULL, 'zipCode', 'Индекс', false);
+INSERT INTO mt_attribute_def VALUES (209, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_room', 'Ph.адрес.комната', 'policyHolder.addresses[?(@.isPrimary)].room', 89, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.room', NULL, 'room', 'Комната', false);
+INSERT INTO mt_attribute_def VALUES (210, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_building', 'Ph.адрес.строение', 'policyHolder.addresses[?(@.isPrimary)].building', 86, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.building', NULL, 'building', 'Строение', false);
+INSERT INTO mt_attribute_def VALUES (295, 353, 364, 'INSURANCE_CONTRACT', 'io_arrivalCity', 'Город прилета', 'insuredObjects[0].travelSegments[*].arrivalCity', 113, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.travelSegments[*].arrivalCity', NULL, 'arrivalCity', 'Город прилета', false);
+INSERT INTO mt_attribute_def VALUES (296, 353, 364, 'INSURANCE_CONTRACT', 'io_departureCity', 'Город вылета', 'insuredObjects[0].travelSegments[*].departureCity', 111, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.travelSegments[*].departureCity', NULL, 'departureCity', 'Город вылета', false);
+INSERT INTO mt_attribute_def VALUES (297, 353, 364, 'INSURANCE_CONTRACT', 'io_ticketPrice', 'Стоимость билета', 'insuredObjects[0].travelSegments[*].ticketPrice.sum()', 53, 'IN', 'SINGLE', 'NUMBER', NULL, 'insuredObjects.travelSegments[*].ticketPrice.sum()', NULL, 'ticketPrice', 'Стоимость билета', false);
+INSERT INTO mt_attribute_def VALUES (157, 341, 364, 'INSURANCE_CONTRACT', 'ph_age_end', 'Страхователь.возраст на дату окончания договора', 'null', 141, 'MAGIC', 'SINGLE', 'NUMBER', NULL, 'null', NULL, 'age_end', 'Возраст на дату окончания договора', false);
+INSERT INTO mt_attribute_def VALUES (198, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_typeCode', 'Ph.адрес.тип адреса', 'policyHolder.addresses[?(@.isPrimary)].typeCode', 74, 'IN', 'SINGLE', 'STRING', 'REGISTRATION', 'policyHolder.addresses.typeCode', 'addressType', 'typeCode', 'Тип адреса', false);
+INSERT INTO mt_attribute_def VALUES (265, 351, 364, 'INSURANCE_CONTRACT', 'io_device_licenseKey', 'Застрахованное ус-во. ключ лицензии', 'insuredObjects[0].device.licenseKey', 114, 'IN', 'SINGLE', 'STRING', '1234567890', 'insuredObjects.device.licenseKey', NULL, 'device_licenseKey', 'Ключ лицензии', false);
+INSERT INTO mt_attribute_def VALUES (266, 351, 364, 'INSURANCE_CONTRACT', 'io_device_osName', 'Застрахованное ус-во. название ос', 'insuredObjects[0].device.osName', 117, 'IN', 'SINGLE', 'STRING', 'Android', 'insuredObjects.device.osName', NULL, 'device_osName', 'Название ос', false);
+INSERT INTO mt_attribute_def VALUES (268, 351, 364, 'INSURANCE_CONTRACT', 'io_device_name', 'Застрахованное ус-во. название', 'insuredObjects[0].device.deviceName', 103, 'IN', 'SINGLE', 'STRING', 'Телефон', 'insuredObjects.device.deviceName', NULL, 'device_name', 'Название', false);
+INSERT INTO mt_attribute_def VALUES (180, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_isResident', 'Страхователь.резидент рф юр.лица', 'policyHolder.organization.isResident', 45, 'IN', 'SINGLE', 'STRING', 'true', 'policyHolder.organization.isResident', 'yesNo', 'isResident', 'Резидент рф юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (183, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_kpp', 'Страхователь.кпп', 'policyHolder.organization.kpp', 41, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.kpp', NULL, 'kpp', 'Кпп', false);
+INSERT INTO mt_attribute_def VALUES (204, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_ext_id', 'Ph.адрес.внешний id', 'policyHolder.addresses[?(@.isPrimary)].ext_id', 101, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.ext_id', NULL, 'ext_id', 'Внешний id', false);
+INSERT INTO mt_attribute_def VALUES (205, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_addressStr', 'Ph.адрес.адресная строка', 'policyHolder.addresses[?(@.isPrimary)].addressStr', 98, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.addressStr', NULL, 'addressStr', 'Адресная строка', false);
+INSERT INTO mt_attribute_def VALUES (211, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_city', 'Ph.адрес.город', 'policyHolder.addresses[?(@.isPrimary)].city', 79, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.city', NULL, 'city', 'Город', false);
+INSERT INTO mt_attribute_def VALUES (175, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_inn', 'Страхователь.инн юр.лица', 'policyHolder.organization.inn', 36, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.inn', NULL, 'inn', 'Инн юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (176, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_nciCode', 'Страхователь.нси код', 'policyHolder.organization.nciCode', 48, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.nciCode', NULL, 'nciCode', 'Нси код', false);
+INSERT INTO mt_attribute_def VALUES (181, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_okpo', 'Страхователь.окпо', 'policyHolder.organization.okpo', 43, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.okpo', NULL, 'okpo', 'Окпо', false);
+INSERT INTO mt_attribute_def VALUES (158, 341, 364, 'INSURANCE_CONTRACT', 'ph_isResident', 'Страхователь.резидент рф', 'policyHolder.person.isResident', 28, 'IN', 'SINGLE', 'STRING', 'true', 'policyHolder.person.isResident', 'yesNo', 'ph_isResident', 'Страхователь.резидент рф', false);
+INSERT INTO mt_attribute_def VALUES (280, 352, 364, 'INSURANCE_CONTRACT', 'io_numberOfFloors', 'Имущество.количество этажей', 'insuredObjects[0].property.numberOfFloors', 131, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.numberOfFloors', NULL, 'numberOfFloors', 'Количество этажей', false);
+INSERT INTO mt_attribute_def VALUES (259, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_countryCode', 'Io.адрес.код страны', 'insuredObjects[0].addresses[?(@.isPrimary)].countryCode', 75, 'IN', 'SINGLE', 'STRING', 'RU', 'insuredObjects.addresses.countryCode', 'country2', 'countryCode', 'Код страны', false);
+INSERT INTO mt_attribute_def VALUES (195, 344, 364, 'INSURANCE_CONTRACT', 'ph_doc_serial', 'Ph.документ.серия документа', 'policyHolder.identifiers[?(@.isPrimary)].serial', 57, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.identifiers.serial', NULL, 'serial', 'Серия документа', false);
+INSERT INTO mt_attribute_def VALUES (304, 354, 364, 'INSURANCE_CONTRACT', 'rf_sport2', 'Доп.риск спорт #2', 'insuredObjects[0].riskFactors.sport2', 146, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.sport2', NULL, 'sport2', 'Доп.риск спорт #2', false);
+INSERT INTO mt_attribute_def VALUES (305, 354, 364, 'INSURANCE_CONTRACT', 'rf_sport4', 'Доп.риск спорт #4', 'insuredObjects[0].riskFactors.sport4', 148, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.sport4', NULL, 'sport4', 'Доп.риск спорт #4', false);
+INSERT INTO mt_attribute_def VALUES (306, 354, 364, 'INSURANCE_CONTRACT', 'rf_profSport', 'Профессиональный спорт', 'insuredObjects[0].riskFactors.profSport', 150, 'IN', 'SINGLE', 'STRING', '0', 'insuredObjects.riskFactors.profSport', NULL, 'profSport', 'Профессиональный спорт', false);
+INSERT INTO mt_attribute_def VALUES (163, 341, 364, 'INSURANCE_CONTRACT', 'ph_citizenship', 'Страхователь.гражданство', 'policyHolder.person.citizenship', 16, 'IN', 'SINGLE', 'STRING', 'RU', 'policyHolder.person.citizenship', 'country2', 'citizenship', 'Гражданство', false);
+INSERT INTO mt_attribute_def VALUES (185, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_shortName', 'Страхователь.краткое наименование юр.лица', 'policyHolder.organization.shortName', 39, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.shortName', NULL, 'shortName', 'Краткое наименование юр.лица', false);
+INSERT INTO mt_attribute_def VALUES (186, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_fullNameEn', 'Страхователь.полное наименование  юр.лица англ', 'policyHolder.organization.fullNameEn', 38, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.fullNameEn', NULL, 'fullNameEn', 'Полное наименование  юр.лица англ', false);
+INSERT INTO mt_attribute_def VALUES (202, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_flat', 'Ph.адрес.квартира', 'policyHolder.addresses[?(@.isPrimary)].flat', 87, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.flat', NULL, 'flat', 'Квартира', false);
+INSERT INTO mt_attribute_def VALUES (203, 345, 364, 'INSURANCE_CONTRACT', 'ph_addr_addressStrEn', 'Ph.адрес.адресная строка англ', 'policyHolder.addresses[?(@.isPrimary)].addressStrEn', 99, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.addresses.addressStrEn', NULL, 'addressStrEn', 'Адресная строка англ', false);
+INSERT INTO mt_attribute_def VALUES (290, 352, 364, 'INSURANCE_CONTRACT', 'io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 136, 'IN', 'SINGLE', 'NUMBER', '0', 'insuredObjects.property.floor', NULL, 'floor', 'Этаж', false);
+INSERT INTO mt_attribute_def VALUES (291, 352, 364, 'INSURANCE_CONTRACT', 'io_cadastrNr', 'Имущество.кадастровый номер', 'insuredObjects[0].property.cadastrNr', 120, 'IN', 'SINGLE', 'STRING', '77:07:0018002:2590', 'insuredObjects.property.cadastrNr', NULL, 'cadastrNr', 'Кадастровый номер', false);
+INSERT INTO mt_attribute_def VALUES (292, 352, 364, 'INSURANCE_CONTRACT', 'io_propertyTypeCode', 'Имущество.тип имущества код', 'insuredObjects[0].property.propertyType.code', 104, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.property.propertyType.code', NULL, 'propertyTypeCode', 'Тип имущества код', false);
+INSERT INTO mt_attribute_def VALUES (342, 4, 364, 'INSURANCE_CONTRACT', 'ph_contacts', 'Контакты', 'policyHolder.contacts', 11, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'policyHolder.contacts', NULL, 'contacts', 'Контакты', false);
+INSERT INTO mt_attribute_def VALUES (167, 341, 364, 'INSURANCE_CONTRACT', 'ph_middleName', 'Страхователь.отчество', 'policyHolder.person.middleName', 5, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.middleName', NULL, 'middleName', 'Отчество', false);
+INSERT INTO mt_attribute_def VALUES (168, 341, 364, 'INSURANCE_CONTRACT', 'ph_lastName', 'Страхователь.фамилия', 'policyHolder.person.lastName', 3, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.lastName', NULL, 'lastName', 'Фамилия', false);
+INSERT INTO mt_attribute_def VALUES (261, 350, 364, 'INSURANCE_CONTRACT', 'io_addr_typeCode', 'Io.адрес.тип адреса', 'insuredObjects[0].addresses[?(@.isPrimary)].typeCode', 73, 'IN', 'SINGLE', 'STRING', 'REGISTRATION', 'insuredObjects.addresses.typeCode', 'addressType', 'typeCode', 'Тип адреса', false);
+INSERT INTO mt_attribute_def VALUES (179, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_group', 'Страхователь.gруппа страхователя юл', 'policyHolder.organization.group', 46, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.group', NULL, 'group', 'Gруппа страхователя юл', false);
+INSERT INTO mt_attribute_def VALUES (341, 4, 364, 'INSURANCE_CONTRACT', 'ph_person', 'Физ.лицо', 'policyHolder.person', 10, 'OBJECT', 'SINGLE', 'OBJECT', '', 'policyHolder.person', NULL, 'ph_person', 'Физ.лицо', false);
+INSERT INTO mt_attribute_def VALUES (1745, 357, 364, 'INSURANCE_CONTRACT', 'ic_displayName', 'Строка для страхового договора', 'insurer.organization.displayName', 0, 'IN', 'SINGLE', 'STRING', '', 'insurer.organization.displayName', NULL, 'ic_displayName', 'Строка для страхового договора', false);
+INSERT INTO mt_attribute_def VALUES (1746, 1, 364, 'INSURANCE_CONTRACT', 'pl_productName', 'Название продукта', 'productName', 2, 'VAR', 'SINGLE', 'STRING', '', 'productName', NULL, 'pl_productName', 'Название продукта', false);
+INSERT INTO mt_attribute_def VALUES (169, 341, 364, 'INSURANCE_CONTRACT', 'ph_gender', 'Пол', 'policyHolder.person.gender', 18, 'IN', 'SINGLE', 'STRING', '', 'policyHolder.person.gender', 'gender', 'ph_gender', 'Пол', false);
+INSERT INTO mt_attribute_def VALUES (170, 341, 364, 'INSURANCE_CONTRACT', 'ph_firstName', 'Страхователь.имя', 'policyHolder.person.firstName', 2, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.person.firstName', NULL, 'firstName', 'Имя', false);
+INSERT INTO mt_attribute_def VALUES (387, 357, 364, 'INSURANCE_CONTRACT', 'ic_org_okpo', 'Страховщик.окпо', 'insurer.organization.okpo', 43, 'IN', 'SINGLE', 'STRING', NULL, 'insurer.organization.okpo', NULL, 'okpo', 'Окпо', false);
+INSERT INTO mt_attribute_def VALUES (178, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_country', 'Страхователь.код страны регистрации', 'policyHolder.organization.country', 35, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.country', 'country2', 'country', 'Код страны регистрации', false);
+INSERT INTO mt_attribute_def VALUES (345, 4, 364, 'INSURANCE_CONTRACT', 'ph_addresses', 'Адрес', 'policyHolder.addresses[?(@.isPrimary)]', 14, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'policyHolder.addresses', NULL, 'addresses', 'Адрес', false);
+INSERT INTO mt_attribute_def VALUES (347, 5, 364, 'INSURANCE_CONTRACT', 'io_contacts', 'Контакты', 'insuredObjects[0].contacts', 21, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.contacts', NULL, 'contacts', 'Контакты', false);
+INSERT INTO mt_attribute_def VALUES (276, 351, 364, 'INSURANCE_CONTRACT', 'io_device_serialNr', 'Застрахованное ус-во. серийный номер', 'insuredObjects[0].device.serialNr', 112, 'IN', 'SINGLE', 'STRING', '1234567890', 'insuredObjects.device.serialNr', NULL, 'device_serialNr', 'Серийный номер', false);
+INSERT INTO mt_attribute_def VALUES (172, 342, 364, 'INSURANCE_CONTRACT', 'ph_phone', 'Страхователь.телефон', 'policyHolder.contacts.phone', 49, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.contacts.phone', NULL, 'phone', 'Телефон', false);
+INSERT INTO mt_attribute_def VALUES (173, 342, 364, 'INSURANCE_CONTRACT', 'ph_email', 'Страхователь.email', 'policyHolder.contacts.email', 52, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.contacts.email', NULL, 'email', 'Email', false);
+INSERT INTO mt_attribute_def VALUES (174, 343, 364, 'INSURANCE_CONTRACT', 'ph_org_bic', 'Страхователь.бик', 'policyHolder.organization.bic', 44, 'IN', 'SINGLE', 'STRING', NULL, 'policyHolder.organization.bic', NULL, 'bic', 'Бик', false);
+INSERT INTO mt_attribute_def VALUES (224, 346, 364, 'INSURANCE_CONTRACT', 'io_birthPlace', 'Застрахованный.место рождения', 'insuredObjects[0].person.birthPlace', 14, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.person.birthPlace', NULL, 'birthPlace', 'Место рождения', false);
 
+SET session_replication_role = 'origin';
 
-insert into pt_metadata (var_code, var_name, var_path, var_type, var_value, var_cdm, nr, var_data_type) values
+INSERT INTO pt_insurance_company VALUES (112, 364, 'vsk', 'VSK', 'active', '{}', 'ACTIVE', '2026-04-06 14:59:36.107812', '2026-04-06 14:59:36.107812');
 
-('io_addr_addressStr', 'Адрес.адресная строка', 'insuredObjects[0].addresses[isPrimary].addressesStr', 'IN', '', 'insuredObject.addresses.addressStr', '133', 'STRING'),
-('io_addr_addressStrEn', 'Адрес.адресная строка англ', 'insuredObjects[0].addresses[isPrimary].addressesStrEn', 'IN', '', 'insuredObject.addresses.addressStrEn', '134', 'STRING'),
-('io_addr_building', 'Адрес.строение', 'insuredObjects[0].addresses[isPrimary].building', 'IN', '', 'insuredObject.addresses.building', '127', 'STRING'),
-('io_addr_city', 'Адрес.город', 'insuredObjects[0].addresses[isPrimary].city', 'IN', '', 'insuredObject.addresses.city', '124', 'STRING'),
-('io_addr_countryCode', 'Адрес.код страны', 'insuredObjects[0].addresses[isPrimary].countryCode', 'IN', 'RU', 'insuredObject.addresses.countryCode', '122', 'STRING'),
-('io_addr_ext_id', 'Адрес.внешний ID', 'insuredObjects[0].addresses[isPrimary].ext_id', 'IN', '', 'insuredObject.addresses.ext_id', '136', 'STRING'),
-('io_addr_fiasId', 'Адрес.код ФИАС', 'insuredObjects[0].addresses[isPrimary].fiasId', 'IN', '', 'insuredObject.addresses.fiasId', '132', 'STRING'),
-('io_addr_flat', 'Адрес.квартира', 'insuredObjects[0].addresses[isPrimary].flat', 'IN', '', 'insuredObject.addresses.flat', '128', 'STRING'),
-('io_addr_house', 'Адрес.дом', 'insuredObjects[0].addresses[isPrimary].house', 'IN', '', 'insuredObject.addresses.house', '126', 'STRING'),
-('io_addr_kladrId', 'Адрес.код КЛАДР', 'insuredObjects[0].addresses[isPrimary].kladrId', 'IN', '', 'insuredObject.addresses.kladrId', '131', 'STRING'),
-('io_addr_region', 'Адрес.регион', 'insuredObjects[0].addresses[isPrimary].region', 'IN', '', 'insuredObject.addresses.region', '123', 'STRING'),
-('io_addr_room', 'Адрес.комната', 'insuredObjects[0].addresses[isPrimary].room', 'IN', '', 'insuredObject.addresses.room', '129', 'STRING'),
-('io_addr_street', 'Адрес.улица', 'insuredObjects[0].addresses[isPrimary].street', 'IN', '', 'insuredObject.addresses.street', '125', 'STRING'),
-('io_addr_typeCode', 'Адрес.тип адреса', 'insuredObjects[0].addresses[isPrimary].typeCode', 'IN', 'REGISTRATION', 'insuredObject.addresses.typeCode', '121', 'STRING'),
-('io_addr_zipCode', 'Адрес.индекс', 'insuredObjects[0].addresses[isPrimary].zipCode', 'IN', '', 'insuredObject.addresses.zipCode', '130', 'STRING'),
-('io_email', 'Застрахованный.email', 'insuredObjects[0].contacts[isPrimary].email', 'IN', '', 'insuredObject.contacts..email', '91', 'STRING'),
-('io_phone', 'Застрахованный.телефон', 'insuredObjects[0].contacts[isPrimary].phone', 'IN', '', 'insuredObject.contacts.phone', '81', 'STRING'),
-('io_device_countryCode', 'Застрахованное ус-во. код страны', 'insuredObjects[0].device.countryCode', 'IN', 'RU', 'insuredObject.device.countryCode', '1009', 'STRING'),
-('io_device_name', 'Застрахованное ус-во. название', 'insuredObjects[0].device.deviceName', 'IN', 'Телефон', 'insuredObject.device.deviceName', '1001', 'STRING'),
-('io_device_devicePrice', 'Застрахованное ус-во. цена', 'insuredObjects[0].device.devicePrice', 'IN', '10000', 'insuredObject.device.devicePrice', '1010', 'STRING'),
-('io_device_typeCode', 'Застрахованное ус-во. код типа', 'insuredObjects[0].device.deviceTypeCode', 'IN', 'PHONE', 'insuredObject.device.deviceTypeCode', '1002', 'STRING'),
-('io_device_imei', 'Застрахованное ус-во. IMEI', 'insuredObjects[0].device.imei', 'IN', '1234567890', 'insuredObject.device.imei', '1007', 'STRING'),
-('io_device_licenseKey', 'Застрахованное ус-во. ключ лицензии', 'insuredObjects[0].device.licenseKey', 'IN', '1234567890', 'insuredObject.device.licenseKey', '1006', 'STRING'),
-('io_device_model', 'Застрахованное ус-во. модель', 'insuredObjects[0].device.model', 'IN', 'Galaxy S21', 'insuredObject.device.model', '1004', 'STRING'),
-('io_device_osName', 'Застрахованное ус-во. название ОС', 'insuredObjects[0].device.osName', 'IN', 'Android', 'insuredObject.device.osName', '1008', 'STRING'),
-('io_device_osVersion', 'Застрахованное ус-во. версия ОС', 'insuredObjects[0].device.osVersion', 'IN', '10', 'insuredObject.device.osVersion', '1008', 'STRING'),
-('io_device_serialNr', 'Застрахованное ус-во. серийный номер', 'insuredObjects[0].device.serialNr', 'IN', '1234567890', 'insuredObject.device.serialNr', '1005', 'STRING'),
-('io_device_tradeMark', 'Застрахованное ус-во. торговая марка', 'insuredObjects[0].device.tradeMark', 'IN', 'Samsung', 'insuredObject.device.tradeMark', '1003', 'STRING'),
-('io_doc_countryCode', 'Документ.страна выдачи документа', 'insuredObjects[0].identifiers[isPrimary].countryCode', 'IN', 'RU', 'insuredObject.identifiers.countryCode', '110', 'STRING'),
-('io_doc_dateIssue', 'Документ.дата выдачи', 'insuredObjects[0].identifiers[isPrimary].dateIssue', 'IN', '', 'insuredObject.identifiers.dateIssue', '104', 'STRING'),
-('io_doc_divisionCode', 'Документ.код подразделения', 'insuredObjects[0].identifiers[isPrimary].divisionCode', 'IN', '', 'insuredObject.identifiers.divisionCode', '107', 'STRING'),
-('io_doc_ext_id', 'Документ.внешний ID', 'insuredObjects[0].identifiers[isPrimary].ext_id', 'IN', '', 'insuredObject.identifiers.ext_id', '109', 'STRING'),
-('io_doc_number', 'Документ.номер документа', 'insuredObjects[0].identifiers[isPrimary].number', 'IN', '', 'insuredObject.identifiers.number', '103', 'STRING'),
-('io_doc_serial', 'Документ.серия документа', 'insuredObjects[0].identifiers[isPrimary].serial', 'IN', '', 'insuredObject.identifiers.serial', '102', 'STRING'),
-('io_doc_typeCode', 'Документ.код типа документа', 'insuredObjects[0].identifiers[isPrimary].typeCode', 'IN', '', 'insuredObject.identifiers.typeCode', '101', 'STRING'),
-('io_doc_validUntil', 'Документ.действительно до', 'insuredObjects[0].identifiers[isPrimary].validUntil', 'IN', '', 'insuredObject.identifiers.validUntil', '105', 'STRING'),
-('io_doc_whom', 'Документ.кем выдан', 'insuredObjects[0].identifiers[isPrimary].whom', 'IN', '', 'insuredObject.identifiers.whom', '106', 'STRING'),
-('io_packageCode', 'Код пакета', 'insuredObjects[0].packageCode', 'IN', '0', 'insuredObject.packageCode', '11', 'STRING'),
-('io_age_end', 'Возраст застрахованного на дату окончания полиса', '', 'MAGIC', '', 'insuredObject.person.age_end', '1102', 'NUMBER'),
-('io_age_issue', 'Возраст застрахованного на дату выпуска полиса', '', 'MAGIC', '', 'insuredObject.person.age_issue', '1101', 'NUMBER'),
-('io_birthDate', 'Застрахованный.дата рождения', 'insuredObjects[0].person.birthDate', 'IN', '', 'insuredObject.person.birthDate', '4', 'STRING'),
-('io_birthPlace', 'Застрахованный.место рождения', 'insuredObjects[0].person.birthPlace', 'IN', '', 'insuredObject.person.birthPlace', '7', 'STRING'),
-('io_citizenship', 'Застрахованный.гражданство', 'insuredObjects[0].person.citizenship', 'IN', 'RU', 'insuredObject.person.citizenship', '8', 'STRING'),
-('io_ext_id', 'Застрахованный.внешний ID', 'insuredObjects[0].person.ext_id', 'IN', '', 'insuredObject.person.ext_id', '14', 'STRING'),
-('io_familyState', 'Застрахованный.семейное положение', 'insuredObjects[0].person.familyState', 'IN', 'SINGLE', 'insuredObject.person.familyState', '10', 'STRING'),
-('io_firstName', 'Застрахованный.имя', 'insuredObjects[0].person.firstName', 'IN', '', 'insuredObject.person.firstName', '1', 'STRING'),
-('io_fullName', 'Застрахованный.полное ФИО', 'insuredObjects[0].person.fullName', 'IN', '', 'insuredObject.person.fullName', '5', 'STRING'),
-('io_fullNameEn', 'Застрахованный.полное ФИО англ', 'insuredObjects[0].person.fullNameEn', 'IN', '', 'insuredObject.person.fullNameEn', '6', 'STRING'),
-('io_gender', 'Застрахованный.пол', 'insuredObjects[0].person.gender', 'IN', '', 'insuredObject.person.gender', '9', 'STRING'),
-('io_isPublicOfficial', 'Застрахованный.признак ПДЛ', 'insuredObjects[0].person.isPublicOfficial', 'IN', '', 'insuredObject.person.isPublicOfficial', '11', 'STRING'),
-('io_lastName', 'Застрахованный.фамилия', 'insuredObjects[0].person.lastName', 'IN', '', 'insuredObject.person.lastName', '2', 'STRING'),
-('io_middleName', 'Застрахованный.отчество', 'insuredObjects[0].person.middleName', 'IN', '', 'insuredObject.person.middleName', '3', 'STRING'),
-('io_sumInsured', 'Страховая сумма объекта страхования', 'insuredObjects[0].sumInsured', 'IN', '100000', 'insuredObject.sumInsured', '10', 'NUMBER'),
-('io_arrivalCity', 'город прилета', 'insuredObjects[0].travelSegments[*].arrivalCity', 'IN', '', 'insuredObject.travelSegments.arrivalCity', '1005', 'STRING'),
-('io_departureCity', 'город вылета', 'insuredObjects[0].travelSegments[*].departureCity', 'IN', '', 'insuredObject.travelSegments.departureCity', '1004', 'STRING'),
-('io_departureDate', 'дата вылета', 'insuredObjects[0].travelSegments[*].departureDate', 'IN', '', 'insuredObject.travelSegments.departureDate', '1002', 'STRING'),
-('io_departureTime', 'время вылета', 'insuredObjects[0].travelSegments[*].departureTime', 'IN', '', 'insuredObject.travelSegments.departureTime', '1003', 'STRING'),
-('io_legs', 'количество перелетов', 'insuredObjects[0].travelSegments[*].count()', 'IN', '', 'insuredObject.travelSegments.legs', '101', 'NUMBER'),
-('io_ticketNr', 'номер билета', 'insuredObjects[0].travelSegments[*].ticketNr', 'IN', '', 'insuredObject.travelSegments.ticketNr', '1001', 'STRING'),
-('io_ticketPrice', 'стоимость билета', 'insuredObjects[0].travelSegments[*].ticketPrice.sum()', 'IN', '', 'insuredObject.travelSegments.ticketPrice', '101', 'NUMBER'),
-('io_isResident', 'Застрахованный.резидент РФ', 'insuredObjects[0].person.isResident', 'IN', 'true', 'insuredObjects[0].person.isResident', '12', 'STRING'),
-('pl_TermDays', 'Срок полиса в днях', '', 'MAGIC', '', 'policy.magic.termDays', '1202', 'NUMBER'),
-('pl_TermMonths', 'Срок полиса в месяцах', '', 'MAGIC', '', 'policy.magic.termMonths', '1201', 'NUMBER'),
-('pl_endDate', 'дата окончания договора', 'endDate', 'IN', '', 'policy.policy.endDate', '12', 'STRING'),
-('pl_issueDate', 'дата выпуска договора', 'issueDate', 'IN', '', 'policy.policy.issueDate', '15', 'STRING'),
-('pl_policyNumber', 'номер договора', 'policyNumber', 'IN', '', 'policy.policy.policyNumber', '13', 'STRING'),
-('pl_premium', 'премия по договору', 'premium', 'IN', '', 'policy.policy.premium', '14', 'STRING'),
-('pl_productCode', 'Код продукта', 'productCode', 'IN', '', 'policy.policy.productCode', '10', 'STRING'),
-('pl_startDate', 'дата начала действия договора', 'startDate', 'IN', '', 'policy.policy.startDate', '11', 'STRING'),
-('ph_addr_addressStr', 'Адрес.адресная строка', 'policyHolder.address.addressStr', 'IN', '', 'policyHolder.addresses.addressStr', '133', 'STRING'),
-('ph_addr_addressStrEn', 'Адрес.адресная строка англ', 'policyHolder.address.addressStrEn', 'IN', '', 'policyHolder.addresses.addressStrEn', '134', 'STRING'),
-('ph_addr_building', 'Адрес.строение', 'policyHolder.address.building', 'IN', '', 'policyHolder.addresses.building', '127', 'STRING'),
-('ph_addr_city', 'Адрес.город', 'policyHolder.address.city', 'IN', '', 'policyHolder.addresses.city', '124', 'STRING'),
-('ph_addr_countryCode', 'Адрес.код страны', 'policyHolder.address.countryCode', 'IN', 'RU', 'policyHolder.addresses.countryCode', '122', 'STRING'),
-('ph_addr_ext_id', 'Адрес.внешний ID', 'policyHolder.address.ext_id', 'IN', '', 'policyHolder.addresses.ext_id', '136', 'STRING'),
-('ph_addr_fiasId', 'Адрес.код ФИАС', 'policyHolder.address.fiasId', 'IN', '', 'policyHolder.addresses.fiasId', '132', 'STRING'),
-('ph_addr_flat', 'Адрес.квартира', 'policyHolder.address.flat', 'IN', '', 'policyHolder.addresses.flat', '128', 'STRING'),
-('ph_addr_house', 'Адрес.дом', 'policyHolder.address.house', 'IN', '', 'policyHolder.addresses.house', '126', 'STRING'),
-('ph_addr_kladrId', 'Адрес.код КЛАДР', 'policyHolder.address.kladrId', 'IN', '', 'policyHolder.addresses.kladrId', '131', 'STRING'),
-('ph_addr_region', 'Адрес.регион', 'policyHolder.address.region', 'IN', '', 'policyHolder.addresses.region', '123', 'STRING'),
-('ph_addr_room', 'Адрес.комната', 'policyHolder.address.room', 'IN', '', 'policyHolder.addresses.room', '129', 'STRING'),
-('ph_addr_street', 'Адрес.улица', 'policyHolder.address.street', 'IN', '', 'policyHolder.addresses.street', '125', 'STRING'),
-('ph_addr_typeCode', 'Адрес.тип адреса', 'policyHolder.address.typeCode', 'IN', 'REGISTRATION', 'policyHolder.addresses.typeCode', '121', 'STRING'),
-('ph_addr_zipCode', 'Адрес.индекс', 'policyHolder.address.zipCode', 'IN', '', 'policyHolder.addresses.zipCode', '130', 'STRING'),
-('ph_email', 'Страхователь.email', 'policyHolder.email', 'IN', '', 'policyHolder.contacts..email', '91', 'STRING'),
-('ph_phone', 'Страхователь.телефон', 'policyHolder.phone.phoneNumber', 'IN', '', 'policyHolder.contacts.phone', '81', 'STRING'),
-('ph_doc_countryCode', 'Документ.страна выдачи документа', 'policyHolder.passport.countryCode', 'IN', 'RU', 'policyHolder.identifiers.countryCode', '110', 'STRING'),
-('ph_doc_dateIssue', 'Документ.дата выдачи', 'policyHolder.passport.dateIssue', 'IN', '', 'policyHolder.identifiers.dateIssue', '104', 'STRING'),
-('ph_doc_divisionCode', 'Документ.код подразделения', 'policyHolder.passport.divisionCode', 'IN', '', 'policyHolder.identifiers.divisionCode', '107', 'STRING'),
-('ph_doc_ext_id', 'Документ.внешний ID', 'policyHolder.passport.ext_id', 'IN', '', 'policyHolder.identifiers.ext_id', '109', 'STRING'),
-('ph_doc_number', 'Документ.номер документа', 'policyHolder.passport.number', 'IN', '', 'policyHolder.identifiers.number', '103', 'STRING'),
-('ph_doc_serial', 'Документ.серия документа', 'policyHolder.passport.serial', 'IN', '', 'policyHolder.identifiers.serial', '102', 'STRING'),
-('ph_doc_typeCode', 'Документ.код типа документа', 'policyHolder.passport.typeCode', 'IN', '', 'policyHolder.identifiers.typeCode', '101', 'STRING'),
-('ph_doc_validUntil', 'Документ.действительно до', 'policyHolder.passport.validUntil', 'IN', '', 'policyHolder.identifiers.validUntil', '105', 'STRING'),
-('ph_doc_whom', 'Документ.кем выдан', 'policyHolder.passport.whom', 'IN', '', 'policyHolder.identifiers.whom', '106', 'STRING'),
-('ph_org_bic', 'Страхователь.БИК', 'policyHolder.organization.bic', 'IN', '', 'policyHolder.organization.bic', '60', 'STRING'),
-('ph_country', 'Страхователь.код страны регистрации', 'policyHolder.organization.country', 'IN', '', 'policyHolder.organization.country', '51', 'STRING'),
-('ph_org_ext_id', 'Страхователь.внешний ID', 'policyHolder.organization.ext_id', 'IN', '', 'policyHolder.organization.ext_id', '64', 'STRING'),
-('ph_org_fullName', 'Страхователь.полное наименование юр.лица', 'policyHolder.organization.fullName', 'IN', '', 'policyHolder.organization.fullName', '53', 'STRING'),
-('ph_org_fullNameEn', 'Страхователь.полное наименование  юр.лица англ', 'policyHolder.organization.fullNameEn', 'IN', '', 'policyHolder.organization.fullNameEn', '54', 'STRING'),
-('ph_org_group', 'Страхователь.Gруппа страхователя ЮЛ', 'policyHolder.organization.group', 'IN', '', 'policyHolder.organization.group', '62', 'STRING'),
-('ph_org_inn', 'Страхователь.ИНН юр.лица', 'policyHolder.organization.inn', 'IN', '', 'policyHolder.organization.inn', '52', 'STRING'),
-('ph_org_isResident', 'Страхователь.резидент РФ юр.лица', 'policyHolder.organization.isResident', 'IN', 'true', 'policyHolder.organization.isResident', '61', 'STRING'),
-('ph_org_kpp', 'Страхователь.КПП', 'policyHolder.organization.kpp', 'IN', '', 'policyHolder.organization.kpp', '57', 'STRING'),
-('ph_org_legalForm', 'Страхователь.организационно-правовая форма', 'policyHolder.organization.legalForm', 'IN', '', 'policyHolder.organization.legalForm', '56', 'STRING'),
-('ph_org_nciCode', 'Страхователь.НСИ код', 'policyHolder.organization.nciCode', 'IN', '', 'policyHolder.organization.nciCode', '65', 'STRING'),
-('ph_org_ogrn', 'Страхователь.ОГРН', 'policyHolder.organization.ogrn', 'IN', '', 'policyHolder.organization.ogrn', '58', 'STRING'),
-('ph_org_okpo', 'Страхователь.ОКПО', 'policyHolder.organization.okpo', 'IN', '', 'policyHolder.organization.okpo', '59', 'STRING'),
-('ph_org_shortName', 'Страхователь.краткое наименование юр.лица', 'policyHolder.organization.shortName', 'IN', '', 'policyHolder.organization.shortName', '55', 'STRING'),
-('ph_age_end', 'Страхователь.возраст на дату окончания договора', '', 'MAGIC', '', 'policyHolder.person.age_end', '1115', 'NUMBER'),
-('ph_age_issue', 'Страхователь.возраст на дату выпуска договора', '', 'MAGIC', '', 'policyHolder.person.age_issue', '1115', 'NUMBER'),
-('ph_birthDate', 'Страхователь.дата рождения', 'policyHolder.person.birthDate', 'IN', '', 'policyHolder.person.birthDate', '4', 'STRING'),
-('ph_birthPlace', 'Страхователь.место рождения', 'policyHolder.person.birthPlace', 'IN', '', 'policyHolder.person.birthPlace', '7', 'STRING'),
-('ph_citizenship', 'Страхователь.гражданство', 'policyHolder.person.citizenship', 'IN', 'RU', 'policyHolder.person.citizenship', '8', 'STRING'),
-('ph_ext_id', 'Страхователь.внешний ID', 'policyHolder.person.ext_id', 'IN', '', 'policyHolder.person.ext_id', '14', 'STRING'),
-('ph_familyState', 'Страхователь.семейное положение', 'policyHolder.person.familyState', 'IN', 'SINGLE', 'policyHolder.person.familyState', '10', 'STRING'),
-('ph_firstName', 'Страхователь.имя', 'policyHolder.person.firstName', 'IN', '', 'policyHolder.person.firstName', '1', 'STRING'),
-('ph_fullName', 'Страхователь.полное ФИО', 'policyHolder.person.fullName', 'IN', '', 'policyHolder.person.fullName', '5', 'STRING'),
-('ph_fullNameEn', 'Страхователь.полное ФИО англ', 'policyHolder.person.fullNameEn', 'IN', '', 'policyHolder.person.fullNameEn', '6', 'STRING'),
-('ph_gender', 'Страхователь.пол', 'policyHolder.person.gender', 'IN', '', 'policyHolder.person.gender', '9', 'STRING'),
-('ph_isFemale', 'Страхователь.пол.Ж', '', 'MAGIC', '', 'policyHolder.person.isFemale', '1114', 'STRING'),
-('ph_isMale', 'Страхователь.пол.М', '', 'MAGIC', '', 'policyHolder.person.isMale', '1113', 'STRING'),
-('ph_isPublicOfficial', 'Страхователь.признак ПДЛ', 'policyHolder.person.isPublicOfficial', 'IN', '', 'policyHolder.person.isPublicOfficial', '11', 'STRING'),
-('ph_isResident', 'Страхователь.резидент РФ', 'policyHolder.person.isResident', 'IN', 'true', 'policyHolder.person.isResident', '12', 'STRING'),
-('ph_lastName', 'Страхователь.фамилия', 'policyHolder.person.lastName', 'IN', '', 'policyHolder.person.lastName', '2', 'STRING'),
-('ph_middleName', 'Страхователь.отчество', 'policyHolder.person.middleName', 'IN', '', 'policyHolder.person.middleName', '3', 'STRING'),
-('io_propertyTypeCode', 'Имущество.тип имущества код', 'insuredObjects[0].property.propertyType.code', 'IN', '', 'insuredObject.property.propertyType.code', 1001, 'STRING'),
-('io_cadastrNr', 'Имущество.кадастровый номер', 'insuredObjects[0].property.cadastrNr', 'IN', '77:07:0018002:2590', 'insuredObject.property.cadastrNr', 1018, 'STRING'),
-('io_wallsMaterial', 'Имущество.материал стен', 'insuredObjects[0].property.wallsMaterial', 'IN', 'Каменные, кирпичные', 'insuredObject.property.wallsMaterial', 1019, 'STRING'),
-('io_wallsMaterialOther', 'Имущество.материал стен другой', 'insuredObjects[0].property.wallsMaterialOther', 'IN', 'Каменные, кирпичные', 'insuredObject.property.wallsMaterialOther', 1020, 'STRING'),
-('io_ceilingMaterial', 'Имущество.материал перекрытий', 'insuredObjects[0].property.ceilingMaterial', 'IN', 'Смешанные', 'insuredObject.property.ceilingMaterial', 1021, 'STRING'),
-('io_ceilingMaterialOther', 'Имущество.материал перекрытий другой', 'insuredObjects[0].property.ceilingMaterialOther', 'IN', 'Смешанные', 'insuredObject.property.ceilingMaterialOther', 1022, 'STRING'),
-('io_constructionYear', 'Имущество.год постройки', 'insuredObjects[0].property.constructionYear', 'IN', '', 'insuredObject.property.constructionYear', 1023, 'STRING'),
-('io_repairYear', 'Имущество.год ремонта', 'insuredObjects[0].property.repairYear', 'IN', '', 'insuredObject.property.repairYear', 1024, 'STRING'),
-('io_buildingArea', 'Имущество.площадь здания', 'insuredObjects[0].property.buildingArea', 'IN', '0', 'insuredObject.property.buildingArea', 1025, 'NUMBER'),
-('io_landArea', 'Имущество.площадь участка', 'insuredObjects[0].property.landArea', 'IN', '0', 'insuredObject.property.landArea', 1026, 'NUMBER'),
-('io_buildingValue', 'Имущество.стоимость здания', 'insuredObjects[0].property.buildingValue', 'IN', '0', 'insuredObject.property.buildingValue', 1027, 'NUMBER'),
-('io_wearCoefficient', 'Имущество.коэффициент износа', 'insuredObjects[0].property.wearCoefficient', 'IN', '0', 'insuredObject.property.wearCoefficient', 1028, 'NUMBER'),
-('io_numberOfFloors', 'Имущество.количество этажей', 'insuredObjects[0].property.numberOfFloors', 'IN', '0', 'insuredObject.property.numberOfFloors', 1029, 'NUMBER'),
-('io_propertyLocation', 'Имущество.расположение имущества', 'insuredObjects[0].property.propertyLocation', 'IN', 'В многоквартирном доме', 'insuredObject.property.propertyLocation', 1030, 'STRING'),
-('io_isNewBuilding', 'Имущество.новостройка', 'insuredObjects[0].property.isNewBuilding', 'IN', '', 'insuredObject.property.isNewBuilding', 1031, 'STRING'),
-('io_propertyValue', 'Имущество.стоимость имущества', 'insuredObjects[0].property.propertyValue', 'IN', '0', 'insuredObject.property.propertyValue', 1032, 'NUMBER'),
-('io_commissioningDate', 'Имущество.дата ввода в эксплуатацию', 'insuredObjects[0].property.commissioningDate', 'IN', '', 'insuredObject.property.commissioningDate', 1033, 'STRING'),
-
-('gross_up_factor', 'gross-up_factor 1/(1-kV)', '', 'MAGIC', '', 'policy.magic.grossUpFactor', 1050, 'NUMBER'),
-('pl_commRate', 'Процент кВ по договору', 'commission.appliedCommissionRate', 'IN', '', 'policy.commission.appliedCommissionRate', 1050, 'NUMBER'),
-
-('io_floor', 'Имущество.этаж', 'insuredObjects[0].property.floor', 'IN', '0', 'insuredObject.property.floor', 1034, 'NUMBER');
-
-
-
-
-
-insert into pt_refdata values
-('fns-dul','1','Паспорт гражданина СССР'),
-('fns-dul','2','Загранпаспорт гражданина СССР'),
-('fns-dul','3','Свидетельство о рождении'),
-('fns-dul','4','Удостоверение личности офицера'),
-('fns-dul','5','Справка об освобождении из места лишения свободы'),
-('fns-dul','6','Паспорт Минморфлота'),
-('fns-dul','7','Военный билет'),
-('fns-dul','8','Временное удостоверение, выданное взамен военного билета'),
-('fns-dul','9','Дипломатический паспорт'),
-('fns-dul','10','Паспорт иностранного гражданина'),
-('fns-dul','11','Свидетельство о рассмотрении ходатайства о признании лица беженцем на территории РФ по существу'),
-('fns-dul','12','Вид на жительство в Российской Федерации'),
-('fns-dul','13','Удостоверение беженца'),
-('fns-dul','14','Временное удостоверение личности гражданина Российской Федерации'),
-('fns-dul','15','Разрешение на временное проживание в Российской Федерации'),
-('fns-dul','16','Временное удостоверение личности лица без гражданства в РФ'),
-('fns-dul','18','Свидетельство о предоставлении временного убежища на территории Российской Федерации (до 01.01.2013)'),
-('fns-dul','19','Свидетельство о предоставлении временного убежища на территории Российской Федерации'),
-('fns-dul','21','Паспорт гражданина Российской Федерации'),
-('fns-dul','22','Паспорт гражданина РФ, удостоверяющий личность гражданина РФ за пределами территории РФ'),
-('fns-dul','23','Свидетельство о рождении, выданное уполномоченным органом иностранного государства'),
-('fns-dul','24','Удостоверение личности военнослужащего Российской Федерации'),
-('fns-dul','26','Паспорт моряка'),
-('fns-dul','27','Военный билет офицера запаса'),
-('fns-dul','28','Служебный паспорт гражданина Российской Федерации'),
-('fns-dul','60','Документы, подтверждающие факт регистрации по месту жительства (пребывания)'),
-('fns-dul','61','Свидетельство о регистрации по месту жительства'),
-('fns-dul','62','Вид на жительство иностранного гражданина'),
-('fns-dul','63','Свидетельство о регистрации по месту пребывания'),
-('fns-dul','81','Свидетельство о смерти'),
-('fns-dul','91','Иные документы');
-
-insert into pt_refdata values
-('oksm2','AF','АФГАНИСТАН'),
-('oksm2','AL','АЛБАНИЯ'),
-('oksm2','AQ','АНТАРКТИДА'),
-('oksm2','DZ','АЛЖИР'),
-('oksm2','AS','АМЕРИКАНСКОЕ САМОА'),
-('oksm2','AD','АНДОРРА'),
-('oksm2','AO','АНГОЛА'),
-('oksm2','AG','АНТИГУА И БАРБУДА'),
-('oksm2','AZ','АЗЕРБАЙДЖАН'),
-('oksm2','AR','АРГЕНТИНА'),
-('oksm2','AU','АВСТРАЛИЯ'),
-('oksm2','AT','АВСТРИЯ'),
-('oksm2','BS','БАГАМЫ'),
-('oksm2','BH','БАХРЕЙН'),
-('oksm2','BD','БАНГЛАДЕШ'),
-('oksm2','AM','АРМЕНИЯ'),
-('oksm2','BB','БАРБАДОС'),
-('oksm2','BE','БЕЛЬГИЯ'),
-('oksm2','BM','БЕРМУДЫ'),
-('oksm2','BT','БУТАН'),
-('oksm2','BO','БОЛИВИЯ, МНОГОНАЦИОНАЛЬНОЕ ГОСУДАРСТВО'),
-('oksm2','BA','БОСНИЯ И ГЕРЦЕГОВИНА'),
-('oksm2','BW','БОТСВАНА'),
-('oksm2','BV','ОСТРОВ БУВЕ'),
-('oksm2','BR','БРАЗИЛИЯ'),
-('oksm2','BZ','БЕЛИЗ'),
-('oksm2','IO','БРИТАНСКАЯ ТЕРРИТОРИЯ В ИНДИЙСКОМ ОКЕАНЕ'),
-('oksm2','SB','СОЛОМОНОВЫ ОСТРОВА'),
-('oksm2','VG','ВИРГИНСКИЕ ОСТРОВА (БРИТАНСКИЕ)'),
-('oksm2','BN','БРУНЕЙ-ДАРУССАЛАМ'),
-('oksm2','BG','БОЛГАРИЯ'),
-('oksm2','MM','МЬЯНМА'),
-('oksm2','BI','БУРУНДИ'),
-('oksm2','BY','БЕЛАРУСЬ'),
-('oksm2','KH','КАМБОДЖА'),
-('oksm2','CM','КАМЕРУН'),
-('oksm2','CA','КАНАДА'),
-('oksm2','CV','КАБО-ВЕРДЕ'),
-('oksm2','KY','ОСТРОВА КАЙМАН'),
-('oksm2','CF','ЦЕНТРАЛЬНО-АФРИКАНСКАЯ РЕСПУБЛИКА'),
-('oksm2','LK','ШРИ-ЛАНКА'),
-('oksm2','TD','ЧАД'),
-('oksm2','CL','ЧИЛИ'),
-('oksm2','CN','КИТАЙ'),
-('oksm2','TW','ТАЙВАНЬ (КИТАЙ)'),
-('oksm2','CX','ОСТРОВ РОЖДЕСТВА'),
-('oksm2','CC','КОКОСОВЫЕ (КИЛИНГ) ОСТРОВА'),
-('oksm2','CO','КОЛУМБИЯ'),
-('oksm2','KM','КОМОРЫ'),
-('oksm2','YT','МАЙОТТА'),
-('oksm2','CG','КОНГО'),
-('oksm2','CD','КОНГО, ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА'),
-('oksm2','CK','ОСТРОВА КУКА'),
-('oksm2','CR','КОСТА-РИКА'),
-('oksm2','HR','ХОРВАТИЯ'),
-('oksm2','CU','КУБА'),
-('oksm2','CY','КИПР'),
-('oksm2','CZ','ЧЕХИЯ'),
-('oksm2','BJ','БЕНИН'),
-('oksm2','DK','ДАНИЯ'),
-('oksm2','DM','ДОМИНИКА'),
-('oksm2','DO','ДОМИНИКАНСКАЯ РЕСПУБЛИКА'),
-('oksm2','EC','ЭКВАДОР'),
-('oksm2','SV','ЭЛЬ-САЛЬВАДОР'),
-('oksm2','GQ','ЭКВАТОРИАЛЬНАЯ ГВИНЕЯ'),
-('oksm2','ET','ЭФИОПИЯ'),
-('oksm2','ER','ЭРИТРЕЯ'),
-('oksm2','EE','ЭСТОНИЯ'),
-('oksm2','FO','ФАРЕРСКИЕ ОСТРОВА'),
-('oksm2','FK','ФОЛКЛЕНДСКИЕ ОСТРОВА (МАЛЬВИНСКИЕ)'),
-('oksm2','GS','ЮЖНАЯ ДЖОРДЖИЯ И ЮЖНЫЕ САНДВИЧЕВЫ ОСТРОВА'),
-('oksm2','FJ','ФИДЖИ'),
-('oksm2','FI','ФИНЛЯНДИЯ'),
-('oksm2','AX','АЛАНДСКИЕ ОСТРОВА'),
-('oksm2','FR','ФРАНЦИЯ'),
-('oksm2','GF','ФРАНЦУЗСКАЯ ГВИАНА'),
-('oksm2','PF','ФРАНЦУЗСКАЯ ПОЛИНЕЗИЯ'),
-('oksm2','TF','ФРАНЦУЗСКИЕ ЮЖНЫЕ ТЕРРИТОРИИ'),
-('oksm2','DJ','ДЖИБУТИ'),
-('oksm2','GA','ГАБОН'),
-('oksm2','GE','ГРУЗИЯ'),
-('oksm2','GM','ГАМБИЯ'),
-('oksm2','PS','ПАЛЕСТИНА, ГОСУДАРСТВО'),
-('oksm2','DE','ГЕРМАНИЯ'),
-('oksm2','GH','ГАНА'),
-('oksm2','GI','ГИБРАЛТАР'),
-('oksm2','KI','КИРИБАТИ'),
-('oksm2','GR','ГРЕЦИЯ'),
-('oksm2','GL','ГРЕНЛАНДИЯ'),
-('oksm2','GD','ГРЕНАДА'),
-('oksm2','GP','ГВАДЕЛУПА'),
-('oksm2','GU','ГУАМ'),
-('oksm2','GT','ГВАТЕМАЛА'),
-('oksm2','GN','ГВИНЕЯ'),
-('oksm2','GY','ГАЙАНА'),
-('oksm2','HT','ГАИТИ'),
-('oksm2','HM','ОСТРОВ ХЕРД И ОСТРОВА МАКДОНАЛЬД'),
-('oksm2','VA','ПАПСКИЙ ПРЕСТОЛ (ГОСУДАРСТВО - ГОРОД ВАТИКАН)'),
-('oksm2','HN','ГОНДУРАС'),
-('oksm2','HK','ГОНКОНГ'),
-('oksm2','HU','ВЕНГРИЯ'),
-('oksm2','IS','ИСЛАНДИЯ'),
-('oksm2','IN','ИНДИЯ'),
-('oksm2','ID','ИНДОНЕЗИЯ'),
-('oksm2','IR','ИРАН (ИСЛАМСКАЯ РЕСПУБЛИКА)'),
-('oksm2','IQ','ИРАК'),
-('oksm2','IE','ИРЛАНДИЯ'),
-('oksm2','IL','ИЗРАИЛЬ'),
-('oksm2','IT','ИТАЛИЯ'),
-('oksm2','CI','КОТ ДИВУАР'),
-('oksm2','JM','ЯМАЙКА'),
-('oksm2','JP','ЯПОНИЯ'),
-('oksm2','KZ','КАЗАХСТАН'),
-('oksm2','JO','ИОРДАНИЯ'),
-('oksm2','KE','КЕНИЯ'),
-('oksm2','KP','КОРЕЯ, НАРОДНО-ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА'),
-('oksm2','KR','КОРЕЯ, РЕСПУБЛИКА'),
-('oksm2','KW','КУВЕЙТ'),
-('oksm2','KG','КИРГИЗИЯ'),
-('oksm2','LA','ЛАОССКАЯ НАРОДНО-ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА'),
-('oksm2','LB','ЛИВАН'),
-('oksm2','LS','ЛЕСОТО'),
-('oksm2','LV','ЛАТВИЯ'),
-('oksm2','LR','ЛИБЕРИЯ'),
-('oksm2','LY','ЛИВИЯ'),
-('oksm2','LI','ЛИХТЕНШТЕЙН'),
-('oksm2','LT','ЛИТВА'),
-('oksm2','LU','ЛЮКСЕМБУРГ'),
-('oksm2','MO','МАКАО'),
-('oksm2','MG','МАДАГАСКАР'),
-('oksm2','MW','МАЛАВИ'),
-('oksm2','MY','МАЛАЙЗИЯ'),
-('oksm2','MV','МАЛЬДИВЫ'),
-('oksm2','ML','МАЛИ'),
-('oksm2','MT','МАЛЬТА'),
-('oksm2','MQ','МАРТИНИКА'),
-('oksm2','MR','МАВРИТАНИЯ'),
-('oksm2','MU','МАВРИКИЙ'),
-('oksm2','MX','МЕКСИКА'),
-('oksm2','MC','МОНАКО'),
-('oksm2','MN','МОНГОЛИЯ'),
-('oksm2','MD','МОЛДОВА, РЕСПУБЛИКА'),
-('oksm2','ME','ЧЕРНОГОРИЯ'),
-('oksm2','MS','МОНТСЕРРАТ'),
-('oksm2','MA','МАРОККО'),
-('oksm2','MZ','МОЗАМБИК'),
-('oksm2','OM','ОМАН'),
-('oksm2','NA','НАМИБИЯ'),
-('oksm2','NR','НАУРУ'),
-('oksm2','NP','НЕПАЛ'),
-('oksm2','NL','НИДЕРЛАНДЫ, КОРОЛЕВСТВО'),
-('oksm2','CW','КЮРАСАО'),
-('oksm2','AW','АРУБА'),
-('oksm2','SX','СЕН-МАРТЕН (нидерландская часть)'),
-('oksm2','BQ','БОНЭЙР, СИНТ-ЭСТАТИУС И САБА'),
-('oksm2','NC','НОВАЯ КАЛЕДОНИЯ'),
-('oksm2','VU','ВАНУАТУ'),
-('oksm2','NZ','НОВАЯ ЗЕЛАНДИЯ'),
-('oksm2','NI','НИКАРАГУА'),
-('oksm2','NE','НИГЕР'),
-('oksm2','NG','НИГЕРИЯ'),
-('oksm2','NU','НИУЭ'),
-('oksm2','NF','ОСТРОВ НОРФОЛК'),
-('oksm2','NO','НОРВЕГИЯ'),
-('oksm2','MP','СЕВЕРНЫЕ МАРИАНСКИЕ ОСТРОВА'),
-('oksm2','UM','МАЛЫЕ ТИХООКЕАНСКИЕ ОТДАЛЕННЫЕ ОСТРОВА СОЕДИНЕННЫХ ШТАТОВ'),
-('oksm2','FM','МИКРОНЕЗИЯ, ФЕДЕРАТИВНЫЕ ШТАТЫ'),
-('oksm2','MH','МАРШАЛЛОВЫ ОСТРОВА'),
-('oksm2','PW','ПАЛАУ'),
-('oksm2','PK','ПАКИСТАН'),
-('oksm2','PA','ПАНАМА'),
-('oksm2','PG','ПАПУА-НОВАЯ ГВИНЕЯ'),
-('oksm2','PY','ПАРАГВАЙ'),
-('oksm2','PE','ПЕРУ'),
-('oksm2','PH','ФИЛИППИНЫ'),
-('oksm2','PN','ПИТКЕРН'),
-('oksm2','PL','ПОЛЬША'),
-('oksm2','PT','ПОРТУГАЛИЯ'),
-('oksm2','GW','ГВИНЕЯ-БИСАУ'),
-('oksm2','TL','ТИМОР-ЛЕСТЕ'),
-('oksm2','PR','ПУЭРТО-РИКО'),
-('oksm2','QA','КАТАР'),
-('oksm2','RE','РЕЮНЬОН'),
-('oksm2','RO','РУМЫНИЯ'),
-('oksm2','RU','РОССИЯ'),
-('oksm2','RW','РУАНДА'),
-('oksm2','BL','СЕН-БАРТЕЛЕМИ'),
-('oksm2','SH','СВЯТАЯ ЕЛЕНА, ОСТРОВ ВОЗНЕСЕНИЯ, ТРИСТАН-ДА-КУНЬЯ'),
-('oksm2','KN','СЕНТ-КИТС И НЕВИС'),
-('oksm2','AI','АНГИЛЬЯ'),
-('oksm2','LC','СЕНТ-ЛЮСИЯ'),
-('oksm2','MF','СЕН-МАРТЕН (французская часть)'),
-('oksm2','PM','СЕН-ПЬЕР И МИКЕЛОН'),
-('oksm2','VC','СЕНТ-ВИНСЕНТ И ГРЕНАДИНЫ'),
-('oksm2','SM','САН-МАРИНО'),
-('oksm2','ST','САН-ТОМЕ И ПРИНСИПИ'),
-('oksm2','SA','САУДОВСКАЯ АРАВИЯ'),
-('oksm2','SN','СЕНЕГАЛ'),
-('oksm2','RS','СЕРБИЯ'),
-('oksm2','SC','СЕЙШЕЛЫ'),
-('oksm2','SL','СЬЕРРА-ЛЕОНЕ'),
-('oksm2','SG','СИНГАПУР'),
-('oksm2','SK','СЛОВАКИЯ'),
-('oksm2','VN','ВЬЕТНАМ'),
-('oksm2','SI','СЛОВЕНИЯ'),
-('oksm2','SO','СОМАЛИ'),
-('oksm2','ZA','ЮЖНАЯ АФРИКА'),
-('oksm2','ZW','ЗИМБАБВЕ'),
-('oksm2','ES','ИСПАНИЯ'),
-('oksm2','SS','ЮЖНЫЙ СУДАН'),
-('oksm2','SD','СУДАН'),
-('oksm2','EH','ЗАПАДНАЯ САХАРА'),
-('oksm2','SR','СУРИНАМ'),
-('oksm2','SJ','ШПИЦБЕРГЕН И ЯН МАЙЕН'),
-('oksm2','SZ','ЭСВАТИНИ'),
-('oksm2','SE','ШВЕЦИЯ'),
-('oksm2','CH','ШВЕЙЦАРИЯ'),
-('oksm2','SY','СИРИЙСКАЯ АРАБСКАЯ РЕСПУБЛИКА'),
-('oksm2','TJ','ТАДЖИКИСТАН'),
-('oksm2','TH','ТАИЛАНД'),
-('oksm2','TG','ТОГО'),
-('oksm2','TK','ТОКЕЛАУ'),
-('oksm2','TO','ТОНГА'),
-('oksm2','TT','ТРИНИДАД И ТОБАГО'),
-('oksm2','AE','ОБЪЕДИНЕННЫЕ АРАБСКИЕ ЭМИРАТЫ'),
-('oksm2','TN','ТУНИС'),
-('oksm2','TR','ТУРЦИЯ'),
-('oksm2','TM','ТУРКМЕНИСТАН'),
-('oksm2','TC','ОСТРОВА ТЕРКС И КАЙКОС'),
-('oksm2','TV','ТУВАЛУ'),
-('oksm2','UG','УГАНДА'),
-('oksm2','UA','УКРАИНА'),
-('oksm2','MK','СЕВЕРНАЯ МАКЕДОНИЯ'),
-('oksm2','EG','ЕГИПЕТ'),
-('oksm2','GB','СОЕДИНЕННОЕ КОРОЛЕВСТВО ВЕЛИКОБРИТАНИИ И СЕВЕРНОЙ ИРЛАНДИИ'),
-('oksm2','GG','ГЕРНСИ'),
-('oksm2','JE','ДЖЕРСИ'),
-('oksm2','IM','ОСТРОВ МЭН'),
-('oksm2','TZ','ТАНЗАНИЯ, ОБЪЕДИНЕННАЯ РЕСПУБЛИКА'),
-('oksm2','US','СОЕДИНЕННЫЕ ШТАТЫ'),
-('oksm2','VI','ВИРГИНСКИЕ ОСТРОВА (США)'),
-('oksm2','BF','БУРКИНА-ФАСО'),
-('oksm2','UY','УРУГВАЙ'),
-('oksm2','UZ','УЗБЕКИСТАН'),
-('oksm2','VE','ВЕНЕСУЭЛА, БОЛИВАРИАНСКАЯ РЕСПУБЛИКА'),
-('oksm2','WF','УОЛЛИС И ФУТУНА'),
-('oksm2','WS','САМОА'),
-('oksm2','YE','ЙЕМЕН'),
-('oksm2','ZM','ЗАМБИЯ'),
-('oksm2','AB','АБХАЗИЯ'),
-('oksm2','OS','ЮЖНАЯ ОСЕТИЯ'),
-('oksm2','DN','ДНР'),
-('oksm2','LN','ЛНР');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '1', 'Паспорт гражданина СССР');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '2', 'Загранпаспорт гражданина СССР');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '3', 'Свидетельство о рождении');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '4', 'Удостоверение личности офицера');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '5', 'Справка об освобождении из места лишения свободы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '6', 'Паспорт Минморфлота');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '7', 'Военный билет');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '8', 'Временное удостоверение, выданное взамен военного билета');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '9', 'Дипломатический паспорт');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '10', 'Паспорт иностранного гражданина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '11', 'Свидетельство о рассмотрении ходатайства о признании лица беженцем на территории РФ по существу');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '12', 'Вид на жительство в Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '13', 'Удостоверение беженца');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '14', 'Временное удостоверение личности гражданина Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '15', 'Разрешение на временное проживание в Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '16', 'Временное удостоверение личности лица без гражданства в РФ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '18', 'Свидетельство о предоставлении временного убежища на территории Российской Федерации (до 01.01.2013)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '19', 'Свидетельство о предоставлении временного убежища на территории Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '21', 'Паспорт гражданина Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '22', 'Паспорт гражданина РФ, удостоверяющий личность гражданина РФ за пределами территории РФ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '23', 'Свидетельство о рождении, выданное уполномоченным органом иностранного государства');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '24', 'Удостоверение личности военнослужащего Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '26', 'Паспорт моряка');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '27', 'Военный билет офицера запаса');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '28', 'Служебный паспорт гражданина Российской Федерации');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '60', 'Документы, подтверждающие факт регистрации по месту жительства (пребывания)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '61', 'Свидетельство о регистрации по месту жительства');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '62', 'Вид на жительство иностранного гражданина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '63', 'Свидетельство о регистрации по месту пребывания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '81', 'Свидетельство о смерти');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('fns-dul', '91', 'Иные документы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AF', 'Афганистан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AX', 'Аландские острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AL', 'Албания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DZ', 'Алжир');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AS', 'Американское Самоа');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AD', 'Андорра');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AO', 'Ангола');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AI', 'Ангилья');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AQ', 'Антарктида');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AG', 'Антигуа и Барбуда');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AR', 'Аргентина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AM', 'Армения');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AW', 'Аруба');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AU', 'Австралия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AT', 'Австрия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AZ', 'Азербайджан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BS', 'Багамы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BH', 'Бахрейн');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BD', 'Бангладеш');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BB', 'Барбадос');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BY', 'Беларусь');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BE', 'Бельгия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BZ', 'Белиз');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BJ', 'Бенин');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BM', 'Бермуды');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BT', 'Бутан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BO', 'Боливия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BQ', 'Бонайре, Синт-Эстатиус и Саба');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BA', 'Босния и Герцеговина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BW', 'Ботсвана');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BV', 'Остров Буве');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BR', 'Бразилия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IO', 'Британская территория в Индийском океане');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BN', 'Бруней');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BG', 'Болгария');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BF', 'Буркина-Фасо');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BI', 'Бурунди');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CV', 'Кабо-Верде');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KH', 'Камбоджа');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CM', 'Камерун');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CA', 'Канада');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KY', 'Каймановы острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CF', 'Центральноафриканская Республика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TD', 'Чад');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CL', 'Чили');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CN', 'Китай');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CX', 'Остров Рождества');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CC', 'Кокосовые острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CO', 'Колумбия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KM', 'Коморы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CG', 'Конго');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CD', 'Конго, Демократическая Республика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CK', 'Острова Кука');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CR', 'Коста-Рика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CI', 'Кот-д''Ивуар');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HR', 'Хорватия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CU', 'Куба');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CW', 'Кюрасао');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CY', 'Кипр');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CZ', 'Чехия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DK', 'Дания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DJ', 'Джибути');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DM', 'Доминика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DO', 'Доминиканская Республика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'EC', 'Эквадор');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'EG', 'Египет');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SV', 'Сальвадор');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GQ', 'Экваториальная Гвинея');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ER', 'Эритрея');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'EE', 'Эстония');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SZ', 'Эсватини');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ET', 'Эфиопия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FK', 'Фолклендские острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FO', 'Фарерские острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FJ', 'Фиджи');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FI', 'Финляндия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FR', 'Франция');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GF', 'Французская Гвиана');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PF', 'Французская Полинезия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TF', 'Французские Южные территории');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GA', 'Габон');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GM', 'Гамбия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GE', 'Грузия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'DE', 'Германия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GH', 'Гана');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GI', 'Гибралтар');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GR', 'Греция');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GL', 'Гренландия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GD', 'Гренада');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GP', 'Гваделупа');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GU', 'Гуам');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GT', 'Гватемала');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GG', 'Гернси');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GN', 'Гвинея');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GW', 'Гвинея-Бисау');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GY', 'Гайана');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HT', 'Гаити');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HM', 'Остров Херд и острова Макдональд');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VA', 'Ватикан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HN', 'Гондурас');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HK', 'Гонконг');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'HU', 'Венгрия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IS', 'Исландия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IN', 'Индия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ID', 'Индонезия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IR', 'Иран');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IQ', 'Ирак');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IE', 'Ирландия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IM', 'Остров Мэн');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IL', 'Израиль');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'IT', 'Италия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'JM', 'Ямайка');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'JP', 'Япония');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'JE', 'Джерси');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'JO', 'Иордания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KZ', 'Казахстан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KE', 'Кения');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KI', 'Кирибати');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KP', 'Корейская Народно-Демократическая Республика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KR', 'Корея, Республика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KW', 'Кувейт');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KG', 'Кыргызстан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LA', 'Лаос');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LV', 'Латвия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LB', 'Ливан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LS', 'Лесото');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LR', 'Либерия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LY', 'Ливия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LI', 'Лихтенштейн');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LT', 'Литва');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LU', 'Люксембург');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MO', 'Макао');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MG', 'Мадагаскар');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MW', 'Малави');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MY', 'Малайзия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MV', 'Мальдивы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ML', 'Мали');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MT', 'Мальта');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MH', 'Маршалловы острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MQ', 'Мартиника');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MR', 'Мавритания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MU', 'Маврикий');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'YT', 'Майотта');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MX', 'Мексика');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'FM', 'Микронезия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MD', 'Молдова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MC', 'Монако');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MN', 'Монголия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ME', 'Черногория');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MS', 'Монтсеррат');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MA', 'Марокко');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MZ', 'Мозамбик');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MM', 'Мьянма');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NA', 'Намибия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NR', 'Науру');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NP', 'Непал');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NL', 'Нидерланды');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NC', 'Новая Каледония');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NZ', 'Новая Зеландия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NI', 'Никарагуа');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NE', 'Нигер');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NG', 'Нигерия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NU', 'Ниуэ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NF', 'Остров Норфолк');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MK', 'Северная Македония');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MP', 'Северные Марианские острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'NO', 'Норвегия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'OM', 'Оман');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PK', 'Пакистан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PW', 'Палау');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PS', 'Палестина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PA', 'Панама');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PG', 'Папуа — Новая Гвинея');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PY', 'Парагвай');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PE', 'Перу');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PH', 'Филиппины');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PN', 'Питкэрн');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PL', 'Польша');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PT', 'Португалия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PR', 'Пуэрто-Рико');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'QA', 'Катар');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'RE', 'Реюньон');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'RO', 'Румыния');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'RU', 'Россия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'RW', 'Руанда');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'BL', 'Сен-Бартелеми');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SH', 'Святая Елена, Вознесения и Тристан-да-Кунья');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'KN', 'Сент-Китс и Невис');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LC', 'Сент-Люсия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'MF', 'Сен-Мартен');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'PM', 'Сен-Пьер и Микелон');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VC', 'Сент-Винсент и Гренадины');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'WS', 'Самоа');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SM', 'Сан-Марино');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ST', 'Сан-Томе и Принсипи');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SA', 'Саудовская Аравия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SN', 'Сенегал');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'RS', 'Сербия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SC', 'Сейшелы');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SL', 'Сьерра-Леоне');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SG', 'Сингапур');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SX', 'Синт-Мартен');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SK', 'Словакия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SI', 'Словения');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SB', 'Соломоновы острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SO', 'Сомали');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ZA', 'Южная Африка');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GS', 'Южная Георгия и Южные Сандвичевы острова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SS', 'Южный Судан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ES', 'Испания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'LK', 'Шри-Ланка');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SD', 'Судан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SR', 'Суринам');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SJ', 'Шпицберген и Ян-Майен');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SE', 'Швеция');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'CH', 'Швейцария');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'SY', 'Сирия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TW', 'Тайвань');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TJ', 'Таджикистан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TZ', 'Танзания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TH', 'Таиланд');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TL', 'Тимор-Лесте');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TG', 'Того');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TK', 'Токелау');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TO', 'Тонга');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TT', 'Тринидад и Тобаго');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TN', 'Тунис');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TR', 'Турция');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TM', 'Туркменистан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TC', 'Теркс и Кайкос');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'TV', 'Тувалу');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'UG', 'Уганда');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'UA', 'Украина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'AE', 'Объединенные Арабские Эмираты');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'GB', 'Великобритания');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'US', 'Соединенные Штаты');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'UM', 'Внешние малые острова США');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'UY', 'Уругвай');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'UZ', 'Узбекистан');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VU', 'Вануату');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VE', 'Венесуэла');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VN', 'Вьетнам');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VG', 'Виргинские острова, Британские');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'VI', 'Виргинские острова, США');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'WF', 'Уоллис и Футуна');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'EH', 'Западная Сахара');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'YE', 'Йемен');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ZM', 'Замбия');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('country2', 'ZW', 'Зимбабве');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('gender', 'F', 'Женский');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('gender', 'M', 'Мужской');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierTypeCode', 'PASSPORT', 'Паспорт');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierTypeCode', 'DRIVER LICENCE', 'Вод.уд.');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierTypeCode', 'OTHER', 'Другой документ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('yesNo', 'N', 'Нет');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('yesNo', 'Y', 'Да');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'HOME-DEVICE', 'крупная и мелкая бытовая техника');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'DIGITAL-DEVICE', 'цифровая техника');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'TABLET', 'TABLET');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'NETBOOK', 'NETBOOK');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'LAPTOP', 'LAPTOP');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'MOBILE-PHONE', 'MOBILE-PHONE');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'SMARTPHONE', 'SMARTPHONE');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'PORT-AUDIO-VIDEO', 'PORT-AUDIO-VIDEO');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'E-BOOK', 'E-BOOK');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'CAR-NAVIGATOR', 'CAR-NAVIGATOR');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'CAR-DVR', 'CAR-DVR');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'GAME-CONSOLE', 'GAME-CONSOLE');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('deviceType', 'SMART-WATCH', 'SMART-WATCH');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'SINGLE', 'Холост / Не замужем');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'MARRIED', 'Состоит в браке');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'DIVORCED', 'Разведен(а)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'WIDOWED', 'Вдовец / Вдова');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'CIVIL_MARRIAGE', 'Гражданский брак');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('familyState', 'SEPARATED', 'Раздельное проживание');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'PASSPORT_RF', 'Паспорт гражданина РФ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'BIRTH_CERTIFICATE', 'Свидетельство о рождении');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'FOREIGN_PASSPORT', 'Загранпаспорт гражданина РФ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'DRIVER_LICENSE', 'Водительское удостоверение');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'MILITARY_ID', 'Военный билет');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'SERVICE_PASSPORT', 'Служебный паспорт');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'DIPLOMATIC_PASSPORT', 'Дипломатический паспорт');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'SEAMAN_PASSPORT', 'Паспорт моряка');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'FOREIGN_PASSPORT_FOREIGN', 'Паспорт иностранного гражданина');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'RESIDENCE_PERMIT', 'Вид на жительство');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'TEMPORARY_RESIDENCE', 'Разрешение на временное проживание');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'REFUGEE_CERTIFICATE', 'Удостоверение беженца');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'STATELESS_PASSPORT', 'Паспорт лица без гражданства');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'BIRTH_CERTIFICATE_FOREIGN', 'Свидетельство о рождении (иностранное)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('identifierType', 'OTHER', 'Иной документ');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'SINGLE', 'Полная оплата премии одним платежом');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'SEMI_ANNUAL', '2 платежа в год (раз в 6 месяцев)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'QUARTERLY', '4 платежа в год (раз в 3 месяца)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'MONTHLY', '12 платежей в год');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'BI_MONTHLY', '6 платежей в год (раз в 2 месяца)');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'ANNUAL', '1 платеж в год');

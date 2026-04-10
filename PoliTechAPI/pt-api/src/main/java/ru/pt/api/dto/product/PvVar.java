@@ -29,11 +29,26 @@ public class PvVar {
     @JsonProperty("varNr")
     private String varNr;
 
-    @JsonProperty("varRefCode")
-    private String varRefCode;
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("parent_id")
+    private Long parent_id;
+
+    @JsonProperty("varList")
+    private String varList;
+
+    @JsonProperty("isSystem")
+    private boolean isSystem;
+
+    @JsonProperty("isDeleted")
+    private boolean isDeleted = false;
     
     @JsonProperty("isTarifFactor")
     private boolean isTarifFactor = false;
+    
+    @JsonProperty("name")
+    private String name;
     
     // Constructors
     public PvVar() {}
@@ -131,20 +146,55 @@ public class PvVar {
         this.varNr = varNr;
     }
 
-    public String getVarRefCode() {
-        return varRefCode;
+    public Long getId() {
+        return id;
     }
-    public void setVarRefCode(String varRefCode) {
-        this.varRefCode = varRefCode;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public boolean isTarifFactor() {
+    public Long getParent_id() {
+        return parent_id;
+    }
+    public void setParent_id(Long parent_id) {
+        this.parent_id = parent_id;
+    }
+
+    public String getVarList() {
+        return varList;
+    }
+
+    public void setVarList(String varList) {
+        this.varList = varList;
+    }
+
+    public boolean getIsSystem() {
+        return isSystem;
+    }
+    public void setIsSystem(boolean isSystem) {
+        this.isSystem = isSystem;
+    }
+
+    public boolean getIsDeleted() {
+        return this.isDeleted;
+    }
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public boolean getIsTarifFactor() {
         return isTarifFactor;
     }
-    public void setTarifFactor(boolean isTarifFactor) {
+    public void setIsTarifFactor(boolean isTarifFactor) {
         this.isTarifFactor = isTarifFactor;
     }
 
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
     public static PvVar varSumInsured(String coverCode) {
         return new PvVar("co_" + coverCode + "_sumInsured"
         , "Страховая сумма по  " + coverCode

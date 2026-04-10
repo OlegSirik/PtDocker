@@ -1,12 +1,15 @@
 <div class="formly-forms-container">
   <div class="page-header">
-    <h1 class="page-title">{{ policy.productCode }}</h1>
-    <div class="header-actions">
-      <button mat-raised-button color="accent" class="cancel-button" (click)="onCancel()">
-        <mat-icon>arrow_back</mat-icon>
-        Back to Product
-      </button>
+    <div class="page-header-row">
+      <h2 class="page-subtitle">{{ policy.productCode }}</h2>
+      <div class="header-actions">
+        <button mat-raised-button class="header-btn" (click)="onCancel()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Product
+        </button>
+      </div>
     </div>
+    <h3 class="page-subhead">{{ product.name }}</h3>
   </div>
 
   <!-- Policy Card -->
@@ -16,85 +19,82 @@
       <mat-card-title>Policy</mat-card-title>
     </mat-card-header>
   -->
-    <mat-card-content>
-      <div style="display: flex; gap: 12px; height: 100%;">
-        <!-- Left Column: 60% width -->
-        <div style="width: 60%; height: 100%; background-color: white; padding-left: 20px;padding-right: 20px;">
+    <mat-card-content class="grid-layout">
+      <div class="grid-row">
+        <div class="span-6 policy-contract">
           <h3>Договор страхования {{ policy.policyNumber }}</h3>
-          <!-- First Line: id, product -->
-          <div class="display-flex" style="gap: 12px;">
-<!---
-            <mat-form-field appearance="outline" class="form-field flex-1">
-              <mat-label>ID</mat-label>
-              <input matInput [(ngModel)]="policy.id" name="id" readonly>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field flex-2">
-              <mat-label>Product</mat-label>
-              <input matInput [(ngModel)]="policy.productCode" name="productCode" readonly>
-            </mat-form-field>
-
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <mat-form-field appearance="outline" class="form-field ">
-              <mat-label>Status</mat-label>
-              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
-            </mat-form-field>
-          </div>
-
-            -->
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <mat-form-field appearance="outline" class="form-field ">
-              <mat-label>Status</mat-label>
-              <input matInput [(ngModel)]="policy.statusCode" name="statusCode" readonly>
-            </mat-form-field>
-          </div>
-          </div>
-          <!-- Second Line: startDate, endDate, waitingPeriod, policyTerm -->
-          <div class="display-flex" style="gap: 12px;">
-            @if (policy.startDate) {
-              <mat-form-field appearance="outline" class="form-field flex-1">
+          <div class="policy-pair-row">
+            @if (getShowStartDate()) {
+              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
                 <mat-label>Дата начала договора</mat-label>
-                <input matInput [(ngModel)]="policy.startDate" name="startDate" type="date">
+                <input
+                  matInput
+                  [matDatepicker]="startDatePicker"
+                  [(ngModel)]="policyStartDateValue"
+                  (ngModelChange)="onPolicyStartDateChange($event)"
+                  name="startDate"
+                />
+                <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker
+                  #startDatePicker
+                  [startAt]="policyStartDateValue ?? policyPeriodDatePickerFallbackStart"
+                ></mat-datepicker>
               </mat-form-field>
             } @else {
-              <mat-form-field appearance="outline" class="form-field flex-1">
+              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
                 <mat-label>Период охлаждения</mat-label>
-                <input matInput [(ngModel)]="policy.waitingPeriod" name="waitingPeriod">
-              </mat-form-field>  
-              <mat-form-field appearance="outline" class="form-field flex-1">
-                <mat-label>Дата начала договора</mat-label>
-                <input matInput [(ngModel)]="policy.startDate" name="startDate" type="date" readonly>
+                <mat-select [(ngModel)]="policy.waitingPeriod" name="waitingPeriod">
+                  @for (opt of listEntries('waitingPeriod'); track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
             }
           </div>
-          <div class="display-flex" style="gap: 12px;">
-            @if (policy.endDate) {
-              <mat-form-field appearance="outline" class="form-field flex-1">
+          <div class="policy-pair-row">
+            @if (getShowEndDate()) {
+              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
                 <mat-label>Дата окончания договора</mat-label>
-                <input matInput [(ngModel)]="policy.endDate" name="endDate" type="date">
+                <input
+                  matInput
+                  [matDatepicker]="endDatePicker"
+                  [(ngModel)]="policyEndDateValue"
+                  (ngModelChange)="onPolicyEndDateChange($event)"
+                  name="endDate"
+                />
+                <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker
+                  #endDatePicker
+                  [startAt]="policyEndDateValue ?? policyPeriodDatePickerFallbackStart"
+                ></mat-datepicker>
               </mat-form-field>
             } @else {
-              <mat-form-field appearance="outline" class="form-field flex-1">
+              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
                 <mat-label>Период страхования</mat-label>
-                <input matInput [(ngModel)]="policy.policyTerm" name="policyTerm">
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="form-field flex-1">
-                <mat-label>Дата окончания договора</mat-label>
-                <input matInput [(ngModel)]="policy.endDate" name="endDate" type="date" readonly>
+                <mat-select [(ngModel)]="policy.policyTerm" name="policyTerm">
+                  @for (opt of listEntries('policyTerm'); track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
             }
           </div>
         </div>
-        
-        <!-- Right Column: 40% width -->
-        <div style="width: 40%; height: 100%; background-color: white; padding-left: 20px;padding-right: 20px;">
+
+        <div class="span-4 policy-premium">
           <h3>Премия и статус договора</h3>
-          <div style="display: flex; flex-direction: column; gap: 12px;">  
-            <div class="premium-block">
-              <span class="premium-label">Premium</span>
-              <span class="premium-value">{{ formatPremium(policy.premium) }}</span>
-            </div>
+          <div class="premium-block">
+            <span class="premium-label">Premium</span>
+            <span class="premium-value">{{ formatPremium(policy.premium) }}</span>
           </div>
+
+          <div class="span-2">
+            <span class="premium-label">Период страхования: {{ policy.startDate }} - {{ policy.endDate }}</span>
+            </div>
+          <div class="span-2">
+            <span class="premium-label">Статус договора: {{ policy.statusCode }}</span>
+            </div>
+    
         </div>
       </div>
     </mat-card-content>
@@ -105,184 +105,246 @@
     <mat-card-header>
       <mat-card-title>Страхователь</mat-card-title>
     </mat-card-header>
-    <mat-card-content>
-      <h3>Физ.лицо</h3>
-      <div class="display-flex">
-        @if (getFieldVisible('ph_firstName')) {
-          <mat-form-field class="form-field flex-2" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_firstName') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.firstName" name="ph_firstName">
-          </mat-form-field>
-        }
-        
+
+    <mat-card-content class="grid-layout">
+      <h3>Перс. данные</h3>
         @if (getFieldVisible('ph_lastName')) {
-          <mat-form-field class="form-field flex-2" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_lastName') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.person.lastName" name="ph_lastName">
           </mat-form-field>
         }
+
+        @if (getFieldVisible('ph_firstName')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_firstName') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.person.firstName" name="ph_firstName">
+          </mat-form-field>
+        }        
     
         @if (getFieldVisible('ph_middleName')) {
-          <mat-form-field class="form-field flex-2" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_middleName') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.person.middleName" name="ph_middleName">
           </mat-form-field>
         }
         
         @if (getFieldVisible('ph_birthDate')) {
-          <mat-form-field class="form-field flex-1" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_birthDate') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.birthDate" name="ph_birthDate">
+            <input
+              matInput
+              [matDatepicker]="phBirthPicker"
+              [(ngModel)]="policyHolderBirthDateValue"
+              (ngModelChange)="onPolicyHolderBirthDateChange($event)"
+              name="ph_birthDate"
+            />
+            <mat-datepicker-toggle matSuffix [for]="phBirthPicker"></mat-datepicker-toggle>
+            <mat-datepicker
+              #phBirthPicker
+              startView="multi-year"
+              [startAt]="policyHolderBirthDateValue ?? birthDatePickerFallbackStart"
+            ></mat-datepicker>
           </mat-form-field>
         }
-      </div>
-      <div class="display-flex">
+
         @if (getFieldVisible('ph_fullName')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-5" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_fullName') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.person.fullName" name="ph_fullName">
           </mat-form-field>
         }
 
         @if (getFieldVisible('ph_fullNameEn')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-5" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_fullNameEn') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.person.fullNameEn" name="ph_fullNameEn">
           </mat-form-field>
         }
-      </div>
-      <div class="display-flex">
+
+      <div class="grid-row">
+        @if (getFieldVisible('ph_gender')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_gender') }}</mat-label>
+            <mat-select [(ngModel)]="policy.policyHolder.person.gender" name="ph_gender">
+              @for (opt of listEntries('ph_gender'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_familyState')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_familyState') }}</mat-label>
+            <mat-select [(ngModel)]="policy.policyHolder.person.familyState" name="ph_familyState">
+              @for (opt of listEntries('ph_familyState'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_citizenship')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_citizenship') }}</mat-label>
+            <mat-select [(ngModel)]="policy.policyHolder.person.citizenship" name="ph_citizenship">
+              @for (opt of listEntries('ph_citizenship'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_isResident')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_isResident') }}</mat-label>
+            <mat-select [(ngModel)]="policy.policyHolder.person.isResident" name="ph_isResident">
+              @for (opt of listEntries('ph_isResident'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
         @if (getFieldVisible('ph_birthPlace')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_birthPlace') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.person.birthPlace" name="ph_birthPlace">
           </mat-form-field>
         }
-        @if (getFieldVisible('ph_familyState')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_familyState') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.familyState" name="ph_familyState">
+
+        @if (getFieldVisible('ph_isPublicOfficial')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_isPublicOfficial') }}</mat-label>
+            <mat-select [(ngModel)]="policy.policyHolder.person.isPublicOfficial" name="ph_isPublicOfficial">
+              @for (opt of listEntries('ph_isPublicOfficial'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
-        
-        @if (getFieldVisible('ph_citizenship')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_citizenship') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.citizenship" name="ph_citizenship">
+
+        @if (getFieldVisible('ph_ext_id')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_ext_id') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.person.ext_id" name="ph_ext_id">
           </mat-form-field>
         }
-        
-        @if (getFieldVisible('ph_isResident')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_isResident') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.isResident" name="ph_isResident">
-          </mat-form-field>
-        }
+
       </div>
 
       <h3>Документ</h3>
-      <div class="display-flex">
+      <div class="grid-row">
+
         @if (getFieldVisible('ph_doc_typeCode')) {
-          <mat-form-field class="form-field flex-2" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_typeCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.identifiers.typeCode" name="ph_doc_typeCode">
+            <mat-select [(ngModel)]="policy.policyHolder.identifiers.typeCode" name="ph_doc_typeCode">
+              @for (opt of listEntries('ph_doc_typeCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
         
         @if (getFieldVisible('ph_doc_serial')) {
-          <mat-form-field class="form-field flex-1" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_serial') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.identifiers.serial" name="ph_doc_serial">
           </mat-form-field>
         }
         
         @if (getFieldVisible('ph_doc_number')) {
-          <mat-form-field class="form-field flex-1" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_number') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.identifiers.number" name="ph_doc_number">
           </mat-form-field>
         }
-      </div>
-      <div class="display-flex">
         @if (getFieldVisible('ph_doc_dateIssue')) {
-          <mat-form-field class="form-field flex-1" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_dateIssue') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.identifiers.dateIssue" name="ph_doc_dateIssue">
+            <input
+              matInput
+              [matDatepicker]="phDocDateIssuePicker"
+              [(ngModel)]="policyHolderDocDateIssueValue"
+              (ngModelChange)="onPolicyHolderDocDateIssueChange($event)"
+              name="ph_doc_dateIssue"
+            />
+            <mat-datepicker-toggle matSuffix [for]="phDocDateIssuePicker"></mat-datepicker-toggle>
+            <mat-datepicker
+              #phDocDateIssuePicker
+              [startAt]="policyHolderDocDateIssueValue ?? docDatePickerFallbackStart"
+            ></mat-datepicker>
           </mat-form-field>
         }
+      </div>
+
+      <div class="grid-row">
         
         @if (getFieldVisible('ph_doc_whom')) {
-          <mat-form-field class="form-field flex-2" appearance="outline">
+          <mat-form-field class="form-field span-6" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_whom') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.identifiers.whom" name="ph_doc_whom">
           </mat-form-field>
         }
   
         @if (getFieldVisible('ph_doc_divisionCode')) {
-          <mat-form-field class="form-field flex-1" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_divisionCode') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.identifiers.divisionCode" name="ph_doc_divisionCode">
           </mat-form-field>
         }
-      </div>
 
-      <div class="display-flex">
+        @if (getFieldVisible('ph_doc_validUntil')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_doc_validUntil') }}</mat-label>
+            <input
+              matInput
+              [matDatepicker]="phDocValidUntilPicker"
+              [(ngModel)]="policyHolderDocValidUntilValue"
+              (ngModelChange)="onPolicyHolderDocValidUntilChange($event)"
+              name="ph_doc_validUntil"
+            />
+            <mat-datepicker-toggle matSuffix [for]="phDocValidUntilPicker"></mat-datepicker-toggle>
+            <mat-datepicker
+              #phDocValidUntilPicker
+              [startAt]="policyHolderDocValidUntilValue ?? docDatePickerFallbackStart"
+            ></mat-datepicker>
+          </mat-form-field>
+        }
+
         @if (getFieldVisible('ph_doc_countryCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_countryCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.identifiers.countryCode" name="ph_doc_countryCode">
+            <mat-select [(ngModel)]="policy.policyHolder.identifiers.countryCode" name="ph_doc_countryCode">
+              @for (opt of listEntries('ph_doc_countryCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
         
         @if (getFieldVisible('ph_doc_ext_id')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_doc_ext_id') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.identifiers.ext_id" name="ph_doc_ext_id">
           </mat-form-field>
         }
         
-        @if (getFieldVisible('ph_doc_validUntil')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_doc_validUntil') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.identifiers.validUntil" name="ph_doc_validUntil">
-          </mat-form-field>
-        }
-      </div>
-
-      <div class="display-flex">
-        @if (getFieldVisible('ph_ext_id')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_ext_id') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.ext_id" name="ph_ext_id">
-          </mat-form-field>
-        }
-
-        @if (getFieldVisible('ph_gender')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_gender') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.gender" name="ph_gender">
-          </mat-form-field>
-        }
-
-        @if (getFieldVisible('ph_isPublicOfficial')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_isPublicOfficial') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.person.isPublicOfficial" name="ph_isPublicOfficial">
-          </mat-form-field>
-        }
       </div>
 
       <h3>Контакты</h3>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('ph_phone')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-5" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_phone') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.contacts.phone" name="ph_phone">
           </mat-form-field>
         }
 
         @if (getFieldVisible('ph_email')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-5" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_email') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.contacts.email" name="ph_email">
           </mat-form-field>
@@ -290,227 +352,245 @@
       </div>
 
       <h3>Адрес</h3>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('ph_addr_typeCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_typeCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.typeCode" name="ph_addr_typeCode">
+            <mat-select [(ngModel)]="policy.policyHolder.addresses.typeCode" name="ph_addr_typeCode">
+              @for (opt of listEntries('ph_addr_typeCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
         
         @if (getFieldVisible('ph_addr_addressStr')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-7" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_addressStr') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.addresses.addressStr" name="ph_addr_addressStr">
           </mat-form-field>
         }
       </div>
-      <div class="display-flex">
+
+      <div class="grid-row">
         @if (getFieldVisible('ph_addr_addressStrEn')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_addressStrEn') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.addresses.addressStrEn" name="ph_addr_addressStrEn">
           </mat-form-field>
         }
-        
-        @if (getFieldVisible('ph_addr_building')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_building') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.building" name="ph_addr_building">
-          </mat-form-field>
-        }
-        
-        @if (getFieldVisible('ph_addr_city')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_city') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.city" name="ph_addr_city">
-          </mat-form-field>
-        }
+      
         
         @if (getFieldVisible('ph_addr_countryCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_countryCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.countryCode" name="ph_addr_countryCode">
+            <mat-select [(ngModel)]="policy.policyHolder.addresses.countryCode" name="ph_addr_countryCode">
+              @for (opt of listEntries('ph_addr_countryCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
         
-        @if (getFieldVisible('ph_addr_ext_id')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_ext_id') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.ext_id" name="ph_addr_ext_id">
+        @if (getFieldVisible('ph_addr_zipCode')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_zipCode') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.zipCode" name="ph_addr_zipCode">
           </mat-form-field>
         }
-        
-        @if (getFieldVisible('ph_addr_fiasId')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_fiasId') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.fiasId" name="ph_addr_fiasId">
-          </mat-form-field>
-        }
-        
-        @if (getFieldVisible('ph_addr_flat')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_flat') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.flat" name="ph_addr_flat">
-          </mat-form-field>
-        }
-        
-        @if (getFieldVisible('ph_addr_house')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_house') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.house" name="ph_addr_house">
-          </mat-form-field>
-        }
-        
-        @if (getFieldVisible('ph_addr_kladrId')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_kladrId') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.kladrId" name="ph_addr_kladrId">
-          </mat-form-field>
-        }
-        
+
         @if (getFieldVisible('ph_addr_region')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-2" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_region') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.addresses.region" name="ph_addr_region">
           </mat-form-field>
         }
         
-        @if (getFieldVisible('ph_addr_room')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_room') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.room" name="ph_addr_room">
+        @if (getFieldVisible('ph_addr_city')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_city') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.city" name="ph_addr_city">
           </mat-form-field>
         }
-        
+
         @if (getFieldVisible('ph_addr_street')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('ph_addr_street') }}</mat-label>
             <input matInput [(ngModel)]="policy.policyHolder.addresses.street" name="ph_addr_street">
           </mat-form-field>
         }
-        
-        @if (getFieldVisible('ph_addr_zipCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
-            <mat-label>{{ getFieldLabel('ph_addr_zipCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.policyHolder.addresses.zipCode" name="ph_addr_zipCode">
+
+        @if (getFieldVisible('ph_addr_building')) {
+          <mat-form-field class="form-field span-1" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_building') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.building" name="ph_addr_building">
           </mat-form-field>
         }
+
+        
+        @if (getFieldVisible('ph_addr_house')) {
+          <mat-form-field class="form-field span-1" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_house') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.house" name="ph_addr_house">
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_addr_flat')) {
+          <mat-form-field class="form-field span-1" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_flat') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.flat" name="ph_addr_flat">
+          </mat-form-field>
+        }
+        
+        @if (getFieldVisible('ph_addr_room')) {
+          <mat-form-field class="form-field span-1" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_room') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.room" name="ph_addr_room">
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_addr_kladrId')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_kladrId') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.kladrId" name="ph_addr_kladrId">
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_addr_fiasId')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_fiasId') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.fiasId" name="ph_addr_fiasId">
+          </mat-form-field>
+        }
+
+        @if (getFieldVisible('ph_addr_ext_id')) {
+          <mat-form-field class="form-field span-2" appearance="outline">
+            <mat-label>{{ getFieldLabel('ph_addr_ext_id') }}</mat-label>
+            <input matInput [(ngModel)]="policy.policyHolder.addresses.ext_id" name="ph_addr_ext_id">
+          </mat-form-field>
+        }
+
+        
+        
       </div>
 
       @if (getShowOrganization()) {
         <h3>Юр.лицо</h3>
-        <div class="display-flex">
-          @if (getFieldVisible('ph_ext_id')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_ext_id') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.ext_id" name="ph_ext_id">
-            </mat-form-field>
-          }
-          
-          @if (getFieldVisible('ph_org_fullName')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_org_fullName') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.fullName" name="ph_org_fullName">
-            </mat-form-field>
-          }
-          
-          @if (getFieldVisible('ph_org_fullNameEn')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_org_fullNameEn') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.fullNameEn" name="ph_org_fullNameEn">
-            </mat-form-field>
-          }
-          
-          @if (getFieldVisible('ph_group')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_group') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.group" name="ph_group">
-            </mat-form-field>
-          }
-          
+        <div class="grid-row">
           @if (getFieldVisible('ph_org_inn')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
+            <mat-form-field class="form-field span-2" appearance="outline">
               <mat-label>{{ getFieldLabel('ph_org_inn') }}</mat-label>
               <input matInput [(ngModel)]="policy.policyHolder.organization.inn" name="ph_org_inn">
             </mat-form-field>
           }
           
-          @if (getFieldVisible('ph_isResident')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_isResident') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.isResident" name="ph_isResident">
+          @if (getFieldVisible('ph_org_legalForm')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_legalForm') }}</mat-label>
+              <mat-select [(ngModel)]="policy.policyHolder.organization.legalForm" name="ph_org_legalForm">
+                @for (opt of listEntries('ph_org_legalForm'); track opt.value) {
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+          @if (getFieldVisible('ph_org_fullName')) {
+            <mat-form-field class="form-field span-6" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_fullName') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.fullName" name="ph_org_fullName">
             </mat-form-field>
           }
           
-          @if (getFieldVisible('ph_kpp')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_kpp') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.kpp" name="ph_kpp">
+        </div>
+        <div class="grid-row">
+          @if (getFieldVisible('ph_org_shortName')) {
+            <mat-form-field class="form-field span-4" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_shortName') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.shortName" name="ph_org_shortName">
+            </mat-form-field>
+          }
+
+          @if (getFieldVisible('ph_org_fullNameEn')) {
+            <mat-form-field class="form-field span-6" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_fullNameEn') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.fullNameEn" name="ph_org_fullNameEn">
+            </mat-form-field>
+          }
+
+        </div>
+
+        <div class="grid-row">
+          
+          
+          @if (getFieldVisible('ph_org_isResident')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_isResident') }}</mat-label>
+              <mat-select [(ngModel)]="policy.policyHolder.organization.isResident" name="ph_org_isResident">
+                @for (opt of listEntries('ph_org_isResident'); track opt.value) {
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+          @if (getFieldVisible('ph_org_kpp')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_kpp') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.kpp" name="ph_org_kpp">
             </mat-form-field>
           }
           
-          @if (getFieldVisible('ph_legalForm')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_legalForm') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.legalForm" name="ph_legalForm">
-            </mat-form-field>
-          }
               
-          @if (getFieldVisible('ph_ogrn')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_ogrn') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.ogrn" name="ph_ogrn">
+          @if (getFieldVisible('ph_org_ogrn')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_ogrn') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.ogrn" name="ph_org_ogrn">
             </mat-form-field>
           }
           
-          @if (getFieldVisible('ph_shortName')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_shortName') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.shortName" name="ph_shortName">
-            </mat-form-field>
-          }
-          
-          @if (getFieldVisible('ph_country')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_country') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.country" name="ph_country">
+          @if (getFieldVisible('ph_org_country')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_country') }}</mat-label>
+              <mat-select [(ngModel)]="policy.policyHolder.organization.country" name="ph_org_country">
+                @for (opt of listEntries('ph_org_country'); track opt.value) {
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                }
+              </mat-select>
             </mat-form-field>
           }
 
-          @if (getFieldVisible('org_okpo')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('org_okpo') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.okpo" name="org_okpo">
+          @if (getFieldVisible('ph_org_okpo')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_okpo') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.okpo" name="ph_org_okpo">
+            </mat-form-field>
+          }
+          @if (getFieldVisible('ph_org_bic')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_bic') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.bic" name="ph_org_bic">
             </mat-form-field>
           }
 
-          @if (getFieldVisible('ph_bic')) {
-            <mat-form-field class="form-field flex-3" appearance="outline">
-              <mat-label>{{ getFieldLabel('ph_bic') }}</mat-label>
-              <input matInput [(ngModel)]="policy.policyHolder.organization.bic" name="ph_bic">
+          @if (getFieldVisible('ph_org_group')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_group') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.group" name="ph_org_group">
             </mat-form-field>
           }
+
+
+          @if (getFieldVisible('ph_org_ext_id')) {
+            <mat-form-field class="form-field span-2" appearance="outline">
+              <mat-label>{{ getFieldLabel('ph_org_ext_id') }}</mat-label>
+              <input matInput [(ngModel)]="policy.policyHolder.organization.ext_id" name="ph_org_ext_id">
+            </mat-form-field>
+          }
+
         </div>
       }
 
-      @if (getShowPHCustom()) {
-        <div class="form-section">
-          <h3>Дополнительные поля</h3>
-          
-          @for (fieldKey of addFieldKeys; track fieldKey) {
-            <div class="dynamic-field">
-              <mat-form-field appearance="outline" class="form-field">
-                <mat-label>LABEL</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="policy.policyHolder.customFields[fieldKey]" 
-                  [name]="'addField_' + fieldKey">
-              </mat-form-field>
-            </div>
-          }
-        </div>
-      }
     </mat-card-content>
   </mat-card>
 
@@ -519,85 +599,93 @@
     <mat-card-header>
       <mat-card-title>Объект страхования</mat-card-title>
     </mat-card-header>
-    <mat-card-content>
+    <mat-card-content class="grid-layout">
     @if (getShowIoDevice()) {  
       <h3>Бытовая электроника</h3>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('io_device_typeCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_typeCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.insuredObject.device.deviceTypeCode" name="io_device_typeCode">
+            <mat-select [(ngModel)]="policy.insuredObject.device.deviceTypeCode" name="io_device_typeCode">
+              @for (opt of listEntries('io_device_typeCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
 
         @if (getFieldVisible('io_device_tradeMark')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_tradeMark') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.tradeMark" name="io_device_tradeMark">
           </mat-form-field>
         }
 
         @if (getFieldVisible('io_device_model')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_model') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.model" name="io_device_model">
           </mat-form-field>
         }
       </div>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('io_device_countryCode')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_countryCode') }}</mat-label>
-            <input matInput [(ngModel)]="policy.insuredObject.device.countryCode" name="io_device_countryCode">
+            <mat-select [(ngModel)]="policy.insuredObject.device.countryCode" name="io_device_countryCode">
+              @for (opt of listEntries('io_device_countryCode'); track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
           </mat-form-field>
         }
         
         @if (getFieldVisible('io_device_devicePrice')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_devicePrice') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.devicePrice" name="io_device_devicePrice">
           </mat-form-field>
         }
         
         @if (getFieldVisible('io_device_imei')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_imei') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.imei" name="io_device_imei">
           </mat-form-field>
         }
       </div>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('io_device_licenseKey')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_licenseKey') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.licenseKey" name="io_device_licenseKey">
           </mat-form-field>
         }
         
         @if (getFieldVisible('io_device_name')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-6" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_name') }}</mat-label>
               <input matInput [(ngModel)]="policy.insuredObject.device.deviceName" name="io_device_name">
           </mat-form-field>
         }
       </div>
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('io_device_osName')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_osName') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.osName" name="io_device_osName">
           </mat-form-field>
         }
         
         @if (getFieldVisible('io_device_osVersion')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-3" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_osVersion') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.osVersion" name="io_device_osVersion">
           </mat-form-field>
         }
         
         @if (getFieldVisible('io_device_serialNr')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('io_device_serialNr') }}</mat-label>
             <input matInput [(ngModel)]="policy.insuredObject.device.serialNr" name="io_device_serialNr">
           </mat-form-field>
@@ -606,40 +694,42 @@
     }
     @if (getShowIoTravelSegments()) {
       <h3>Авиа перевозки</h3>
-      <div class="button-section">
+      <div class="button-section grid-full">
         <button mat-raised-button color="primary" class="add-button" (click)="addTravelSegment()">
           <mat-icon>add</mat-icon>
           Add
         </button>
       </div>
+
+      <div class="grid-full coverage-table-wrap">
       <table mat-table [dataSource]="travelSegmentsDataSource" class="coverage-table">
         <ng-container matColumnDef="ticketNr">
-          <th mat-header-cell *matHeaderCellDef>Ticket Nr</th>
+          <th mat-header-cell *matHeaderCellDef>{{ getFieldLabel('io_ticketNr') }}</th>
           <td mat-cell *matCellDef="let element">{{ element.ticketNr || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="ticketPrice">
-          <th mat-header-cell *matHeaderCellDef>Ticket Price</th>
+          <th mat-header-cell *matHeaderCellDef>{{ getFieldLabel('io_ticketPrice')}}</th>
           <td mat-cell *matCellDef="let element">{{ element.ticketPrice || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="departureDate">
-          <th mat-header-cell *matHeaderCellDef>Departure Date</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'a' + getFieldLabel('io_departureDate')}}</th>
           <td mat-cell *matCellDef="let element">{{ element.departureDate || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="departureTime">
-          <th mat-header-cell *matHeaderCellDef>Departure Time</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'b' + getFieldLabel('io_departureTime')}}</th>
           <td mat-cell *matCellDef="let element">{{ element.departureTime || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="departureCity">
-          <th mat-header-cell *matHeaderCellDef>Departure City</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'c' + getFieldLabel('io_departureCity')}}</th>
           <td mat-cell *matCellDef="let element">{{ element.departureCity || '' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="arrivalCity">
-          <th mat-header-cell *matHeaderCellDef>Arrival City</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'd' + getFieldLabel('io_arrivalCity')}}</th>
           <td mat-cell *matCellDef="let element">{{ element.arrivalCity || '' }}</td>
         </ng-container>
 
@@ -655,14 +745,15 @@
         <tr mat-header-row *matHeaderRowDef="travelSegmentsDisplayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: travelSegmentsDisplayedColumns;"></tr>
       </table>
+      </div>
     }
     
 
-      <mat-divider class="section-separator"></mat-divider>
+      <mat-divider class="section-separator grid-full"></mat-divider>
 
-      <div class="display-flex">
+      <div class="grid-row">
         @if (getFieldVisible('io_sumInsured')) {
-          <mat-form-field class="form-field flex-3" appearance="outline">
+          <mat-form-field class="form-field span-4" appearance="outline">
             <mat-label>{{ getFieldLabel('io_sumInsired') }}</mat-label>
             <input matInput class="text-right" [(ngModel)]="policy.insuredObject.sumInsured" name="io_sumInsured">
           </mat-form-field>

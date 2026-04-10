@@ -290,10 +290,10 @@ public class FileServiceImpl implements FileService {
 
     private FileStorage resolve(Tenant tenant) {
 
-        String type = tenant.storageType();
-        logger.debug("Resolving storage for tenant: {}, type: {}", tenant.code(), type);
+        FileStorageType fsType = tenant.storageType();
+        logger.debug("Resolving storage for tenant: {}, type: {}", tenant.code(), fsType);
         for (FileStorage storage : storages) {
-            if (storage.supports(FileStorageType.valueOf(type))) {
+            if (storage.supports(fsType)) {
                 return storage;
             }
         }

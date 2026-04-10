@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, Inject } from '@angular/core';
+import { Component, OnInit, inject, Inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,25 +15,26 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialogModule, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { ProductService, Product, QuoteValidator, Package, PackageFile, Cover, Deductible, Limit } from '../../shared/services/product.service';
-
-export interface PolicyVar {
-  varPath: string;
-  varName: string;
-  varCode: string;
-  category: string;
-  field: string;
-  name: string;
-  code: string;
-  varNr:  number;
-  varCdm: string;
-}
+import {
+  ProductService,
+  Product,
+  PolicyVar,
+  QuoteValidator,
+  Package,
+  PackageFile,
+  Cover,
+  Deductible,
+  Limit,
+} from '../../shared/services/product.service';
 import { ValidatorDialogComponent } from './validator-dialog/validator-dialog.component';
 import { PackageDialogComponent } from './package-dialog/package-dialog.component';
 import { CoverDialogComponent } from './cover-dialog/cover-dialog.component';
 import { DeductibleDialogComponent } from './deductible-dialog/deductible-dialog.component';
 import { LimitDialogComponent } from './limit-dialog/limit-dialog.component';
+import { ProductPvVarEditDialogComponent } from './product-pv-var-edit-dialog.component';
 import { Observable, of } from 'rxjs';
 import { tap, map, filter, catchError, switchMap } from 'rxjs/operators';
 import { BusinessLineService } from '../../shared/services/business-line.service';
@@ -43,6 +44,8 @@ import { AuthService } from '../../shared/services/auth.service';
 import { TestRequestService } from '../../shared/services/api/test-request.service';
 import { VarsService } from '../../shared/services/vars.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
+import { TreeTableComponent, isObjectVarTypeRow } from '../../shared/components/tree-table';
+import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 
 @Component({
     selector: 'app-product',
@@ -61,12 +64,19 @@ import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/ap
         MatPaginatorModule,
         MatDialogModule,
         MatBadgeModule,
+        MatSlideToggleModule,
+        MatTooltipModule,
+        TreeTableComponent,
     ],
     templateUrl: './product.component.html',
     styleUrls: ['./product.component.scss']
 })
 export class ProductComponent implements OnInit {
+  @ViewChild('productTreeTable') productTreeTable?: TreeTableComponent<TreeTableSourceRow>;
+
   lob: BusinessLineEdit | undefined;
+
+  readonly isObjectVarTypeRow = isObjectVarTypeRow;
   
   product: Product = {
     lob: '',
@@ -163,7 +173,18 @@ export class ProductComponent implements OnInit {
   // Policy Variables table
   policyVarsDisplayedColumns = ['category', 'field', 'name', 'code', 'actions'];
   policyVarsFiltered = []
-  policyFilter = 'Policy Holder';
+  /** Только шаблоны печати ({@code strings.*} в varCdm). */
+  policyFilter = 'strings';
+
+  /** Дерево атрибутов продукта (данные из {@link Product.vars}). */
+  productTreeTableData: TreeTableSourceRow[] = [];
+  productTreeDisplayedColumns: string[] = ['name', 'code', 'actions'];
+  showDeletedProductTree = false;
+
+  /** Дерево переменных: правки только в DEV-версии продукта. */
+  get productTreeMutationsLocked(): boolean {
+    return this.product.versionStatus === 'PROD';
+  }
 
   // Files table
   filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
@@ -255,28 +276,26 @@ export class ProductComponent implements OnInit {
           if (!this.product.rules) {
             this.product.rules = { insuredEqualsPolicyHolder: false };
           }
-          // Ensure arrays are initialized for all packages and covers
-          if (this.product.packages) {
-            this.product.packages.forEach(pkg => {
-              if (!pkg.files) {
-                pkg.files = [];
+          if (!this.product.packages) {
+            this.product.packages = [];
+          }
+          this.product.packages.forEach(pkg => {
+            if (!pkg.files) {
+              pkg.files = [];
+            }
+            if (!pkg.covers) {
+              pkg.covers = [];
+            }
+            // Ensure deductibles and limits arrays are initialized for all covers
+            pkg.covers.forEach((cover: Cover) => {
+              if (!cover.deductibles) {
+                cover.deductibles = [];
               }
-              if (!pkg.covers) {
-                pkg.covers = [];
-              }
-              // Ensure deductibles and limits arrays are initialized for all covers
-              if (pkg.covers) {
-                pkg.covers.forEach((cover: Cover) => {
-                  if (!cover.deductibles) {
-                    cover.deductibles = [];
-                  }
-                  if (!cover.limits) {
-                    cover.limits = [];
-                  }
-                });
+              if (!cover.limits) {
+                cover.limits = [];
               }
             });
-          }
+          });
         }),
         catchError((error) => {
           this.snackBar.open('Ошибка загрузки продукта', 'Закрыть', { duration: 3000 });
@@ -568,79 +587,116 @@ export class ProductComponent implements OnInit {
     this.paginatedSaveValidators = this.filteredSaveValidators.slice(startIndex, startIndex + this.saveValidatorPageSize);
   }
 
-  // Package methods
+  /** True if another package already uses this code (optionally ignore `excludeIndex`). */
+  private isPackageCodeTaken(code: string, excludeIndex?: number): boolean {
+    const normalized = (code ?? '').trim();
+    if (!normalized) {
+      return true;
+    }
+    return this.product.packages.some((p, i) => {
+      if (excludeIndex !== undefined && i === excludeIndex) {
+        return false;
+      }
+      return (p.code ?? '').trim() === normalized;
+    });
+  }
+
   addPackage(): void {
     const dialogRef = this.dialog.open(PackageDialogComponent, {
       width: '500px',
       data: {
-        isNew: true
-      }
+        isNew: true,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Calculate package.id as max(id) + 1
-        const maxId = this.product.packages.length > 0 
-          ? Math.max(...this.product.packages.map(p => p.id || 0))
-          : 0;
-        result.id = maxId + 1;
-        result.code = result.id.toString();
-        
-        // Ensure arrays are initialized
-        if (!result.files) {
-          result.files = [];
-        }
-        if (!result.covers) {
-          result.covers = [];
-        }
-        
-        this.product.packages.push(result);
-        this.updatePackagesTable();
-        
-        // Make new record selected and update child tables
-        this.selectedPackageIndex = this.product.packages.length - 1;
-        this.currentPackage = result;
-        this.updateChildTables();
-        
-        this.updateChanges();
+    dialogRef.afterClosed().subscribe((result: Package | undefined) => {
+      if (!result) {
+        return;
       }
+      const code = String(result.code ?? '').trim();
+      if (!code) {
+        this.snackBar.open('Укажите код пакета', 'Закрыть', { duration: 3000 });
+        return;
+      }
+      if (this.isPackageCodeTaken(code)) {
+        this.snackBar.open('Код пакета должен быть уникальным', 'Закрыть', { duration: 3000 });
+        return;
+      }
+      const maxId =
+        this.product.packages.length > 0
+          ? Math.max(...this.product.packages.map((p) => p.id ?? 0))
+          : 0;
+      result.id = maxId + 1;
+      result.code = code;
+      if (!result.files) {
+        result.files = [];
+      }
+      if (!result.covers) {
+        result.covers = [];
+      }
+
+      this.product.packages.push(result);
+      this.updatePackagesTable();
+
+      this.selectedPackageIndex = this.product.packages.length - 1;
+      this.currentPackage = result;
+      this.updateChildTables();
+
+      this.updateChanges();
     });
   }
 
   editPackage(pkg: Package, index: number): void {
+    if (index < 0 || index >= this.product.packages.length) {
+      this.snackBar.open('Не удалось найти пакет в списке', 'Закрыть', { duration: 3000 });
+      return;
+    }
     const dialogRef = this.dialog.open(PackageDialogComponent, {
       width: '500px',
       data: {
         package: pkg,
-        isNew: false
-      }
+        isNew: false,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Preserve existing files and covers arrays if not provided
-        if (!result.files) {
-          result.files = pkg.files || [];
-        }
-        if (!result.covers) {
-          result.covers = pkg.covers || [];
-        }
-        // Preserve id and code
-        result.id = pkg.id;
-        result.code = pkg.code;
-        this.product.packages[index] = result;
-        this.updatePackagesTable();
-        // Update child tables if this package is selected
-        if (this.selectedPackageIndex === index) {
-          this.currentPackage = result;
-          this.updateChildTables();
-        }
-        this.updateChanges();
+    dialogRef.afterClosed().subscribe((result: Package | undefined) => {
+      if (!result) {
+        return;
       }
+      const code = String(result.code ?? '').trim();
+      if (!code) {
+        this.snackBar.open('Укажите код пакета', 'Закрыть', { duration: 3000 });
+        return;
+      }
+      if (this.isPackageCodeTaken(code, index)) {
+        this.snackBar.open('Код пакета должен быть уникальным', 'Закрыть', { duration: 3000 });
+        return;
+      }
+      // Preserve existing files and covers arrays if not provided
+      if (!result.files) {
+        result.files = pkg.files || [];
+      }
+      if (!result.covers) {
+        result.covers = pkg.covers || [];
+      }
+      result.id = pkg.id;
+      result.code = code;
+      this.product.packages[index] = result;
+      this.updatePackagesTable();
+      // Update child tables if this package is selected
+      if (this.selectedPackageIndex === index) {
+        this.currentPackage = result;
+        this.updateChildTables();
+      }
+      this.updateChanges();
     });
   }
 
   deletePackage(pkg: Package, index: number): void {
+    if (index < 0 || index >= this.product.packages.length) {
+      this.snackBar.open('Не удалось найти пакет в списке', 'Закрыть', { duration: 3000 });
+      return;
+    }
     if (confirm('Удалить пакет?')) {
       this.product.packages.splice(index, 1);
       
@@ -673,6 +729,9 @@ export class ProductComponent implements OnInit {
   }
 
   showFiles(pkg: Package, index: number): void {
+    if (index < 0 || index >= this.product.packages.length) {
+      return;
+    }
     this.selectedPackageIndex = index;
     this.currentPackage = pkg;
     this.selectedCoverIndex = -1;
@@ -695,8 +754,10 @@ export class ProductComponent implements OnInit {
   }
 
   updatePackagesTable(): void {
-    this.filteredPackages = this.product.packages;
-    this.paginatedPackages = this.product.packages;
+    const pkgs = this.product.packages ?? [];
+    // New array reference so mat-table picks up push/splice/in-place edits
+    this.filteredPackages = [...pkgs];
+    this.paginatedPackages = [...pkgs];
   }
 
   onPackagesPageChange(event: PageEvent): void {
@@ -1049,40 +1110,194 @@ export class ProductComponent implements OnInit {
   }
 
  
-  updatePolicyTable() {}
+  updatePolicyTable(): void {
+    this.syncProductTreeFromVars();
+  }
+
+  onShowDeletedProductTreeChange(): void {
+    this.syncProductTreeFromVars();
+  }
+
+  /**
+   * Плоский список {@link Product.vars} → строки для {@link TreeTableComponent}
+   * (иерархия по {@code id} / {@code parent_id}, как в PvVar с бэкенда).
+   */
+  syncProductTreeFromVars(): void {
+    const vars = this.product?.vars ?? [];
+    const syntheticBase = 1_000_000;
+    const used = new Set<number>();
+    // delete vars with parent_id is null and varCode != 'policy'
+    const vars2 = vars.filter(v => (!(v.parent_id == null && v.varCode !== 'policy')));
+    
+    this.productTreeTableData = vars2.map((v, i) => this.policyVarToTreeRow(v, i, syntheticBase, used));
+  }
+
+  private policyVarToTreeRow(
+    v: PolicyVar,
+    index: number,
+    syntheticBase: number,
+    used: Set<number>,
+  ): TreeTableSourceRow {
+    let id = v.id != null ? Number(v.id) : NaN;
+    if (!Number.isFinite(id) || used.has(id)) {
+      id = syntheticBase + index;
+    }
+    used.add(id);
+
+    const p = v.parent_id;
+    const parentNum = p === null || p === undefined ? NaN : Number(p);
+    const parent_id = Number.isFinite(parentNum) ? parentNum : null;
+
+    const nrRaw = v.varNr;
+    const varNr =
+      typeof nrRaw === 'number' && Number.isFinite(nrRaw)
+        ? nrRaw
+        : Number(String(nrRaw ?? '').trim()) || 0;
+
+    return {
+      id,
+      parent_id,
+      varNr,
+      varName: v.varName ?? '',
+      varCode: v.varCode ?? '',
+      varType: v.varType,
+      varDataType: v.varDataType,
+      isSystem: v.isSystem ?? false,
+      isDeleted: v.isDeleted ?? false,
+      isTarifFactor: v.isTarifFactor ?? false,
+      varList: v.varList,
+      varPath: v.varPath ?? '',
+      varValue: v.varValue ?? '',
+      varCdm: v.varCdm ?? '',
+      name: v.name?.trim() || v.varName || '',
+    };
+  }
+
+  /** Сопоставление строки дерева с элементом {@link Product.vars}. */
+  findPolicyVarForTreeRow(row: TreeTableSourceRow): PolicyVar | undefined {
+    return this.product.vars.find((v) => {
+      if (v.id != null && Number(v.id) === row.id) {
+        return true;
+      }
+      return v.varCode === row.varCode && (v.varCdm ?? '') === (row.varCdm ?? '');
+    });
+  }
+
+  openProductPvVarEditDialog(row: TreeTableSourceRow): void {
+    if (this.productTreeMutationsLocked) {
+      return;
+    }
+    const v = this.findPolicyVarForTreeRow(row);
+    if (!v) {
+      return;
+    }
+    this.dialog
+      .open(ProductPvVarEditDialogComponent, {
+        width: '760px',
+        maxHeight: '90vh',
+        data: { variable: { ...v } },
+      })
+      .afterClosed()
+      .subscribe((result?: PolicyVar) => {
+        if (!result) {
+          return;
+        }
+        this.applyPolicyVarEditFromDialog(v, result);
+        this.updateChanges();
+        this.syncProductTreeFromVars();
+      });
+  }
+
+  private applyPolicyVarEditFromDialog(target: PolicyVar, edited: PolicyVar): void {
+    target.id = edited.id;
+    target.parent_id = edited.parent_id;
+    target.varList = edited.varList;
+    target.isSystem = edited.isSystem;
+    target.isDeleted = edited.isDeleted;
+    target.varPath = edited.varPath;
+    target.varName = edited.varName;
+    target.varCode = edited.varCode;
+    target.varDataType = edited.varDataType;
+    target.varValue = edited.varValue;
+    target.varType = edited.varType;
+    target.varCdm = edited.varCdm;
+    target.varNr = edited.varNr;
+    target.varRefCode = edited.varRefCode;
+    target.isTarifFactor = edited.isTarifFactor;
+  }
+
+  /**
+   * После встроенного soft-delete в дереве у потомков уже стоит {@code isDeleted} на строках —
+   * переносим флаги в {@link Product.vars}.
+   */
+  onProductTreeSoftDeleted(_row: TreeTableSourceRow): void {
+    for (const r of this.productTreeTableData) {
+      const v = this.findPolicyVarForTreeRow(r);
+      if (v) {
+        v.isDeleted = !!r.isDeleted;
+      }
+    }
+    this.updateChanges();
+    this.syncProductTreeFromVars();
+  }
+
+  onProductTreeRestoreNode(row: TreeTableSourceRow): void {
+    let v: PolicyVar | undefined = this.findPolicyVarForTreeRow(row);
+    const seen = new Set<number>();
+    while (v) {
+      const vid = v.id != null ? Number(v.id) : NaN;
+      if (Number.isFinite(vid)) {
+        if (seen.has(vid)) {
+          break;
+        }
+        seen.add(vid);
+      }
+      v.isDeleted = false;
+      const pid = v.parent_id;
+      if (pid == null) {
+        break;
+      }
+      const pNum = Number(pid);
+      v = this.product.vars.find((x) => x.id != null && Number(x.id) === pNum);
+    }
+    this.updateChanges();
+    this.syncProductTreeFromVars();
+  }
 
   get paginatedPolicyVars(): any[] {
-
-    let filtered = this.product.vars;
+    const vars = this.product?.vars ?? [];
+    let filtered = vars;
     let categories: string[] = [];
     let prefix = '';
     let result: any[] = [];
 
+    const cdm = (v: PolicyVar) => (v.varCdm ?? '').trim();
+
     // Apply filter based on selected option
     if (this.policyFilter === 'policyHolder') {
       prefix = 'policyHolder.';
-      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
       categories = this.varsService.getPhCategories(this.lob?.mpPhType || '');
     } else if (this.policyFilter === 'insuredObject') {
       prefix = 'insuredObject.';
-      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
       categories = this.varsService.getIoCategories(this.lob?.mpInsObjectType || 'person');
     } else if (this.policyFilter === 'policy') {
       prefix = 'policy.';
-      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
       categories = [''];
     } else if (this.policyFilter === 'coverage') {
       prefix = 'coverage.';
-      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
       categories = [''];
     } else if (this.policyFilter === 'strings') {
       prefix = 'strings.';
-      filtered = this.product.vars.filter(v => v.varCdm.startsWith(prefix));
+      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
       categories = [''];
     }
 
     for (const category of categories) {
-      let category_filtered = filtered.filter(v => v.varCdm.startsWith(prefix + category));
+      let category_filtered = filtered.filter((v) => cdm(v).startsWith(prefix + category));
     
       // Sort by varNr
       category_filtered = category_filtered.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
@@ -1092,20 +1307,24 @@ export class ProductComponent implements OnInit {
       category_filtered.map((v, index) => {
         let category = '';
         let field = '';
-        const parts = v.varCdm.split('.');
+        const path = cdm(v);
+        const parts = path.split('.');
 
-        if (v.varCdm.startsWith('policyHolder.')) {
+        if (path.startsWith('policyHolder.')) {
           category = parts[1];
           field = parts[2];
-        } else if (v.varCdm.startsWith('insuredObject.')) {
+        } else if (path.startsWith('insuredObject.')) {
           category = parts[1];
           field = parts[2];
-        } else if (v.varCdm.startsWith('policy.')) {
+        } else if (path.startsWith('policy.')) {
           category = '';
           field = parts[1];
-        } else if (v.varCdm.startsWith('coverage.')) {
+        } else if (path.startsWith('coverage.')) {
           category = '';
           field = parts[1];
+        } else if (path.startsWith('strings.')) {
+          category = '';
+          field = parts.length > 1 ? parts.slice(1).join('.') : '';
         } else {
           category = parts.join('.');
           field = '';
@@ -1432,13 +1651,18 @@ console.log(pkg)
   }
 
   getPackageIndex(pkg: Package): number {
-    // Try to find by reference first (most reliable)
-    const refIndex = this.product.packages.indexOf(pkg);
-    if (refIndex !== -1) return refIndex;
-    
-    // Fallback to matching by code or id
-    const index = this.product.packages.findIndex(p => p.code === pkg.code || p.id === pkg.id);
-    return index !== -1 ? index : 0;
+    const list = this.product.packages ?? [];
+    const refIndex = list.indexOf(pkg);
+    if (refIndex !== -1) {
+      return refIndex;
+    }
+    if (pkg.id != null) {
+      const byId = list.findIndex((p) => p.id === pkg.id);
+      if (byId !== -1) {
+        return byId;
+      }
+    }
+    return list.findIndex((p) => p.code === pkg.code);
   }
 
   getCoverIndex(cover: Cover): number {
@@ -1526,17 +1750,21 @@ export class TestRequestDialog {
         <strong>Variable Code:</strong> {{ data.variable.varCode }}
       </div>
       <div style="margin-bottom: 16px;">
-        <strong>Category:</strong> {{ data.variable.category }}
+        <strong>CDM:</strong> {{ data.variable.varCdm }}
       </div>
       <div style="margin-bottom: 16px;">
-        <strong>Field:</strong> {{ data.variable.field }}
+        <strong>Type / Data type:</strong> {{ data.variable.varType }} / {{ data.variable.varDataType }}
       </div>
-      <div style="margin-bottom: 16px;">
-        <strong>Name:</strong> {{ data.variable.name }}
-      </div>
-      <div style="margin-bottom: 16px;">
-        <strong>Code:</strong> {{ data.variable.code }}
-      </div>
+      @if (data.variable.id != null) {
+        <div style="margin-bottom: 16px;">
+          <strong>id / parent_id:</strong> {{ data.variable.id }} / {{ data.variable.parent_id ?? '—' }}
+        </div>
+      }
+      @if (data.variable.varList) {
+        <div style="margin-bottom: 16px;">
+          <strong>varList:</strong> {{ data.variable.varList }}
+        </div>
+      }
     </div>
     <div mat-dialog-actions align="end">
       <button mat-raised-button color="primary" mat-dialog-close>Close</button>

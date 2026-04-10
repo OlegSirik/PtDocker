@@ -73,6 +73,6 @@ export class PackageDialogComponent {
   }
 
   isValid(): boolean {
-    return !!(this.package.name);
+    return !!(this.package.name?.trim() && String(this.package.code ?? '').trim());
   }
 }

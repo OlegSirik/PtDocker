@@ -5,29 +5,29 @@ import java.util.Objects;
 
 public class ProductTestId implements Serializable {
 
-    private Integer productId;
-    private Integer versionNo;
+    private Long productId;
+    private Long versionNo;
 
     public ProductTestId() {}
 
-    public ProductTestId(Integer productId, Integer versionNo) {
+    public ProductTestId(Long productId, Long versionNo) {
         this.productId = productId;
         this.versionNo = versionNo;
     }
 
-    public Integer getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(Integer productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 

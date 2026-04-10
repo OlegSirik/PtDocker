@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.List;
 
+import ru.pt.api.dto.refs.RecordStatus;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,6 +23,6 @@ public class PricelistDto {
     private BigDecimal price;
     private Long amountFree;
     private Long amountBooked;
-    private String status;  // ACTIVE, SUSPENDED, DELETED
+    private RecordStatus recordStatus;
     private List<AddonProductRef> addonProducts;  // product_id, preconditions from po_addon_products
 }

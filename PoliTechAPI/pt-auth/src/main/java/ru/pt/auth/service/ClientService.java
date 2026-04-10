@@ -3,7 +3,7 @@ package ru.pt.auth.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.auth.Client;
-import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.auth.ClientAuthLevel;
 import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.dto.exception.BadRequestException;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ClientService implements ClientSecurityConfigService {
@@ -66,10 +67,10 @@ public class ClientService implements ClientSecurityConfigService {
         this.identityProviderRegistry = identityProviderRegistry;
     }
 
-    public Optional<ClientEntity> findByClientId(String clientId) {
+    public Optional<ClientEntity> findByAuthClientId(String clientId) {
         AuthenticatedUser user = getCurrentUser();
         authorizationService.check(user, AuthZ.ResourceType.CLIENT, clientId, null, AuthZ.Action.VIEW);
-        return clientRepository.findByClientId(clientId);
+        return clientRepository.findByAuthClientId(clientId);
     }
 
     /**
@@ -93,13 +94,26 @@ public class ClientService implements ClientSecurityConfigService {
     private ClientSecurityConfig mapToDomain(ClientEntity e) {
         return new ClientSecurityConfig(
             e.getId(),
-            e.getClientId(),
+            e.getAuthClientId(),
             e.getDefaultAccountId(),
             e.getTenant().getId(),
             e.getName(),
             e.getAuthType() != null ? AuthType.valueOf(e.getAuthType()) : null,
-            e.getAuthLevel() != null ? ClientAuthType.valueOf(e.getAuthLevel()) : null
+            e.getAuthLevel() != null ? parseClientAuthLevel(e.getAuthLevel()) : null
         );
+    }
+
+    private static ClientAuthLevel parseClientAuthLevel(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String s = raw.trim();
+        for (ClientAuthLevel l : ClientAuthLevel.values()) {
+            if (l.getValue().equalsIgnoreCase(s)) {
+                return l;
+            }
+        }
+        return null;
     }
 
     // ========== CLIENT MANAGEMENT (TNT_ADMIN) ==========
@@ -116,8 +130,8 @@ public class ClientService implements ClientSecurityConfigService {
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
         // Проверка уникальности clientId
-        if (clientRepository.findByClientIdandTenantCode(client.getClientId(), user.getTenantCode()).isPresent()) {
-            throw new BadRequestException("Client with ID '" + client.getClientId() + "' already exists");
+        if (clientRepository.findByAuthClientIdandTenantCode(client.getAuthClientId(), user.getTenantCode()).isPresent()) {
+            throw new BadRequestException("Client with ID '" + client.getAuthClientId() + "' already exists");
         }
 
         client.setTid(tenant.getId());
@@ -187,13 +201,13 @@ public class ClientService implements ClientSecurityConfigService {
             }
         }
 
-        if (!clientToUpdate.getClientId().equals(client.getClientId())) {
+        if (!clientToUpdate.getAuthClientId().equals(client.getAuthClientId())) {
             // Проверка уникальности нового clientId
-            ClientEntity oldClient = clientRepository.findByClientIdandTenantCode(client.getClientId(), user.getTenantCode())
+            ClientEntity oldClient = clientRepository.findByAuthClientIdandTenantCode(client.getAuthClientId(), user.getTenantCode())
                     .orElse(new ClientEntity());
 
             if (oldClient.getId() != null && !oldClient.getId().equals(client.getId())) {
-                throw new BadRequestException("Client with ID '" + client.getClientId() + "' already exists");
+                throw new BadRequestException("Client with ID '" + client.getAuthClientId() + "' already exists");
             }
         }
 
@@ -204,7 +218,7 @@ public class ClientService implements ClientSecurityConfigService {
         ClientEntity saved = clientRepository.save(clientEntity);
 
         AccountEntity account = accountRepository.findCliensAccountByClientId(saved.getId())
-                .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + saved.getClientId()));
+                .orElseThrow(() -> new NotFoundException("Client account not found for client id: " + saved.getAuthClientId()));
 
         Client clientDto = clientMapper.toDto(saved);
         clientDto.setClientAccountId(account.getId());
@@ -222,37 +236,7 @@ public class ClientService implements ClientSecurityConfigService {
         List<ClientEntity> clients = clientRepository.findBytenantCode(user.getTenantCode());
 
         List<Client> clientsDto = clients.stream()
-            .map(client -> {
-                //ClientConfiguration configuration = clientConfigurationService.getClientConfiguration(client.getId());
-                Client dto = new Client();
-                dto.setId(client.getId());
-                dto.setTid(client.getTenant().getId());
-                dto.setClientId(client.getClientId());
-                dto.setName(client.getName());
-                dto.setIsDeleted(client.getDeleted());
-                //dto.setCreatedAt(client.getCreatedAt());
-                //dto.setUpdatedAt(client.getUpdatedAt());
-                dto.setTid(client.getTenant().getId());
-                dto.setDefaultAccountId(client.getDefaultAccountId());
-                dto.setAuthType(client.getAuthType());
-                ClientConfigurationEntity conf = client.getClientConfigurationEntity();
-                if (conf != null) {
-                 
-                ClientConfiguration configuration = new ClientConfiguration();
-                    configuration.setPaymentGate(conf.getPaymentGate());
-                    configuration.setSendEmailAfterBuy(conf.isSendEmailAfterBuy());
-                    configuration.setSendSmsAfterBuy(conf.isSendSmsAfterBuy());
-                    configuration.setPaymentGateAgentNumber(conf.getPaymentGateAgentNumber());
-                    configuration.setPaymentGateLogin(conf.getPaymentGateLogin());
-                    configuration.setPaymentGatePassword(conf.getPaymentGatePassword());
-                    configuration.setEmployeeEmail(conf.getEmployeeEmail());
-                
-                    dto.setClientConfiguration(configuration);
-                }
-                   
-                
-                return dto;
-            })
+            .map(clientMapper::toDto)
             .collect(Collectors.toList());
 
         return clientsDto;
@@ -309,7 +293,6 @@ public class ClientService implements ClientSecurityConfigService {
             productRole.roleProductId(),
             productRole.roleProductName(),
             account.getId(),
-            false,
             true,
             true,
             true,

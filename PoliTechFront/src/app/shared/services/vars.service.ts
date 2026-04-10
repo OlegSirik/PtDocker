@@ -94,6 +94,7 @@ export interface LobVar {
   varList: string | null;
   isSystem: boolean;
   isDeleted: boolean;
+  name: string;
 }
 
 @Injectable({

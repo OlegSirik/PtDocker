@@ -43,7 +43,7 @@ public interface AccountTokenRepository extends JpaRepository<AccountTokenEntity
     @Query("SELECT at FROM AccountTokenEntity at " +
            "JOIN TenantEntity t ON at.tid = t.id " +
            "JOIN ClientEntity c ON at.clientId = c.id " +
-           "WHERE t.code = :tenantCode AND c.clientId = :clientAuthId AND at.accountId = :accountId")
+           "WHERE t.code = :tenantCode AND c.authClientId = :clientAuthId AND at.accountId = :accountId")
     Optional<AccountTokenEntity> findByAll4Fields(
               @Param("tenantCode") String tenantCode,
               @Param("clientAuthId") String clientAuthId,

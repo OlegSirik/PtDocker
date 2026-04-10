@@ -89,6 +89,9 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
    */
   @Input() enableVarEditDialog = true;
 
+  /** Скрыть встроенную кнопку мягкого удаления (например, только просмотр или PROD). */
+  @Input() disableBuiltInSoftDelete = false;
+
   /** Событие при раскрытии/сворачивании узла */
   @Output() expandedChange = new EventEmitter<{ node: T; expanded: boolean }>();
   
@@ -264,6 +267,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
         varList: res.varList,
         varPath: res.varPath,
         varValue: res.varValue,
+        name: (res.name?.trim() || res.varName) ?? '',
       });
       this.rowVarUpdated.emit(row);
       this.cdr.markForCheck();
@@ -286,6 +290,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
       varCdm: '',
       varType: 'STRING',
       varDataType: 'STRING',
+      name: '',
     };
     const ref = this.dialog.open(TreeTableRowEditDialogComponent, {
       width: '520px',

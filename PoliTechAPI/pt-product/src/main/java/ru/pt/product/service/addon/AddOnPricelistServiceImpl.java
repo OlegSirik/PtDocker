@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.pt.api.dto.addon.AddonProductRef;
 import ru.pt.api.dto.addon.PricelistDto;
-import ru.pt.api.dto.addon.PricelistListDto;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.refs.RecordStatus;
 import ru.pt.api.service.addon.AddOnPricelistService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -42,7 +42,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
         entity.setPrice(cmd.getPrice());
         entity.setAmountFree(cmd.getAmountFree() != null ? cmd.getAmountFree() : 0L);
         entity.setAmountBooked(cmd.getAmountBooked() != null ? cmd.getAmountBooked() : 0L);
-        entity.setStatus(cmd.getStatus() != null ? cmd.getStatus() : "ACTIVE");
+        entity.setRecordStatus(cmd.getRecordStatus() != null ? cmd.getRecordStatus().getValue() : RecordStatus.ACTIVE.getValue());
         
         entity = pricelistRepository.save(entity);
         if (cmd.getAddonProducts() != null) {
@@ -73,7 +73,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
         entity.setPrice(cmd.getPrice());
         entity.setAmountFree(cmd.getAmountFree());
         entity.setAmountBooked(cmd.getAmountBooked());
-        entity.setStatus(cmd.getStatus());
+        entity.setRecordStatus(cmd.getRecordStatus().getValue());
         entity = pricelistRepository.save(entity);
         if (cmd.getAddonProducts() != null) {
             addonProductRepository.findByTidAndAddonId(tid, entity.getId()).forEach(addonProductRepository::delete);
@@ -95,7 +95,7 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
         Long tid = getCurrentTenantId();
         var entity = pricelistRepository.findByTidAndId(tid, id)
                 .orElseThrow(() -> new NotFoundException("Pricelist not found: " + id));
-        entity.setStatus("DELETED");
+        entity.setRecordStatus(RecordStatus.DELETED.toValue());
         pricelistRepository.save(entity);
     }
 
@@ -103,21 +103,23 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
     public void suspendPricelist(Long id) {
         authorizationService.check(getCurrentUser(), AuthZ.ResourceType.POLICY_ADDON, String.valueOf(id), null, AuthZ.Action.MANAGE);
         Long tid = getCurrentTenantId();
-        var entity = pricelistRepository.findByTidAndId(tid, id)
+        AddonPricelistEntity entity = pricelistRepository.findByTidAndId(tid, id)
                 .orElseThrow(() -> new NotFoundException("Pricelist not found: " + id));
-        entity.setStatus("SUSPENDED");
+                
+        entity.setRecordStatus(RecordStatus.SUSPENDED.toValue());
+
         pricelistRepository.save(entity);
     }
 
     @Override
-    public List<PricelistListDto> getPricelists(Long providerId) {
+    public List<PricelistDto> getPricelists(Long providerId) {
         authorizationService.check(getCurrentUser(), AuthZ.ResourceType.POLICY_ADDON, null, null, AuthZ.Action.LIST);
         Long tid = getCurrentTenantId();
         var entities = providerId != null
                 ? pricelistRepository.findByTidAndProviderIdOrderByCode(tid, providerId)
                 : pricelistRepository.findByTidOrderByCode(tid);
         return entities.stream()
-                .map(this::toListDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -163,35 +165,8 @@ public class AddOnPricelistServiceImpl implements AddOnPricelistService {
                 .price(e.getPrice())
                 .amountFree(e.getAmountFree())
                 .amountBooked(e.getAmountBooked())
-                .status(e.getStatus())
+                .recordStatus(RecordStatus.fromValue(e.getRecordStatus()))
                 .addonProducts(refs)
-                .build();
-    }
-
-    private PricelistDto toDtoSimple(AddonPricelistEntity e) {
-        return PricelistDto.builder()
-                .id(e.getId())
-                .providerId(e.getProviderId())
-                .code(e.getCode())
-                .name(e.getName())
-                .categoryCode(e.getCategoryCode())
-                .price(e.getPrice())
-                .amountFree(e.getAmountFree())
-                .amountBooked(e.getAmountBooked())
-                .status(e.getStatus())
-                .build();
-    }
-
-    private PricelistListDto toListDto(AddonPricelistEntity e) {
-        return PricelistListDto.builder()
-                .id(e.getId())
-                .providerId(e.getProviderId())
-                .code(e.getCode())
-                .name(e.getName())
-                .categoryCode(e.getCategoryCode())
-                .price(e.getPrice())
-                .amountFree(e.getAmountFree())
-                .status(e.getStatus())
                 .build();
     }
 

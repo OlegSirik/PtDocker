@@ -2,6 +2,9 @@ package ru.pt.auth.utils;
 
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Client;
+import ru.pt.api.dto.auth.ClientAuthLevel;
+import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.refs.RecordStatus;
 import ru.pt.auth.entity.ClientEntity;
 import ru.pt.auth.entity.TenantEntity;
 import ru.pt.auth.service.ClientConfigurationMapper;
@@ -20,22 +23,21 @@ public class ClientMapper {
         ClientEntity entity = new ClientEntity();
         entity.setId(dto.getId());
 
-        // Создаем Tenant только с id для связи
         if (dto.getTid() != null) {
             TenantEntity tenant = new TenantEntity();
             tenant.setId(dto.getTid());
             entity.setTenant(tenant);
         }
 
-        entity.setClientId(dto.getClientId());
+        entity.setAuthClientId(dto.getAuthClientId());
         entity.setDefaultAccountId(dto.getDefaultAccountId());
         entity.setName(dto.getName());
-        entity.setDeleted(dto.getIsDeleted());
-        entity.setAuthType(dto.getAuthType());
-        entity.setAuthLevel(dto.getAuthLevel()); 
-        //entity.setCreatedAt(dto.getCreatedAt());
-        //entity.setUpdatedAt(dto.getUpdatedAt());
-
+        entity.setRecordStatus(
+                dto.getRecordStatus() != null ? dto.getRecordStatus().getValue() : "ACTIVE");
+        entity.setAuthType(
+                dto.getAuthType() != null ? dto.getAuthType().getValue() : "LOCAL_JWT");
+        entity.setAuthLevel(
+                dto.getAuthLevel() != null ? dto.getAuthLevel().getValue() : "CLIENT");
         if (dto.getClientConfiguration() != null) {
             entity.setClientConfigurationEntity(
                     clientConfigurationMapper.toEntity(dto.getClientConfiguration())
@@ -53,14 +55,15 @@ public class ClientMapper {
         Client dto = new Client();
         dto.setId(entity.getId());
         dto.setTid(entity.getTenant() != null ? entity.getTenant().getId() : null);
-        dto.setClientId(entity.getClientId());
+        dto.setAuthClientId(entity.getAuthClientId());
         dto.setDefaultAccountId(entity.getDefaultAccountId());
         dto.setName(entity.getName());
-        dto.setIsDeleted(entity.getDeleted());
-        //dto.setCreatedAt(entity.getCreatedAt());
-        //dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setAuthType(entity.getAuthType());
-        dto.setAuthLevel(entity.getAuthLevel());
+
+        RecordStatus recordStatus = RecordStatus.fromValue(entity.getRecordStatus());
+        dto.setRecordStatus(recordStatus != null ? recordStatus : RecordStatus.ACTIVE);
+
+        dto.setAuthType(parseClientAuthType(entity.getAuthType()));
+        dto.setAuthLevel(parseClientAuthLevel(entity.getAuthLevel()));
         if (entity.getClientConfigurationEntity() != null) {
             dto.setClientConfiguration(
                     clientConfigurationMapper.toDto(entity.getClientConfigurationEntity())
@@ -68,6 +71,32 @@ public class ClientMapper {
         }
 
         return dto;
+    }
+
+    private static ClientAuthType parseClientAuthType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return ClientAuthType.LOCAL_JWT;
+        }
+        String s = raw.trim();
+        for (ClientAuthType t : ClientAuthType.values()) {
+            if (t.getValue().equalsIgnoreCase(s)) {
+                return t;
+            }
+        }
+        return ClientAuthType.LOCAL_JWT;
+    }
+
+    private static ClientAuthLevel parseClientAuthLevel(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return ClientAuthLevel.CLIENT;
+        }
+        String s = raw.trim();
+        for (ClientAuthLevel l : ClientAuthLevel.values()) {
+            if (l.getValue().equalsIgnoreCase(s)) {
+                return l;
+            }
+        }
+        return ClientAuthLevel.CLIENT;
     }
 
 }

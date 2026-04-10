@@ -15,7 +15,7 @@ public interface CalculatorService {
      * @param packageNo номер пакета
      * @return модель калькулятора или null, если не найден
      */
-    CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo);
+    CalculatorModel getCalculator(Long tenantId, Long productId, Long versionNo, String packageNo);
 
     /**
      * Создать калькулятор, если он отсутствует
@@ -25,29 +25,32 @@ public interface CalculatorService {
      * @param packageNo номер пакета
      * @return созданный или найденный калькулятор
      */
-    CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo);
+    CalculatorModel createCalculatorIfMissing(Long tenantId, Long productId, String productCode, Long versionNo, String packageNo);
 
     /**
      * копирует калькулятор в другой продукт версию
+     * @param tenantId айди тенанта
      * @param productId айди продукта
      * @param versionNo номер версии
      * @param packageNo номер пакета
      * @return модель калькулятора
      */
-    public void copyCalculator(Integer productId, Integer versionNo, Integer packageNo, Integer versionNoTo) ;
+    public void copyCalculator(Long tenantId, Long productId, Long versionNo, String packageNo, Long versionNoTo) ;
 
     /**
      * Выполнить калькулятор и вернуть рассчитанные переменные
+     * @param tenantId айди тенанта
      * @param productId айди продукта
      * @param versionNo номер версии
      * @param packageNo номер пакета
      * @param inputValues входные переменные
      * @return список переменных с рассчитанными значениями
      */
-    void runCalculator(Integer productId, Integer versionNo, Integer packageNo, CalculatorContext ctx);
+    void runCalculator(Long tenantId, Long productId, Long versionNo, String packageNo, CalculatorContext ctx);
 
     /**
      * Заменить модель калькулятора
+     * @param tenantId айди тенанта
      * @param productId айди продукта
      * @param productCode код продукта
      * @param versionNo номер версии
@@ -55,22 +58,22 @@ public interface CalculatorService {
      * @param newJson новая модель калькулятора
      * @return сохраненная модель
      */
-    CalculatorModel replaceCalculator(Integer productId, String productCode, Integer versionNo,
-                                      Integer packageNo, CalculatorModel newJson);
+    CalculatorModel replaceCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
+                                      String packageNo, CalculatorModel newJson);
 
     /**
      * Синхронизировать переменные калькулятора с продуктом
      * @param calculatorId идентификатор калькулятора
      */
-    void syncVars(Integer calculatorId);
+    void syncVars(Long tenantId, Long calculatorId);
 
     /**
      * Получить калькулятор по идентификатору
      * @param calculatorId идентификатор калькулятора
      * @return модель калькулятора или null, если не найден
      */
-    CalculatorModel getCalculatorById(Integer calculatorId);
+    CalculatorModel getCalculatorById(Long tenantId, Long calculatorId);
 
-    void deleteCalculator(Integer productId, Integer versionNo, Integer packageNo);
+    void deleteCalculator(Long tenantId, Long productId, Long versionNo, String packageNo);
 
 }

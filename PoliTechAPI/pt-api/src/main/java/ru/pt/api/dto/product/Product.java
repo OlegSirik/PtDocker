@@ -5,18 +5,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import ru.pt.api.dto.refs.RecordStatus;
+
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product {
-    private Integer id;
+    private Long id;
     private String lob;
     private String code;
     private String name;
-    private Integer prodVersionNo;
-    private Integer devVersionNo;
+    private Long prodVersionNo;
+    private Long devVersionNo;
     /** pt_insurance_company.id, может быть null */
     private Long insCompanyId;
-    private boolean isDeleted = false;
+    private RecordStatus recordStatus;
 }

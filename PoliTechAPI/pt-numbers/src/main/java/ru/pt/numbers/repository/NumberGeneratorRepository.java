@@ -9,15 +9,17 @@ import ru.pt.numbers.entity.NumberGeneratorEntity;
 
 import java.util.Optional;
 
-public interface NumberGeneratorRepository extends JpaRepository<NumberGeneratorEntity, Integer>, NumberGeneratorRepositoryCustom {
+public interface NumberGeneratorRepository extends JpaRepository<NumberGeneratorEntity, Long>, NumberGeneratorRepositoryCustom {
 
-    @Query("select ng from NumberGeneratorEntity ng where ng.tid = :tId and ng.productCode = :productCode")
-    Optional<NumberGeneratorEntity> findByProductCode(@Param("tId") Long tId, @Param("productCode") String productCode);
+//    @Query("select ng from NumberGeneratorEntity ng where ng.tid = :tId and ng.code = :code")
+//    Optional<NumberGeneratorEntity> findByTidAndCode(@Param("tId") Long tId, @Param("code") String code);
 
-    @Query("select ng from NumberGeneratorEntity ng where ng.tid = :tId and ng.id = :id")
-    Optional<NumberGeneratorEntity> findByTidAndId(@Param("tId") Long tId, @Param("id") Integer id);
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
+//    @Query("select ng from NumberGeneratorEntity ng where ng.tid = :tId and ng.code = :code")
+//    Optional<NumberGeneratorEntity> findByTidAndCodeForUpdate(@Param("tId") Long tId, @Param("code") String code);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select ng from NumberGeneratorEntity ng where ng.tid = :tId and ng.id = :id")
-    Optional<NumberGeneratorEntity> findByTidAndIdForUpdate(@Param("tId") Long tId, @Param("id") Integer id);
+    Optional<NumberGeneratorEntity> findByTidAndIdForUpdate(@Param("tId") Long tId, @Param("id") Long id);
+
 }

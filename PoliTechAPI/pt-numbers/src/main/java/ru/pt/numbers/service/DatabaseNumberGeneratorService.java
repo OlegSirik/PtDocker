@@ -1,76 +1,36 @@
 package ru.pt.numbers.service;
 
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.service.numbers.NumberGeneratorService;
-import ru.pt.api.security.AuthenticatedUser;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.numbers.entity.NumberGeneratorEntity;
 import ru.pt.numbers.repository.NumberGeneratorRepository;
-import ru.pt.numbers.utils.NumberGeneratorMapper;
 
 import java.time.LocalDate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.domain.model.VariableContext;
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Кор реализация сервиса генерации номеров через таблицу в БД
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class DatabaseNumberGeneratorService implements NumberGeneratorService {
 
     private final NumberGeneratorRepository repository;
-    private final NumberGeneratorMapper mapper;
-    private final SecurityContextHelper securityContextHelper;
-
-    public DatabaseNumberGeneratorService(NumberGeneratorRepository repository,
-                                  NumberGeneratorMapper mapper,
-                                  SecurityContextHelper securityContextHelper) {
-        this.repository = repository;
-        this.mapper = mapper;
-        this.securityContextHelper = securityContextHelper;
-    }
-
-    /**
-     * Get current authenticated user from security context
-     * @return AuthenticatedUser representing the current user
-     * @throws ru.pt.api.dto.exception.UnauthorizedException if user is not authenticated
-     */
-    protected AuthenticatedUser getCurrentUser() {
-        return securityContextHelper.getAuthenticatedUser()
-                .orElseThrow(() -> new UnauthorizedException("Unable to get current user from context"));
-    }
-
-    /**
-     * Get current tenant ID from authenticated user
-     * @return Long representing the current tenant ID
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
-     */
-    protected Long getCurrentTenantId() {
-        return getCurrentUser().getTenantId();
-    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public String getNextNumber(VariableContext values, String productCode) {
-        NumberGeneratorEntity ng = null;
-        if (productCode != null && !productCode.isEmpty()) {
-            ng = repository.findByProductCode(getCurrentTenantId(), productCode)
-                    .orElseThrow(() -> new NotFoundException("Generator not found: " + productCode));
-        }
-        if (ng == null) {
-            // TODO кастомное исключение
-            throw new NotFoundException("Generator not found: " + productCode);
-        }
-        ng = getNext(ng.getId());
+    public String getNextNumber(Long tid, NumberGeneratorDescription ng, VariableContext values) {
+
+        Long currentValue = getNext(tid, ng);
 
         String mask = ng.getMask();
         StringBuilder resultMask = new StringBuilder(mask);
@@ -94,7 +54,7 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
             } else if (key.matches("X+")) {
                 // Handle any number of X's as sequence number (XXXX, XXX, XX, etc.)
                 int xCount = key.length();
-                Integer currentValue = ng.getCurrentValue();
+                //Long currentValue = ng.getCurrentValue();
                 if (ng.getXorMask() != null && !ng.getXorMask().isEmpty()) {
                     currentValue = currentValue ^ Integer.parseInt(ng.getXorMask());
                 }
@@ -120,63 +80,61 @@ public class DatabaseNumberGeneratorService implements NumberGeneratorService {
     }
 
     @Override
-    public void create(NumberGeneratorDescription numberGeneratorDescription) {
-        var entity = mapper.toEntity(numberGeneratorDescription);
-        entity.setTid(getCurrentTenantId());
+    public void create(Long tid, NumberGeneratorDescription numberGeneratorDescription) {
+        var entity = new NumberGeneratorEntity();
+        //entity.setCode(numberGeneratorDescription.getProductCode());
+        entity.setTid(tid);
+        entity.setCurrentValue(0L);
+        entity.setLastReset(LocalDate.now());
         repository.save(entity);
+        numberGeneratorDescription.setId(entity.getId());
     }
 
     @Override
-    public void update(NumberGeneratorDescription numberGeneratorDescription) {
-        if (numberGeneratorDescription.getId() == null) {
-            throw new BadRequestException("NumberGenerator ID must not be null for update");
-        }
+    public void reset(Long tid, Long id) {
+        var nge = repository.findByTidAndIdForUpdate(tid, id)
+            .orElseThrow(() -> new NotFoundException("NumberGenerator not found with id: " + id));
 
-        var existing = repository.findByProductCode(getCurrentTenantId(), numberGeneratorDescription.getProductCode())
-            .orElseThrow(() -> new NotFoundException("NumberGenerator not found with icode: " + numberGeneratorDescription.getProductCode()));
-
-        existing.setProductCode(numberGeneratorDescription.getProductCode());
-        existing.setMask(numberGeneratorDescription.getMask());
-        existing.setResetPolicy(numberGeneratorDescription.getResetPolicy());
-        existing.setMaxValue(numberGeneratorDescription.getMaxValue());
-        existing.setXorMask(numberGeneratorDescription.getXorMask());
-        repository.save(existing);
+        nge.setCurrentValue(0L);
+        nge.setLastReset(LocalDate.now());
+        repository.save(nge);
     }
 
-    private NumberGeneratorEntity getNext(Integer id) {
-        Long tid = getCurrentTenantId();
-        NumberGeneratorEntity ng = repository.findByTidAndIdForUpdate(tid, id)
-                .orElseThrow(() -> new NotFoundException("Generator not found: " + id));
+    private Long getNext(Long tid, NumberGeneratorDescription ng) {
+
+        NumberGeneratorEntity nge = repository.findByTidAndIdForUpdate(tid, ng.getId())
+                .orElseThrow(() -> new NotFoundException("Generator not found: " + ng.getId()));
 
         LocalDate today = LocalDate.now();
         switch (ng.getResetPolicy()) {
             case YEARLY:
-                if (ng.getLastReset().getYear() != today.getYear()) {
-                    ng.setLastReset(today);
-                    ng.setCurrentValue(0);
+                if (nge.getLastReset().getYear() != today.getYear()) {
+                    nge.setLastReset(today);
+                    nge.setCurrentValue(0L);
                 }
                 break;
             case MONTHLY:
-                if (ng.getLastReset().getYear() != today.getYear() || ng.getLastReset().getMonth() != today.getMonth()) {
-                    ng.setLastReset(today);
-                    ng.setCurrentValue(0);
+                if (nge.getLastReset().getYear() != today.getYear() || nge.getLastReset().getMonth() != today.getMonth()) {
+                    nge.setLastReset(today);
+                    nge.setCurrentValue(0L);
                 }
                 break;
             case NEVER:
         }
 
-        int next = ng.getCurrentValue() + 1;
+        Long next = nge.getCurrentValue() + 1;
         if (ng.getMaxValue() != null && next > ng.getMaxValue()) {
-            ng.setCurrentValue(0);
+            nge.setCurrentValue(0L);
         }
-        repository.save(ng);
+        repository.save(nge);
 
-        Integer newValue = repository.incrementAndGetCurrentValue(tid, id);
+        Long newValue = repository.incrementAndGetCurrentValue(tid, ng.getId());
         if (newValue == null) {
-            throw new NotFoundException("Generator not found: " + id);
+            throw new NotFoundException("Generator not found: " + ng.getId());
         }
-        ng.setCurrentValue(newValue);
-        return ng;
+        nge.setCurrentValue(newValue);
+
+        return newValue;
     }
 
 }

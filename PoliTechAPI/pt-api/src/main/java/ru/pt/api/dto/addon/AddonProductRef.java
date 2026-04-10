@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddonProductRef {
-    private Integer productId;
+    private Long productId;
     private String preconditions;  // JSON
 }

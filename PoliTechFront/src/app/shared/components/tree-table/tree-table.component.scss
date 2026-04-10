@@ -7,6 +7,14 @@ tr.clickable-row.tree-row-deleted {
   opacity: 0.55;
 }
 
+tr.clickable-row.tree-row-unsaved-new {
+  box-shadow: inset 3px 0 0 0 #2e7d32;
+}
+
+tr.clickable-row.tree-row-unsaved-modified {
+  box-shadow: inset 3px 0 0 0 #f9a825;
+}
+
 /* Остаток ширины строки (всё кроме code / actions) */
 th.col-name,
 td.col-name {

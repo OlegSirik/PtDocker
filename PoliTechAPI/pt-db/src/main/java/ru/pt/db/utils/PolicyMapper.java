@@ -104,7 +104,7 @@ public class PolicyMapper {
         var index = new PolicyIndexEntity();
         index.setPublicId(UUID.fromString(policy.getPublicId()));
         index.setPolicyNumber(policy.getPolicyNumber());
-        index.setVersionNo(1);
+        index.setVersionNo(1L);
         index.setProductCode(policy.getProductCode());
         index.setProductVersionNo(policy.getProductVersion());
         index.setTopVersion(true);

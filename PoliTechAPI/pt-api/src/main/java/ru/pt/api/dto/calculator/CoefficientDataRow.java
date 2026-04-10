@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CoefficientDataRow {
-    private Integer id;
+    private Long id;
     private List<String> conditionValue = new ArrayList<>();
     private Double resultValue;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

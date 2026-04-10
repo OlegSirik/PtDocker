@@ -15,13 +15,13 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.nodeType = 'TENANT'")
     Optional<AccountEntity> findTenantAccount(@Param("tenantCode") String tenantCode);
 
-    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = 'CLIENT'")
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.authClientId = :authClientId AND a.nodeType = 'CLIENT'")
     Optional<AccountEntity> findClientAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId);
 
-    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.Id = :clientId AND a.nodeType = 'CLIENT'")
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.id = :clientId AND a.nodeType = 'CLIENT'")
     Optional<AccountEntity> findClientAccountById(@Param("tenantCode") String tenantCode, @Param("clientId") Long clientId);
 
-    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.clientId = :authClientId AND a.nodeType = :nodeType")
+    @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.clientEntity.authClientId = :authClientId AND a.nodeType = :nodeType")
     Optional<AccountEntity> findAdminAccount(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId, @Param("nodeType") AccountNodeType nodeType);
 
     @Query("SELECT a FROM AccountEntity a WHERE a.tenantEntity.code = :tenantCode AND a.id = :id")
@@ -48,7 +48,7 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     /**
      * Get next account ID from sequence
      */
-    @Query(value = "SELECT nextval('account_seq')", nativeQuery = true)
+    @Query(value = "SELECT nextval('acc_seq')", nativeQuery = true)
     Long getNextAccountId();
 
     /**

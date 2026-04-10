@@ -4,7 +4,7 @@ public interface RequestContext {
     String getTenant();
     String getClient();
     String getLogin();
-    String getAccount();
+    Long getAccount();
 
     // lifecycle
     boolean isTenantResolved();
@@ -13,7 +13,7 @@ public interface RequestContext {
     void setTenant(String tenant);
     void setClient(String client);
     void setLogin(String login);
-    void setAccount(String account);
+    void setAccount(Long account);
 
     void clear();
 }

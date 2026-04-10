@@ -5,25 +5,27 @@ package ru.pt.api.dto.numbers;
  */
 public class NumberGeneratorDescription {
 
-    private Integer id;
-    private String productCode;
+    private Long id;
+    //private String productCode;
+    //private String code;
     private String mask;
     private ResetPolicy resetPolicy;
-    private int maxValue = 999_999;
+    private Long maxValue = 999_999L;
     private String xorMask;
 
     public NumberGeneratorDescription() {
     }
 
-    public NumberGeneratorDescription(Integer id, String productCode, String mask, ResetPolicy resetPolicy, int maxValue, String xorMask) {
+    public NumberGeneratorDescription(Long id, String mask, ResetPolicy resetPolicy, Long maxValue, String xorMask) {
         this.id = id;
-        this.productCode = productCode;
+      //  this.productCode = productCode;
+       // this.code = productCode;
         this.mask = mask;
         this.resetPolicy = resetPolicy;
         this.maxValue = maxValue;
         this.xorMask = xorMask;
     }
-
+/* 
     public String getProductCode() {
         return productCode;
     }
@@ -31,7 +33,7 @@ public class NumberGeneratorDescription {
     public void setProductCode(String productCode) {
         this.productCode = productCode;
     }
-
+*/
     public String getMask() {
         return mask;
     }
@@ -48,11 +50,11 @@ public class NumberGeneratorDescription {
         this.resetPolicy = resetPolicy;
     }
 
-    public int getMaxValue() {
+    public Long getMaxValue() {
         return maxValue;
     }
 
-    public void setMaxValue(int maxValue) {
+    public void setMaxValue(Long maxValue) {
         this.maxValue = maxValue;
     }
 
@@ -64,19 +66,28 @@ public class NumberGeneratorDescription {
         this.xorMask = xorMask;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
+    /* 
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+*/
     @Override
     public String toString() {
         return "NumberGeneratorDescription{" +
                 "id=" + id +
-                ", productCode='" + productCode + '\'' +
+                //", productCode='" + productCode + '\'' +
                 ", mask='" + mask + '\'' +
                 ", resetPolicy=" + resetPolicy +
                 ", maxValue=" + maxValue +

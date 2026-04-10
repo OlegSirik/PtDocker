@@ -6,5 +6,4 @@ public interface TenantConfig {
 
     Tenant getTenant(String tenantCode);
     Tenant getTenantById(Long tenantId);
-
 }

@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.addon.PricelistDto;
-import ru.pt.api.dto.addon.PricelistListDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.addon.AddOnPricelistService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -29,7 +28,7 @@ public class AddonPricelistController extends SecuredController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PricelistListDto>> getPricelists(
+    public ResponseEntity<List<PricelistDto>> getPricelists(
             @PathVariable String tenantCode,
             @RequestParam(required = false) Long spId) {
         return ResponseEntity.ok(addOnPricelistService.getPricelists(spId));
@@ -46,7 +45,10 @@ public class AddonPricelistController extends SecuredController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PricelistDto> updatePricelist(@PathVariable String tenantCode, @PathVariable Long id, @RequestBody PricelistDto dto) {
+    public ResponseEntity<PricelistDto> updatePricelist(
+        @PathVariable String tenantCode, 
+        @PathVariable Long id, 
+        @RequestBody PricelistDto dto) {
         dto.setId(id);
         return ResponseEntity.ok(addOnPricelistService.updatePricelist(dto));
     }

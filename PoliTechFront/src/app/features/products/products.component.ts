@@ -114,7 +114,8 @@ export class ProductsComponent implements OnInit {
     });
   }
 
-  editProduct(product: ProductList): void {
+  editProduct(product: ProductList, event?: Event): void {
+    event?.stopPropagation();
     if (!product?.id) return;
 
     // Use devVersionNo if available, otherwise use prodVersionNo, fallback to 0
@@ -124,7 +125,8 @@ export class ProductsComponent implements OnInit {
     this.router.navigate(['/', this.authService.tenant, 'product', product.id, 'version', versionNo]);
   }
 
-  deleteProduct(product: ProductList): void {
+  deleteProduct(product: ProductList, event?: Event): void {
+    event?.stopPropagation();
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: { message: `Удалить продукт "${product.name}"?` }

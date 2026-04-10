@@ -3,9 +3,9 @@ package ru.pt.product.service.addon;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.pt.api.dto.addon.ProviderDto;
-import ru.pt.api.dto.addon.ProviderListDto;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.refs.RecordStatus;
 import ru.pt.api.service.addon.AddOnProviderService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -31,7 +31,7 @@ public class AddOnProviderServiceImpl implements AddOnProviderService {
         var entity = new AddonProviderEntity();
         entity.setTid(tid);
         entity.setName(cmd.getName());
-        entity.setStatus(cmd.getStatus() != null ? cmd.getStatus() : "ACTIVE");
+        entity.setRecordStatus(cmd.getRecordStatus() != null ? cmd.getRecordStatus().getValue() : RecordStatus.ACTIVE.getValue());
         entity.setExecutionMode(cmd.getExecutionMode() != null ? cmd.getExecutionMode() : "LOCAL");
         entity = repository.save(entity);
         return toDto(entity);
@@ -47,7 +47,7 @@ public class AddOnProviderServiceImpl implements AddOnProviderService {
         var entity = repository.findByTidAndId(tid, cmd.getId())
                 .orElseThrow(() -> new NotFoundException("Provider not found: " + cmd.getId()));
         entity.setName(cmd.getName());
-        entity.setStatus(cmd.getStatus());
+        entity.setRecordStatus(cmd.getRecordStatus().getValue());
         entity.setExecutionMode(cmd.getExecutionMode());
         entity = repository.save(entity);
         return toDto(entity);
@@ -59,16 +59,16 @@ public class AddOnProviderServiceImpl implements AddOnProviderService {
         Long tid = getCurrentTenantId();
         var entity = repository.findByTidAndId(tid, id)
                 .orElseThrow(() -> new NotFoundException("Provider not found: " + id));
-        entity.setStatus("SUSPENDED");
+        entity.setRecordStatus(RecordStatus.SUSPENDED.toValue());
         repository.save(entity);
     }
 
     @Override
-    public List<ProviderListDto> getProviders() {
+    public List<ProviderDto> getProviders() {
         authorizationService.check(getCurrentUser(), AuthZ.ResourceType.POLICY_ADDON, null, null, AuthZ.Action.LIST);
         Long tid = getCurrentTenantId();
         return repository.findByTidOrderByName(tid).stream()
-                .map(this::toListDto)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -94,17 +94,9 @@ public class AddOnProviderServiceImpl implements AddOnProviderService {
         return ProviderDto.builder()
                 .id(e.getId())
                 .name(e.getName())
-                .status(e.getStatus())
+                .recordStatus(RecordStatus.fromValue(e.getRecordStatus()))
                 .executionMode(e.getExecutionMode())
                 .build();
     }
 
-    private ProviderListDto toListDto(AddonProviderEntity e) {
-        return ProviderListDto.builder()
-                .id(e.getId())
-                .name(e.getName())
-                .status(e.getStatus())
-                .executionMode(e.getExecutionMode())
-                .build();
-    }
 }

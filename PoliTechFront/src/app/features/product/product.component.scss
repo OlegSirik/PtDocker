@@ -263,6 +263,54 @@
       border-radius: 8px;
       background: #f8f9fa;
     }
+
+    .pv-vars-tree-readonly-hint {
+      color: #c62828;
+      font-weight: 500;
+    }
+
+    .pv-vars-tree-toolbar {
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px 24px;
+    }
+
+    .pv-vars-tree-expand-actions {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tree-table-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .schema-tree-name-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .pv-tree-tarif-icon {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      color: #1565c0;
+    }
+
+    .schema-tree-name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   // Responsive design

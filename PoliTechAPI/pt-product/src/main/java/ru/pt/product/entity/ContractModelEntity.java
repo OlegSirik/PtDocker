@@ -6,10 +6,7 @@ import jakarta.persistence.*;
  * Entity for contract model (mt_contract_model)
  */
 @Entity
-@Table(name = "mt_contract_model", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"tid", "code"}),
-    @UniqueConstraint(columnNames = {"tid", "name"})
-})
+@Table(name = "mt_contract_model")
 public class ContractModelEntity {
 
     @Id

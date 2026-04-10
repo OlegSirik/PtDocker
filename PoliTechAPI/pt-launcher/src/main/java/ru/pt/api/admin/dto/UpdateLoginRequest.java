@@ -8,17 +8,9 @@ public class UpdateLoginRequest {
     private String tenantCode;
     private String fullName;
     private String position;
-    private Boolean isDeleted;
+    private String recordStatus;
 
     // Getters and Setters
-    public String getTenantCode() {
-        return tenantCode;
-    }
-
-    public void setTenantCode(String tenantCode) {
-        this.tenantCode = tenantCode;
-    }
-
     public String getFullName() {
         return fullName;
     }
@@ -35,12 +27,12 @@ public class UpdateLoginRequest {
         this.position = position;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 }
 

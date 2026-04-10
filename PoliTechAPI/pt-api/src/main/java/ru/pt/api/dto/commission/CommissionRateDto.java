@@ -25,7 +25,7 @@ public class CommissionRateDto {
     private Long accountId;
 
     @JsonProperty("productId")
-    private Integer productId;
+    private Long productId;
 
     @JsonProperty("action")
     private CommissionAction action;

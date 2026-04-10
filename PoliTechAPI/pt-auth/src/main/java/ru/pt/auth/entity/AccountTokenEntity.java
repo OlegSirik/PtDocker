@@ -7,12 +7,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "acc_account_tokens",
-        uniqueConstraints = @UniqueConstraint(name = "acc_account_tokens_uk", columnNames = {"token", "client_id"}))
+@Table(name = "acc_account_tokens")
 public class AccountTokenEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_seq")
+    @SequenceGenerator(name = "acc_seq", sequenceName = "acc_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "tid", nullable = false)

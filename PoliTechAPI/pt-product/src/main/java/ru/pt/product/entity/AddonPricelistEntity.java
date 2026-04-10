@@ -44,8 +44,8 @@ public class AddonPricelistEntity {
     @Column(name = "amount_booked", nullable = false)
     private Long amountBooked = 0L;
 
-    @Column(name = "status", nullable = false, length = 30)
-    private String status;
+    @Column(name = "record_status", nullable = false, length = 30)
+    private String recordStatus;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "product", columnDefinition = "jsonb")

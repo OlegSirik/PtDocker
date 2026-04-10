@@ -11,8 +11,8 @@ public class LobEntity {
 
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_lobs_seq")
-    @SequenceGenerator(name = "pt_lobs_seq", sequenceName = "pt_lobs_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "code", nullable = false, unique = true, length = 128)
@@ -25,8 +25,8 @@ public class LobEntity {
     @Column(name = "lob", columnDefinition = "jsonb", nullable = false)
     private String lob;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    @Column(name = "record_status", nullable = false)
+    private String recordStatus = "ACTIVE";
 
     @Column(name = "tid", nullable = false)
     private Long tId;
@@ -63,12 +63,12 @@ public class LobEntity {
         this.lob = lob;
     }
 
-    public boolean isDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public Long getTid() {

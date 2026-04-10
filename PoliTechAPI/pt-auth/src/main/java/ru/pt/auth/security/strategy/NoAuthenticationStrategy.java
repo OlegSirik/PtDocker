@@ -31,15 +31,15 @@ public class NoAuthenticationStrategy implements IdentitySourceStrategy {
 
     @Override
     public void resolveIdentity(HttpServletRequest request) {
-        String accountId = request.getHeader("X-Account-Id");
+        Long accountId = Long.parseLong(request.getHeader("X-Account-Id"));
         if (accountId == null) {
             throw new BadCredentialsException("Account ID is required");
         }
         //requestContext.setAccountId(accountId);
-        AccountEntity accountEntity = accountRepository.findById(Long.parseLong(accountId))
+        AccountEntity accountEntity = accountRepository.findById(accountId)
             .orElseThrow(() -> new NotFoundException("Account not found"));
 
-        requestContext.setClient(accountEntity.getClient().getClientId());
+        requestContext.setClient(accountEntity.getClient().getAuthClientId());
         requestContext.setAccount(accountId);
         requestContext.setLogin(accountEntity.getAccountLogins().get(0).getUserLogin());
         requestContext.setTenant(accountEntity.getTenant().getCode());

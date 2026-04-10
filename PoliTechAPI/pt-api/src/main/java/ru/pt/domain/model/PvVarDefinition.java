@@ -7,7 +7,7 @@ public final class PvVarDefinition {
 
     public enum Type { STRING, NUMBER }
     public enum VarScope { DOMAIN, CALCULATOR }
-    public enum VarSourceType { IN, MAGIC,CONST, COEFFICIENT, VAR, CALC, TEXT }
+    public enum VarSourceType { IN, MAGIC,CONST, COEFFICIENT, VAR, CALC, TEXT, OBJECT }
     public enum GroupFunctionName {
         HZ("hz"),
         SUM("sum"),

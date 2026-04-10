@@ -9,7 +9,7 @@ public class LoginResponse {
     private String fullName;
     private String tenantCode;
     private String position;
-    private Boolean isDeleted;
+    private String recordStatus;
     private String createdAt;
     private String updatedAt;
 
@@ -54,12 +54,12 @@ public class LoginResponse {
         this.position = position;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public String getCreatedAt() {

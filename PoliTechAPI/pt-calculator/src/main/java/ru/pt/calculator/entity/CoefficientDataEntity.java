@@ -4,18 +4,18 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "coefficient_data")
-@SequenceGenerator(name = "coefficient_data_seq_gen", sequenceName = "coefficient_data_seq", allocationSize = 1)
 public class CoefficientDataEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "coefficient_data_seq_gen")
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
+    private Long id;
 
     @Column(name = "tid", nullable = false)
     private Long tId;
 
     @Column(name = "calculator_id", nullable = false)
-    private Integer calculatorId;
+    private Long calculatorId;
 
     @Column(name = "coefficient_code", nullable = false, length = 128)
     private String coefficientCode;
@@ -54,19 +54,19 @@ public class CoefficientDataEntity {
         this.tId = tId;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getCalculatorId() {
+    public Long getCalculatorId() {
         return calculatorId;
     }
 
-    public void setCalculatorId(Integer calculatorId) {
+    public void setCalculatorId(Long calculatorId) {
         this.calculatorId = calculatorId;
     }
 

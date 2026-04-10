@@ -11,11 +11,11 @@ public class ProductTestEntity {
 
     @Id
     @Column(name = "product_id", nullable = false)
-    private Integer productId;
+    private Long productId;
 
     @Id
     @Column(name = "version_no", nullable = false)
-    private Integer versionNo;
+    private Long versionNo;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "quote_example", columnDefinition = "jsonb")
@@ -25,19 +25,19 @@ public class ProductTestEntity {
     @Column(name = "policy_example", columnDefinition = "jsonb")
     private String policyExample;
 
-    public Integer getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(Integer productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 

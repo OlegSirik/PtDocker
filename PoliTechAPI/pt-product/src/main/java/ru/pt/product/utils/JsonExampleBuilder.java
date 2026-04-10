@@ -1,14 +1,18 @@
 package ru.pt.product.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class JsonExampleBuilder {
@@ -163,5 +167,127 @@ public class JsonExampleBuilder {
         paths.put("policyHolder.document.countryCode", "RU");
 
         return Collections.unmodifiableMap(paths);
+    }
+
+
+    /**
+     * Описание узла дерева JSON: {@code parentId == null} — корень документа.
+     * {@link #nodeType()}: {@code attribute} — лист со строкой {@link #nodeValue()},
+     * {@code object} — объект с детьми по ключу {@link #nodeName()},
+     * {@code array} — массив из детей по порядку {@code id}.
+     */
+    public static record NodeData(Long id, Long parentId, String nodeName, String nodeType, String nodeValue) {}
+
+    /**
+     * Собирает JSON по дереву описаний: корни с {@code parentId == null}, далее {@code parentId == id} родителя.
+     */
+    public static String buildJson(List<NodeData> nodeDataList) throws Exception {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        if (nodeDataList == null || nodeDataList.isEmpty()) {
+            return "{}";
+        }
+
+        Map<Long, NodeData> byId = new HashMap<>();
+        for (NodeData n : nodeDataList) {
+            if (n != null && n.id() != null) {
+                byId.put(n.id(), n);
+            }
+        }
+
+        Map<Long, List<NodeData>> childrenByParent = new HashMap<>();
+        for (NodeData n : nodeDataList) {
+            if (n == null) {
+                continue;
+            }
+            Long pid = n.parentId();
+            if (pid != null && byId.containsKey(pid)) {
+                childrenByParent.computeIfAbsent(pid, k -> new ArrayList<>()).add(n);
+            }
+        }
+        Comparator<NodeData> byIdAsc =
+                Comparator.comparing(NodeData::id, Comparator.nullsLast(Long::compareTo));
+        childrenByParent.values().forEach(list -> list.sort(byIdAsc));
+
+        List<NodeData> roots = new ArrayList<>();
+        for (NodeData n : nodeDataList) {
+            if (n != null && n.parentId() == null) {
+                roots.add(n);
+            }
+        }
+        roots.sort(byIdAsc);
+
+        ObjectNode document = mapper.createObjectNode();
+        for (NodeData r : roots) {
+            String key = rootKey(r);
+            document.set(key, buildNodeFromDescription(r, mapper, childrenByParent));
+        }
+
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(document);
+    }
+
+    private static String rootKey(NodeData r) {
+        if (r.nodeName() != null && !r.nodeName().isBlank()) {
+            return r.nodeName().trim();
+        }
+        return r.id() != null ? "node_" + r.id() : "_";
+    }
+
+    private static String normalizedNodeType(String nodeType) {
+        if (nodeType == null || nodeType.isBlank()) {
+            return "";
+        }
+        return nodeType.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static JsonNode buildNodeFromDescription(
+            NodeData n,
+            ObjectMapper mapper,
+            Map<Long, List<NodeData>> childrenByParent) {
+        List<NodeData> children =
+                n.id() == null ? List.of() : childrenByParent.getOrDefault(n.id(), List.of());
+        String type = normalizedNodeType(n.nodeType());
+
+        return switch (type) {
+            case "ATTRIBUTE" -> mapper.getNodeFactory().textNode(n.nodeValue() != null ? n.nodeValue() : "");
+            case "OBJECT" -> buildObjectNode(mapper, childrenByParent, children);
+            case "ARRAY" -> buildArrayNode(mapper, childrenByParent, children);
+            default -> defaultNode(n, mapper, childrenByParent, children);
+        };
+    }
+
+    private static ObjectNode buildObjectNode(
+            ObjectMapper mapper,
+            Map<Long, List<NodeData>> childrenByParent,
+            List<NodeData> children) {
+        ObjectNode obj = mapper.createObjectNode();
+        for (NodeData c : children) {
+            String name = c.nodeName() != null ? c.nodeName().trim() : "";
+            if (!name.isEmpty()) {
+                obj.set(name, buildNodeFromDescription(c, mapper, childrenByParent));
+            }
+        }
+        return obj;
+    }
+
+    private static ArrayNode buildArrayNode(
+            ObjectMapper mapper,
+            Map<Long, List<NodeData>> childrenByParent,
+            List<NodeData> children) {
+        ArrayNode arr = mapper.createArrayNode();
+        for (NodeData c : children) {
+            arr.add(buildNodeFromDescription(c, mapper, childrenByParent));
+        }
+        return arr;
+    }
+
+    private static JsonNode defaultNode(
+            NodeData n,
+            ObjectMapper mapper,
+            Map<Long, List<NodeData>> childrenByParent,
+            List<NodeData> children) {
+        if (children.isEmpty()) {
+            return mapper.getNodeFactory().textNode(n.nodeValue() != null ? n.nodeValue() : "");
+        }
+        return buildObjectNode(mapper, childrenByParent, children);
     }
 }

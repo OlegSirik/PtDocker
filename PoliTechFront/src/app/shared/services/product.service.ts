@@ -40,6 +40,13 @@ export interface Product {
 }
 
 export interface PolicyVar {
+  /** С бэкенда (схема / PvVar); для дерева на экране продукта */
+  id?: number;
+  parent_id?: number | null;
+  varList?: string;
+  isSystem?: boolean;
+  isDeleted?: boolean;
+  name?: string;
   varPath: string;
   varName: string;
   varCode: string;
@@ -98,6 +105,10 @@ export interface Deductible {
   text: string;
 }
 
+export interface UiProductData {
+  jsonExample: string;
+  lists: { [key: string]: { [key: string]: string } };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -345,9 +356,12 @@ handleHttpError(error: any): string {
   }
 
   getTestRequestSave(productId: number, versionNo: number): Observable<string> {
-    
-
     const url = `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/example_save`;
     return this.http.get(url, { responseType: 'text' })
+  }
+
+  getUiProductData(productId: number): Observable<UiProductData> {
+    const url = `${this.authService.baseApiUrl}/admin/products/${productId}/forms`;
+    return this.http.get<UiProductData>(url);
   }
 }

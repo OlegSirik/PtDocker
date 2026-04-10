@@ -25,5 +25,5 @@ public interface MarketplaceService {
     /**
      * Get form metadata for a product by id.
      */
-    FormMetadata getProduct(Integer productId);
+    FormMetadata getProduct(Long productId);
 }

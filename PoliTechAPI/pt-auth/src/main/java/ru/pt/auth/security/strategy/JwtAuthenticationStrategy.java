@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.auth.Tenant;
+import ru.pt.api.dto.refs.TenantAuthType;
 import ru.pt.api.service.auth.TenantConfig;
 import ru.pt.auth.model.AuthProperties;
 import ru.pt.auth.model.AuthType;
@@ -55,7 +56,7 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
         if (tenantCode != null && !tenantCode.isBlank()) {
             try {
                 Tenant tenant = tenantConfig.getTenant(tenantCode);
-                if ("JWT".equalsIgnoreCase(tenant.authType())
+                if (TenantAuthType.JWT.equals(tenant.authType())
                         && tenant.authConfig() != null
                         && !tenant.authConfig().isEmpty()) {
 
@@ -100,15 +101,16 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
         requestContext.setClient(clientId);
         
         requestContext.setLogin(username);
-        String accountId = request.getHeader("X-Account-Id");
-        if (accountId != null && !accountId.isEmpty()) {
+
+        String xAccountId = request.getHeader("X-Account-Id");
+        if (xAccountId != null && !xAccountId.isEmpty()) {
             try {
-                Long.parseLong(accountId);
+                Long accountId = Long.parseLong(xAccountId);
+                requestContext.setAccount(accountId);
             } catch (NumberFormatException e) {
                 throw new BadCredentialsException("X-Account-Id must be a number");
             }
         }
-        requestContext.setAccount(accountId);
     }
         
     /**

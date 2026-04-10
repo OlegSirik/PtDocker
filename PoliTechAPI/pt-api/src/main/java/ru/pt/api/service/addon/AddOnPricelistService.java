@@ -1,7 +1,6 @@
 package ru.pt.api.service.addon;
 
 import ru.pt.api.dto.addon.PricelistDto;
-import ru.pt.api.dto.addon.PricelistListDto;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public interface AddOnPricelistService {
 
     void suspendPricelist(Long id);
 
-    List<PricelistListDto> getPricelists(Long providerId);
+    List<PricelistDto> getPricelists(Long providerId);
 
     PricelistDto getPricelist(Long id);
 }

@@ -8,13 +8,11 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "acc_product_roles",
-        uniqueConstraints = @UniqueConstraint(name = "acc_product_roles_uk",
-                columnNames = {"account_id", "role_product_id", "role_account_id"}))
+@Table(name = "acc_product_roles")
 public class ProductRoleEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    @SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_seq")
+    @SequenceGenerator(name = "acc_seq", sequenceName = "acc_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,9 +36,6 @@ public class ProductRoleEntity {
 
     @Column(name = "id_path", nullable = false, length = 300)
     private String idPath;
-
-    @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "can_read")
     private Boolean canRead = false;
@@ -126,14 +121,6 @@ public class ProductRoleEntity {
 
     public void setIdPath(String idPath) {
         this.idPath = idPath;
-    }
-
-    public Boolean getDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
     }
 
     public Boolean getCanRead() {

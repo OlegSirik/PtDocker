@@ -6,28 +6,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CalculatorModel {
-    private Integer id;
-    private Integer productId;
+    private Long id;
+    private Long productId;
     private String productCode;
-    private Integer versionNo;
-    private Integer packageNo;
+    private Long versionNo;
+    private String packageNo;
     private List<PvVar> vars = new ArrayList<>();
     private List<FormulaDef> formulas = new ArrayList<>();
     private List<CoefficientDef> coefficients = new ArrayList<>();
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(Integer productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
@@ -39,19 +39,19 @@ public class CalculatorModel {
         this.productCode = productCode;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 
-    public Integer getPackageNo() {
+    public String getPackageNo() {
         return packageNo;
     }
 
-    public void setPackageNo(Integer packageNo) {
+    public void setPackageNo(String packageNo) {
         this.packageNo = packageNo;
     }
 

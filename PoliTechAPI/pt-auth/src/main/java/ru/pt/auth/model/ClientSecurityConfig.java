@@ -1,6 +1,6 @@
 package ru.pt.auth.model;
 
-import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.auth.ClientAuthLevel;
 
 public record ClientSecurityConfig (
     Long id,
@@ -9,5 +9,5 @@ public record ClientSecurityConfig (
     Long tid,
     String name,
     AuthType authType,
-    ClientAuthType authLevel
+    ClientAuthLevel authLevel
 ) { }

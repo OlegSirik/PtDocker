@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.InsuranceCompanyDto;
 import ru.pt.api.service.auth.AuthZ;
@@ -29,8 +30,9 @@ public class InsCompanyServiceImpl implements InsCompanyService {
 
     @Override
     @Transactional
-    public InsuranceCompanyDto create(InsuranceCompanyDto dto) {
-        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, null, null, AuthZ.Action.MANAGE);
+    public InsuranceCompanyDto create(Long tenantId, InsuranceCompanyDto dto) {
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, null, tenantId, AuthZ.Action.MANAGE);
+        
         Long tid = getCurrentTenantId();
         if (dto.getCode() == null || dto.getCode().isBlank()) {
             throw new BadRequestException("code must not be empty");
@@ -53,13 +55,13 @@ public class InsCompanyServiceImpl implements InsCompanyService {
 
     @Override
     @Transactional
-    public InsuranceCompanyDto update(InsuranceCompanyDto dto) {
+    public InsuranceCompanyDto update(Long tenantId, InsuranceCompanyDto dto) {
         if (dto.getId() == null) {
             throw new BadRequestException("id must not be null for update");
         }
-        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(dto.getId()), null, AuthZ.Action.MANAGE);
-        Long tid = getCurrentTenantId();
-        InsuranceCompanyEntity e = repository.findByTidAndId(tid, dto.getId())
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(dto.getId()), tenantId, AuthZ.Action.MANAGE);
+       
+        InsuranceCompanyEntity e = repository.findByTidAndId(tenantId, dto.getId())
                 .orElseThrow(() -> new NotFoundException("Insurance company not found: " + dto.getId()));
         if (dto.getCode() == null || dto.getCode().isBlank()) {
             throw new BadRequestException("code must not be empty");
@@ -68,7 +70,7 @@ public class InsCompanyServiceImpl implements InsCompanyService {
             throw new BadRequestException("name must not be empty");
         }
         String code = dto.getCode().trim();
-        if (!code.equals(e.getCode()) && repository.existsByTidAndCode(tid, code)) {
+        if (!code.equals(e.getCode()) && repository.existsByTidAndCode(tenantId, code)) {
             throw new BadRequestException("Insurance company with code already exists: " + code);
         }
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
@@ -82,28 +84,25 @@ public class InsCompanyServiceImpl implements InsCompanyService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
-        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(id), null, AuthZ.Action.MANAGE);
-        Long tid = getCurrentTenantId();
-        InsuranceCompanyEntity e = repository.findByTidAndId(tid, id)
+    public void delete(Long tenantId, Long id) {
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(id), tenantId, AuthZ.Action.MANAGE);
+        InsuranceCompanyEntity e = repository.findByTidAndId(tenantId, id)
                 .orElseThrow(() -> new NotFoundException("Insurance company not found: " + id));
         repository.delete(e);
     }
 
     @Override
-    public InsuranceCompanyDto get(Long id) {
-        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(id), null, AuthZ.Action.VIEW);
-        Long tid = getCurrentTenantId();
-        InsuranceCompanyEntity e = repository.findByTidAndId(tid, id)
+    public InsuranceCompanyDto get(Long tenantId, Long id) {
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, String.valueOf(id), tenantId, AuthZ.Action.VIEW);
+        InsuranceCompanyEntity e = repository.findByTidAndId(tenantId, id)
                 .orElseThrow(() -> new NotFoundException("Insurance company not found: " + id));
         return InsuranceCompanyMapper.toDto(e);
     }
 
     @Override
-    public List<InsuranceCompanyDto> getAll() {
-        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, null, null, AuthZ.Action.LIST);
-        Long tid = getCurrentTenantId();
-        return repository.findByTidOrderByCodeAsc(tid).stream()
+    public List<InsuranceCompanyDto> getAll(Long tenantId) {
+        authorizationService.check(getCurrentUser(), AuthZ.ResourceType.INS_COMPANY, null, tenantId, AuthZ.Action.LIST);
+        return repository.findByTidOrderByCodeAsc(tenantId).stream()
                 .map(InsuranceCompanyMapper::toDto)
                 .collect(Collectors.toList());
     }

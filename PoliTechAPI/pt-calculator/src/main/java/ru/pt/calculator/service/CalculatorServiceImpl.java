@@ -7,22 +7,29 @@ import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.VarDataType;
+import ru.pt.api.dto.product.LobCoefficientColumn;
+import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.service.auth.AuthorizationService;
+import ru.pt.api.service.auth.AuthZ.Action;
+import ru.pt.api.service.auth.AuthZ.ResourceType;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
-import ru.pt.api.service.product.ProductService;
+import ru.pt.api.service.product.ProductServiceCRUD;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.calculator.entity.CalculatorEntity;
@@ -37,12 +44,12 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.math.RoundingMode.HALF_UP;
 
-import ru.pt.domain.model.VariableContextImpl;
-
-@Component
+@Service
 @RequiredArgsConstructor
 public class CalculatorServiceImpl implements CalculatorService {
 
@@ -50,11 +57,11 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     private final CalculatorRepository calculatorRepository;
     private final CoefficientService coefficientService;
-    private final ProductService productService;
-    private final LobService lobService;
+    private final ProductServiceCRUD productServiceCRUD;
     private final ObjectMapper objectMapper;
     private final SecurityContextHelper securityContextHelper;
-
+    private final AuthorizationService authService;
+    private final LobService lobService;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -74,47 +81,109 @@ public class CalculatorServiceImpl implements CalculatorService {
         return getCurrentUser().getTenantId();
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public CalculatorModel getCalculator(Integer productId, Integer versionNo, Integer packageNo) {
+    public CalculatorModel getCalculator(Long tenantId,Long productId, Long versionNo, String packageNo) {
         logger.debug("Getting calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
-        return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
-                .map(CalculatorEntity::getCalculator)
-                .map(c -> {
-                    try {
-                        logger.trace("Parsing calculator JSON for productId={}", productId);
-                        return objectMapper.readValue(c, CalculatorModel.class);
-                    } catch (JsonProcessingException e) {
-                        logger.error("Failed to parse calculator JSON: {}", e.getMessage(), e);
-                        throw new RuntimeException(e);
-                    }
-                })
-                .orElse(null);
+        
+        authService.check(
+                getCurrentUser(),
+                ResourceType.PRODUCT,
+                String.valueOf(productId),
+                tenantId,
+                Action.VIEW);
+
+        Optional<CalculatorEntity> found =
+                calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo);
+        if (found.isEmpty()) {
+            return null;
+        }
+        
+        String json = found.get().getCalculator();
+        
+        try {
+            logger.trace("Parsing calculator JSON for productId={}", productId);
+            CalculatorModel model = objectMapper.readValue(json, CalculatorModel.class);
+
+            ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+            
+            // Добавить переменные с договора
+            productVersionModel.getVars().forEach(var -> {
+                if (var.getIsTarifFactor() == true) {
+                    var.setVarCdm("CALCULATOR");
+                    model.getVars().add(var);
+                }
+            });
+            
+            
+            // Добавить переменные с пакета
+
+            productVersionModel.getPackages().forEach(pkg -> {
+
+                if (Objects.equals(pkg.getCode(), packageNo)) {
+                    logger.debug("Found matching package: {}, adding cover variables", packageNo);
+                    pkg.getCovers().forEach(cover -> {
+                        PvVar varSumInsured = PvVar.varSumInsured(cover.getCode());
+                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
+                            model.getVars().add(varSumInsured);
+                        }
+
+                        PvVar varPremium = PvVar.varPremium(cover.getCode());
+                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
+                            model.getVars().add(varPremium);
+                        }
+
+                        PvVar varDeductibleNr = PvVar.varDeductibleNr(cover.getCode());
+                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
+                            model.getVars().add(varDeductibleNr);
+                        }
+
+/*                         
+                        PvVar varLimitMin = PvVar.varLimitMin(cover.getCode());
+                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMin.getVarCode()))) {
+                            model.getVars().add(varLimitMin);
+                        }
+                        PvVar varLimitMax = PvVar.varLimitMax(cover.getCode());
+                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMax.getVarCode()))) {
+                            model.getVars().add(varLimitMax);
+                        }
+*/
+                    });
+                }
+            });
+
+
+
+
+            return model;
+
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to parse calculator JSON: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Transactional(readOnly = true)
     @Override
-    public CalculatorModel getCalculatorById(Integer calculatorId) {
-        logger.debug("Getting calculator by ID: calculatorId={}", calculatorId);
-        return calculatorRepository.findById(calculatorId)
-                .filter(entity -> entity.getTId().equals(getCurrentTenantId()))
-                .map(CalculatorEntity::getCalculator)
-                .map(c -> {
-                    try {
-                        logger.trace("Parsing calculator JSON for calculatorId={}", calculatorId);
-                        return objectMapper.readValue(c, CalculatorModel.class);
-                    } catch (JsonProcessingException e) {
-                        logger.error("Failed to parse calculator JSON: {}", e.getMessage(), e);
-                        throw new RuntimeException(e);
-                    }
-                })
-                .orElse(null);
+    public CalculatorModel getCalculatorById(Long tenantId, Long calculatorId) {
+        
+        logger.debug("Getting calculator by ID: tenantId={}, calculatorId={}", tenantId, calculatorId);
+        Optional<CalculatorEntity> opt = calculatorRepository.findById(calculatorId);
+        if (opt.isEmpty()) {
+            return null;
+        }
+        CalculatorEntity entity = opt.get();
+
+        return getCalculator(tenantId, entity.getProductId(), entity.getVersionNo(), entity.getPackageNo());       
     }
 
+    @Override
     @Transactional
-    public CalculatorModel createCalculatorIfMissing(Integer productId, String productCode, Integer versionNo, Integer packageNo) {
-        logger.info("Creating calculator if missing: productId={}, productCode={}, versionNo={}, packageNo={}", 
-                productId, productCode, versionNo, packageNo);
-        return calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
+    public CalculatorModel createCalculatorIfMissing(Long tenantId, Long productId, String productCode, Long versionNo, String packageNo) {
+       
+        logger.info("Creating calculator if missing: tenantId={}, productId={}, productCode={}, versionNo={}, packageNo={}",
+                tenantId, productId, productCode, versionNo, packageNo);
+        return calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo)
                 .map(CalculatorEntity::getCalculator)
                 .map(c -> {
                     try {
@@ -128,15 +197,9 @@ public class CalculatorServiceImpl implements CalculatorService {
                 .orElseGet(() -> {
                     logger.info("Calculator not found, creating new one");
 
-                    // get product, product version and line of business from services
-                    // Example:
-                    ru.pt.api.dto.product.ProductVersionModel productVersionModel = productService.getProduct(productId, true);
-
-                    //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
-
-                    //if (lobModel == null) {
-                    //    throw new IllegalArgumentException("LOB not found: " + productVersionModel.getLob());
-                    //}
+                    
+                    ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+                    LobModel lobModel = lobService.getByCode(tenantId, productVersionModel.getLob());
 
                     // create empty calculator JSON as per spec
                     CalculatorModel calculatorModel = new CalculatorModel();
@@ -148,48 +211,6 @@ public class CalculatorServiceImpl implements CalculatorService {
                     calculatorModel.setFormulas(new ArrayList<>());
                     calculatorModel.setCoefficients(new ArrayList<>());
 
-
-//                    lobModel.getMpVars()
-//                            .forEach(var -> calculatorModel.getVars().add(var));
-
-                    productVersionModel.getVars().forEach(var -> calculatorModel.getVars().add(var));
-                    logger.debug("Added {} variables from product version", productVersionModel.getVars().size());
-                    
-                    // INSERT_YOUR_CODE
-                    // Find the package in productVersion.packages with code == packageNo
-                    productVersionModel.getPackages().forEach(pkg -> {
-
-                        if (pkg.getCode().equals(packageNo)) {
-                            logger.debug("Found matching package: {}, adding cover variables", packageNo);
-                            pkg.getCovers().forEach(cover -> {
-                                PvVar varSumInsured = PvVar.varSumInsured(cover.getCode());
-                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
-                                    calculatorModel.getVars().add(varSumInsured);
-                                }
-
-                                PvVar varPremium = PvVar.varPremium(cover.getCode());
-                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
-                                    calculatorModel.getVars().add(varPremium);
-                                }
-
-                                PvVar varDeductibleNr = PvVar.varDeductibleNr(cover.getCode());
-                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
-                                    calculatorModel.getVars().add(varDeductibleNr);
-                                }
-
-                                PvVar varLimitMin = PvVar.varLimitMin(cover.getCode());
-                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMin.getVarCode()))) {
-                                    calculatorModel.getVars().add(varLimitMin);
-                                }
-                                PvVar varLimitMax = PvVar.varLimitMax(cover.getCode());
-                                if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMax.getVarCode()))) {
-                                    calculatorModel.getVars().add(varLimitMax);
-                                }
-
-                            });
-                        }
-                    });
-
                     FormulaDef formulaDef = new FormulaDef();
                     formulaDef.setVarCode("pkg" + packageNo + "_formula");
                     formulaDef.setVarName("Calculator for package:" + packageNo);
@@ -197,9 +218,47 @@ public class CalculatorServiceImpl implements CalculatorService {
                     formulaDef.setLines(new ArrayList<>());
                     calculatorModel.getFormulas().add(formulaDef);
 
+                    if (lobModel != null && lobModel.getMpCoefficients() != null) {
+                        lobModel.getMpCoefficients().forEach(coefficient -> {
+                            CoefficientDef coefficientDef = new CoefficientDef();
+                            coefficientDef.setVarCode(coefficient.getVarCode());
+                            coefficientDef.setVarName(coefficient.getVarName());
+                            coefficientDef.setAltVarCode(coefficient.getAltVarCode());
+                            coefficientDef.setAltVarValue(coefficient.getAltVarValue());
+
+                            List<CoefficientColumn> columns = new ArrayList<>();
+                            
+                            if (coefficient.getColumns() != null) {
+                                for (LobCoefficientColumn col : coefficient.getColumns()) {
+                                    CoefficientColumn cc = new CoefficientColumn();
+                                    cc.setVarCode(col.getVarCode());
+                                    cc.setVarDataType(col.getVarDataType());
+                                    cc.setNr(col.getNr());
+                                    cc.setConditionOperator(col.getConditionOperator());
+                                    cc.setSortOrder(col.getSortOrder());
+                                    columns.add(cc);
+                                }
+                            }
+                            coefficientDef.setColumns(columns);
+                            calculatorModel.getCoefficients().add(coefficientDef);
+                                
+                            calculatorModel.getVars().add(
+                                new PvVar(
+                                    coefficient.getVarCode(),
+                                    coefficient.getVarName(),
+                                    "",
+                                    "COEFFICIENT",
+                                    "",
+                                    VarDataType.NUMBER,
+                                    "CALCULATOR",
+                                    "100"
+                                )
+                            );
+                        });
+                    }
 
                     CalculatorEntity e = new CalculatorEntity();
-                    e.setTId(getCurrentTenantId());
+                    e.setTId(tenantId);
                     e.setProductId(productId);
                     e.setProductCode(productCode);
                     e.setVersionNo(versionNo);
@@ -235,9 +294,18 @@ public class CalculatorServiceImpl implements CalculatorService {
                 });
     }
 
-    public CalculatorModel replaceCalculator(Integer productId, String productCode, Integer versionNo,
-                                             Integer packageNo, CalculatorModel newJson) {
-        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
+    @Override
+    @Transactional
+    public CalculatorModel replaceCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
+                                             String packageNo, CalculatorModel newJson) {
+        
+        authService.check(
+                getCurrentUser(),
+                ResourceType.PRODUCT,
+                String.valueOf(productId),
+                tenantId,
+                Action.MANAGE);
+        CalculatorEntity entity = calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo)
                 .orElseThrow(() -> new IllegalArgumentException("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo));
 
         newJson.setProductId(productId);
@@ -263,27 +331,36 @@ public class CalculatorServiceImpl implements CalculatorService {
         }
     }
 
+    @Override
     @Transactional
-    public void deleteCalculator(Integer productId, Integer versionNo, Integer packageNo) {
+    public void deleteCalculator(Long tenantId, Long productId, Long versionNo, String packageNo) {
+        
+        authService.check(
+                getCurrentUser(),
+                ResourceType.PRODUCT,
+                String.valueOf(productId),
+                tenantId,
+                Action.MANAGE);
         logger.info("Deleting calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
 
-        CalculatorModel calcModel = getCalculator(productId, versionNo, packageNo);
+        CalculatorModel calcModel = getCalculator(tenantId, productId, versionNo, packageNo);
         if (calcModel == null) {
             logger.warn("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo);
             return;
         }
 
-        Integer calculatorId = calcModel.getId();
+        Long calculatorId = calcModel.getId();
         if (calculatorId != null && calcModel.getCoefficients() != null) {
+            
             for (CoefficientDef coefficient : calcModel.getCoefficients()) {
                 if (coefficient == null || coefficient.getVarCode() == null) {
                     continue;
                 }
-                coefficientService.replaceTable(calculatorId, coefficient.getVarCode(), List.of());
+                coefficientService.replaceTable( calculatorId, coefficient.getVarCode(), List.of());
             }
         }
 
-        CalculatorEntity entity = calculatorRepository.findByKeys(getCurrentTenantId(), productId, versionNo, packageNo)
+        CalculatorEntity entity = calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo)
                 .orElse(null);
         if (entity == null) {
             logger.info("Calculator not found, nothing to delete: productId={}, versionNo={}, packageNo={}",
@@ -295,15 +372,16 @@ public class CalculatorServiceImpl implements CalculatorService {
     }
 
     @Transactional
-    public CalculatorModel saveCalculator(CalculatorModel calculator, boolean isUpdate) {
+    public CalculatorModel saveCalculator(Long tenantId, CalculatorModel calculator, boolean isUpdate) {
+        
 
-        Integer id = calculator.getId();
-        Integer productId = calculator.getProductId();
+        Long id = calculator.getId();
+        Long productId = calculator.getProductId();
         String productCode = calculator.getProductCode();
-        Integer versionNo = calculator.getVersionNo();
-        Integer packageNo = calculator.getPackageNo();
-    
-        CalculatorModel calcExists = getCalculator(productId, versionNo, packageNo); 
+        Long versionNo = calculator.getVersionNo();
+        String packageNo = calculator.getPackageNo();
+
+        CalculatorModel calcExists = getCalculator(tenantId, productId, versionNo, packageNo); 
         if (calcExists != null) {
             if (!isUpdate) {
                 throw new RuntimeException();
@@ -314,7 +392,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         CalculatorEntity e = new CalculatorEntity();
         e.setId(id);
-        e.setTId(getCurrentTenantId());
+        e.setTId(tenantId);
         e.setProductId(productId);
         e.setProductCode(productCode);
         e.setVersionNo(versionNo);
@@ -346,23 +424,29 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Transactional
     @Override
-    public void copyCalculator(Integer productId, Integer versionNo, Integer packageNo, Integer versionNoTo) {
+    public void copyCalculator(Long tenantId, Long productId, Long versionNo, String packageNo, Long versionNoTo) {
+       
         logger.info("Copying calculator: productId={}, from version={} to version={}, packageNo={}", 
                 productId, versionNo, versionNoTo, packageNo);
 
-        CalculatorModel calc = getCalculator(productId, versionNo, packageNo);
+        CalculatorModel calc = getCalculator(tenantId, productId, versionNo, packageNo);
         if ( calc == null ) {
             logger.warn("Source calculator not found, skipping copy");
             return;
         }
 
         calc.setVersionNo(versionNoTo);
-        Integer calcIdFrom = calc.getId();
+        Long calcIdFrom = calc.getId();
         calc.setId(null);
 
-        CalculatorModel newCalc = saveCalculator(calc, false);
+        CalculatorModel newCalc = saveCalculator(tenantId, calc, false);
         logger.info("Calculator copied successfully to version {}", versionNoTo);
 
+        if (calcIdFrom == null || newCalc.getId() == null) {
+            return;
+        }
+        //int from = Math.toIntExact(calcIdFrom);
+        //int to = Math.toIntExact(newCalc.getId());
         for (CoefficientDef coefficient : newCalc.getCoefficients()) {
             if (coefficient == null || coefficient.getVarCode() == null) {
                 continue;
@@ -371,11 +455,23 @@ public class CalculatorServiceImpl implements CalculatorService {
         }
     }
 
-    public void syncVars(Integer calculatorId) {
-        // TODO Auto-generated method stub
-        // get calculator by id from repository
+    @Override
+    @Transactional
+    public void syncVars(Long tenantId, Long calculatorId) {
+        return;
+    }
+/*
         CalculatorEntity entity = calculatorRepository.findById(calculatorId)
                 .orElseThrow(() -> new IllegalArgumentException("Calculator not found for id=" + calculatorId));
+        if (!tenantId.equals(entity.getTId())) {
+            throw new ForbiddenException("Calculator does not belong to the requested tenant");
+        }
+        authService.check(
+                getCurrentUser(),
+                ResourceType.PRODUCT,
+                String.valueOf(entity.getProductId()),
+                tenantId,
+                Action.MANAGE);
         String calculatorModelJson = entity.getCalculator();
         CalculatorModel calculatorModel;
         try {
@@ -386,14 +482,13 @@ public class CalculatorServiceImpl implements CalculatorService {
         if (calculatorModel == null) {
             throw new IllegalStateException("Calculator JSON is null for id=" + calculatorId);
         }
-        // get productVersionModel from repository
-        ProductVersionModel productVersionModel = productService.getProduct(entity.getProductId(), false);
+        ProductVersionModel productVersionModel = productServiceCRUD.getProduct(tenantId, entity.getProductId(), false);
         if (productVersionModel == null) {
             throw new NotFoundException("Product not found for id=" + entity.getProductId());
         }
 
         // get productVersionModel version from repository
-        ProductVersionModel productVersion = productService.getVersion(entity.getProductId(), entity.getVersionNo());
+        ProductVersionModel productVersion = productServiceCRUD.getVersion(tenantId, entity.getProductId(), entity.getVersionNo());
         if (productVersion == null) {
             throw new NotFoundException("Product version not found for id=" + entity.getProductId() + " and versionNo=" + entity.getVersionNo());
         }
@@ -417,19 +512,20 @@ public class CalculatorServiceImpl implements CalculatorService {
         // save calculator
         calculatorRepository.save(entity);
     }
-
+*/
 /*********************************/    
     @Override
     public void runCalculator(
-        Integer productId,
-        Integer versionNo,
-        Integer packageNo,
+        Long tenantId,
+        Long productId,
+        Long versionNo,
+        String packageNo,
         CalculatorContext ctx
     ) {
-        logger.info("Running calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
         
-        // Получить описание калькулятора
-        CalculatorModel model = getCalculator(productId, versionNo, packageNo);
+        logger.info("Running calculator: productId={}, versionNo={}, packageNo={}", productId, versionNo, packageNo);
+
+        CalculatorModel model = getCalculator(tenantId, productId, versionNo, packageNo);
         if (model == null || model.getFormulas() == null || model.getFormulas().isEmpty()) {
             logger.warn("Calculator not found or has no formulas, skipping");
             return;
@@ -526,7 +622,12 @@ public class CalculatorServiceImpl implements CalculatorService {
                 logger.warn("Coefficient definition not found for varCode: {}", varCode);
                 return null;
             }
-            String s = coefficientService.getCoefficientValue(model.getId(), varCode, ctx, cd.getColumns());
+            Long calcId = model.getId();
+            if (calcId == null) {
+                logger.warn("Calculator model has no id; cannot resolve coefficient {}", varCode);
+                return null;
+            }
+            String s = coefficientService.getCoefficientValue(calcId, varCode, ctx, cd.getColumns());
             logger.debug("Coefficient value resolved: {}={}", varCode, s);
             
             // Если вернулся null то ничего не найдено или еще какаято ошибка. 

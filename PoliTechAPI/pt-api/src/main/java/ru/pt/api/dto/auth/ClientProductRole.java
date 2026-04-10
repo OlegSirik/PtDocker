@@ -8,5 +8,5 @@ public record ClientProductRole (
   Long id,
   Long productId,
   String productName,
-  Boolean isDeleted )
+  String recordStatus )
  {}

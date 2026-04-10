@@ -1,4 +1,0 @@
-create docker image for this application 
-nake of repo is olegsirik/vsk-robot-zaytsev-front
-image must be compatible with docker hub
-push it to docker hub 

@@ -16,7 +16,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChip } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TenantsService, Tenant } from '../../../shared/services/api/tenants.service';
+import { TenantsService, Tenant, RecordStatus } from '../../../shared/services/api/tenants.service';
 import { LoginService, Login } from '../../../shared/services/api/logins.service';
 import { TenantAdminService, TenantAdmin } from '../../../shared/services/api/tenant-admins.service';
 import { AuthService as RestAuthService, User } from '../../../shared/services/auth.service';
@@ -48,6 +48,9 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./tenants-page.component.scss']
 })
 export class TenantsPageComponent implements OnInit {
+  /** Exposed for template bindings (`RecordStatus.ACTIVE`, etc.). */
+  readonly RecordStatus = RecordStatus;
+
   private tenantsService = inject(TenantsService);
   private loginService = inject(LoginService);
   private tenantAdminService = inject(TenantAdminService);
@@ -64,7 +67,7 @@ export class TenantsPageComponent implements OnInit {
   currentTenantData: Tenant = {
     name: '',
     code: '',
-    isDeleted: false,
+    recordStatus: RecordStatus.ACTIVE,
     authType: ''
   };
 
@@ -179,7 +182,7 @@ export class TenantsPageComponent implements OnInit {
         id: tenant.id,
         name: tenant.name,
         code: tenant.code,
-        isDeleted: tenant.isDeleted || false,
+        recordStatus: tenant.recordStatus || 'ACTIVE',
         createdAt: tenant.createdAt,
         updatedAt: tenant.updatedAt,
         authType: tenant.authType || ''
@@ -194,7 +197,7 @@ export class TenantsPageComponent implements OnInit {
               id: foundTenant.id,
               name: foundTenant.name,
               code: foundTenant.code,
-              isDeleted: foundTenant.isDeleted || false,
+              recordStatus: foundTenant.recordStatus || 'ACTIVE',
               createdAt: foundTenant.createdAt,
               updatedAt: foundTenant.updatedAt,
               authType: foundTenant.authType || ''
@@ -222,7 +225,7 @@ export class TenantsPageComponent implements OnInit {
     this.tenantsService.update(this.currentTenantData.id, {
       name: this.currentTenantData.name,
       code: this.currentTenantData.code,
-      isDeleted: this.currentTenantData.isDeleted,
+      recordStatus: this.currentTenantData.recordStatus,
       authType: this.currentTenantData.authType
     }).subscribe({
       next: () => {
@@ -784,7 +787,7 @@ export class TenantDialogComponent {
     this.tenant = data.tenant || {
       name: '',
       code: '',
-      isDeleted: false
+      recordStatus: 'ACTIVE'
     };
   }
 

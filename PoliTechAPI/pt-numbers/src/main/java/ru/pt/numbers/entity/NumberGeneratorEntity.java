@@ -1,8 +1,6 @@
 package ru.pt.numbers.entity;
 
 import jakarta.persistence.*;
-import ru.pt.api.dto.numbers.ResetPolicy;
-
 import java.time.LocalDate;
 
 @Entity
@@ -11,38 +9,28 @@ public class NumberGeneratorEntity {
 
     @Id
     @Column(name = "id", nullable = false)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
+    private Long id;
 
     @Column(name = "tid", nullable = false)
     private Long tid;
 
-    @Column(name = "product_code", nullable = false, length = 100)
-    private String productCode;
+//    @Column(name = "code", nullable = false, length = 100)
+//    private String code;
 
-    @Column(name = "mask", nullable = false, length = 255)
-    private String mask;
-
-    @Column(name = "reset_policy", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
-    private ResetPolicy resetPolicy;
-
-    @Column(name = "max_value", nullable = false)
-    private Integer maxValue = 999999;
+    @Column(name = "current_value", nullable = false)
+    private Long currentValue = 0L;
 
     @Column(name = "last_reset", nullable = false)
     private LocalDate lastReset = LocalDate.now();
 
-    @Column(name = "current_value", nullable = false)
-    private Integer currentValue = 0;
 
-    @Column(name = "xor_mask", nullable = false, length = 20)
-    private String xorMask;
-
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -54,37 +42,21 @@ public class NumberGeneratorEntity {
         this.tid = tid;
     }
 
-    public String getProductCode() {
-        return productCode;
+    public Long getCurrentValue() {
+        return currentValue;
     }
 
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
+    public void setCurrentValue(Long currentValue) {
+        this.currentValue = currentValue;
     }
 
-    public String getMask() {
-        return mask;
-    }
+//    public String getCode() {
+//        return code;
+//    }
 
-    public void setMask(String mask) {
-        this.mask = mask;
-    }
-
-    public ResetPolicy getResetPolicy() {
-        return resetPolicy;
-    }
-
-    public void setResetPolicy(ResetPolicy resetPolicy) {
-        this.resetPolicy = resetPolicy;
-    }
-
-    public Integer getMaxValue() {
-        return maxValue;
-    }
-
-    public void setMaxValue(Integer maxValue) {
-        this.maxValue = maxValue;
-    }
+//    public void setCode(String code) {
+//        this.code = code;
+//    }
 
     public LocalDate getLastReset() {
         return lastReset;
@@ -92,21 +64,5 @@ public class NumberGeneratorEntity {
 
     public void setLastReset(LocalDate lastReset) {
         this.lastReset = lastReset;
-    }
-
-    public Integer getCurrentValue() {
-        return currentValue;
-    }
-
-    public void setCurrentValue(Integer currentValue) {
-        this.currentValue = currentValue;
-    }
-
-    public String getXorMask() {
-        return xorMask;
-    }
-
-    public void setXorMask(String xorMask) {
-        this.xorMask = xorMask;
     }
 }

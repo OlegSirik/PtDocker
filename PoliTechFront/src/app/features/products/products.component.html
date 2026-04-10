@@ -131,10 +131,10 @@
           <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
           <td mat-cell *matCellDef="let element" align="end" class="col-actions">
             <div class="action-buttons">
-              <button mat-button color="primary" class="action-button" (click)="editProduct(element)">
+              <button mat-button color="primary" class="action-button" type="button" (click)="editProduct(element, $event)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-button color="warn" class="action-button" (click)="deleteProduct(element)">
+              <button mat-button color="warn" class="action-button" type="button" (click)="deleteProduct(element, $event)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>

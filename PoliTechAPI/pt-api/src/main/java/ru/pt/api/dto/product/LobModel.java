@@ -38,4 +38,7 @@ public class LobModel {
     @JsonProperty("mpFiles")
     private List<LobFile> mpFiles;
 
+    @JsonProperty("mpCoefficients")
+    private List<LobCoefficientDef> mpCoefficients;
+
 }

@@ -1,9 +1,6 @@
 package ru.pt.api.service.numbers;
 
-import ru.pt.api.dto.errors.ValidationError;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
-
-import java.util.List;
 
 import ru.pt.domain.model.VariableContext;
 
@@ -14,32 +11,28 @@ public interface NumberGeneratorService {
 
     /**
      * Получить следующий номер
+     * @param tid идентификатор Tenant
+     * @param numberGeneratorDescription параметры для нумератора
      * @param values описание договора
-     * @param productCode код продукта
      * @return номер полиса(уникальный)
      */
-    String getNextNumber(VariableContext values, String productCode);
+    String getNextNumber(Long tid, NumberGeneratorDescription numberGeneratorDescription, VariableContext values);
 
     /**
      * Создать новый алгоритм нумератора
+     * @param tid идентификатор Tenant
      * @param numberGeneratorDescription параметры для создания
      */
-    void create(NumberGeneratorDescription numberGeneratorDescription);
+    void create(Long tid, NumberGeneratorDescription numberGeneratorDescription);
 
     /**
-     * Обновить нумератор
-     * @param numberGeneratorDescription параметры для обновления
+     * Сбросить нумератор по id
+     * @param tid идентификатор Tenant
+     * @param id id нумератора
      */
-    void update(NumberGeneratorDescription numberGeneratorDescription);
+    void reset(Long tid, Long id);
 
-    /**
-     * Провалидировать поля для создания нумератора
-     * @param numberGeneratorDescription описание
-     * @return список ошибок
-     */
-    default List<ValidationError> validate(NumberGeneratorDescription numberGeneratorDescription){
-        return List.of();
-    }
+
 
 
 }

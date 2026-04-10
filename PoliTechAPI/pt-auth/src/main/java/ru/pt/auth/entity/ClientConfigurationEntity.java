@@ -7,8 +7,8 @@ import jakarta.persistence.*;
 public class ClientConfigurationEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_client_configuration_seq")
-    @SequenceGenerator(name = "acc_client_configuration_seq", sequenceName = "acc_client_configuration_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_seq")
+    @SequenceGenerator(name = "acc_seq", sequenceName = "acc_seq", allocationSize = 1)
     private Long id;
 
     // тип платежного шлюза

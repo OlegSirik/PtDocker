@@ -46,7 +46,7 @@ import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
-import ru.pt.api.service.product.VersionManager;
+
 import ru.pt.api.utils.JsonProjection;
 
 import ru.pt.api.security.AuthenticatedUser;
@@ -94,7 +94,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final SecurityContextHelper securityContextHelper;
     private final NumberGeneratorService numberGeneratorService;
     private final ProductService productService;
-    private final VersionManager versionManager;
     private final CalculatorService calculatorService;
     private final LobService lobService;
     private final ValidatorService validatorService;
@@ -188,9 +187,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
     }
 
-    private void calculatePremium(PolicyDTO policyDTO, ProductVersionModel product, CalculatorContext varCtx) {
+    private void calculatePremium(Long tenantId, PolicyDTO policyDTO, ProductVersionModel product, CalculatorContext varCtx) {
         logger.debug("Calculating premium. productCode={}, packageCode={}", 
             product.getCode(), policyDTO.getInsuredObjects().get(0).getPackageCode());
+
 
         // Print all variable definitions
 /*
@@ -203,6 +203,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         addMandatoryVars(policyDTO, varCtx.getDefinitions());
 
         CalculatorModel calculatorModel = calculatorService.getCalculator(
+            tenantId,
             product.getId(), 
             product.getVersionNo(), 
             policyDTO.getInsuredObjects().get(0).getPackageCode());
@@ -211,6 +212,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             logger.debug("Running calculator for product {} version {} package {}", 
                 product.getId(), product.getVersionNo(), policyDTO.getInsuredObjects().get(0).getPackageCode());
             calculatorService.runCalculator(
+                tenantId,
                 product.getId(), 
                 product.getVersionNo(), 
                 policyDTO.getInsuredObjects().get(0).getPackageCode(), 
@@ -299,7 +301,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         /* Удалить возможный хлам */
         policyDTO.setPremium(null);
         policyDTO.setPolicyNumber(null);
-        policyDTO.setProductVersion(0);
+        policyDTO.setProductVersion(0L);
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
 
@@ -316,7 +318,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         try {
             // Для тестера ghjlern d cnfnect дев
-            product = productService.getProductByCode(productCode, iAmTester);
+            product = productService.getProductByCode(user.getTenantId(), productCode, iAmTester);
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (NotFoundException e) {
             // Re-throw NotFoundException as-is
@@ -351,7 +353,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
 
         // 4.1 Получить страховщика
-        InsuranceCompanyDto insCompany = insCompanyService.get(product.getInsCompanyId());
+        InsuranceCompanyDto insCompany = insCompanyService.get(user.getTenantId(), product.getInsCompanyId());
         policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
 
         // 4.5 Проверить желаемую комиссию агента
@@ -411,7 +413,22 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setOptions(policyAddOns);
 
         // 10. Расчёт премии (lazy!)
-        calculatePremium(policyDTO, product, varCtx);
+/* 
+        var packageCode = policyDTO.getInsuredObjects().get(0).getPackageCode();
+        var package = product.getPackages().stream()
+            .filter(p -> p.getCode().equals(packageCode))
+            .findFirst()
+            .orElse(null);
+        if (package == null) {
+            throw new NotFoundException("Package not found: " + packageCode);
+        }
+        var calculatorId = package.getCalculatorId();
+        var calculator = calculatorService.getCalculator(user.getTenantId(), product.getId(), product.getVersionNo(), packageCode);
+        if (calculator == null) {
+            throw new NotFoundException("Calculator not found: " + packageCode);
+        }
+*/        
+        calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
 
         // 11. Перенос результатов в DTO
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
@@ -459,7 +476,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         /* Удалить возможный хлам */
         policyDTO.setPremium(null);
         policyDTO.setPolicyNumber(null);
-        policyDTO.setProductVersion(0);
+        policyDTO.setProductVersion(0L);
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
         
@@ -472,7 +489,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 3. Продукт
         String productCode = policyDTO.getProductCode();
         logger.debug("Fetching product for save. productCode={}", productCode);
-        var product = productService.getProductByCode(productCode, iAmTester);
+        var product = productService.getProductByCode(user.getTenantId(), productCode, iAmTester);
         logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
         if (!iAmTester) {
@@ -484,7 +501,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         preProcessService.applyProductMetadata(policyDTO, product);
 
         // 4.1 Получить страховщика
-        InsuranceCompanyDto insCompany = insCompanyService.get(product.getInsCompanyId());
+        InsuranceCompanyDto insCompany = insCompanyService.get(user.getTenantId(), product.getInsCompanyId());
         policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
 
         // 4.5 Проверить желаемую комиссию агента
@@ -533,7 +550,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
 
         // 10. Расчёт премии (lazy!)
-        calculatePremium(policyDTO, product, varCtx);
+        calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
   
         // 11. Рассчет КВ
         commissionDTO = commissionService.calculateCommission(
@@ -547,7 +564,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setCommission(commissionDTO);
         
         // 11. Получить номер полиса
-        String nextNumber = numberGeneratorService.getNextNumber(varCtx, productCode);
+        //Long id = product.getNumberGeneratorDescription().getId();
+        String nextNumber = numberGeneratorService.getNextNumber(user.getTenantId(), product.getNumberGeneratorDescription(), varCtx);
         policyDTO.setPolicyNumber(nextNumber);
         logger.debug("Generated policy number: {}", nextNumber);
 
@@ -562,7 +580,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         policyDTO.getProcessList().setPhDigest(ph_digest);
         policyDTO.getProcessList().setIoDigest(io_digest);
-        policyDTO.getProcessList().setInsCompanyCode(insCompanyService.get(product.getInsCompanyId()).getCode());
+        policyDTO.getProcessList().setInsCompanyCode(insCompany.getCode());
 
         // 12. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
@@ -735,11 +753,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         var productCode = jsonProjection.getProductCode();
         logger.debug("Updating policy with productCode={}", productCode);
 
-        var version = versionManager.getLatestVersionByProductCode(productCode);
+        //var version = versionManager.getLatestVersionByProductCode(productCode);
 
-        PolicyData updatedPolicy = storageService.update(policy, userData, version, policyNumber);
+        //PolicyData updatedPolicy = storageService.update(policy, userData, version, policyNumber);
         logger.info("Policy updated. policyNumber={}", policyNumber);
-        return updatedPolicy;
+        //return updatedPolicy;
+        return null;
     }
 
     @Override

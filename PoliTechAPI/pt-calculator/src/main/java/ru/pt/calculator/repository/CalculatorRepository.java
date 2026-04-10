@@ -7,12 +7,12 @@ import ru.pt.calculator.entity.CalculatorEntity;
 
 import java.util.Optional;
 
-public interface CalculatorRepository extends JpaRepository<CalculatorEntity, Integer> {
+public interface CalculatorRepository extends JpaRepository<CalculatorEntity, Long> {
 
     @Query("select c from CalculatorEntity c where c.tId = :tId and c.productId = :productId and c.versionNo = :versionNo and c.packageNo = :packageNo")
     Optional<CalculatorEntity> findByKeys(
         @Param("tId") Long tId,
-        @Param("productId") Integer productId,
-                                          @Param("versionNo") Integer versionNo,
-                                          @Param("packageNo") Integer packageNo);
+        @Param("productId") Long productId,
+        @Param("versionNo") Long versionNo,
+        @Param("packageNo") String packageNo);
 }

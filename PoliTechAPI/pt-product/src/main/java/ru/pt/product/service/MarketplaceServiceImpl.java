@@ -8,6 +8,7 @@ import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.marketplace.*;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.marketplace.MarketplaceService;
+import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.auth.AccountProductRoles;
@@ -73,12 +74,13 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         for (ru.pt.api.dto.auth.ProductRole role : allowedRoles) {
             Long productId = role.roleProductId();
             try {
-                ProductVersionModel pv = productService.getProduct(productId.intValue(), false);
+                ProductVersionModel pv = productService.getProduct(getCurrentTenantId(), productId, false);
                 if (pv == null) {
                     continue;
                 }
 
-                LobModel lob = lobService.getByCode(pv.getLob());
+                Long tenantId = getCurrentTenantId();
+                LobModel lob = lobService.getByCode(tenantId, pv.getLob());
                 Map<String, String> coverNames = getCoverNames(lob);
 
                 if (pv.getPackages() == null) continue;
@@ -98,11 +100,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     }
 
     @Override
-    public FormMetadata getProduct(Integer productId) {
+    public FormMetadata getProduct(Long productId) {
         Long tenantId = getCurrentTenantId();
 
         // Verify product exists and account has access
-        ProductVersionModel pv = productService.getProduct(productId, false);
+        ProductVersionModel pv = productService.getProduct(tenantId, productId, false);
         if (pv == null) {
             throw new NotFoundException("Product not found: " + productId.toString());
         }

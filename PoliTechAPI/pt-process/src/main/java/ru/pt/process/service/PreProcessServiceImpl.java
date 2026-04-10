@@ -49,8 +49,9 @@ public class PreProcessServiceImpl implements PreProcessService {
         logger.info("Applying product metadata. productCode={}", productVersionModel.getCode());
         
         policy.setProductVersion(productVersionModel.getVersionNo());
-        policy.setInsCompanyId(productVersionModel.getInsCompanyId());
-        
+//        policy.setInsCompanyId(productVersionModel.getInsCompanyId());
+        policy.setProductName(productVersionModel.getName());
+
         normalizePolicyDates( policy,  productVersionModel);
 
         var insuredObject = policy.getInsuredObjects().get(0);
@@ -61,13 +62,13 @@ public class PreProcessServiceImpl implements PreProcessService {
             insuredObject = emptyInsuredObject;
         }
 
-        Integer inPackageNo;
+        String inPackageNo;
         if (insuredObject.getPackageCode() == null) {
-            inPackageNo = 0;
+            inPackageNo = "0";
         } else {
             inPackageNo = insuredObject.getPackageCode();
         }
-        final Integer pkgCode = inPackageNo;
+        final String pkgCode = inPackageNo;
 
         PvPackage pvPackage = productVersionModel.getPackages().stream()
                 .filter(p -> p.getCode().equals(pkgCode))

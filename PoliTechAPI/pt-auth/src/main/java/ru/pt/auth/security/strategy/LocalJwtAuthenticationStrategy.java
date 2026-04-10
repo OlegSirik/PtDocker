@@ -52,15 +52,16 @@ public class LocalJwtAuthenticationStrategy implements IdentitySourceStrategy {
         requestContext.setClient(clientId);
         requestContext.setLogin(username);
 
-        String accountId = request.getHeader("X-Account-Id");
-        if (accountId != null && !accountId.isEmpty()) {
+        String xAccountId = request.getHeader("X-Account-Id");
+        if (xAccountId != null && !xAccountId.isEmpty()) {
             try {
-                Long.parseLong(accountId);
+                Long accountId = Long.parseLong(xAccountId);
+                requestContext.setAccount(accountId);
             } catch (NumberFormatException e) {
                 throw new BadCredentialsException("X-Account-Id must be a number");
             }
         }
-        requestContext.setAccount(accountId);
+        
     }
 
     /**

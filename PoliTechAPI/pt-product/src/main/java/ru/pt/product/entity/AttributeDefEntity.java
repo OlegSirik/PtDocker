@@ -7,18 +7,12 @@ import jakarta.persistence.*;
  * API-обмен через DTO {@link ru.pt.api.dto.product.LobVar}; отдельный сервис не используется — операции в {@link ru.pt.api.service.schema.SchemaService}.
  */
 @Entity
-@Table(
-        name = "mt_attribute_def",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_attribute_def",
-                columnNames = {"tenant_id", "document_id", "var_code"}
-        )
-)
+@Table(name = "mt_attribute_def")
 public class AttributeDefEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mt_attribute_def_gen")
-    @SequenceGenerator(name = "mt_attribute_def_gen", sequenceName = "mt_attribute_def_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "mt_seq")
+    @SequenceGenerator(name = "mt_seq", sequenceName = "mt_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "parent_id")

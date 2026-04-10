@@ -31,6 +31,13 @@ spring:
     serialization:
       '[WRITE_DATES_AS_TIMESTAMPS]': false
 
+# Dev/test: tenant create/delete smoke test (set app.test-scenario1.enabled=true). Never in production.
+app:
+  test-scenario1:
+    enabled: false
+    # sys-tenant-code: sys
+    # sys-auth-client-id: sys
+
 server:
   port: 8080
 

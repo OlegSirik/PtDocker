@@ -50,7 +50,7 @@ public class MarketplaceController {
     @Operation(summary = "Get product form metadata", description = "Returns form metadata for a product")
     public ResponseEntity<FormMetadata> getProduct(
             @Parameter(description = "Tenant code") @PathVariable String tenantCode,
-            @Parameter(description = "Product code") @PathVariable Integer productId) {
+            @Parameter(description = "Product code") @PathVariable Long productId) {
         return ResponseEntity.ok(marketplaceService.getProduct(productId));
     }
 }

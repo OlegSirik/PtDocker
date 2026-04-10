@@ -43,7 +43,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional
-    public CoefficientDataEntity insert(Integer calculatorId, String code, CoefficientDataRow row) {
+    public CoefficientDataEntity insert(Long calculatorId, String code, CoefficientDataRow row) {
         logger.debug("Inserting coefficient data: calculatorId={}, code={}", calculatorId, code);
         CoefficientDataEntity entity = new CoefficientDataEntity();
         entity.setCalculatorId(calculatorId);
@@ -56,7 +56,7 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional
-    public CoefficientDataEntity update(Integer id, CoefficientDataRow row) {
+    public CoefficientDataEntity update(Long id, CoefficientDataRow row) {
         logger.debug("Updating coefficient data: id={}", id);
         CoefficientDataEntity entity = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Coefficient row not found: " + id));
         mapFromRow(entity, row);
@@ -66,14 +66,14 @@ public class CoefficientServiceImpl implements CoefficientService {
     }
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Long id) {
         logger.info("Deleting coefficient data: id={}", id);
         repository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<CoefficientDataRow> getTable(Integer calculatorId, String code) {
+    public List<CoefficientDataRow> getTable(Long calculatorId, String code) {
         logger.debug("Getting coefficient table: calculatorId={}, code={}", calculatorId, code);
         List<CoefficientDataEntity> rows = repository.findAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         List<CoefficientDataRow> data = new ArrayList<>();
@@ -86,7 +86,7 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional
     @Override
-    public List<CoefficientDataRow> replaceTable(Integer calculatorId, String code, List<CoefficientDataRow> tableJson) {
+    public List<CoefficientDataRow> replaceTable(Long calculatorId, String code, List<CoefficientDataRow> tableJson) {
         logger.info("Replacing coefficient table: calculatorId={}, code={}, rows={}", calculatorId, code, tableJson.size());
         repository.deleteAllByCalcAndCode(getCurrentTenantId(), calculatorId, code);
         logger.debug("Deleted existing coefficient data");
@@ -107,7 +107,7 @@ public class CoefficientServiceImpl implements CoefficientService {
      * @param columns List of coefficient columns defining conditions
      * @return SQL query string with variable names, or null if parameters are invalid
      */
-    public String getSQL(Integer calculatorId,
+    public String getSQL(Long calculatorId,
                          String coefficientCode,
                          List<CoefficientColumn> columns) {
         logger.debug("Generating SQL: calculatorId={}, coefficientCode={}", calculatorId, coefficientCode);
@@ -168,7 +168,7 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional(readOnly = true)
     @Override
-    public String getCoefficientValue(Integer calculatorId,
+    public String getCoefficientValue(Long calculatorId,
                                       String coefficientCode,
                                       VariableContext values,
                                       List<CoefficientColumn> columns) {
@@ -245,7 +245,7 @@ public class CoefficientServiceImpl implements CoefficientService {
 
     @Transactional
     @Override
-    public int copyCoefficient(Integer calculatorIdFrom, Integer calculatorIdTo, String coefficientCode) {
+    public int copyCoefficient(Long calculatorIdFrom, Long calculatorIdTo, String coefficientCode) {
         logger.info("Copying coefficient: from={}, to={}, code={}", calculatorIdFrom, calculatorIdTo, coefficientCode);
 
         if (calculatorIdFrom == null || calculatorIdTo == null || coefficientCode == null) {

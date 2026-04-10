@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 public class CommissionRateEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_commission_rates_seq")
-    @SequenceGenerator(name = "acc_commission_rates_seq", sequenceName = "acc_commission_rates_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "acc_seq")
+    @SequenceGenerator(name = "acc_seq", sequenceName = "acc_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,13 +25,10 @@ public class CommissionRateEntity {
     private AccountEntity account;
 
     @Column(name = "product_id", nullable = false)
-    private Integer productId;
+    private Long productId;
 
     @Column(name = "action", nullable = false, length = 50)
     private String action;
-
-    @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false;
 
     @Column(name = "rate_value", precision = 10, scale = 4)
     private BigDecimal rateValue;
@@ -70,12 +67,10 @@ public class CommissionRateEntity {
     public void setTenant(TenantEntity tenant) { this.tenant = tenant; }
     public AccountEntity getAccount() { return account; }
     public void setAccount(AccountEntity account) { this.account = account; }
-    public Integer getProductId() { return productId; }
-    public void setProductId(Integer productId) { this.productId = productId; }
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
-    public Boolean getDeleted() { return isDeleted; }
-    public void setDeleted(Boolean deleted) { isDeleted = deleted; }
     public BigDecimal getRateValue() { return rateValue; }
     public void setRateValue(BigDecimal rateValue) { this.rateValue = rateValue; }
     public BigDecimal getFixedAmount() { return fixedAmount; }

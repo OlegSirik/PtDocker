@@ -56,7 +56,7 @@ public class IdentityResolutionFilter extends AbstractSecurityFilter {
         }
 
         String tenant = requestContext.getTenant();
-        String accountId = requestContext.getAccount();
+        Long accountId = requestContext.getAccount();
 
         logger.debug("IdentityResolutionFilter: tenant={}, accountId={}", tenant, accountId);
 
@@ -73,7 +73,7 @@ public class IdentityResolutionFilter extends AbstractSecurityFilter {
         try {
             logger.debug("IdentityResolutionFilter: Loading user details for accountId={}", accountId);
             UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(accountId);
+                    userDetailsService.loadUserByUsername(accountId.toString());
 
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(

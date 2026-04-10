@@ -102,9 +102,9 @@
             <div class="form-row">
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Статус</mat-label>
-                <mat-select [(ngModel)]="currentTenantData.isDeleted" name="isDeleted" required>
-                  <mat-option [value]="false">ACTIVE</mat-option>
-                  <mat-option [value]="true">SUSPENDED</mat-option>
+                <mat-select [(ngModel)]="currentTenantData.recordStatus" name="recordStatus" required>
+                  <mat-option [value]="RecordStatus.ACTIVE">ACTIVE</mat-option>
+                  <mat-option [value]="RecordStatus.DELETED">DELETED</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
@@ -114,6 +114,7 @@
                 <mat-label>Auth Type</mat-label>
                 <mat-select [(ngModel)]="currentTenantData.authType" name="authType" required>
                   <mat-option value="JWT">JWT</mat-option>
+                  <mat-option value="LOCAL_JWT">LOCAL_JWT</mat-option>
                   <mat-option value="HEADER">HEADER</mat-option>
                   <mat-option value="APIKEY">APIKEY</mat-option>
                   <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>

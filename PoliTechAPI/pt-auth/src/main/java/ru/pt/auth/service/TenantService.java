@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
+import lombok.RequiredArgsConstructor;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -23,10 +24,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ru.pt.api.dto.auth.Tenant;
+import ru.pt.api.dto.refs.RecordStatus;
+import ru.pt.api.dto.file.FileStorageType;
+import ru.pt.api.dto.refs.TenantAuthType;
 import ru.pt.auth.utils.TenantMapper;
 import ru.pt.api.service.auth.TenantConfig;
+import ru.pt.api.service.schema.SchemaService;
 
 @Service
+@RequiredArgsConstructor
 public class TenantService implements TenantSecurityConfigService, TenantConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
@@ -38,22 +44,7 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
     private final AccountLoginRepository accountLoginRepository;
     private final SecurityContextHelper securityContextHelper;
     private final TenantMapper tenantMapper;
-    public TenantService(
-            TenantRepository tenantRepository,
-            AccountRepository accountRepository,
-            ClientRepository clientRepository,
-            LoginRepository loginRepository,
-            AccountLoginRepository accountLoginRepository,
-            SecurityContextHelper securityContextHelper,
-            TenantMapper tenantMapper) {
-        this.tenantRepository = tenantRepository;
-        this.accountRepository = accountRepository;
-        this.clientRepository = clientRepository;
-        this.loginRepository = loginRepository;
-        this.accountLoginRepository = accountLoginRepository;
-        this.securityContextHelper = securityContextHelper;
-        this.tenantMapper = tenantMapper;
-    }
+    private final SchemaService schemaService;
 
     public Optional<TenantEntity> findByCode(String code) {
         return tenantRepository.findByCode(code.toLowerCase());
@@ -111,8 +102,15 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
         }
 
         //TODO AuthType
-        TenantEntity tenant = TenantEntity.create(tenantDto.code(), tenantDto.name(), "JWT");
+        TenantEntity tenant = TenantEntity.create(tenantDto.code(), tenantDto.name(), "LOCAL_JWT");
+        if (tenant.getAuthType() == null ) {
+            tenant.setAuthType("LOCAL_JWT");
+        }
+        if (tenant.getStorageType() == null ) {
+            tenant.setStorageType("DB");
+        }
         tenant.setId(getNextId());
+
         TenantEntity savedTenant = save(tenant);
 
         // Создаем tenant account
@@ -159,6 +157,8 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
         
         logger.info("Default client '{}' created for tenant '{}'", savedClient.getName(), savedTenant.getName());
 
+        schemaService.newTenantCreated(savedTenant.getId());
+
         return tenantMapper.toDto(savedTenant);
     }
 
@@ -183,8 +183,9 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
 
         // Пока только название можно поменять
         tenantEntity.setName(tenantDto.name());
-        tenantEntity.setAuthType(tenantDto.authType());
-        tenantEntity.setDeleted(tenantDto.isDeleted());
+        tenantEntity.setAuthType(tenantDto.authType().getValue());
+        tenantEntity.setRecordStatus(
+                tenantDto.recordStatus() != null ? tenantDto.recordStatus().getValue() : null);
         TenantEntity savedTenantEntity = save(tenantEntity);
         return tenantMapper.toDto(savedTenantEntity);
     }
@@ -193,7 +194,7 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
      * SYS_ADMIN: Удаление tenant (soft delete)
      */
     @Transactional
-    public void deleteTenant(String tenantCode) {
+    public void softDeleteTenant(String tenantCode) {
         UserDetailsImpl currentUser = getCurrentUser();
         if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
             throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
@@ -202,11 +203,25 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
         TenantEntity tenant = findByCode(tenantCode)
                 .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantCode));
 
-        tenant.setDeleted(true);
+        tenant.setRecordStatus(RecordStatus.DELETED.getValue());
+        tenant.setUpdatedAt(LocalDateTime.now());
         save(tenant);
         logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
     }
 
+    @Transactional
+    public void deleteTenant(Tenant tenantDto) {
+        UserDetailsImpl currentUser = getCurrentUser();
+        if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
+            throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
+        }
+
+        TenantEntity tenant = findByCode(tenantDto.code())
+                .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantDto.code()));
+
+        tenantRepository.delete(tenant);
+        logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
+    }
     // ========== HELPER METHODS ==========
 
     /**
@@ -271,9 +286,9 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
         return new Tenant(
             entity.getId(),
             entity.getName(),
-            entity.getDeleted(),
-            entity.getAuthType(),
-            entity.getStorageType(),
+            RecordStatus.valueOf(entity.getRecordStatus()),
+            TenantAuthType.fromValue(entity.getAuthType()),
+            FileStorageType.valueOf(entity.getStorageType()),
             entity.getCode(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
@@ -286,17 +301,6 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
     public Tenant getTenantById(Long tenantId) {
         TenantEntity entity = tenantRepository.findById(tenantId)
             .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
-        return new Tenant(
-            entity.getId(),
-            entity.getName(),
-            entity.getDeleted(),
-            entity.getAuthType(),
-            entity.getStorageType(),
-            entity.getCode(),
-            entity.getCreatedAt(),
-            entity.getUpdatedAt(),
-            entity.getStorageConfig() != null ? entity.getStorageConfig() : new HashMap<>(),
-            entity.getAuthConfig() != null ? entity.getAuthConfig() : new HashMap<>()
-        );
+        return tenantMapper.toDto(entity);
     }
 }

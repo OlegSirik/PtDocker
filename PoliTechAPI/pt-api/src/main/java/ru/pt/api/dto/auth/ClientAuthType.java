@@ -1,8 +1,11 @@
 package ru.pt.api.dto.auth;
 
 public enum ClientAuthType {
-    USER("USER"),
-    CLIENT("CLIENT");
+
+    LOCAL_JWT("LOCAL_JWT"),
+    HEADERS("HEADERS"),
+    NONE("NONE"),
+    APIKEY("APIKEY");
 
     private final String value;
 
@@ -13,4 +16,5 @@ public enum ClientAuthType {
     public String getValue() {
         return value;
     }
+
 }

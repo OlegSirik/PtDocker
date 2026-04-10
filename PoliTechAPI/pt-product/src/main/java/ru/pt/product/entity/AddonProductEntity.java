@@ -22,7 +22,7 @@ public class AddonProductEntity {
     private Long tid;
 
     @Column(name = "product_id", nullable = false)
-    private Integer productId;
+    private Long productId;
 
     @Column(name = "addon_id", nullable = false)
     private Long addonId;

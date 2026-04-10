@@ -13,7 +13,7 @@ public class PolicyIndex {
 
     private String policyNumber;
     // TODO версия не по формату
-    private Integer versionNo;
+    private Long versionNo;
 
     private String productCode;
 
@@ -34,7 +34,7 @@ public class PolicyIndex {
     public PolicyIndex() {
     }
 
-    public PolicyIndex(UUID policyId, String policyNumber, Integer versionNo, String productCode, ZonedDateTime startDate, ZonedDateTime endDate, Long userAccountId, Long clientAccountId, String versionStatus, PolicyStatus policyStatus) {
+    public PolicyIndex(UUID policyId, String policyNumber, Long versionNo, String productCode, ZonedDateTime startDate, ZonedDateTime endDate, Long userAccountId, Long clientAccountId, String versionStatus, PolicyStatus policyStatus) {
         this.policyId = policyId;
         this.policyNumber = policyNumber;
         this.versionNo = versionNo;
@@ -64,11 +64,11 @@ public class PolicyIndex {
         this.policyNumber = policyNumber;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 

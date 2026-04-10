@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import {
   BusinessLineEditService,
@@ -20,10 +21,23 @@ import {
   BusinessLineVar,
   BusinessLineCover,
   BusinessLineFile,
-  SCHEMA_TREE_VAR_CDM_PREFIX,
+  BusinessLineCoefficient,
+  BusinessLineCoefficientColumn,
 } from '../../shared';
+import { CalculatorService } from '../../shared/services/calculator.service';
+import { BusinessLineCoefficientDialogComponent } from './business-line-coefficient-dialog/business-line-coefficient-dialog.component';
+import { BusinessLineColumnDialogComponent } from './business-line-column-dialog/business-line-column-dialog.component';
+import { buildCoefficientDataSqlTemplate } from './coefficient-sql.util';
+import { SqlDialogComponent } from '../calculator/sql-dialog/sql-dialog.component';
 import {JsonPipe} from '@angular/common';
-import { VarsService } from '../../shared/services/vars.service';
+import { VarsService, type LobVar } from '../../shared/services/vars.service';
+import {
+  Observable,
+  of,
+  forkJoin,
+  from,
+} from 'rxjs';
+import { switchMap, concatMap, last, map, tap, defaultIfEmpty } from 'rxjs/operators';
 import {
   TreeTableComponent,
   type TreeTableChildCreatePayload,
@@ -48,6 +62,7 @@ import { AuthService } from '../../shared/services/auth.service';
     MatTabsModule,
     MatPaginatorModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     TreeTableComponent,
   ],
     templateUrl: './business-line-edit.component.html',
@@ -62,9 +77,20 @@ export class BusinessLineEditComponent implements OnInit {
   private snack = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
+  private calculatorService = inject(CalculatorService);
   varService = inject(VarsService);
 
-  businessLine: BusinessLineEdit = { id:-1,mpCode: '', mpName: '', mpVars: [], mpCovers: [], mpFiles: [], mpPhType: '', mpInsObjectType: '' };
+  businessLine: BusinessLineEdit = {
+    id: -1,
+    mpCode: '',
+    mpName: '',
+    mpVars: [],
+    mpCovers: [],
+    mpFiles: [],
+    mpPhType: '',
+    mpInsObjectType: '',
+    mpCoefficients: [],
+  };
   originalBusinessLine: BusinessLineEdit | null = null;
   isNewRecord = true;
   hasChanges = false;
@@ -75,6 +101,28 @@ export class BusinessLineEditComponent implements OnInit {
   policyHolderDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   policyInsObjectDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   textVarDisplayedColumns: string[] = ['varCode', 'varName', 'varValue', 'textVarActions'];
+
+  /** Таб «Коэффициенты» — список коэффициентов ЛБ (как на странице калькулятора). */
+  lobCoefficientsDisplayedColumns: string[] = [
+    'varCode',
+    'varName',
+    'altVarCode',
+    'altVarValue',
+    'coeffActions',
+  ];
+  lobColumnsDisplayedColumns: string[] = [
+    'nr',
+    'conditionOperator',
+    'varCode',
+    'sortOrder',
+    'varDataType',
+    'columnActions',
+  ];
+  conditionOperatorOptions: string[] = [];
+  sortOrderOptions: string[] = [];
+  selectedCoefficientIndex = -1;
+  selectedCoefficientVarCode: string | null = null;
+  selectedLobColumnKey: string | null = null;
 
   exampleJsonText = '';
 
@@ -169,7 +217,9 @@ export class BusinessLineEditComponent implements OnInit {
     const code = this.route.snapshot.paramMap.get('id');
 
     this.varService.getAllVars();
-    
+    this.calculatorService.getConditionOperatorOptions().subscribe((o) => (this.conditionOperatorOptions = o));
+    this.calculatorService.getSortOrderOptions().subscribe((o) => (this.sortOrderOptions = o));
+
     if (code) {
       this.isNewRecord = false;
       this.svc.getBusinessLineByCode(code).subscribe(doc => {
@@ -184,6 +234,10 @@ export class BusinessLineEditComponent implements OnInit {
         */
 
         this.businessLine = doc;
+        this.normalizeMpCoefficients();
+        this.selectedCoefficientIndex = -1;
+        this.selectedCoefficientVarCode = null;
+        this.selectedLobColumnKey = null;
         this.syncTreeTableFromMpVars();
         /*
         this.businessLine = {
@@ -206,6 +260,10 @@ export class BusinessLineEditComponent implements OnInit {
     } else {
       this.isNewRecord = true;
       this.businessLine.mpVars = [];
+      this.businessLine.mpCoefficients = [];
+      this.selectedCoefficientIndex = -1;
+      this.selectedCoefficientVarCode = null;
+      this.selectedLobColumnKey = null;
       this.updateChanges();
       this.loadSchemaTreeIntoMpVarsForNewRecord();
     }
@@ -215,14 +273,190 @@ export class BusinessLineEditComponent implements OnInit {
     this.hasChanges = !this.originalBusinessLine || JSON.stringify(this.businessLine) !== JSON.stringify(this.originalBusinessLine);
   }
 
-  /** Узел дерева схемы в mpVars помечается varCdm {@link SCHEMA_TREE_VAR_CDM_PREFIX}. */
+  /**
+   * Узел дерева схемы договора в mpVars: {@code varType === 'OBJECT'} или потомок такого узла по {@code parent_id}.
+   * {@link BusinessLineVar.varCdm} не подменяется — значение с бэкенда / справочника.
+   */
   private isSchemaTreeMpVar(v: BusinessLineVar): boolean {
-    return !!v.varCdm?.startsWith(SCHEMA_TREE_VAR_CDM_PREFIX);
+    if ((v.varType?.trim().toUpperCase() ?? '') === 'OBJECT') {
+      return true;
+    }
+    const p = v.parent_id;
+    if (p == null || p === undefined) {
+      return false;
+    }
+    const parent = this.businessLine.mpVars.find((x) => x.id === p);
+    return parent ? this.isSchemaTreeMpVar(parent) : false;
+  }
+
+  /** Тот же {@code document_id}, что в {@link #loadSchemaTreeIntoMpVarsForNewRecord}. */
+  private readonly schemaDocumentId = 'INSURANCE_CONTRACT';
+
+  /** Узлы схемы с локальными правками, которые нужно отправить в API перед сохранением ЛС. */
+  private schemaVarsPendingApiSync(): BusinessLineVar[] {
+    return this.businessLine.mpVars.filter(
+      (v) =>
+        this.isSchemaTreeMpVar(v) &&
+        (v.unsavedSchemaRow === 'new' || v.unsavedSchemaRow === 'modified') &&
+        !v.isDeleted,
+    );
+  }
+
+  private schemaApiVarCdm(v: BusinessLineVar): string {
+    return (v.varCdm ?? '').trim();
+  }
+
+  private businessLineVarToSchemaLobVarForApi(
+    v: BusinessLineVar,
+    idRemap: Map<number, number>,
+    mode: 'create' | 'update',
+  ): LobVar {
+    const p = v.parent_id;
+    const parent_id: number | null =
+      p == null || p === undefined ? null : (idRemap.get(p) ?? p);
+
+    return {
+      varCode: v.varCode,
+      varName: v.varName,
+      varPath: v.varPath ?? '',
+      varType: v.varType ?? 'STRING',
+      varDataType: v.varDataType ?? 'STRING',
+      varValue: v.varValue ?? '',
+      varCdm: this.schemaApiVarCdm(v),
+      varNr: String(v.varNr ?? 0),
+      id: mode === 'update' ? v.id! : 0,
+      parent_id,
+      varList: v.varList ?? null,
+      isSystem: !!v.isSystem,
+      isDeleted: false,
+      name: v.name ?? '',
+    };
+  }
+
+  private mergeLobVarResponseIntoSchemaMpVar(target: BusinessLineVar, lob: LobVar): void {
+    const rawNr = lob.varNr;
+    const nr =
+      rawNr != null && rawNr !== ''
+        ? Number(String(rawNr).trim())
+        : NaN;
+    const vdt = lob.varDataType as unknown;
+    const varDataType =
+      typeof vdt === 'string' ? vdt : target.varDataType ?? 'STRING';
+
+    target.id = lob.id;
+    target.parent_id = lob.parent_id ?? undefined;
+    target.varCode = lob.varCode;
+    target.varName = lob.varName;
+    target.varType = lob.varType ?? target.varType;
+    target.varPath = lob.varPath ?? '';
+    target.varDataType = varDataType;
+    target.varValue = lob.varValue ?? '';
+    target.varNr = Number.isFinite(nr) ? nr : target.varNr ?? 0;
+    target.varList = lob.varList ?? undefined;
+    target.isSystem = lob.isSystem;
+    target.varCdm = lob.varCdm ?? '';
+    target.unsavedSchemaRow = undefined;
+    target.name = lob.name ?? '';
+  }
+
+  private remapSchemaParentIds(oldId: number, newId: number): void {
+    for (const w of this.businessLine.mpVars) {
+      if (this.isSchemaTreeMpVar(w) && w.parent_id === oldId) {
+        w.parent_id = newId;
+      }
+    }
+  }
+
+  /**
+   * Родители перед детьми: у дочернего {@code parent_id} либо уже в БД, либо уже обработан в этом списке.
+   */
+  private topologicalNewSchemaVars(vars: BusinessLineVar[]): BusinessLineVar[] {
+    const newIds = new Set(vars.map((v) => v.id!).filter((id): id is number => id != null));
+    const processedIds = new Set<number>();
+    const order: BusinessLineVar[] = [];
+    for (let step = 0; step < vars.length + 2; step++) {
+      let progressed = false;
+      for (const v of vars) {
+        const vid = v.id;
+        if (vid == null || processedIds.has(vid)) continue;
+        const p = v.parent_id;
+        const parentReady =
+          p == null || p === undefined || !newIds.has(p) || processedIds.has(p);
+        if (parentReady) {
+          order.push(v);
+          processedIds.add(vid);
+          progressed = true;
+        }
+      }
+      if (order.length === vars.length) {
+        return order;
+      }
+      if (!progressed) {
+        throw new Error('schema tree: cannot order new nodes (parent chain)');
+      }
+    }
+    throw new Error('schema tree: topological sort failed');
+  }
+
+  /**
+   * POST/PUT атрибутов схемы для помеченных mpVars, ответы мержим в {@link businessLine.mpVars}.
+   */
+  private syncSchemaAttributesBeforeSave(): Observable<void> {
+    const pending = this.schemaVarsPendingApiSync();
+    if (!pending.length) {
+      return of(void 0);
+    }
+
+    const newOnes = pending.filter((v) => v.unsavedSchemaRow === 'new');
+    const modifiedOnes = pending.filter((v) => v.unsavedSchemaRow === 'modified');
+    const idRemap = new Map<number, number>();
+    const code = this.schemaDocumentId;
+
+    const afterCreates: Observable<void> =
+      newOnes.length === 0
+        ? of(void 0)
+        : from(this.topologicalNewSchemaVars(newOnes)).pipe(
+            concatMap((v) =>
+              this.varService
+                .createAttribute(code, this.businessLineVarToSchemaLobVarForApi(v, idRemap, 'create'))
+                .pipe(
+                  tap((lob) => {
+                    const oldId = v.id!;
+                    this.mergeLobVarResponseIntoSchemaMpVar(v, lob);
+                    if (oldId !== lob.id) {
+                      this.remapSchemaParentIds(oldId, lob.id);
+                    }
+                    idRemap.set(oldId, lob.id);
+                  }),
+                ),
+            ),
+            last(),
+            map(() => void 0),
+            defaultIfEmpty(void 0),
+          );
+
+    return afterCreates.pipe(
+      switchMap(() =>
+        modifiedOnes.length === 0
+          ? of(void 0)
+          : forkJoin(
+              modifiedOnes.map((v) =>
+                this.varService
+                  .updateAttribute(
+                    code,
+                    this.businessLineVarToSchemaLobVarForApi(v, idRemap, 'update'),
+                  )
+                  .pipe(tap((lob) => this.mergeLobVarResponseIntoSchemaMpVar(v, lob))),
+              ),
+            ).pipe(map(() => void 0)),
+      ),
+      tap(() => this.syncTreeTableFromMpVars()),
+    );
   }
 
   /** Новый документ: GET attributes → все строки кладём в mpVars как узлы схемы. */
   private loadSchemaTreeIntoMpVarsForNewRecord(): void {
-    this.varService.loadAttributes('INSURANCE_CONTRACT').subscribe({
+    this.varService.loadAttributes(this.schemaDocumentId).subscribe({
       next: (data) => {
         this.businessLine.mpVars = (data ?? []).map((row) => this.treeSourceRowToMpVar(row));
         this.syncTreeTableFromMpVars();
@@ -237,8 +471,6 @@ export class BusinessLineEditComponent implements OnInit {
   }
 
   private treeSourceRowToMpVar(row: TreeTableSourceRow): BusinessLineVar {
-    // Маркер узла схемы в mpVars — только префикс schemaTree (см. isSchemaTreeMpVar); не подставлять varCdm из API.
-    const varCdm = `${SCHEMA_TREE_VAR_CDM_PREFIX}${row.id}`;
     return {
       id: row.id,
       parent_id: row.parent_id ?? undefined,
@@ -249,10 +481,12 @@ export class BusinessLineEditComponent implements OnInit {
       varDataType: row.varDataType ?? 'STRING',
       varValue: row.varValue ?? '',
       varNr: row.varNr ?? 0,
-      varCdm,
+      varCdm: row.varCdm ?? '',
       varList: row.varList,
       isSystem: row.isSystem,
       isDeleted: false,
+      unsavedSchemaRow: row.unsavedSchemaRow,
+      name: row.name ?? '',
     };
   }
 
@@ -271,7 +505,19 @@ export class BusinessLineEditComponent implements OnInit {
       varPath: v.varPath ?? '',
       varValue: v.varValue ?? '',
       varCdm: v.varCdm ?? '',
+      unsavedSchemaRow: v.unsavedSchemaRow,
+      name: v.name ?? '',
     };
+  }
+
+  /** После успешного сохранения ЛС — снять маркеры «не сохранено в документе». */
+  private clearSchemaTreeUnsavedFlags(): void {
+    for (const v of this.businessLine.mpVars) {
+      if (this.isSchemaTreeMpVar(v)) {
+        v.unsavedSchemaRow = undefined;
+      }
+    }
+    this.syncTreeTableFromMpVars();
   }
 
   /** Таблица дерева строится только из mpVars (существующий документ или после loadAttributes). */
@@ -293,6 +539,9 @@ export class BusinessLineEditComponent implements OnInit {
       if (!v) break;
       if (this.isSchemaTreeMpVar(v)) {
         v.isDeleted = false;
+        if (v.unsavedSchemaRow !== 'new') {
+          v.unsavedSchemaRow = 'modified';
+        }
       }
       id = v.parent_id ?? null;
     }
@@ -311,6 +560,10 @@ export class BusinessLineEditComponent implements OnInit {
     v.varType = row.varType ?? v.varType;
     v.varPath = row.varPath ?? v.varPath;
     v.varValue = row.varValue ?? v.varValue;
+    v.name = row.name?.trim() || row.varName || v.name || '';
+    if (v.unsavedSchemaRow !== 'new') {
+      v.unsavedSchemaRow = 'modified';
+    }
     this.syncTreeTableFromMpVars();
     this.updateChanges();
   }
@@ -328,10 +581,12 @@ export class BusinessLineEditComponent implements OnInit {
       varDataType: d.varDataType ?? 'STRING',
       varValue: d.varValue ?? '',
       varNr: d.varNr ?? 0,
-      varCdm: `${SCHEMA_TREE_VAR_CDM_PREFIX}${id}`,
+      varCdm: (d.varCdm ?? '').trim() || (d.varPath ?? '').trim(),
       varList: d.varList,
       isSystem: false,
       isDeleted: false,
+      unsavedSchemaRow: 'new',
+      name: d.name?.trim() || d.varName.trim() || '',
     };
     this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
     this.syncTreeTableFromMpVars();
@@ -352,12 +607,18 @@ export class BusinessLineEditComponent implements OnInit {
       for (const x of this.businessLine.mpVars) {
         if (!this.isSchemaTreeMpVar(x) || x.parent_id !== parentId) continue;
         x.isDeleted = true;
+        if (x.unsavedSchemaRow !== 'new') {
+          x.unsavedSchemaRow = 'modified';
+        }
         if (x.id != null) markSchemaBranchDeleted(x.id);
       }
     };
     const v = this.businessLine.mpVars.find((x) => x.id === node.id);
     if (v && this.isSchemaTreeMpVar(v)) {
       v.isDeleted = true;
+      if (v.unsavedSchemaRow !== 'new') {
+        v.unsavedSchemaRow = 'modified';
+      }
     }
     markSchemaBranchDeleted(node.id);
     this.syncTreeTableFromMpVars();
@@ -409,23 +670,34 @@ export class BusinessLineEditComponent implements OnInit {
       return;
     }
 
-    if (this.isNewRecord) {
-      this.svc.create(this.businessLine).subscribe((saved) => {
-        this.businessLine = saved;
-        this.syncTreeTableFromMpVars();
-        this.updateChanges();
-        this.snack.open('Сохранено', 'OK', { duration: 2000 });
+    this.syncSchemaAttributesBeforeSave()
+      .pipe(
+        switchMap(() =>
+          this.isNewRecord
+            ? this.svc.create(this.businessLine)
+            : this.svc.update(this.businessLine.id, this.businessLine),
+        ),
+      )
+      .subscribe({
+        next: (saved) => {
+          this.businessLine = saved;
+          this.normalizeMpCoefficients();
+          this.isNewRecord = false;
+          this.clearSchemaTreeUnsavedFlags();
+          this.updateChanges();
+          this.snack.open('Сохранено', 'OK', { duration: 2000 });
+        },
+        error: (err: unknown) => {
+          console.error(err);
+          const msg =
+            err && typeof err === 'object' && 'error' in err
+              ? (err as { error?: { message?: string } }).error?.message
+              : undefined;
+          this.snack.open(msg ?? 'Ошибка синхронизации схемы или сохранения документа', 'OK', {
+            duration: 4500,
+          });
+        },
       });
-    } else {
-      this.svc.update(this.businessLine.id, this.businessLine).subscribe((saved) => {
-        this.businessLine = saved;
-        this.isNewRecord = false;
-        this.syncTreeTableFromMpVars();
-        this.updateChanges();
-        this.snack.open('Сохранено', 'OK', { duration: 2000 });
-      });
-    }
-
   }
 
   addVar(): void {
@@ -791,6 +1063,223 @@ export class BusinessLineEditComponent implements OnInit {
   openTextVarDialog(data: any, cb: (res?: any)=>void) {
     const ref = this.dialog.open(TextVarEditDialog, { data });
     ref.afterClosed().subscribe(cb);
+  }
+
+  /** Гарантирует {@link BusinessLineEdit.mpCoefficients} и вложенные {@link BusinessLineCoefficient.columns}. */
+  private normalizeMpCoefficients(): void {
+    if (!this.businessLine.mpCoefficients) {
+      this.businessLine.mpCoefficients = [];
+    }
+    for (const c of this.businessLine.mpCoefficients) {
+      if (!c.columns) {
+        c.columns = [];
+      }
+    }
+  }
+
+  private ensureMpCoefficients(): void {
+    this.normalizeMpCoefficients();
+  }
+
+  lobColumnKey(col: BusinessLineCoefficientColumn): string {
+    return `${col.nr}|${col.varCode}|${col.conditionOperator}|${col.sortOrder}`;
+  }
+
+  get selectedCoefficientColumns(): BusinessLineCoefficientColumn[] {
+    if (this.selectedCoefficientIndex < 0) {
+      return [];
+    }
+    this.ensureMpCoefficients();
+    const c = this.businessLine.mpCoefficients![this.selectedCoefficientIndex];
+    return c?.columns ?? [];
+  }
+
+  addCoefficient(): void {
+    this.ensureMpCoefficients();
+    const ref = this.dialog.open(BusinessLineCoefficientDialogComponent, {
+      width: '600px',
+      data: {
+        isNew: true,
+        vars: this.businessLine.mpVars,
+      },
+    });
+    ref.afterClosed().subscribe((result: BusinessLineCoefficient | undefined) => {
+      if (!result) {
+        return;
+      }
+      if (!result.columns) {
+        result.columns = [];
+      }
+      this.ensureMpCoefficients();
+      this.businessLine.mpCoefficients = [...this.businessLine.mpCoefficients!, result];
+      this.updateChanges();
+    });
+  }
+
+  editCoefficient(row: BusinessLineCoefficient, ev?: Event): void {
+    ev?.stopPropagation();
+    this.ensureMpCoefficients();
+    const idx = this.businessLine.mpCoefficients!.findIndex((c) => c.varCode === row.varCode);
+    if (idx < 0) {
+      return;
+    }
+    const ref = this.dialog.open(BusinessLineCoefficientDialogComponent, {
+      width: '600px',
+      data: {
+        isNew: false,
+        coefficient: this.businessLine.mpCoefficients![idx],
+        vars: this.businessLine.mpVars,
+      },
+    });
+    ref.afterClosed().subscribe((result: BusinessLineCoefficient | undefined) => {
+      if (!result) {
+        return;
+      }
+      if (!result.columns) {
+        result.columns = [];
+      }
+      this.businessLine.mpCoefficients![idx] = result;
+      if (this.selectedCoefficientVarCode === row.varCode) {
+        this.selectedCoefficientVarCode = result.varCode;
+      }
+      this.updateChanges();
+    });
+  }
+
+  deleteCoefficient(row: BusinessLineCoefficient, ev?: Event): void {
+    ev?.stopPropagation();
+    this.ensureMpCoefficients();
+    const idx = this.businessLine.mpCoefficients!.findIndex((c) => c.varCode === row.varCode);
+    if (idx < 0 || !confirm('Удалить коэффициент?')) {
+      return;
+    }
+    this.businessLine.mpCoefficients!.splice(idx, 1);
+    if (this.selectedCoefficientIndex === idx) {
+      this.selectedCoefficientIndex = -1;
+      this.selectedCoefficientVarCode = null;
+      this.selectedLobColumnKey = null;
+    } else if (this.selectedCoefficientIndex > idx) {
+      this.selectedCoefficientIndex--;
+    }
+    this.updateChanges();
+  }
+
+  onCoefficientRowClick(row: BusinessLineCoefficient): void {
+    this.ensureMpCoefficients();
+    const idx = this.businessLine.mpCoefficients!.findIndex((c) => c.varCode === row.varCode);
+    if (idx < 0) {
+      return;
+    }
+    this.selectedCoefficientIndex = idx;
+    this.selectedCoefficientVarCode = row.varCode;
+    this.selectedLobColumnKey = null;
+  }
+
+  isCoefficientRowSelected(row: BusinessLineCoefficient): boolean {
+    return this.selectedCoefficientVarCode === row.varCode;
+  }
+
+  showLobCoefficientSql(): void {
+    if (this.selectedCoefficientIndex < 0) {
+      this.snack.open('Выберите коэффициент', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.ensureMpCoefficients();
+    const coef = this.businessLine.mpCoefficients![this.selectedCoefficientIndex];
+    const sql = buildCoefficientDataSqlTemplate(0, coef.varCode, coef.columns ?? []);
+    if (sql == null) {
+      this.snack.open(
+        'Не удалось построить SQL: проверьте колонки (операторы и сортировку).',
+        'Закрыть',
+        { duration: 4500 },
+      );
+      return;
+    }
+    this.dialog.open(SqlDialogComponent, {
+      width: '700px',
+      minWidth: '500px',
+      data: { sql },
+    });
+  }
+
+  addColumn(): void {
+    if (this.selectedCoefficientIndex < 0) {
+      return;
+    }
+    this.ensureMpCoefficients();
+    const coef = this.businessLine.mpCoefficients![this.selectedCoefficientIndex];
+    const ref = this.dialog.open(BusinessLineColumnDialogComponent, {
+      width: '900px',
+      minWidth: '900px',
+      data: {
+        isNew: true,
+        vars: this.businessLine.mpVars,
+        conditionOperatorOptions: this.conditionOperatorOptions,
+        sortOrderOptions: this.sortOrderOptions,
+      },
+    });
+    ref.afterClosed().subscribe((result: BusinessLineCoefficientColumn | undefined) => {
+      if (!result) {
+        return;
+      }
+      const prev = coef.columns ?? [];
+      coef.columns = [...prev, result];
+      this.updateChanges();
+    });
+  }
+
+  editColumn(column: BusinessLineCoefficientColumn, ev?: Event): void {
+    ev?.stopPropagation();
+    if (this.selectedCoefficientIndex < 0) {
+      return;
+    }
+    this.ensureMpCoefficients();
+    const coef = this.businessLine.mpCoefficients![this.selectedCoefficientIndex];
+    const index = coef.columns.indexOf(column);
+    if (index < 0) {
+      return;
+    }
+    this.selectedLobColumnKey = this.lobColumnKey(column);
+    const ref = this.dialog.open(BusinessLineColumnDialogComponent, {
+      width: '900px',
+      minWidth: '900px',
+      data: {
+        isNew: false,
+        column: { ...column },
+        vars: this.businessLine.mpVars,
+        conditionOperatorOptions: this.conditionOperatorOptions,
+        sortOrderOptions: this.sortOrderOptions,
+      },
+    });
+    ref.afterClosed().subscribe((result: BusinessLineCoefficientColumn | undefined) => {
+      if (!result) {
+        return;
+      }
+      coef.columns[index] = result;
+      this.selectedLobColumnKey = this.lobColumnKey(result);
+      this.updateChanges();
+    });
+  }
+
+  isLobColumnRowSelected(column: BusinessLineCoefficientColumn): boolean {
+    return this.selectedLobColumnKey === this.lobColumnKey(column);
+  }
+
+  deleteColumn(column: BusinessLineCoefficientColumn, ev?: Event): void {
+    ev?.stopPropagation();
+    if (this.selectedCoefficientIndex < 0) {
+      return;
+    }
+    const cols = this.businessLine.mpCoefficients![this.selectedCoefficientIndex].columns;
+    const index = cols.indexOf(column);
+    if (index < 0 || !confirm('Удалить колонку?')) {
+      return;
+    }
+    cols.splice(index, 1);
+    if (this.selectedLobColumnKey === this.lobColumnKey(column)) {
+      this.selectedLobColumnKey = null;
+    }
+    this.updateChanges();
   }
 
 }

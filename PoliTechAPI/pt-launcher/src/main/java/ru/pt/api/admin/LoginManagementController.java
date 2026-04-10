@@ -78,7 +78,7 @@ public class LoginManagementController extends SecuredController {
                     loginId,
                     request.getFullName(),
                     request.getPosition(),
-                    request.getIsDeleted()
+                    request.getRecordStatus()
             ));
     }
 
@@ -97,7 +97,7 @@ public class LoginManagementController extends SecuredController {
                     loginId,
                     request.getFullName(),
                     request.getPosition(),
-                    request.getIsDeleted()
+                    request.getRecordStatus()
             ));
     }
 

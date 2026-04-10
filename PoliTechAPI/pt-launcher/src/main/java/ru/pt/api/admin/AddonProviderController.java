@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.addon.ProviderDto;
-import ru.pt.api.dto.addon.ProviderListDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.addon.AddOnProviderService;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -29,7 +28,7 @@ public class AddonProviderController extends SecuredController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProviderListDto>> getProviders(@PathVariable String tenantCode) {
+    public ResponseEntity<List<ProviderDto>> getProviders(@PathVariable String tenantCode) {
         return ResponseEntity.ok(addOnProviderService.getProviders());
     }
 
@@ -44,7 +43,10 @@ public class AddonProviderController extends SecuredController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProviderDto> updateProvider(@PathVariable String tenantCode, @PathVariable Long id, @RequestBody ProviderDto dto) {
+    public ResponseEntity<ProviderDto> updateProvider(
+        @PathVariable String tenantCode, 
+        @PathVariable Long id, 
+        @RequestBody ProviderDto dto) {
         dto.setId(id);
         return ResponseEntity.ok(addOnProviderService.updateProvider(dto));
     }

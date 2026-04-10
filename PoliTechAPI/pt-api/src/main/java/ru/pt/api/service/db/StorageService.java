@@ -1,7 +1,6 @@
 package ru.pt.api.service.db;
 
 import ru.pt.api.dto.db.PolicyData;
-import ru.pt.api.dto.versioning.Version;
 import ru.pt.api.security.AuthenticatedUser;
 
 import java.util.List;
@@ -46,7 +45,7 @@ public interface StorageService {
      * @param policyNumber номер полиса для обновления
      * @return обновленный договор
      */
-    PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber);
+   // PolicyData update(String policy, AuthenticatedUser userData, Version version, String policyNumber);
 
     /**
      * Получить данные по айди договора

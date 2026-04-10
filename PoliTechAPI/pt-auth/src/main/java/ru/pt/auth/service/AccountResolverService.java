@@ -11,7 +11,7 @@ import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.security.context.RequestContext;
-import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.auth.ClientAuthLevel;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
 @Service
@@ -34,7 +34,7 @@ public class AccountResolverService {
         String tenantCode = requestContext.getTenant();
         String authClientId = requestContext.getClient();
         String userLogin = requestContext.getLogin();
-        String accountId = requestContext.getAccount();
+        Long accountId = requestContext.getAccount();
         
         if (tenantCode == null || tenantCode.isEmpty()) {
             throw new NotFoundException("TenantContext not set");
@@ -50,7 +50,7 @@ public class AccountResolverService {
         }
 
         // Если это CLIENT_AUTH то всегда берем экаутн с клиента
-        if (clientSecurityConfig.authLevel() == ClientAuthType.CLIENT) {
+        if (clientSecurityConfig.authLevel() == ClientAuthLevel.CLIENT) {
             //  это клиентский аккаунт.Но нет дефолтного аккаунта.
             Long defaultAccountId = clientSecurityConfig.defaultAccountId();
 
@@ -58,16 +58,16 @@ public class AccountResolverService {
                 throw new UnprocessableEntityException("Default account not set for client: " + authClientId);
             }
             // если accountId задан, то проверяем, что он равен defaultAccountId. Иначе выбрасываем ошибку.
-            if (accountId != null && !accountId.equals(defaultAccountId.toString())) {
+            if (accountId != null && !accountId.equals(defaultAccountId)) {
                 throw new UnprocessableEntityException("Account in context is invalid for this user");
             }
             // текущий эккаун это клиентский экаутн.
-            requestContext.setAccount(defaultAccountId.toString());
+            requestContext.setAccount(defaultAccountId);
             return;
         }
 
         // Это USER_AUTH и если экаунт передан в заголовке то ничего не переопределяем. Проверим в следующем фильтре
-        if (accountId != null && !accountId.isEmpty()) {
+        if (accountId != null) {
             return;
         }
 
@@ -92,6 +92,6 @@ public class AccountResolverService {
                     .findFirst()
                     .orElse(accountLogins.getFirst());
         
-        requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
+        requestContext.setAccount(defaultAccountLogin.getAccount().getId());
     }
 }

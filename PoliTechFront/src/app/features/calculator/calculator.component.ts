@@ -281,6 +281,7 @@ export class CalculatorComponent implements OnInit {
           return;
         }
         
+        result.varCdm = 'CALCULATOR';
         this.calculator.vars.push(result);
         this.updateVarsTable();
         this.updateChanges();
@@ -682,7 +683,7 @@ export class CalculatorComponent implements OnInit {
           varType: 'COEFFICIENT',
           varValue: '',
           varDataType: 'NUMBER',
-          varCdm: '',
+          varCdm: 'CALCULATOR',
           varNr: 10000
         }
         this.newCalculatorVar(varItem);

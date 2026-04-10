@@ -10,24 +10,27 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.numbers.NumberGeneratorService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.api.service.product.ProductServiceCRUD;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.AttributeDefEntity;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 
-import ru.pt.product.repository.InsuranceCompanyRepository;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
-import ru.pt.product.utils.JsonExampleBuilder;
+
 import ru.pt.product.utils.ProductMapper;
 
 import java.time.ZonedDateTime;
@@ -40,15 +43,21 @@ import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
 
 import org.springframework.context.annotation.Lazy;
+import lombok.RequiredArgsConstructor;
 
+import jakarta.persistence.Id;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.auth.AuthZ.Action;
 import ru.pt.api.service.auth.AuthZ.ResourceType;
 import ru.pt.api.service.calculator.CalculatorService;
-
+import ru.pt.api.service.schema.SchemaService;
 import ru.pt.product.repository.AttributeDefRepository;
 
-@Component
+import ru.pt.api.dto.refs.RecordStatus;
+import ru.pt.product.repository.InsuranceCompanyRepository;
+
+@Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
@@ -62,35 +71,10 @@ public class ProductServiceImpl implements ProductService {
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationService authService;
     private final CalculatorService calculatorService;
-    private final AttributeDefRepository attributeDefRepository;
+    private final ProductServiceCRUD productServiceCRUD;   
     private final InsuranceCompanyRepository insuranceCompanyRepository;
-
-    // Constructor with @Lazy to break circular dependency with CalculatorService
-    public ProductServiceImpl(
-            ProductRepository productRepository,
-            ProductMapper productMapper,
-            LobService lobService,
-            ObjectMapper objectMapper,
-            ProductVersionRepository productVersionRepository,
-            NumberGeneratorService numberGeneratorService,
-            SecurityContextHelper securityContextHelper,
-            AuthorizationService authService,
-            @Lazy CalculatorService calculatorService,
-            AttributeDefRepository attributeDefRepository,
-            InsuranceCompanyRepository insuranceCompanyRepository) {
-        this.productRepository = productRepository;
-        this.productMapper = productMapper;
-        this.lobService = lobService;
-        this.objectMapper = objectMapper;
-        this.productVersionRepository = productVersionRepository;
-        this.numberGeneratorService = numberGeneratorService;
-        this.securityContextHelper = securityContextHelper;
-        this.authService = authService;
-        this.calculatorService = calculatorService;
-        this.attributeDefRepository = attributeDefRepository;
-        this.insuranceCompanyRepository = insuranceCompanyRepository;
-    }
-
+    private final AttributeDefRepository attributeDefRepository;
+    private final SchemaService schemaService;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -101,31 +85,16 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"));
     }
 
-    /**
-     * Get current tenant ID from authenticated user
-     * @return Long representing the current tenant ID
-     * @throws ru.pt.api.dto.exception.BadRequestException if user is not authenticated
-     */
-    protected Long getCurrentTenantId() {
-        return getCurrentUser().getTenantId();
-    }
-
-    private void checkProductAccess(Action action, String resourceId) {
-        AuthenticatedUser user = getCurrentUser();
-        Long resourceAccountId = user.getActingAccountId() != null ? user.getActingAccountId() : user.getAccountId();
-        authService.check(user, ResourceType.PRODUCT, resourceId, resourceAccountId, action);
-    }
-
-    private void assertInsCompanyBelongsToTenant(Long insCompanyId) {
+    private void assertInsCompanyBelongsToTenant(Long tid, Long insCompanyId) {
         if (insCompanyId == null) {
             return;
         }
-        insuranceCompanyRepository.findByTidAndId(getCurrentTenantId(), insCompanyId)
+        insuranceCompanyRepository.findByTidAndId(tid, insCompanyId)
                 .orElseThrow(() -> new BadRequestException("Insurance company not found for tenant: " + insCompanyId));
     }
 
     @Override
-    public List<Product> listSummaries(Long insComp) {
+    public List<Product> listSummaries(Long tenantId, Long insComp) {
 
         authService.check(
             getCurrentUser(), 
@@ -134,17 +103,16 @@ public class ProductServiceImpl implements ProductService {
             null,   // resourceAccountId - list all
             Action.LIST);
 
-        return productRepository.listActiveSummaries(getCurrentTenantId(), insComp).stream()
+        return productRepository.listActiveSummaries(tenantId, insComp).stream()
                 .map(r -> {
                     Product product = new Product();
-                    product.setId((Integer) r[0]);
+                    product.setId((Long) r[0]);
                     product.setLob((String) r[1]);
                     product.setCode((String) r[2]);
                     product.setName((String) r[3]);
-                    product.setProdVersionNo((Integer) r[4]);
-                    product.setDevVersionNo((Integer) r[5]);
+                    product.setProdVersionNo((Long) r[4]);
+                    product.setDevVersionNo((Long) r[5]);
                     product.setInsCompanyId((Long) r[6]);
-                    product.setDeleted(false);
                     return product;
                 })
                 .collect(Collectors.toList());
@@ -152,8 +120,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductVersionModel create(ProductVersionModel productVersionModel) {
-        checkProductAccess(Action.ALL, "product:create");
+    public ProductVersionModel create(Long tenantId, ProductVersionModel productVersionModel) {
+
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            null,  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
 
         if (StringUtils.isBlank(productVersionModel.getLob())) {
             throw new BadRequestException("lob must not be empty");
@@ -167,7 +141,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductEntity product = new ProductEntity();
-        product.setTId(getCurrentTenantId());
+        product.setTId(tenantId);
         
         var versionStatus = productVersionModel.getVersionStatus();
         if ( versionStatus == null || versionStatus.isEmpty()) {
@@ -180,7 +154,7 @@ public class ProductServiceImpl implements ProductService {
         } else {
             product.setDevVersionNo(productVersionModel.getVersionNo());
         }
-        product.setDeleted(false);
+        product.setRecordStatus(RecordStatus.ACTIVE.getValue());
         product.setLob(productVersionModel.getLob());
         product.setCode(productVersionModel.getCode());
         product.setName(productVersionModel.getName());
@@ -200,7 +174,7 @@ public class ProductServiceImpl implements ProductService {
 
         if (productVersionModel.getPackages().isEmpty()) {
             PvPackage pvPackage = new PvPackage();
-            pvPackage.setCode(0);
+            pvPackage.setCode("0");
             pvPackage.setName("0");
             productVersionModel.getPackages().add(pvPackage);
             pvPackage.setCovers(new ArrayList<>());
@@ -209,10 +183,16 @@ public class ProductServiceImpl implements ProductService {
         ProductVersionEntity pv = new ProductVersionEntity();
         pv.setProductId(saved.getId());
         pv.setVersionNo(productVersionModel.getVersionNo());
-        pv.setTid(getCurrentTenantId());
+        pv.setTid(tenantId);
+        pv.setProduct("{}");
+        pv.setId(productVersionRepository.nextId());
+
+        log.info("Saving product version {} {} {} {}", pv.getId(), pv.getVersionNo(), pv.getTid(), pv.getProductId());
+        productVersionRepository.save(pv);
+        log.info("Saved product version {} {} {} {}", pv.getId(), pv.getVersionNo(), pv.getTid(), pv.getProductId());
 
         log.info("Getting lob data by code {}", productVersionModel.getLob());
-        LobModel lob = lobService.getByCode(productVersionModel.getLob());
+        LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
         if (lob != null) {
             if (productVersionModel.getVars() == null) {
                 productVersionModel.setVars(new ArrayList<>());
@@ -227,6 +207,19 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setVarDataType(var.getVarDataType());
                 pvVar.setVarCdm(var.getVarCdm());
                 pvVar.setVarNr(var.getVarNr());
+                pvVar.setId(var.getId());
+                pvVar.setParent_id(var.getParent_id());
+                pvVar.setVarList(var.getVarList() != null ? var.getVarList() : "");
+                pvVar.setIsSystem(var.getIsSystem());
+                pvVar.setIsDeleted(var.getIsDeleted());
+                pvVar.setIsTarifFactor(false);
+                pvVar.setName(var.getName());
+
+                if (pvVar.getVarCode().startsWith("co_")) {
+                    pvVar.setIsTarifFactor(true);
+                    pvVar.setIsSystem(true);
+                }
+
                 productVersionModel.getVars().add(pvVar);
             }
         } else {
@@ -235,6 +228,29 @@ public class ProductServiceImpl implements ProductService {
 
         productVersionModel.setPhType( lob.getMpPhType() );
         productVersionModel.setIoType( lob.getMpInsObjectType() );
+
+        // если numberGeneratorDescription не задан, то создать его
+        if (productVersionModel.getNumberGeneratorDescription() == null) {
+            productVersionModel.setNumberGeneratorDescription(new NumberGeneratorDescription());
+        }
+        // создать number generator
+        var numberGeneratorDescription = createNumberGeneratorDescription(productVersionModel);
+        numberGeneratorService.create(tenantId, numberGeneratorDescription);
+
+        // установить id number generator в productVersionModel
+        productVersionModel.getNumberGeneratorDescription().setId(numberGeneratorDescription.getId());
+ 
+        // Для каждого пакета создать пустой калькулятор
+        productVersionModel.getPackages().forEach(pkg -> {
+            CalculatorModel calc = calculatorService.createCalculatorIfMissing(
+                tenantId,
+                saved.getId(),
+                productVersionModel.getCode(),
+                productVersionModel.getVersionNo(),
+                pkg.getCode()
+            );
+            pkg.setCalculatorId(calc.getId());
+        });
 
         String productJson;
         try {
@@ -247,26 +263,26 @@ public class ProductServiceImpl implements ProductService {
 
         productVersionRepository.save(pv);
 
-        //if productVersion.getNumberGenerator() is not null, then create a new number generator
-        if (productVersionModel.getNumberGeneratorDescription() != null) {
-            var numberGeneratorDescription = createNumberGeneratorDescription(productVersionModel);
-            numberGeneratorService.create(numberGeneratorDescription);
-        }
 
-        productVersionModel = syncCoversVars(productVersionModel);
         return productVersionModel;
     }
 
     @Override
-    public ProductVersionModel publishToProd(Integer productId, Integer versionNo) {
-        checkProductAccess(Action.GO2PROD, String.valueOf(productId));
+    public ProductVersionModel publishToProd(Long tenantId, Long productId, Long versionNo) {
 
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(productId),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.GO2PROD);
+
+        ProductEntity product = productRepository.findById(tenantId, productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null) {
             throw new UnprocessableEntityException("No dev version to publish");
         }
-        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), productId, product.getDevVersionNo())
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, product.getDevVersionNo())
                 .orElseThrow(() -> new NotFoundException("Version not found"));
         ProductVersionModel productVersionModel;
         try {
@@ -288,44 +304,42 @@ public class ProductServiceImpl implements ProductService {
         product.setDevVersionNo(null);
         productRepository.save(product);
 
-        return getVersion(productId, product.getProdVersionNo());
+        Long prodVer = product.getProdVersionNo();
+        return getVersion(tenantId, productId, prodVer != null ? prodVer : null);
     }
 
     @Override
-    public ProductVersionModel getVersion(Integer id, Integer versionNo) {
-        checkProductAccess(Action.VIEW, String.valueOf(id));
-        try {
-            ProductEntity productEntity = productRepository.findById(getCurrentTenantId(), id)
-                    .orElseThrow(() -> new NotFoundException("Product not found"));
-            ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
-                    .orElse(null);
-            if (pv == null) {
-                throw new NotFoundException("Version not found");
-            }
-            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
-            model.setInsCompanyId(productEntity.getInsCompanyId());
-            return model;
-        } catch (NotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new NotFoundException("Version not found");
-        }
+    public ProductVersionModel getVersion(Long tenantId, Long productId, Long versionNo) {
+        authService.check(
+            getCurrentUser(),
+            ResourceType.PRODUCT,
+            String.valueOf(productId),
+            tenantId,
+            Action.VIEW);
+
+        return productServiceCRUD.getVersion(tenantId, productId, versionNo);
     }
 
     @Override
-    public ProductVersionModel createVersionFrom(Integer id, Integer versionNo) {
-        checkProductAccess(Action.CREATE, String.valueOf(id));
+    public ProductVersionModel createVersionFrom(Long tenantId, Long productId, Long versionNo) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(productId),
+            tenantId,
+            Action.CREATE);
 
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
+        ProductEntity product = productRepository.findById(tenantId, productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (product.getDevVersionNo() != null) {
             throw new UnprocessableEntityException("only one version can be in dev status");
         }
 
-        int newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
+        Long newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
 
-        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
+        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
                 .orElseThrow(() -> new NotFoundException("Base version not found"))
                 .getProduct();
 
@@ -340,12 +354,10 @@ public class ProductServiceImpl implements ProductService {
         productVersionModel.setVersionStatus("DEV");
         productVersionModel.setInsCompanyId(product.getInsCompanyId());
 
-        productVersionModel = syncCoversVars(productVersionModel);
-
         ProductVersionEntity pv = new ProductVersionEntity();
-        pv.setProductId(id);
+        pv.setProductId(productId);
         pv.setVersionNo(newVersion);
-        pv.setTid(getCurrentTenantId());
+        pv.setTid(tenantId);
         try {
             pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
         } catch (JsonProcessingException e) {
@@ -357,32 +369,47 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
 
         // Copy calculators for each package from old version to new version
-        productVersionModel.getPackages().forEach(pkg -> 
-            calculatorService.copyCalculator(id, versionNo, pkg.getCode(), newVersion)
+        productVersionModel.getPackages().forEach(pkg ->
+            calculatorService.copyCalculator(tenantId, productId, versionNo, pkg.getCode(), newVersion)
         );
 
         return productVersionModel;
     }
 
     @Override
-    public ProductVersionModel updateVersion(Integer id, Integer versionNo, ProductVersionModel newProductVersionModel) {
-        checkProductAccess(Action.ALL, String.valueOf(id));
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
+    public ProductVersionModel updateVersion(Long tenantId, Long productId, Long versionNo, ProductVersionModel newProductVersionModel) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            productId.toString(),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
+
+        ProductEntity product = productRepository.findById(tenantId, productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
             throw new UnprocessableEntityException("only dev version can be updated");
         }
 
-        newProductVersionModel.setId(id);
+        newProductVersionModel.setId(productId);
         newProductVersionModel.setVersionNo(versionNo);
         newProductVersionModel.setVersionStatus("DEV");
 
-        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo)
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
                 .orElseThrow(() -> new NotFoundException("Version not found"));
 
-        newProductVersionModel = syncCoversVars(newProductVersionModel);
 
-        assertInsCompanyBelongsToTenant(newProductVersionModel.getInsCompanyId());
+        if ( versionNo == 1 ) {
+                    // code
+            product.setCode(newProductVersionModel.getCode());
+        }
+        
+        product.setName(newProductVersionModel.getName());
+        product.setInsCompanyId(newProductVersionModel.getInsCompanyId());
+        
+        
+        assertInsCompanyBelongsToTenant(tenantId, newProductVersionModel.getInsCompanyId());
         product.setInsCompanyId(newProductVersionModel.getInsCompanyId());
         productRepository.save(product);
 
@@ -396,44 +423,66 @@ public class ProductServiceImpl implements ProductService {
         pv.setProduct(newProductVersionJson);
         productVersionRepository.save(pv);
 
-        if (newProductVersionModel.getNumberGeneratorDescription() != null) {
-        
-            var description = createNumberGeneratorDescription(newProductVersionModel);
-            try {
-                numberGeneratorService.update(description);
-            } catch (Exception e) {
-                log.warn(e.getMessage());
-            }
-        }
+        newProductVersionModel.getPackages().forEach(pkg ->
+            calculatorService.createCalculatorIfMissing(tenantId, productId, newProductVersionModel.getCode(), versionNo, pkg.getCode())
+        );
 
         return newProductVersionModel;
     }
 
     @Override
-    public void softDeleteProduct(Integer id) {
-        checkProductAccess(Action.ALL, String.valueOf(id));
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
+    public void softDeleteProduct(Long tenantId, Long id) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(id),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
+
+        ProductEntity product = productRepository.findById(tenantId, id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
-        product.setDeleted(true);
+        product.setRecordStatus(RecordStatus.DELETED.getValue());
         productRepository.save(product);
     }
 
     @Override
     @Transactional
-    public void deleteVersion(Integer id, Integer versionNo) {
-        checkProductAccess(Action.ALL, String.valueOf(id));
+    public void deleteVersion(Long tenantId, Long id, Long versionNo) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(id),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
 
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), id)
+        ProductEntity product = productRepository.findById(tenantId, id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
             throw new UnprocessableEntityException("only dev version can be deleted");
         }
-        int deleted = productVersionRepository.deleteByProductIdAndVersionNo(getCurrentTenantId(), id, versionNo);
+        ProductVersionEntity pvEntity = productVersionRepository.findByProductIdAndVersionNo(tenantId, id, versionNo)
+                .orElseThrow(() -> new NotFoundException("Version not found"));
+        ProductVersionModel pvModel;
+        try {
+            pvModel = objectMapper.readValue(pvEntity.getProduct(), ProductVersionModel.class);
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
+        }
+        if (pvModel.getPackages() != null) {
+            for (PvPackage pkg : pvModel.getPackages()) {
+                if (pkg.getCode() != null) {
+                    calculatorService.deleteCalculator(tenantId, id, versionNo, pkg.getCode());
+                }
+            }
+        }
+        Long deleted = productVersionRepository.deleteByProductIdAndVersionNo(tenantId, id, versionNo);
         if (deleted == 0) {
             throw new NotFoundException("Version not found");
         }
         product.setDevVersionNo(null);
-        Integer pv = product.getProdVersionNo();
+        Long pv = product.getProdVersionNo();
         if (pv == null) {
             // это первая версия, ни разу не була в проде. 
             productRepository.delete(product);
@@ -441,192 +490,148 @@ public class ProductServiceImpl implements ProductService {
 //        product.setProdVersionNo(pv == null ? null : Math.max(0, pv));
             productRepository.save(product);
         }
-
-        calculatorService.deleteCalculator(deleted, versionNo, versionNo);
     }
 
 
     @Override
-    public String getJsonExampleQuote(Integer id, Integer versionNo) {
-        checkProductAccess(Action.VIEW, String.valueOf(id));
-        ProductVersionModel productVersionModel = getVersion(id, versionNo);
-        LobModel lob = lobService.getByCode(productVersionModel.getLob());
+    public String getJsonExampleQuote(Long tenantId, Long id, Long versionNo) {
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(id),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
 
-        List<String> jsonPaths = new ArrayList<>();
-        Map<String, String> jsonValues = new HashMap<>();
+        ProductVersionModel productVersionModel = getVersion(tenantId, id, versionNo);
 
-        jsonPaths.add("draftId");
-        jsonValues.put("draftId", "");
-
-        jsonPaths.add("productCode");
-        jsonValues.put("productCode", productVersionModel.getCode());
-
-//        jsonPaths.add("package");
-//        jsonValues.put("package", "0");
-
-        jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", formattedNow());
-
-//        jsonPaths.add("insuredObjects.ioType");
-//        jsonValues.put("insuredObjects.ioType", "Person");
-
-        jsonPaths.add("insuredObjects.sumInsured");
-        jsonValues.put("insuredObjects.sumInsured", "");
-
-        jsonPaths.add("insuredObjects.packageCode");
-        jsonValues.put("insuredObjects.packageCode", "0");
-
-        try {
-        if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-            String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
-            if (values.length > 1) {
-                jsonPaths.add("waitingPeriod");
-                jsonValues.put("waitingPeriod", values[0].trim());
+        List<PvVar> vars = productVersionModel.getVars();
+        Map<String, String> varValues = new HashMap<>();
+        for (PvVar var : vars) {
+            if (var.getIsDeleted()) {
+                continue;
             }
-        } else {
-            jsonPaths.add("startDate");
-            jsonValues.put("startDate", formattedNow());
-        }
-        } catch (Exception e) {}
-
-        try {
-        if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-            String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
-            if (values.length > 1) {
-                jsonPaths.add("policyTerm");
-                jsonValues.put("policyTerm", values[0].trim());
+            if (!var.getIsTarifFactor()) {
+                continue;
             }
-        } else {
-            jsonPaths.add("endDate");
-            jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
+            varValues.put(var.getVarCode(), var.getVarValue());
         }
-        } catch (Exception e) {}
 
-        Set<String> validatorKeys = new HashSet<>();
-
-        productVersionModel.getQuoteValidator().forEach(validator -> {
-            validatorKeys.add(validator.getKeyLeft());
-            validatorKeys.add(validator.getKeyRight());
-        });
-
-        // for each validatorKeys get path by key from lob.mpVars
-        lob.getMpVars().forEach(mpVar -> {
-            if (validatorKeys.contains(mpVar.getVarCode())) {
-                jsonPaths.add(mpVar.getVarPath());
-            }
-        });
-
+        varValues.put("pl_productCode", productVersionModel.getCode());        
+        varValues.put("pl_issueDate", formattedNow());
+        varValues.put("io_packageCode", "0");
         try {
-            return JsonExampleBuilder.buildJsonExampleProduct(jsonPaths, jsonValues);
-        } catch (Exception e) {
-            return "{}";
-        }
+            if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
+                String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    varValues.put("waitingPeriod", values[0].trim());
+                }
+            } else {
+                varValues.put("startDate", formattedNow());
+            }
+            } catch (Exception e) {}
+    
+            try {
+            if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
+                String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    varValues.put("policyTerm", values[0].trim());
+                }
+            } else {
+                varValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
+            }
+            } catch (Exception e) {}
+    
+            
+        String schemaJson = schemaService.getAttributesMetadataJson(
+                getCurrentUser().getTenantId(),
+                SchemaService.INSURANCE_CONTRACT,
+                varValues);
+
+        return schemaJson;
+
     }
 
     @Override
-    public String getJsonExampleSave(Integer id, Integer versionNo) {
-        checkProductAccess(Action.VIEW, String.valueOf(id));
-        ProductVersionModel productVersionModel = getVersion(id, versionNo);
-        LobModel lob = lobService.getByCode(productVersionModel.getLob());
+    public String getJsonExampleSave(Long tenantId, Long id, Long versionNo) {
 
-        List<String> jsonPaths = new ArrayList<>();
-        Map<String, String> jsonValues = new HashMap<>();
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(id),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
 
-        productVersionModel.getVars().forEach(mpVar -> {
-            if (mpVar.getVarType().equals("IN")) {
-                String path = mpVar.getVarCdm();
-                path = path.replace("policy.policy.", "");
-                jsonPaths.add( path);
-                jsonValues.put(path, mpVar.getVarValue());
+        ProductVersionModel productVersionModel = getVersion(tenantId, id, versionNo);
+
+        List<PvVar> vars = productVersionModel.getVars();
+        Map<String, String> varValues = new HashMap<>();
+        for (PvVar var : vars) {
+            if (var.getIsDeleted()) {
+                continue;
             }
-        });
+            varValues.put(var.getVarCode(), var.getVarValue());
+        }
 
-//        jsonPaths.add("draftId");
-//        jsonValues.put("draftId", "");
-
-        jsonPaths.add("productCode");
-        jsonValues.put("productCode", productVersionModel.getCode());
-
-//        jsonPaths.add("package");
-//        jsonValues.put("package", "0");
-
-        jsonPaths.add("issueDate");
-        jsonValues.put("issueDate", formattedNow());
-
-//        jsonPaths.add("insuredObjects.ioType");
-//        jsonValues.put("insuredObjects.ioType", "Person");
-
-        jsonPaths.add("insuredObject.sumInsured");
-        jsonValues.put("insuredObject.sumInsured", "");
-
-        jsonPaths.add("insuredObject.packageCode");
-        jsonValues.put("insuredObject.packageCode", "0");
-
+        varValues.put("pl_productCode", productVersionModel.getCode());        
+        varValues.put("pl_issueDate", formattedNow());
+        varValues.put("io_packageCode", "0");
         try {
-        if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-            String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
-            if (values.length > 1) {
-                jsonPaths.add("waitingPeriod");
-                jsonValues.put("waitingPeriod", values[0].trim());
+            if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
+                String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    varValues.put("waitingPeriod", values[0].trim());
+                }
+            } else {
+                varValues.put("startDate", formattedNow());
             }
-        } else {
-            jsonPaths.add("startDate");
-            jsonValues.put("startDate", formattedNow());
-        }
-        } catch (Exception e) {}
-
-        try {
-        if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-            String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
-            if (values.length > 1) {
-                jsonPaths.add("policyTerm");
-                jsonValues.put("policyTerm", values[0].trim());
+            } catch (Exception e) {}
+    
+            try {
+            if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
+                String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    varValues.put("policyTerm", values[0].trim());
+                }
+            } else {
+                varValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
             }
-        } else {
-            jsonPaths.add("endDate");
-            jsonValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
-        }
-        } catch (Exception e) {}
+            } catch (Exception e) {}
+    
+            
+        String schemaJson = schemaService.getAttributesMetadataJson(
+                getCurrentUser().getTenantId(),
+                SchemaService.INSURANCE_CONTRACT,
+                varValues);
 
-        
-
-
-
-
-        try {
-            return JsonExampleBuilder.buildJsonExampleProduct(jsonPaths, jsonValues);
-        } catch (Exception e) {
-            return "{}";
-        }
+        return schemaJson;
     }
 
     @Override
-    public ProductVersionModel getProduct(Integer id, boolean forDev) {
-        //checkProductAccess(Action.VIEW, String.valueOf(id));
-        var entity = productRepository.findById(getCurrentTenantId(), id)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
+    public ProductVersionModel getProduct(Long tenantId, Long id, boolean forDev) {
+        authService.check(
+            getCurrentUser(),
+            ResourceType.PRODUCT,
+            String.valueOf(id),
+            tenantId,
+            Action.VIEW);
 
-        var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
-        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
-                .orElseThrow();
-        try {
-            ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
-            model.setInsCompanyId(entity.getInsCompanyId());
-            return model;
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
+        return productServiceCRUD.getProduct(tenantId, id, forDev);
     }
 
-    //get product by code and isDeletedFalse
+    //get product by code and recordStatus = ACTIVE
     @Override
-    public ProductVersionModel getProductByCode(String code, boolean forDev) {
+    public ProductVersionModel getProductByCode(Long tenantId, String code, boolean forDev) {
 //        checkProductAccess(Action.VIEW, code);
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            code,  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
 
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
-        var entity = productRepository.findByCode(getCurrentTenantId(), code)
+        var entity = productRepository.findByCode(tenantId, code)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
@@ -634,7 +639,7 @@ public class ProductServiceImpl implements ProductService {
         if (versionNo == null) {
             throw new UnprocessableEntityException("Нет подходящей версии продукта для расчета");
         }
-        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
+        var pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, entity.getId(), versionNo)
                 .orElseThrow();
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -646,15 +651,21 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductVersionModel getProductByCodeAndVersionNo(String code, Integer versionNo) {
-        checkProductAccess(Action.VIEW, code);
+    public ProductVersionModel getProductByCodeAndVersionNo(Long tenantId, String code, Long versionNo) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            code,  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
 
         log.info("Finging product by code {}, versionNo - {}", code, versionNo);
 
-        var entity = productRepository.findByCode(getCurrentTenantId(), code)
+        var entity = productRepository.findByCode(tenantId, code)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
-        var pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), entity.getId(), versionNo)
+        var pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, entity.getId(), versionNo)
                 .orElseThrow();
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
@@ -666,19 +677,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> getProductByAccountId(String accountId) {
-        checkProductAccess(Action.VIEW, accountId);
+    public List<Product> getProductByAccountId(Long tenantId, String accountId) {
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            accountId,  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
         var productId = productRepository.findProductIdEntityByAccountId(Long.parseLong(accountId));
         return productRepository.findAllById(productId).stream()
+                .filter(p -> tenantId.equals(p.getTId()))
                 .map(productMapper::toDto).toList();
     }
 
     @Override
-    public List<PvVar> getPvVars() {
+    public List<PvVar> getPvVars(Long tenantId) {
         // Only check that user is authenticated, no authorization check
-        var user = getCurrentUser();
-        
-        List<AttributeDefEntity> metadata = attributeDefRepository.findByTenantAndModelCode(user.getTenantId(), "box1");
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            null,  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.VIEW);
+
+        List<AttributeDefEntity> metadata = attributeDefRepository.findByTenantAndModelCode(tenantId, "box1");
 
         return metadata.stream()
                 .map(this::mapMetadataToVar)
@@ -687,20 +709,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductVersionModel reloadVars(Integer productId, Integer versionNo, String category) {
-        checkProductAccess(Action.ALL, String.valueOf(productId));
+    public ProductVersionModel reloadVars(Long tenantId, Long productId, Long versionNo, String category) {
+        
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(productId),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
 
         if (category == null || category.isBlank()) {
             throw new BadRequestException("category must not be empty");
         }
 
-        ProductEntity product = productRepository.findById(getCurrentTenantId(), productId)
+        ProductEntity product = productRepository.findById(tenantId, productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
-            throw new UnprocessableEntityException("only dev version can be updated");
+            throw new UnprocessableEntityException("only dev version can be reloaded");
         }
 
-        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(getCurrentTenantId(), productId, versionNo)
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
                 .orElseThrow(() -> new NotFoundException("Version not found"));
 
         ProductVersionModel productVersionModel;
@@ -726,7 +754,7 @@ public class ProductServiceImpl implements ProductService {
                 && var.getVarCdm() != null
                 && var.getVarCdm().startsWith(categoryPrefix));
 
-        LobModel lob = lobService.getByCode(productVersionModel.getLob());
+        LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
         if (lob != null && lob.getMpVars() != null) {
             for (LobVar var : lob.getMpVars()) {
                 if (var.getVarCdm() == null || !var.getVarCdm().startsWith(categoryPrefix)) {
@@ -784,51 +812,12 @@ public class ProductServiceImpl implements ProductService {
         return pvVar;
     }
 
-    private ProductVersionModel syncCoversVars(ProductVersionModel productVersionModel) {
-        if (productVersionModel == null) {
-            return productVersionModel;
-        }
-
-        List<PvVar> existingVars = productVersionModel.getVars();
-        List<PvVar> vars;
-        if (existingVars == null) {
-            vars = new java.util.ArrayList<>();
-        } else {
-            // Create a new list to avoid potential issues with unmodifiable lists
-            vars = new java.util.ArrayList<>(existingVars);
-        }
-
-        // Remove existing cover-related vars
-        vars.removeIf(var -> var != null && var.getVarCode() != null && var.getVarCode().startsWith("co_"));
-
-        // Add vars for each cover in each package
-        List<PvPackage> packages = productVersionModel.getPackages();
-        if (packages != null) {
-            for (PvPackage pkg : packages) {
-                if (pkg != null && pkg.getCovers() != null) {
-                    for (PvCover cover : pkg.getCovers()) {
-                        if (cover != null && cover.getCode() != null) {
-                            vars.add(PvVar.varSumInsured(cover.getCode()));
-                            vars.add(PvVar.varPremium(cover.getCode()));
-                            vars.add(PvVar.varDeductibleNr(cover.getCode()));
-                            vars.add(PvVar.varLimitMin(cover.getCode()));
-                            vars.add(PvVar.varLimitMax(cover.getCode()));
-                        }
-                    }
-                }
-            }
-        }
-
-        productVersionModel.setVars(vars);
-        return productVersionModel;
-    }
-
     private static NumberGeneratorDescription createNumberGeneratorDescription(ProductVersionModel productVersionModel) {
         NumberGeneratorDescription numberGeneratorDescription = new NumberGeneratorDescription();
         numberGeneratorDescription.setId(productVersionModel.getId());
         numberGeneratorDescription.setMask(productVersionModel.getNumberGeneratorDescription().getMask());
         numberGeneratorDescription.setMaxValue(productVersionModel.getNumberGeneratorDescription().getMaxValue());
-        numberGeneratorDescription.setProductCode(productVersionModel.getCode());
+//        numberGeneratorDescription.setProductCode(productVersionModel.getCode());
         numberGeneratorDescription.setResetPolicy(productVersionModel.getNumberGeneratorDescription().getResetPolicy());
         return numberGeneratorDescription;
     }

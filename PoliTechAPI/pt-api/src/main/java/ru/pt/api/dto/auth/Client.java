@@ -1,18 +1,21 @@
 package ru.pt.api.dto.auth;
 
 import ru.pt.api.dto.product.Product;
+import ru.pt.api.dto.refs.RecordStatus;
+import ru.pt.api.dto.auth.ClientAuthType;
+import ru.pt.api.dto.auth.ClientAuthLevel;
 
 public class Client {
     private Long id;
     private Long tid;
-    private String clientId;
+    private String authClientId;
     private Long defaultAccountId;
     private Long clientAccountId;
     private String name;
-    private Boolean isDeleted;
+    private RecordStatus recordStatus;
     private ClientConfiguration clientConfiguration;
-    private String authType;
-    private String authLevel;
+    private ClientAuthType authType;
+    private ClientAuthLevel authLevel;
     private Product[] products;
 
     public Client() {
@@ -34,12 +37,12 @@ public class Client {
         this.tid = tid;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getAuthClientId() {
+        return authClientId;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setAuthClientId(String authClientId) {
+        this.authClientId = authClientId;
     }
 
     public Long getDefaultAccountId() {
@@ -66,12 +69,12 @@ public class Client {
         this.name = name;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
+    public RecordStatus getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setRecordStatus(RecordStatus recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public ClientConfiguration getClientConfiguration() {
@@ -82,11 +85,11 @@ public class Client {
         this.clientConfiguration = clientConfiguration;
     }
 
-    public String getAuthType() {
+    public ClientAuthType getAuthType() {
         return authType;
     }
 
-    public void setAuthType(String authType) {
+    public void setAuthType(ClientAuthType authType) {
         this.authType = authType;
     }
 
@@ -98,11 +101,11 @@ public class Client {
         this.products = products;
     }
 
-    public void setAuthLevel(String authLevel) {
+    public void setAuthLevel(ClientAuthLevel authLevel) {
         this.authLevel = authLevel;
     }
 
-    public String getAuthLevel() {
-        return this.authLevel;
+    public ClientAuthLevel getAuthLevel() {
+        return authLevel;
     }
 }

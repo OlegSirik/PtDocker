@@ -20,6 +20,8 @@ export interface SchemaTreeApiRow {
   varList?: string | null;
   isSystem?: boolean;
   isDeleted?: boolean;
+  /** См. LobVar / PvVar на бэкенде; при отсутствии в JSON клиент подставляет из varName */
+  name?: string | null;
 }
 
 function parseSchemaVarNr(value: string | number | null | undefined): number {
@@ -45,6 +47,7 @@ export function schemaTreeApiRowToSourceRow(row: SchemaTreeApiRow): TreeTableSou
     varPath: row.varPath ?? '',
     varValue: row.varValue ?? '',
     varCdm: row.varCdm ?? '',
+    name: row.name?.trim() || row.varName?.trim() || '',
   };
 }
 
@@ -83,11 +86,19 @@ export interface TreeTableSourceRow {
   varType?: string; // "varType": "OBJECT" или все остальное
   varDataType?: string;
   isSystem?: boolean; // признак системной переменной (если true, то строка не удаляется из дерева)
+  /** Тарифный фактор (PvVar / продукт) */
+  isTarifFactor?: boolean;
   varList?: string; // название список кодов переменных, которые относятся к этой переменной
   varListFilter?: string; // фильтр для списка кодов переменных, которые относятся к этой переменной. Копируется из валидатора
   varPath: string;
   varValue: string;
   varCdm: string;
+  name: string;
+  /**
+   * Только клиент: узел создан в сессии ({@code new}) или изменён и ещё не сохранён в документе
+   * (очищается после успешного save родительского экрана).
+   */
+  unsavedSchemaRow?: 'new' | 'modified';
 }
 
 /** Узел-контейнер схемы (папка), не редактируется как переменная */

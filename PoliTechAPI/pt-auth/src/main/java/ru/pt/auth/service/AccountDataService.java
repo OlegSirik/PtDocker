@@ -18,6 +18,8 @@ import java.util.*;
 
 import org.springframework.stereotype.Component;
 
+import ru.pt.api.dto.refs.RecordStatus;
+
 /**
  * Data access service for account hierarchy and product roles.
  * No authorization checks - pure data access layer.
@@ -153,7 +155,6 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
                 (Long) role.get("role_product_id"),
                 role.get("productName") != null ? String.valueOf(role.get("productName")) : null,
                 (Long) role.get("role_account_id"),
-                Boolean.TRUE.equals(role.get("is_deleted")),
                 Boolean.TRUE.equals(role.get("can_read")),
                 Boolean.TRUE.equals(role.get("can_quote")),
                 Boolean.TRUE.equals(role.get("can_policy")),

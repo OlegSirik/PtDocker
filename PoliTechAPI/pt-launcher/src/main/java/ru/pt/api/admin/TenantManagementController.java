@@ -78,7 +78,7 @@ public class TenantManagementController extends SecuredController {
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Void> deleteTenant(
             @PathVariable String tenantCode) {
-        tenantService.deleteTenant(tenantCode);
+        tenantService.softDeleteTenant(tenantCode);
         return ResponseEntity.noContent().build();
     }
 

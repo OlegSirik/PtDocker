@@ -26,6 +26,7 @@ public final class InsuranceCompanyMapper {
     public static final String K_BANK = "bank";
     public static final String K_BIC = "bic";
     public static final String K_CORR_ACCOUNT = "corr_account";
+    public static final String K_DISPLAY_NAME = "display_name";
 
     private InsuranceCompanyMapper() {
     }
@@ -56,6 +57,7 @@ public final class InsuranceCompanyMapper {
                 .bank(p.get(K_BANK))
                 .bic(p.get(K_BIC))
                 .corrAccount(p.get(K_CORR_ACCOUNT))
+                .displayName(p.get(K_DISPLAY_NAME))
                 .build();
     }
 
@@ -83,6 +85,7 @@ public final class InsuranceCompanyMapper {
         putIfNotBlank(m, K_BANK, dto.getBank());
         putIfNotBlank(m, K_BIC, dto.getBic());
         putIfNotBlank(m, K_CORR_ACCOUNT, dto.getCorrAccount());
+        putIfNotBlank(m, K_DISPLAY_NAME, dto.getDisplayName());
         return m;
     }
 

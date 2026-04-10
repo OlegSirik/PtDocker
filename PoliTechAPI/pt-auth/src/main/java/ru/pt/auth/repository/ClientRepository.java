@@ -14,20 +14,14 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по ID tenant и client_id
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.clientId = :authClientId AND c.isDeleted = false")
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.authClientId = :authClientId AND c.recordStatus = 'ACTIVE'")
     Optional<ClientEntity> findByTenantCodeAndAuthClientId(@Param("tenantCode") String tenantCode, @Param("authClientId") String authClientId);
     
     /**
      * Найти все active clients для tenant
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.isDeleted = false ORDER BY c.name")
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.code = :tenantCode AND c.recordStatus = 'ACTIVE' ORDER BY c.name")
     List<ClientEntity> findByTenantCodeActive(@Param("tenantCode") String tenantCode);
-
-    /**
-     * Найти client по имени в tenant
-     */
-    //@Query("SELECT c FROM ClientEntity c WHERE c.tenantEntity.id = :tenantCode AND c.name = :name AND c.isDeleted = false")
-    //Optional<ClientEntity> findByTenantAndName(@Param("tenantCode") String tenantCode, @Param("name") String name);
 
     /**
      * Найти client по clientId
@@ -45,14 +39,14 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     /**
      * Найти client по clientId и tenantCode
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId AND c.tenantEntity.code = :tenantCode")
-    Optional<ClientEntity> findByClientIdandTenantCode(@Param("clientId") String clientId, @Param("tenantCode") String tenantCode);
+    @Query("SELECT c FROM ClientEntity c WHERE c.authClientId = :clientId AND c.tenantEntity.code = :tenantCode")
+    Optional<ClientEntity> findByAuthClientIdandTenantCode(@Param("clientId") String clientId, @Param("tenantCode") String tenantCode);
 
     /***
      * Найти client по clientId
      */
-    @Query("SELECT c FROM ClientEntity c WHERE c.clientId = :clientId")
-    Optional<ClientEntity> findByClientId(String clientId);
+    @Query("SELECT c FROM ClientEntity c WHERE c.authClientId = :clientId")
+    Optional<ClientEntity> findByAuthClientId(String clientId);
 
 
     

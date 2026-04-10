@@ -19,40 +19,40 @@ public class ProductTestController {
     @GetMapping("/quote/{productId}/{versionNo}")
     public ResponseEntity<String> getTestQuote(
             @PathVariable String tenantCode,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        return ResponseEntity.ok(productTestService.getTestQuote(productId, versionNo));
+        return ResponseEntity.ok(productTestService.getTestQuote(user.getTenantId(), productId, versionNo));
     }
 
     @GetMapping("/policy/{productId}/{versionNo}")
     public ResponseEntity<String> getTestPolicy(
             @PathVariable String tenantCode,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        return ResponseEntity.ok(productTestService.getTestPolicy(productId, versionNo));
+        return ResponseEntity.ok(productTestService.getTestPolicy(user.getTenantId(), productId, versionNo));
     }
 
     @PostMapping("/quote/{productId}/{versionNo}")
     public ResponseEntity<Void> saveTestQuote(
             @PathVariable String tenantCode,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @RequestBody String json,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        productTestService.saveTestQuote(productId, versionNo, json);
+        productTestService.saveTestQuote(user.getTenantId(), productId, versionNo, json);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/policy/{productId}/{versionNo}")
     public ResponseEntity<Void> saveTestPolicy(
             @PathVariable String tenantCode,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @RequestBody String json,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        productTestService.saveTestPolicy(productId, versionNo, json);
+        productTestService.saveTestPolicy(user.getTenantId(), productId, versionNo, json);
         return ResponseEntity.noContent().build();
     }
 }

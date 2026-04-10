@@ -6,7 +6,7 @@ public class TenantDto {
     private Long id;
     private String name;
     private String code;
-    private Boolean isDeleted;
+    private String recordStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -39,12 +39,12 @@ public class TenantDto {
         this.code = code;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
     
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public LocalDateTime getCreatedAt() {

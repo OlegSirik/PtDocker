@@ -67,7 +67,7 @@ public class JwtTokenUtil {
             AccountLoginEntity accountLogin = null;
             if (clientId != null) {
                 accountLogin = accountLogins.stream()
-                        .filter(al -> al.getClient() != null && al.getClient().getClientId().equals(clientId))
+                        .filter(al -> al.getClient() != null && al.getClient().getAuthClientId().equals(clientId))
                         .findFirst()
                         .orElse(null);
 
@@ -113,7 +113,7 @@ public class JwtTokenUtil {
             AccountLoginEntity accountLogin;
             if (clientId != null) {
                 accountLogin = accountLogins.stream()
-                        .filter(al -> al.getClient() != null && al.getClient().getId().equals(clientId))
+                        .filter(al -> al.getClient() != null && al.getClient().getAuthClientId().equals(clientId))
                         .findFirst()
                         .orElse(null);
 
@@ -164,9 +164,9 @@ public class JwtTokenUtil {
             }
 
             if (accountLogin.getClient() != null) {
-                payload.put("clientId", accountLogin.getClient().getId());
+                payload.put("clientId", accountLogin.getClient().getAuthClientId());
                 payload.put("clientName", accountLogin.getClient().getName());
-                payload.put("client_id", accountLogin.getClient().getClientId());
+                payload.put("client_id", accountLogin.getClient().getAuthClientId());
             }
 
             if (accountLogin.getAccount() != null) {

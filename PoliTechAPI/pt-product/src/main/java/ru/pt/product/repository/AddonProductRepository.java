@@ -12,11 +12,11 @@ import java.util.Optional;
 public interface AddonProductRepository extends JpaRepository<AddonProductEntity, Long> {
 
     @Query("select ap from AddonProductEntity ap where ap.tid = :tid and ap.productId = :productId")
-    List<AddonProductEntity> findByTidAndProductId(@Param("tid") Long tid, @Param("productId") Integer productId);
+    List<AddonProductEntity> findByTidAndProductId(@Param("tid") Long tid, @Param("productId") Long productId);
 
     @Query("select ap from AddonProductEntity ap where ap.tid = :tid and ap.productId = :productId and ap.addonId = :addonId")
     Optional<AddonProductEntity> findByTidAndProductIdAndAddonId(
-            @Param("tid") Long tid, @Param("productId") Integer productId, @Param("addonId") Long addonId);
+            @Param("tid") Long tid, @Param("productId") Long productId, @Param("addonId") Long addonId);
 
     @Query("select ap from AddonProductEntity ap where ap.tid = :tid and ap.addonId = :addonId")
     List<AddonProductEntity> findByTidAndAddonId(@Param("tid") Long tid, @Param("addonId") Long addonId);

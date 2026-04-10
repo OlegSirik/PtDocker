@@ -55,7 +55,6 @@ public class CommissionServiceImpl implements CommissionService {
         softDeleteExisting(tid, dto.getAccountId(), dto.getProductId(), dto.getAction());
 
         CommissionRateEntity entity = toEntity(dto, tid);
-        entity.setDeleted(false);
         CommissionRateEntity saved = commissionRateRepository.save(entity);
         return toDto(saved);
     }
@@ -68,19 +67,13 @@ public class CommissionServiceImpl implements CommissionService {
         log.trace("updateProductCommission: tid={}, dtoId={}, accountId={}, productId={}, action={}",
                 tid, dto.getId(), dto.getAccountId(), dto.getProductId(), dto.getAction());
 
-        if (dto.getId() != null) {
-            commissionRateRepository.findByIdAndTenantIncludeDeleted(tid, dto.getId())
-                    .ifPresent(e -> {
-                        if (e.getDeleted()) {throw new BadRequestException("Нельзя изменить удаленную запись");}
-                    });
+        if (dto.getId() == null) {
         } else {
             throw new BadRequestException("Не указан ID");
         }
-        //softDeleteExisting(tid, dto.getAccountId(), dto.getProductId(), dto.getAction());
 
         CommissionRateEntity entity = toEntity(dto, tid);
         entity.setId(dto.getId());
-        entity.setDeleted(false);
         CommissionRateEntity saved = commissionRateRepository.save(entity);
         return toDto(saved);
     }
@@ -94,13 +87,12 @@ public class CommissionServiceImpl implements CommissionService {
 
         CommissionRateEntity entity = commissionRateRepository.findByIdAndTenantIncludeDeleted(tid, id)
                 .orElseThrow(() -> new NotFoundException("Commission configuration not found: " + id));
-        entity.setDeleted(true);
         commissionRateRepository.save(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CommissionRateDto getProductCommission(Long accountId, Integer productId) {
+    public CommissionRateDto getProductCommission(Long accountId, Long productId) {
         AuthenticatedUser user = getCurrentUser();
         Long tid = user.getTenantId();
         log.trace("getProductCommission: tid={}, accountId={}, productId={}", tid, accountId, productId);
@@ -124,7 +116,7 @@ public class CommissionServiceImpl implements CommissionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommissionRateDto> getConfigurations(Long accountId, Integer productId, CommissionAction action) {
+    public List<CommissionRateDto> getConfigurations(Long accountId, Long productId, CommissionAction action) {
         if (accountId == null && productId == null && action == null) {
             return List.of();
         }
@@ -152,7 +144,7 @@ public class CommissionServiceImpl implements CommissionService {
     }
 
     @Override
-    public boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action) {
+    public boolean checkRequestedCommissionRate(BigDecimal requestedCommissionRate, Long accountId, Long productId, CommissionAction action) {
         // Если желаемая комиссия не задана - ничего проверять не нужно
         if (requestedCommissionRate == null) {
             log.trace("checkRequestedCommissionRate: requestedCommissionRate is null, skip validation");
@@ -184,7 +176,7 @@ public class CommissionServiceImpl implements CommissionService {
     }
 
     @Override
-    public CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Integer productId, CommissionAction action, BigDecimal premium) {
+    public CommissionDto calculateCommission(BigDecimal requestedCommissionRate, Long accountId, Long productId, CommissionAction action, BigDecimal premium) {
         // 1. Получить конфиг для агента-продукта-дейсвия
         log.trace("calculateCommission: accountId={}, productId={}, action={}, requestedRate={}, premium={}",
                 accountId, productId, action, requestedCommissionRate, premium);
@@ -192,7 +184,7 @@ public class CommissionServiceImpl implements CommissionService {
         CommissionDto dto = new CommissionDto();
         CommissionRateDto config = new CommissionRateDto();
 
-        List<CommissionRateDto> configs = getConfigurations(accountId, productId != null ? productId.intValue() : null, action);
+        List<CommissionRateDto> configs = getConfigurations(accountId, productId != null ? productId : null, action);
         if (configs.size() == 0) {
             log.trace("calculateCommission: no commission config found, returning zero commission");
             dto.setCommissionAmount(new BigDecimal(0));
@@ -257,10 +249,9 @@ public class CommissionServiceImpl implements CommissionService {
         return dto; 
     }
 
-    private void softDeleteExisting(Long tid, Long accountId, Integer productId, CommissionAction action) {
+    private void softDeleteExisting(Long tid, Long accountId, Long productId, CommissionAction action) {
         commissionRateRepository.findByAccountProductAndAction(tid, accountId, productId, action.getCode())
                 .ifPresent(e -> {
-                    e.setDeleted(true);
                     commissionRateRepository.save(e);
                 });
     }

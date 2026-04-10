@@ -107,6 +107,7 @@ export class TreeTableRowEditDialogComponent {
     if (!this.isValid()) return;
     this.model.varCode = this.model.varCode.trim();
     this.model.varName = this.model.varName.trim();
+    this.model.name = this.model.name?.trim() || this.model.varName;
     if (this.data.mode === 'create') {
       this.model.parent_id = this.data.parentId;
     }

@@ -50,7 +50,6 @@ public class ProductRoleMapper {
 
         entity.setRoleProductId(dto.roleProductId());
 
-        entity.setDeleted(Boolean.TRUE.equals(dto.isDeleted()));
         entity.setCanRead(Boolean.TRUE.equals(dto.canRead()));
         entity.setCanQuote(Boolean.TRUE.equals(dto.canQuote()));
         entity.setCanPolicy(Boolean.TRUE.equals(dto.canPolicy()));
@@ -78,7 +77,6 @@ public class ProductRoleMapper {
             entity.getRoleProductId(),
             productName,
             entity.getRoleAccount() != null ? entity.getRoleAccount().getId() : null,
-            entity.getDeleted(),
             entity.getCanRead(),
             entity.getCanQuote(),
             entity.getCanPolicy(),

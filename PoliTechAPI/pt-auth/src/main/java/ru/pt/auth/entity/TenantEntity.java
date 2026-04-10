@@ -16,15 +16,13 @@ public class TenantEntity {
     public static final String SYS_TENANT_CODE = "sys";
 
     @Id
-    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    //@SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "name", length = 250)
     private String name;
 
-    @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
+    @Column(name = "record_status")
+    private String recordStatus = "ACTIVE";
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -78,12 +76,12 @@ public class TenantEntity {
         this.name = name;
     }
 
-    public Boolean getDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -132,7 +130,7 @@ public class TenantEntity {
         this.code = code;
         this.name = name;
         this.authType = authType;
-        this.isDeleted = false;
+        this.recordStatus = "ACTIVE";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

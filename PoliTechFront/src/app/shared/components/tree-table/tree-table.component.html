@@ -48,7 +48,7 @@
     <td mat-cell *matCellDef="let row" class="col-actions" (click)="$event.stopPropagation()">
       <div class="tree-actions-cell">
 
-        @if (!row.data.isDeleted) {
+        @if (!disableBuiltInSoftDelete && !row.data.isDeleted) {
           <button
             mat-icon-button
             type="button"
@@ -79,5 +79,7 @@
     (click)="rowClick.emit(row.data)"
     class="clickable-row"
     [class.tree-row-deleted]="row.data.isDeleted === true"
+    [class.tree-row-unsaved-new]="row.data.unsavedSchemaRow === 'new'"
+    [class.tree-row-unsaved-modified]="row.data.unsavedSchemaRow === 'modified'"
   ></tr>
 </table>

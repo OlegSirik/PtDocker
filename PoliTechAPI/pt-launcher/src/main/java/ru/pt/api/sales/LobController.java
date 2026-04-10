@@ -9,11 +9,9 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
-import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.product.LobService;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.hz.JsonExampleBuilder;
+import ru.pt.hz.JsonExampleBuilder123;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,14 +26,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/lobs")
 @SecurityRequirement(name = "bearerAuth")
-//@PreAuthorize("hasRole('SYS_ADMIN')")
-public class LobController extends SecuredController {
+
+public class LobController {
 
     private final LobService lobService;
 
-    public LobController(LobService lobService,
-                         SecurityContextHelper securityContextHelper) {
-        super(securityContextHelper);
+    public LobController(LobService lobService) {
         this.lobService = lobService;
     }
 
@@ -45,7 +41,7 @@ public class LobController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
 
-        return lobService.listActiveSummaries();
+        return lobService.listActiveSummaries(user.getTenantId());
     }
 
     // get /admin/lobs/{lob_code} returns json
@@ -57,10 +53,10 @@ public class LobController extends SecuredController {
         
         LobModel lob;
         try {
-            Integer lobId = Integer.parseInt(id);
-            lob = lobService.getById(lobId);
+            Long lobId = Long.parseLong(id);
+            lob = lobService.getById(user.getTenantId(), lobId);
         } catch (NumberFormatException e) {
-            lob = lobService.getByCode(id);
+            lob = lobService.getByCode(user.getTenantId(), id);
         }
         
         if (lob == null) {
@@ -77,7 +73,7 @@ public class LobController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody LobModel payload) {
        
-        LobModel created = lobService.create(payload);
+        LobModel created = lobService.create(user.getTenantId(), payload);
         return ResponseEntity.ok(created);
     }
 
@@ -86,14 +82,14 @@ public class LobController extends SecuredController {
     public ResponseEntity<LobModel> updateLob(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id,
+            @PathVariable("id") Long id,
             @RequestBody LobModel payload) {
 
-        if (payload.getId() == null || id.longValue() != payload.getId()) {
+        if (payload.getId() == null || !id.equals(payload.getId())) {
             throw new BadRequestException("ID in path must match payload ID");
         }
         
-        return ResponseEntity.ok(lobService.update(payload));
+        return ResponseEntity.ok(lobService.update(user.getTenantId(), payload));
     }
 
     // delete /admin/lobs/{lob_code} soft delete
@@ -101,9 +97,9 @@ public class LobController extends SecuredController {
     public ResponseEntity<Void> deleteLob(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("id") Integer id) {
-        //requireAdmin(user);
-        boolean deleted = lobService.softDeleteById(id);
+            @PathVariable("id") Long id) {
+        
+        boolean deleted = lobService.softDeleteById(user.getTenantId(), id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
@@ -113,8 +109,8 @@ public class LobController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("code") String code) {
-        //requireAdmin(user);
-        LobModel lob = lobService.getByCode(code);
+                
+        LobModel lob = lobService.getByCode(user.getTenantId(), code);
         if (lob == null) {
             return ResponseEntity.notFound().build();
         }
@@ -122,7 +118,7 @@ public class LobController extends SecuredController {
             List<String> varPaths = lob.getMpVars() != null
                     ? lob.getMpVars().stream().map(LobVar::getVarPath).collect(Collectors.toList())
                     : List.of();
-            String jsonExample = JsonExampleBuilder.buildJsonExample(varPaths);
+            String jsonExample = JsonExampleBuilder123.buildJsonExample(varPaths);
             return ResponseEntity.ok(jsonExample);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

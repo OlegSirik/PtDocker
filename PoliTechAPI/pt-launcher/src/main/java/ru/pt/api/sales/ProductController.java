@@ -14,7 +14,6 @@ import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Контроллер для управления продуктами
@@ -45,7 +44,7 @@ public class ProductController extends SecuredController {
             @RequestParam(required = false) Long insComp,
             @AuthenticationPrincipal UserDetailsImpl user) {
         //requireAdmin(user);
-        return productService.listSummaries(insComp);
+        return productService.listSummaries(user.getTenantId(), insComp);
     }
 
     @PostMapping
@@ -54,74 +53,78 @@ public class ProductController extends SecuredController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody ProductVersionModel payload) {
         //requireAdmin(user);
-        ProductVersionModel created = productService.create(payload);
+        
+        ProductVersionModel created = productService.create(user.getTenantId(), payload);
         return ResponseEntity.ok(created);
     }
 
     @GetMapping("/{accountId}")
-    public List<Product> getProductsByAccountId(@PathVariable String tenantCode, @PathVariable String accountId) {
-        return productService.getProductByAccountId(accountId);
+    public List<Product> getProductsByAccountId(
+            @PathVariable String tenantCode,
+            @PathVariable String accountId,
+            @AuthenticationPrincipal UserDetailsImpl user) {
+        return productService.getProductByAccountId(user.getTenantId(), accountId);
     }
 
     @GetMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> getVersion(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireAdmin(user);
-        return ResponseEntity.ok(productService.getVersion(productId, versionNo));
+        return ResponseEntity.ok(productService.getVersion(user.getTenantId(), productId, versionNo));
     }
 
     @PostMapping("/{productId}/versions/{versionNo}/cmd/create")
     public ResponseEntity<ProductVersionModel> createVersion(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireRole(user, "SYS_ADMIN");
-        return ResponseEntity.ok(productService.createVersionFrom(productId, versionNo));
+        return ResponseEntity.ok(productService.createVersionFrom(user.getTenantId(), productId, versionNo));
     }
 
     @PostMapping("/{productId}/versions/{versionNo}/cmd/publish")
     public ResponseEntity<ProductVersionModel> publishVersion(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireRole(user, "SYS_ADMIN");
-        return ResponseEntity.ok(productService.publishToProd(productId, versionNo));
+        return ResponseEntity.ok(productService.publishToProd(user.getTenantId(), productId, versionNo));
     }
 
     @PostMapping("/{productId}/versions/{versionNo}/cmd/reload")
     public ResponseEntity<ProductVersionModel> reloadVars(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @RequestParam("cat") String category) {
         //requireRole(user, "SYS_ADMIN");
-        return ResponseEntity.ok(productService.reloadVars(productId, versionNo, category));
+        return ResponseEntity.ok(productService.reloadVars(user.getTenantId(), productId, versionNo, category));
     }
 
     @PutMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> updateVersion(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
             @RequestBody ProductVersionModel payload) {
         //requireAdmin(user);
-        return ResponseEntity.ok(productService.updateVersion(productId, versionNo, payload));
+        return ResponseEntity.ok(productService.updateVersion(user.getTenantId(), productId, versionNo, payload));
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<Void> deleteProduct(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId) {
+            @PathVariable("productId") Long productId) {
         //requireAdmin(user);
-        productService.softDeleteProduct(productId);
+        productService.softDeleteProduct(user.getTenantId(), productId);
         return ResponseEntity.noContent().build();
     }
 
@@ -129,31 +132,31 @@ public class ProductController extends SecuredController {
     public ResponseEntity<Void> deleteVersion(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireAdmin(user);
-        productService.deleteVersion(productId, versionNo);
+        productService.deleteVersion(user.getTenantId(), productId, versionNo);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{productId}/versions/{versionNo}/example_quote")
+    @GetMapping(value = "/{productId}/versions/{versionNo}/example_quote", produces = "application/json")
     public ResponseEntity<String> getJsonExampleQuote(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireAdmin(user);
-        return ResponseEntity.ok(productService.getJsonExampleQuote(productId, versionNo));
+        return ResponseEntity.ok(productService.getJsonExampleQuote(user.getTenantId(), productId, versionNo));
     }
 
-    @GetMapping("/{productId}/versions/{versionNo}/example_save")
+    @GetMapping(value = "/{productId}/versions/{versionNo}/example_save", produces = "application/json")
     public ResponseEntity<String> getJsonExampleSave(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
         //requireAdmin(user);
-        return ResponseEntity.ok(productService.getJsonExampleSave(productId, versionNo));
+        return ResponseEntity.ok(productService.getJsonExampleSave(user.getTenantId(), productId, versionNo));
     }
 
     /**
@@ -163,7 +166,7 @@ public class ProductController extends SecuredController {
     public ResponseEntity<List<PvVar>> getPvVars(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
-        return ResponseEntity.ok(productService.getPvVars());
+        return ResponseEntity.ok(productService.getPvVars(user.getTenantId()));
     }
 }
 

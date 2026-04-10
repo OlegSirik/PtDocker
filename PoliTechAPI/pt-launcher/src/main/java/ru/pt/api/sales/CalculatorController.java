@@ -14,6 +14,8 @@ import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.Optional;
 
 
@@ -27,31 +29,22 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/{tenantCode}/admin/calculators")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 //@PreAuthorize("hasRole('SYS_ADMIN')")
-public class CalculatorController extends SecuredController {
+public class CalculatorController  {
 
     private final CalculatorService calculateService;
     private final CoefficientService coefficientService;
-
-    public CalculatorController(
-            CalculatorService calculateService,
-            SecurityContextHelper securityContextHelper,
-            CoefficientService coefficientService
-    ) {
-        super(securityContextHelper);
-        this.calculateService = calculateService;
-        this.coefficientService = coefficientService;
-    }
 
     @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
     public ResponseEntity<CalculatorModel> getCalculator(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
-            @PathVariable("packageNo") Integer packageNo) {
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
+            @PathVariable("packageNo") String packageNo) {
         //requireAdmin(user);
-        CalculatorModel json = calculateService.getCalculator(productId, versionNo, packageNo);
+        CalculatorModel json = calculateService.getCalculator(user.getTenantId(), productId, versionNo, packageNo);
         return json != null ? ResponseEntity.ok(json) : ResponseEntity.notFound().build();
     }
 
@@ -60,7 +53,7 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<java.util.List<CoefficientDataRow>> getCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Integer calculatorId,
+            @PathVariable("calculatorId") Long calculatorId,
             @PathVariable("code") String code) {
         //requireAdmin(user);
         return ResponseEntity.ok(coefficientService.getTable(calculatorId, code));
@@ -70,10 +63,11 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<java.util.List<CoefficientDataRow>> createCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Integer calculatorId,
+            @PathVariable("calculatorId") Long calculatorId,
             @PathVariable("code") String code,
             @RequestBody java.util.List<CoefficientDataRow> tableJson) {
         //requireAdmin(user);
+        //int calcId = Math.toIntExact(calculatorId);
         // if any exists -> error
         if (!coefficientService.getTable(calculatorId, code).isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -85,7 +79,7 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<java.util.List<CoefficientDataRow>> replaceCoefficients(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Integer calculatorId,
+            @PathVariable("calculatorId") Long calculatorId,
             @PathVariable("code") String code,
             @RequestBody java.util.List<CoefficientDataRow> tableJson) {
         //requireAdmin(user);
@@ -96,10 +90,10 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<String> getCoefficientSQL(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Integer calculatorId,
+            @PathVariable("calculatorId") Long calculatorId,
             @PathVariable("code") String code) {
         //requireAdmin(user);
-        CalculatorModel calculator = calculateService.getCalculatorById(calculatorId);
+        CalculatorModel calculator = calculateService.getCalculatorById(user.getTenantId(), calculatorId);
         if (calculator == null) {
             return ResponseEntity.notFound().build();
         }
@@ -126,12 +120,12 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<CalculatorModel> createCalculator(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
-            @PathVariable("packageNo") Integer packageNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
+            @PathVariable("packageNo") String packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode) {
         //requireAdmin(user);
-        CalculatorModel json = calculateService.createCalculatorIfMissing(productId, productCode, versionNo, packageNo);
+        CalculatorModel json = calculateService.createCalculatorIfMissing(user.getTenantId(), productId, productCode, versionNo, packageNo);
         return ResponseEntity.ok(json);
         
     }
@@ -140,13 +134,13 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<CalculatorModel> replaceCalculator(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Integer productId,
-            @PathVariable("versionNo") Integer versionNo,
-            @PathVariable("packageNo") Integer packageNo,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo,
+            @PathVariable("packageNo") String packageNo,
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode,
             @RequestBody CalculatorModel newJson) {
         //requireAdmin(user);
-        CalculatorModel json = calculateService.replaceCalculator(productId, productCode, versionNo, packageNo, newJson);
+        CalculatorModel json = calculateService.replaceCalculator(user.getTenantId(), productId, productCode, versionNo, packageNo, newJson);
         return ResponseEntity.ok(json);
     }
 
@@ -154,9 +148,9 @@ public class CalculatorController extends SecuredController {
     public ResponseEntity<Void> syncVars(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Integer calculatorId) {
+            @PathVariable("calculatorId") Long calculatorId) {
         //requireAdmin(user);
-        calculateService.syncVars(calculatorId);
+        calculateService.syncVars(user.getTenantId(), calculatorId);
         return ResponseEntity.ok().build();
     }
 

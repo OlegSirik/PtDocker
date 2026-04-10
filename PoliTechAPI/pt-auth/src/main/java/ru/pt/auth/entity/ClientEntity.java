@@ -14,16 +14,14 @@ public class ClientEntity {
     public static final String SYS_CLIENT_ID = "sys";
 
     @Id
-    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
-    //@SequenceGenerator(name = "account_seq", sequenceName = "account_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tid", nullable = false)
     private TenantEntity tenantEntity;
 
-    @Column(name = "client_id", nullable = false)
-    private String clientId;
+    @Column(name = "auth_client_id", nullable = false)
+    private String authClientId;
 
     @Column(name = "default_account_id")
     private Long defaultAccountId;
@@ -31,8 +29,8 @@ public class ClientEntity {
     @Column(name = "name", length = 250)
     private String name;
 
-    @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
+    @Column(name = "record_status")
+    private String recordStatus;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -80,12 +78,12 @@ public class ClientEntity {
         this.tenantEntity = tenantEntity;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getAuthClientId() {
+        return authClientId;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setAuthClientId(String authClientId) {
+        this.authClientId = authClientId;
     }
 
     public Long getDefaultAccountId() {
@@ -104,12 +102,12 @@ public class ClientEntity {
         this.name = name;
     }
 
-    public Boolean getDeleted() {
-        return isDeleted;
+    public String getRecordStatus() {
+        return recordStatus;
     }
 
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
+    public void setRecordStatus(String recordStatus) {
+        this.recordStatus = recordStatus;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -160,14 +158,14 @@ public class ClientEntity {
         this.clientConfigurationEntity = clientConfigurationEntity;
     }
 
-    public boolean isSystem() {return SYS_CLIENT_ID.equals(clientId);}
+    public boolean isSystem() {return SYS_CLIENT_ID.equals(authClientId);}
 
     private ClientEntity(String authClientId,String name, String authType, String authLevel,TenantEntity tenantEntity) {
         this.name = name;
         this.tenantEntity = tenantEntity;
-        this.clientId = authClientId.toLowerCase();
+        this.authClientId = authClientId;
         this.defaultAccountId = null;
-        this.isDeleted = false;
+        this.recordStatus = "ACTIVE";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.authType = authType;

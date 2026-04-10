@@ -10,25 +10,25 @@ import java.util.Optional;
 
 public interface CommissionRateRepository extends JpaRepository<CommissionRateEntity, Long> {
 
-    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId AND c.productId = :productId AND c.isDeleted = false")
+    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId AND c.productId = :productId")
     Optional<CommissionRateEntity> findByAccountAndProduct(
             @Param("tid") Long tid,
             @Param("accountId") Long accountId,
-            @Param("productId") Integer productId);
+            @Param("productId") Long productId);
 
-    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId AND c.productId = :productId AND c.action = :action AND c.isDeleted = false")
+    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId AND c.productId = :productId AND c.action = :action")
     Optional<CommissionRateEntity> findByAccountProductAndAction(
             @Param("tid") Long tid,
             @Param("accountId") Long accountId,
-            @Param("productId") Integer productId,
+            @Param("productId") Long productId,
             @Param("action") String action);
 
-    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId AND c.isDeleted = false")
+    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.account.id = :accountId")
     List<CommissionRateEntity> findByAccountAndTenant(
             @Param("tid") Long tid,
             @Param("accountId") Long accountId);
 
-    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.id = :id and c.isDeleted = false")
+    @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.id = :id")
     Optional<CommissionRateEntity> findByIdAndTenant(@Param("tid") Long tid, @Param("id") Long id);
 
     @Query("SELECT c FROM CommissionRateEntity c WHERE c.tenant.id = :tid AND c.id = :id")
@@ -61,7 +61,6 @@ public interface CommissionRateRepository extends JpaRepository<CommissionRateEn
         FROM acc_commission_rates c
         JOIN acc_tree t ON c.account_id = t.id
         WHERE c.tid = :tid
-          AND c.is_deleted = FALSE
           AND (:productId IS NULL OR c.product_id = :productId)
           AND (:action IS NULL OR c.action = :action)
         ORDER BY t.depth
@@ -69,6 +68,6 @@ public interface CommissionRateRepository extends JpaRepository<CommissionRateEn
     List<CommissionRateEntity> findConfigurations(
             @Param("tid") Long tid,
             @Param("accountId") Long accountId,
-            @Param("productId") Integer productId,
+            @Param("productId") Long productId,
             @Param("action") String action);
 }

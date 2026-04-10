@@ -20,7 +20,7 @@ public interface AddonPricelistRepository extends JpaRepository<AddonPricelistEn
 
     @Query("""
         select p from AddonPricelistEntity p
-        where p.tid = :tid and p.status = 'ACTIVE' and p.amountFree > 0
+        where p.tid = :tid and p.recordStatus = 'ACTIVE' and p.amountFree > 0
         order by p.code, p.price
         """)
     List<AddonPricelistEntity> findAvailableByTid(@Param("tid") Long tid);

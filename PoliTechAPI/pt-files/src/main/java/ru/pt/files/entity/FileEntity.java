@@ -10,8 +10,8 @@ public class FileEntity {
 
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_files_seq")
-    @SequenceGenerator(name = "pt_files_seq", sequenceName = "pt_files_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "public_id")

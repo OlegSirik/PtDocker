@@ -8,21 +8,21 @@ public class CalculatorEntity {
 
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_calculators_seq")
-    @SequenceGenerator(name = "pt_calculators_seq", sequenceName = "pt_calculators_seq", allocationSize = 1)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pt_seq")
+    @SequenceGenerator(name = "pt_seq", sequenceName = "pt_seq", allocationSize = 1)
+    private Long id;
 
     @Column(name = "product_id", nullable = false)
-    private Integer productId;
+    private Long productId;
 
     @Column(name = "product_code", nullable = false, length = 30)
     private String productCode;
 
     @Column(name = "version_no", nullable = false)
-    private Integer versionNo;
+    private Long versionNo;
 
     @Column(name = "package_no", nullable = false)
-    private Integer packageNo;
+    private String packageNo;
 
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "calculator", columnDefinition = "jsonb", nullable = false)
@@ -39,19 +39,19 @@ public class CalculatorEntity {
         this.tId = tId;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(Integer productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
@@ -63,19 +63,19 @@ public class CalculatorEntity {
         this.productCode = productCode;
     }
 
-    public Integer getVersionNo() {
+    public Long getVersionNo() {
         return versionNo;
     }
 
-    public void setVersionNo(Integer versionNo) {
+    public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
     }
 
-    public Integer getPackageNo() {
+    public String getPackageNo() {
         return packageNo;
     }
 
-    public void setPackageNo(Integer packageNo) {
+    public void setPackageNo(String packageNo) {
         this.packageNo = packageNo;
     }
 

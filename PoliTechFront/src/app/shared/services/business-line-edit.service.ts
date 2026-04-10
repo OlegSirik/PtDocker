@@ -6,9 +6,6 @@ import { VarsService } from './vars.service';
 import { BaseApiService } from './api/base-api.service';
 import { EnvService } from './env.service';
 
-/** Префикс {@link BusinessLineVar.varCdm} для узлов дерева схемы (loadAttributes → mpVars). */
-export const SCHEMA_TREE_VAR_CDM_PREFIX = 'schemaTree.';
-
 export interface BusinessLineVar {
   varCode: string;
   varType: string;
@@ -23,6 +20,9 @@ export interface BusinessLineVar {
   varList?: string;
   isSystem?: boolean;
   isDeleted?: boolean;
+  name?: string;
+  /** См. {@link TreeTableSourceRow.unsavedSchemaRow} — дублируется в проекции дерева схемы. */
+  unsavedSchemaRow?: 'new' | 'modified';
 }
 
 export interface BusinessLineCover {
@@ -36,6 +36,22 @@ export interface BusinessLineFile {
   fileName: string;
 }
 
+export interface BusinessLineCoefficient {
+  varCode: string;
+  varName: string;
+  altVarCode: string;
+  altVarValue: string;
+  columns: BusinessLineCoefficientColumn[];
+}
+
+export interface BusinessLineCoefficientColumn {
+  varCode: string;
+  varDataType: string;
+  nr: string;
+  conditionOperator: string;
+  sortOrder: string;
+}
+
 export interface BusinessLineEdit {
   id: number;
   mpCode: string;
@@ -45,6 +61,7 @@ export interface BusinessLineEdit {
   mpVars: BusinessLineVar[];
   mpCovers: BusinessLineCover[];
   mpFiles?: BusinessLineFile[];
+  mpCoefficients?: BusinessLineCoefficient[];
 }
 
 @Injectable({

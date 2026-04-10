@@ -16,7 +16,7 @@ import ru.pt.auth.repository.AccountLoginRepository;
 import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.service.admin.AdminPermissionHelper;
 import ru.pt.auth.model.LoginDto;
-
+import ru.pt.api.dto.refs.RecordStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -83,7 +83,7 @@ public class LoginManagementService {
         login.setUserLogin(userLogin);
         login.setFullName(fullName);
         login.setPosition(position);
-        login.setIsDeleted(false);
+        login.setRecordStatus(RecordStatus.ACTIVE.getValue());
 
         LoginEntity savedLogin = loginRepository.save(login);
 
@@ -141,7 +141,7 @@ public class LoginManagementService {
      * Обновление данных пользователя
      * PATCH /tnts/{tenantCode}/logins/{id}
      */
-    public LoginDto updateLogin(String tenantCode, Long id, String fullName, String position, Boolean isDeleted) {
+    public LoginDto updateLogin(String tenantCode, Long id, String fullName, String position, String recordStatus) {
         String tntCode = adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
         // Шаг 1: Проверка наличия тенанта
         TenantEntity tenant = tenantService.findByCode(tntCode)
@@ -166,8 +166,8 @@ public class LoginManagementService {
             login.setPosition(position);
             updated = true;
         }
-        if (isDeleted != null) {
-            login.setIsDeleted(isDeleted);
+        if (recordStatus != null) {
+            login.setRecordStatus(RecordStatus.fromValue(recordStatus).getValue());
             updated = true;
         }
 
@@ -224,7 +224,7 @@ public class LoginManagementService {
                 .orElseThrow(() -> new NotFoundException("User with id '" + id + "' not found for tenant '" + tntCode + "'"));
 
         // Шаг 4: Установка флага удаления
-        login.setIsDeleted(true);
+        login.setRecordStatus(RecordStatus.SUSPENDED.getValue());
         login = loginRepository.save(login);
 
         logger.info("Deleted (soft) login for user '{}' in tenant '{}'", login.getUserLogin(), tntCode);

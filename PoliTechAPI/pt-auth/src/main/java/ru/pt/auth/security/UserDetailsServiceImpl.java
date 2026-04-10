@@ -85,7 +85,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .orElseThrow(() -> new UsernameNotFoundException("AccountToken not found for account id: " + accountId));
         }
         //requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
-        requestContext.setAccount(username);
+        requestContext.setAccount(accountId);
         // Инициализируем lazy-loaded поля внутри транзакции
         //initializeLazyFields(defaultAccountLogin, loginEntity);
 
