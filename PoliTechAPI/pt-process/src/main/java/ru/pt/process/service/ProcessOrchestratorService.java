@@ -200,6 +200,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         });
         System.out.println("===========================");
 */
+        
         addMandatoryVars(policyDTO, varCtx.getDefinitions());
 
         CalculatorModel calculatorModel = calculatorService.getCalculator(

@@ -309,7 +309,7 @@ CREATE INDEX coefficient_data_calc_code_idx ON coefficient_data (calculator_id, 
 
 CREATE TABLE pt_number_generators (
     id            BIGINT PRIMARY KEY DEFAULT nextval('pt_seq'),
-    tid           BIGINT NOT NULL REFERENCES acc_tenants (id)
+    tid           BIGINT NOT NULL REFERENCES acc_tenants (id),
     last_reset    DATE NOT NULL DEFAULT CURRENT_DATE,
     current_value BIGINT NOT NULL DEFAULT 0
 );
