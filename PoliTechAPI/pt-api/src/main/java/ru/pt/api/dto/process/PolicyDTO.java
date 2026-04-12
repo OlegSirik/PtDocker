@@ -84,6 +84,9 @@ public class PolicyDTO {
     // Constructors
     private Insurer insurer;
 
+    @JsonProperty("policyHolder")
+    private PolicyHolder policyHolder;
+
     public PolicyDTO() {
         this.additionalAttributes = new HashMap<>();
     }
@@ -91,8 +94,7 @@ public class PolicyDTO {
     public PolicyDTO(String draftId, String productCode, String waitingPeriod, String policyTerm,
                   ZonedDateTime startDate, ZonedDateTime endDate, ZonedDateTime issueDate,
                   String installmentType,
-                  List<InsuredObject> insuredObjects,
-                  Long insCompanyId
+                  List<InsuredObject> insuredObjects
 ) {
         this();
         this.draftId = draftId;
@@ -304,6 +306,14 @@ public class PolicyDTO {
 
     public void setInsurer(Insurer insurer) {
         this.insurer = insurer;
+    }
+
+    public PolicyHolder getPolicyHolder() {
+        return this.policyHolder;
+    }
+
+    public void setPolicyHolder(PolicyHolder policyHolder) {
+        this.policyHolder = policyHolder;
     }
 
 }

@@ -240,9 +240,16 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             logger.debug("Premium calculated. totalPremium={}", totalPremium);
         }
 
-//        for ( PvVarDefinition var : varCtx.getDefinitions()) {
-//            logger.info("Var {} {}", var.getCode(),  varCtx.getString(var.getCode()));
-//        }
+        BigDecimal sumInsured = varCtx.getDecimal("io_sumInsured");
+        if (sumInsured != null && sumInsured.compareTo(BigDecimal.ZERO) > 0) {
+            policyDTO.getInsuredObjects().get(0).setSumInsured(sumInsured);
+            logger.debug("Sum insured calculated. sumInsured={}", sumInsured);
+        } else {
+            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
+        }
+        if (!checkSumInsured(policyDTO)) {
+            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
+        }
 
     }
 
@@ -844,6 +851,22 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             }
         }
         return premium;
+    }
+
+    private boolean checkSumInsured(PolicyDTO policyDTO) {
+        BigDecimal sumInsured = BigDecimal.ZERO;
+        InsuredObject insObject = policyDTO.getInsuredObjects().get(0);
+
+        for (Cover cover : insObject.getCovers()) {
+            if (cover.getSumInsured() != null) {
+                // отрицательная сумма если не сработал какойто валидатор суммы
+                if ( sumInsured.compareTo(cover.getSumInsured()) < 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+        
     }
 
     private PvVarDefinition toDefinition(PvVar var) {

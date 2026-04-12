@@ -1165,6 +1165,7 @@ export class ProductComponent implements OnInit {
       isSystem: v.isSystem ?? false,
       isDeleted: v.isDeleted ?? false,
       isTarifFactor: v.isTarifFactor ?? false,
+      isOptional: v.isOptional ?? false,
       varList: v.varList,
       varPath: v.varPath ?? '',
       varValue: v.varValue ?? '',
@@ -1224,6 +1225,22 @@ export class ProductComponent implements OnInit {
     target.varNr = edited.varNr;
     target.varRefCode = edited.varRefCode;
     target.isTarifFactor = edited.isTarifFactor;
+    target.isOptional = edited.isOptional;
+  }
+
+  toggleProductTreeOptional(row: TreeTableSourceRow): void {
+    if (this.productTreeMutationsLocked) {
+      return;
+    }
+    const v = this.findPolicyVarForTreeRow(row);
+    if (!v) {
+      return;
+    }
+    const nextValue = !(v.isOptional ?? false);
+    v.isOptional = nextValue;
+    row.isOptional = nextValue;
+    this.updateChanges();
+    this.syncProductTreeFromVars();
   }
 
   /**

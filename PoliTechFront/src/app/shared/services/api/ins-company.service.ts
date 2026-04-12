@@ -28,6 +28,7 @@ export interface InsuranceCompanyDto {
   bic?: string;
   corrAccount?: string;
   displayName?: string;
+  representativeString?: string;
 }
 
 @Injectable({

@@ -23,7 +23,9 @@ import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.time.ZoneId;
 
@@ -54,13 +56,29 @@ public class PreProcessServiceImpl implements PreProcessService {
 
         normalizePolicyDates( policy,  productVersionModel);
 
-        var insuredObject = policy.getInsuredObjects().get(0);
+        List<InsuredObject> insuredObjects = policy.getInsuredObjects();
+        if (insuredObjects == null || insuredObjects.isEmpty()) {
+            insuredObjects = new ArrayList<>();
+            var emptyInsuredObject = new InsuredObject();
+            emptyInsuredObject.setCovers(new ArrayList<>());
+            insuredObjects.add(emptyInsuredObject);
+            policy.setInsuredObjects(insuredObjects);
+        }
 
+        var insuredObject = insuredObjects.get(0);
+/* 
         if (insuredObject == null || insuredObject.getCovers() == null) {
             var emptyInsuredObject = new InsuredObject();
             emptyInsuredObject.setCovers(new ArrayList<>());
             insuredObject = emptyInsuredObject;
         }
+*/
+        // если задано в правилах что объект страхования = страхователь
+        if (productVersionModel.getRules().isInsuredEqualsPolicyHolder()) {
+            Map<String, Object> additionalAttributes = policy.getPolicyHolder().getAdditionalAttributes();
+            insuredObject.setAdditionalAttributes(additionalAttributes);
+        }
+
 
         String inPackageNo;
         if (insuredObject.getPackageCode() == null) {

@@ -135,6 +135,12 @@
           <input matInput [(ngModel)]="company.displayName" />
         </mat-form-field>
       </div>
+      <div class="form-row">
+        <mat-form-field class="form-field form-field-full" appearance="outline">
+          <mat-label>ФИО представителя для договора</mat-label>
+          <input matInput [(ngModel)]="company.representativeString" />
+        </mat-form-field>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>

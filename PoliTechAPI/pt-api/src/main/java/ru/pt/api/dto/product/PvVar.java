@@ -47,6 +47,9 @@ public class PvVar {
     @JsonProperty("isTarifFactor")
     private boolean isTarifFactor = false;
     
+    @JsonProperty("isOptional")
+    private boolean isOptional = true;
+
     @JsonProperty("name")
     private String name;
     
@@ -187,6 +190,13 @@ public class PvVar {
     }
     public void setIsTarifFactor(boolean isTarifFactor) {
         this.isTarifFactor = isTarifFactor;
+    }
+
+    public boolean getIsOptional() {
+        return isOptional;
+    }
+    public void setIsOptional(boolean isOptional) {
+        this.isOptional = isOptional;
     }
 
     public String getName() {

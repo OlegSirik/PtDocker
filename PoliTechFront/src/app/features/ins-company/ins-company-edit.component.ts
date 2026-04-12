@@ -42,6 +42,7 @@ export class InsCompanyEditComponent implements OnInit {
     code: '',
     name: '',
     status: 'active',
+    representativeString: '',
   };
   isNewRecord = true;
   loading = false;

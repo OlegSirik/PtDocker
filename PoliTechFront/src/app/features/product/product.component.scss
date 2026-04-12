@@ -290,6 +290,18 @@
       gap: 0;
     }
 
+    .pv-tree-optional-btn {
+      margin-right: 4px;
+    }
+
+    .pv-tree-optional-icon {
+      color: #c62828;
+    }
+
+    .pv-tree-optional-icon.is-optional {
+      color: #9e9e9e;
+    }
+
     .schema-tree-name-cell {
       display: inline-flex;
       align-items: center;

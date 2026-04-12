@@ -381,6 +381,20 @@
               </ng-template>
               <ng-template #actionsCell let-item>
                 <span class="tree-table-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="pv-tree-optional-btn"
+                    [disabled]="productTreeMutationsLocked"
+                    matTooltip="Переключить обязательность"
+                    [attr.aria-label]="'Опционально: ' + item.varName"
+                    (click)="toggleProductTreeOptional(item); $event.stopPropagation()"
+                  >
+                    <mat-icon
+                      class="pv-tree-optional-icon"
+                      [class.is-optional]="item.isOptional"
+                    >star</mat-icon>
+                  </button>
                   @if (item.isDeleted) {
                     <button
                       mat-icon-button

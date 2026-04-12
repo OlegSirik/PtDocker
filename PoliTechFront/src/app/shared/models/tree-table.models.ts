@@ -88,6 +88,8 @@ export interface TreeTableSourceRow {
   isSystem?: boolean; // признак системной переменной (если true, то строка не удаляется из дерева)
   /** Тарифный фактор (PvVar / продукт) */
   isTarifFactor?: boolean;
+  /** Опциональная переменная (PvVar / продукт) */
+  isOptional?: boolean;
   varList?: string; // название список кодов переменных, которые относятся к этой переменной
   varListFilter?: string; // фильтр для списка кодов переменных, которые относятся к этой переменной. Копируется из валидатора
   varPath: string;

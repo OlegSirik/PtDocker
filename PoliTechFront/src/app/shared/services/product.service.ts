@@ -57,6 +57,7 @@ export interface PolicyVar {
   varNr: number;
   varRefCode?: string;
   isTarifFactor?: boolean;
+  isOptional?: boolean;
 }
 
 export interface QuoteValidator {
