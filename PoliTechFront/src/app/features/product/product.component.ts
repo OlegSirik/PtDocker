@@ -311,6 +311,32 @@ export class ProductComponent implements OnInit {
     this.hasChanges = true;
   }
 
+  /** Пока форма «грязная», CRUD через API отключён — сначала «Сохранить». */
+  get crudLockedPendingSave(): boolean {
+    return this.hasChanges;
+  }
+
+  private canRunServerCrud(): boolean {
+    return !this.hasChanges && !!this.product?.id && this.product.versionNo != null;
+  }
+
+  /** Редактирование/удаление строки валидатора (не системные: isUpdatable !== false). */
+  validatorRowMutable(v: QuoteValidator): boolean {
+    return this.canRunServerCrud() && v.isUpdatable !== false;
+  }
+
+  private nextValidatorLineNr(list: QuoteValidator[]): number {
+    const nums = list
+      .map((x) => x.lineNr)
+      .filter((n): n is number => n != null && Number.isFinite(Number(n)))
+      .map((n) => Number(n));
+    return nums.length ? Math.max(...nums) + 1 : 1;
+  }
+
+  private buildValidatorPayload(v: QuoteValidator, kind: 'QUOTE' | 'SAVE'): QuoteValidator {
+    return { ...v, validatorType: kind };
+  }
+
   save(): void {
 
     // Validate mandatory fields before saving
@@ -422,9 +448,18 @@ export class ProductComponent implements OnInit {
 
   // Quote Validator methods
   addQuoteValidator(): void {
-    
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open(
+        this.hasChanges ? 'Сначала сохраните изменения в продукте' : 'Сначала сохраните продукт',
+        'Закрыть',
+        { duration: 3000 }
+      );
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
 
-    this.loadDropdownOptions()
+    this.loadDropdownOptions();
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
       width: '600px',
       minWidth: '900px',
@@ -436,16 +471,37 @@ export class ProductComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.product.quoteValidator.push(result);
-        this.updateQuoteValidatorTable();
-        this.updateChanges();
+      if (!result) {
+        return;
       }
+      const lineNr = result.lineNr ?? this.nextValidatorLineNr(this.product.quoteValidator);
+      const payload = this.buildValidatorPayload({ ...result, lineNr, isUpdatable: true }, 'QUOTE');
+      this.productService.addValidator(productId, versionNo, payload).subscribe({
+        next: (updated) => {
+          this.product = updated;
+          this.updateTables();
+          this.hasChanges = false;
+          this.snackBar.open('Проверка добавлена', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error adding quote validator:', error);
+          this.snackBar.open('Ошибка добавления проверки', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
   editQuoteValidator(validator: QuoteValidator, index: number): void {
-    this.loadDropdownOptions()
+    if (!this.validatorRowMutable(validator)) {
+      return;
+    }
+    if (!this.canRunServerCrud()) {
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+
+    this.loadDropdownOptions();
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
       width: '600px',
       minWidth: '900px',
@@ -458,20 +514,60 @@ export class ProductComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.product.quoteValidator[index] = result;
-        this.updateQuoteValidatorTable();
-        this.updateChanges();
+      if (!result) {
+        return;
       }
+      const payload = this.buildValidatorPayload(
+        { ...result, validatorType: 'QUOTE', isUpdatable: validator.isUpdatable !== false },
+        'QUOTE'
+      );
+      this.productService.updateValidator(productId, versionNo, payload).subscribe({
+        next: (updated) => {
+          this.product = updated;
+          this.updateTables();
+          this.hasChanges = false;
+          this.snackBar.open('Проверка обновлена', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error updating quote validator:', error);
+          this.snackBar.open('Ошибка обновления проверки', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
   deleteQuoteValidator(validator: QuoteValidator, index: number): void {
-    if (confirm('Удалить проверку предрасчета?')) {
-      this.product.quoteValidator.splice(index, 1);
-      this.updateQuoteValidatorTable();
-      this.updateChanges();
+    if (!this.validatorRowMutable(validator)) {
+      return;
     }
+    if (!this.canRunServerCrud()) {
+      return;
+    }
+    if (!confirm('Удалить проверку предрасчета?')) {
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+    const payload = this.buildValidatorPayload({ ...validator, validatorType: 'QUOTE' }, 'QUOTE');
+    this.productService.deleteValidator(productId, versionNo, payload).subscribe({
+      next: (updated) => {
+        this.product = updated;
+        this.updateTables();
+        this.hasChanges = false;
+        this.snackBar.open('Проверка удалена', 'Закрыть', { duration: 2000 });
+      },
+      error: (error: any) => {
+        console.error('Error deleting quote validator:', error);
+        this.snackBar.open('Ошибка удаления проверки', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  onQuoteValidatorRowClick(row: QuoteValidator): void {
+    if (!this.validatorRowMutable(row)) {
+      return;
+    }
+    this.editQuoteValidator(row, this.getQuoteValidatorIndex(row));
   }
 
   updateQuoteValidatorTable(): void {
@@ -496,7 +592,18 @@ export class ProductComponent implements OnInit {
 
   // Save Validator methods
   addSaveValidator(): void {
-    this.loadDropdownOptions()
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open(
+        this.hasChanges ? 'Сначала сохраните изменения в продукте' : 'Сначала сохраните продукт',
+        'Закрыть',
+        { duration: 3000 }
+      );
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+
+    this.loadDropdownOptions();
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
       width: '600px',
       minWidth: '900px',
@@ -508,11 +615,23 @@ export class ProductComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.product.saveValidator.push(result);
-        this.updateSaveValidatorTable();
-        this.updateChanges();
+      if (!result) {
+        return;
       }
+      const lineNr = result.lineNr ?? this.nextValidatorLineNr(this.product.saveValidator);
+      const payload = this.buildValidatorPayload({ ...result, lineNr, isUpdatable: true }, 'SAVE');
+      this.productService.addValidator(productId, versionNo, payload).subscribe({
+        next: (updated) => {
+          this.product = updated;
+          this.updateTables();
+          this.hasChanges = false;
+          this.snackBar.open('Проверка добавлена', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error adding save validator:', error);
+          this.snackBar.open('Ошибка добавления проверки', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
@@ -538,7 +657,16 @@ export class ProductComponent implements OnInit {
   }
 
   editSaveValidator(validator: QuoteValidator, index: number): void {
-    this.loadDropdownOptions()
+    if (!this.validatorRowMutable(validator)) {
+      return;
+    }
+    if (!this.canRunServerCrud()) {
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+
+    this.loadDropdownOptions();
     const dialogRef = this.dialog.open(ValidatorDialogComponent, {
       width: '600px',
       minWidth: '900px',
@@ -551,20 +679,60 @@ export class ProductComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.product.saveValidator[index] = result;
-        this.updateSaveValidatorTable();
-        this.updateChanges();
+      if (!result) {
+        return;
       }
+      const payload = this.buildValidatorPayload(
+        { ...result, validatorType: 'SAVE', isUpdatable: validator.isUpdatable !== false },
+        'SAVE'
+      );
+      this.productService.updateValidator(productId, versionNo, payload).subscribe({
+        next: (updated) => {
+          this.product = updated;
+          this.updateTables();
+          this.hasChanges = false;
+          this.snackBar.open('Проверка обновлена', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error updating save validator:', error);
+          this.snackBar.open('Ошибка обновления проверки', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
   deleteSaveValidator(validator: QuoteValidator, index: number): void {
-    if (confirm('Удалить проверку договора?')) {
-      this.product.saveValidator.splice(index, 1);
-      this.updateSaveValidatorTable();
-      this.updateChanges();
+    if (!this.validatorRowMutable(validator)) {
+      return;
     }
+    if (!this.canRunServerCrud()) {
+      return;
+    }
+    if (!confirm('Удалить проверку договора?')) {
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+    const payload = this.buildValidatorPayload({ ...validator, validatorType: 'SAVE' }, 'SAVE');
+    this.productService.deleteValidator(productId, versionNo, payload).subscribe({
+      next: (updated) => {
+        this.product = updated;
+        this.updateTables();
+        this.hasChanges = false;
+        this.snackBar.open('Проверка удалена', 'Закрыть', { duration: 2000 });
+      },
+      error: (error: any) => {
+        console.error('Error deleting save validator:', error);
+        this.snackBar.open('Ошибка удаления проверки', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  onSaveValidatorRowClick(row: QuoteValidator): void {
+    if (!this.validatorRowMutable(row)) {
+      return;
+    }
+    this.editSaveValidator(row, this.getSaveValidatorIndex(row));
   }
 
   updateSaveValidatorTable(): void {
@@ -602,6 +770,12 @@ export class ProductComponent implements OnInit {
   }
 
   addPackage(): void {
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     const dialogRef = this.dialog.open(PackageDialogComponent, {
       width: '500px',
       data: {
@@ -622,11 +796,6 @@ export class ProductComponent implements OnInit {
         this.snackBar.open('Код пакета должен быть уникальным', 'Закрыть', { duration: 3000 });
         return;
       }
-      const maxId =
-        this.product.packages.length > 0
-          ? Math.max(...this.product.packages.map((p) => p.id ?? 0))
-          : 0;
-      result.id = maxId + 1;
       result.code = code;
       if (!result.files) {
         result.files = [];
@@ -635,18 +804,32 @@ export class ProductComponent implements OnInit {
         result.covers = [];
       }
 
-      this.product.packages.push(result);
-      this.updatePackagesTable();
-
-      this.selectedPackageIndex = this.product.packages.length - 1;
-      this.currentPackage = result;
-      this.updateChildTables();
-
-      this.updateChanges();
+      this.productService.addPackage(productId, versionNo, result).subscribe({
+        next: (updatedProduct) => {
+          this.product = updatedProduct;
+          this.updateTables();
+          const newIndex = this.product.packages.findIndex((p) => p.code === code);
+          this.selectedPackageIndex = newIndex;
+          this.currentPackage = newIndex >= 0 ? this.product.packages[newIndex] : null;
+          this.updateChildTables();
+          this.hasChanges = false;
+          this.snackBar.open('Пакет добавлен', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error adding package:', error);
+          this.snackBar.open('Ошибка добавления пакета', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
   editPackage(pkg: Package, index: number): void {
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     if (index < 0 || index >= this.product.packages.length) {
       this.snackBar.open('Не удалось найти пакет в списке', 'Закрыть', { duration: 3000 });
       return;
@@ -679,41 +862,59 @@ export class ProductComponent implements OnInit {
       if (!result.covers) {
         result.covers = pkg.covers || [];
       }
-      result.id = pkg.id;
       result.code = code;
-      this.product.packages[index] = result;
-      this.updatePackagesTable();
-      // Update child tables if this package is selected
-      if (this.selectedPackageIndex === index) {
-        this.currentPackage = result;
-        this.updateChildTables();
-      }
-      this.updateChanges();
+      this.productService.updatePackage(productId, versionNo, pkg.code, result).subscribe({
+        next: (updatedProduct) => {
+          this.product = updatedProduct;
+          this.updateTables();
+          const updatedIndex = this.product.packages.findIndex((p) => p.code === code);
+          if (updatedIndex >= 0) {
+            this.selectedPackageIndex = updatedIndex;
+            this.currentPackage = this.product.packages[updatedIndex];
+          } else {
+            this.selectedPackageIndex = -1;
+            this.currentPackage = null;
+          }
+          this.updateChildTables();
+          this.hasChanges = false;
+          this.snackBar.open('Пакет обновлен', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error updating package:', error);
+          this.snackBar.open('Ошибка обновления пакета', 'Закрыть', { duration: 3000 });
+        }
+      });
     });
   }
 
   deletePackage(pkg: Package, index: number): void {
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     if (index < 0 || index >= this.product.packages.length) {
       this.snackBar.open('Не удалось найти пакет в списке', 'Закрыть', { duration: 3000 });
       return;
     }
     if (confirm('Удалить пакет?')) {
-      this.product.packages.splice(index, 1);
-      
-      // Reset selection if deleted package was selected
-      if (this.selectedPackageIndex === index) {
-        this.selectedPackageIndex = -1;
-        this.currentPackage = null;
-        this.selectedCoverIndex = -1;
-      } else if (this.selectedPackageIndex > index) {
-        // Adjust index if a package before the selected one was deleted
-        this.selectedPackageIndex--;
-        this.currentPackage = this.product.packages[this.selectedPackageIndex];
-      }
-      
-      this.updatePackagesTable();
-      this.updateChildTables();
-      this.updateChanges();
+      this.productService.deletePackage(productId, versionNo, pkg.code).subscribe({
+        next: (updatedProduct) => {
+          this.product = updatedProduct;
+          this.selectedPackageIndex = -1;
+          this.currentPackage = null;
+          this.selectedCoverIndex = -1;
+          this.updateTables();
+          this.updateChildTables();
+          this.hasChanges = false;
+          this.snackBar.open('Пакет удален', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error deleting package:', error);
+          this.snackBar.open('Ошибка удаления пакета', 'Закрыть', { duration: 3000 });
+        }
+      });
     }
   }
   updateFilesTable() {
@@ -773,6 +974,12 @@ export class ProductComponent implements OnInit {
   // Cover methods
   addCover(): void {
     if (this.selectedPackageIndex === -1) return;
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
 
     this.loadDropdownOptions();
 
@@ -792,14 +999,33 @@ export class ProductComponent implements OnInit {
         if (!result.limits) {
           result.limits = [];
         }
-        this.product.packages[this.selectedPackageIndex].covers.push(result);
-        this.updateCoversTable();
-        this.updateChanges();
+        const packageCode = this.product.packages[this.selectedPackageIndex].code;
+        this.productService.addCover(productId, versionNo, packageCode, result).subscribe({
+          next: (updatedProduct) => {
+            this.product = updatedProduct;
+            const pkgIndex = this.product.packages.findIndex((p) => p.code === packageCode);
+            this.selectedPackageIndex = pkgIndex;
+            this.currentPackage = pkgIndex >= 0 ? this.product.packages[pkgIndex] : null;
+            this.updateTables();
+            this.hasChanges = false;
+            this.snackBar.open('Покрытие добавлено', 'Закрыть', { duration: 2000 });
+          },
+          error: (error: any) => {
+            console.error('Error adding cover:', error);
+            this.snackBar.open('Ошибка добавления покрытия', 'Закрыть', { duration: 3000 });
+          }
+        });
       }
     });
   }
 
   editCover(cover: Cover, index: number): void {
+    if (!this.product.id || !this.product.versionNo || this.selectedPackageIndex === -1) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     this.loadDropdownOptions();
     
     const dialogRef = this.dialog.open(CoverDialogComponent, {
@@ -820,32 +1046,51 @@ export class ProductComponent implements OnInit {
         if (!result.limits) {
           result.limits = cover.limits || [];
         }
-        this.product.packages[this.selectedPackageIndex].covers[index] = result;
-        this.updateCoversTable();
-        // Update detail tables if this cover is selected
-        if (this.selectedCoverIndex === index) {
-          this.updateDeductiblesTable();
-          this.updateLimitsTable();
-        }
-        this.updateChanges();
+        const packageCode = this.product.packages[this.selectedPackageIndex].code;
+        this.productService.updateCover(productId, versionNo, packageCode, cover.code, result).subscribe({
+          next: (updatedProduct) => {
+            this.product = updatedProduct;
+            const pkgIndex = this.product.packages.findIndex((p) => p.code === packageCode);
+            this.selectedPackageIndex = pkgIndex;
+            this.currentPackage = pkgIndex >= 0 ? this.product.packages[pkgIndex] : null;
+            this.updateTables();
+            this.hasChanges = false;
+            this.snackBar.open('Покрытие обновлено', 'Закрыть', { duration: 2000 });
+          },
+          error: (error: any) => {
+            console.error('Error updating cover:', error);
+            this.snackBar.open('Ошибка обновления покрытия', 'Закрыть', { duration: 3000 });
+          }
+        });
       }
     });
   }
 
   deleteCover(cover: Cover, index: number): void {
+    if (!this.product.id || !this.product.versionNo || this.selectedPackageIndex === -1) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     if (confirm('Удалить покрытие?')) {
-      // Reset cover selection if deleted cover was selected
-      if (this.selectedCoverIndex === index) {
-        this.selectedCoverIndex = -1;
-      } else if (this.selectedCoverIndex > index) {
-        this.selectedCoverIndex--;
-      }
-      
-      this.product.packages[this.selectedPackageIndex].covers.splice(index, 1);
-      this.updateCoversTable();
-      this.updateDeductiblesTable();
-      this.updateLimitsTable();
-      this.updateChanges();
+      const packageCode = this.product.packages[this.selectedPackageIndex].code;
+      this.productService.deleteCover(productId, versionNo, packageCode, cover.code).subscribe({
+        next: (updatedProduct) => {
+          this.product = updatedProduct;
+          const pkgIndex = this.product.packages.findIndex((p) => p.code === packageCode);
+          this.selectedPackageIndex = pkgIndex;
+          this.currentPackage = pkgIndex >= 0 ? this.product.packages[pkgIndex] : null;
+          this.selectedCoverIndex = -1;
+          this.updateTables();
+          this.hasChanges = false;
+          this.snackBar.open('Покрытие удалено', 'Закрыть', { duration: 2000 });
+        },
+        error: (error: any) => {
+          console.error('Error deleting cover:', error);
+          this.snackBar.open('Ошибка удаления покрытия', 'Закрыть', { duration: 3000 });
+        }
+      });
     }
   }
 
@@ -871,9 +1116,51 @@ export class ProductComponent implements OnInit {
     this.updateLimitsTable();
   }
 
+  private persistSelectedCover(updatedCover: Cover, successMessage: string, errorMessage: string): void {
+    if (!this.canRunServerCrud() || this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id!;
+    const versionNo = this.product.versionNo!;
+    const selectedPackage = this.product.packages[this.selectedPackageIndex];
+    const currentCover = selectedPackage?.covers?.[this.selectedCoverIndex];
+    if (!selectedPackage || !currentCover) {
+      this.snackBar.open('Покрытие не найдено', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const packageCode = selectedPackage.code;
+    const coverCode = currentCover.code;
+    this.productService.updateCover(productId, versionNo, packageCode, coverCode, updatedCover).subscribe({
+      next: (updatedProduct) => {
+        this.product = updatedProduct;
+        const pkgIndex = this.product.packages.findIndex((p) => p.code === packageCode);
+        this.selectedPackageIndex = pkgIndex;
+        this.currentPackage = pkgIndex >= 0 ? this.product.packages[pkgIndex] : null;
+        if (pkgIndex >= 0) {
+          const nextCoverIndex = this.product.packages[pkgIndex].covers.findIndex((c) => c.code === updatedCover.code);
+          this.selectedCoverIndex = nextCoverIndex >= 0 ? nextCoverIndex : -1;
+        } else {
+          this.selectedCoverIndex = -1;
+        }
+        this.updateTables();
+        this.hasChanges = false;
+        this.snackBar.open(successMessage, 'Закрыть', { duration: 2000 });
+      },
+      error: (error: any) => {
+        console.error(errorMessage, error);
+        this.snackBar.open(errorMessage, 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
   // Deductible methods
   addDeductible(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return;
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
 
     const dialogRef = this.dialog.open(DeductibleDialogComponent, {
       width: '600px',
@@ -885,9 +1172,7 @@ export class ProductComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-        if (!cover.deductibles) {
-          cover.deductibles = [];
-        }
+        const deductibles = cover.deductibles ?? [];
         
         // Validate: id must be unique and not empty
         if (!result.id && result.id !== 0) {
@@ -898,19 +1183,25 @@ export class ProductComponent implements OnInit {
           this.snackBar.open('Текст не может быть пустым', 'Закрыть', { duration: 3000 });
           return;
         }
-        if (cover.deductibles.some(d => d.id === result.id)) {
+        if (deductibles.some(d => d.id === result.id)) {
           this.snackBar.open('ID должен быть уникальным', 'Закрыть', { duration: 3000 });
           return;
         }
-        
-        cover.deductibles.push(result);
-        this.updateDeductiblesTable();
-        this.updateChanges();
+        const updatedCover: Cover = {
+          ...cover,
+          deductibles: [...deductibles, result],
+          limits: cover.limits ?? []
+        };
+        this.persistSelectedCover(updatedCover, 'Франшиза добавлена', 'Ошибка добавления франшизы');
       }
     });
   }
 
   editDeductible(deductible: Deductible, index: number): void {
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
     const dialogRef = this.dialog.open(DeductibleDialogComponent, {
       width: '600px',
       data: {
@@ -922,9 +1213,7 @@ export class ProductComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-        if (!cover.deductibles) {
-          cover.deductibles = [];
-        }
+        const deductibles = [...(cover.deductibles ?? [])];
         
         // Validate: id must be unique (excluding current index) and not empty
         if (!result.id && result.id !== 0) {
@@ -935,26 +1224,36 @@ export class ProductComponent implements OnInit {
           this.snackBar.open('Текст не может быть пустым', 'Закрыть', { duration: 3000 });
           return;
         }
-        if (cover.deductibles.some((d, i) => d.id === result.id && i !== index)) {
+        if (deductibles.some((d, i) => d.id === result.id && i !== index)) {
           this.snackBar.open('ID должен быть уникальным', 'Закрыть', { duration: 3000 });
           return;
         }
-        
-        cover.deductibles[index] = result;
-        this.updateDeductiblesTable();
-        this.updateChanges();
+        deductibles[index] = result;
+        const updatedCover: Cover = {
+          ...cover,
+          deductibles,
+          limits: cover.limits ?? []
+        };
+        this.persistSelectedCover(updatedCover, 'Франшиза обновлена', 'Ошибка обновления франшизы');
       }
     });
   }
 
   deleteDeductible(deductible: Deductible, index: number): void {
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
     if (confirm('Удалить франшизу?')) {
       const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-      if (cover.deductibles) {
-        cover.deductibles.splice(index, 1);
-      }
-      this.updateDeductiblesTable();
-      this.updateChanges();
+      const deductibles = [...(cover.deductibles ?? [])];
+      deductibles.splice(index, 1);
+      const updatedCover: Cover = {
+        ...cover,
+        deductibles,
+        limits: cover.limits ?? []
+      };
+      this.persistSelectedCover(updatedCover, 'Франшиза удалена', 'Ошибка удаления франшизы');
     }
   }
 
@@ -983,6 +1282,10 @@ export class ProductComponent implements OnInit {
   // Limits methods
   addLimit(): void {
     if (this.selectedPackageIndex === -1 || this.selectedCoverIndex === -1) return;
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
 
     const dialogRef = this.dialog.open(LimitDialogComponent, {
       width: '500px',
@@ -994,9 +1297,7 @@ export class ProductComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-        if (!cover.limits) {
-          cover.limits = [];
-        }
+        const limits = cover.limits ?? [];
         
         // Validate: sumInsured must be unique, sumInsured and premium must be > 0
         if (!result.sumInsured || result.sumInsured <= 0) {
@@ -1007,19 +1308,25 @@ export class ProductComponent implements OnInit {
           this.snackBar.open('Премия должна быть больше 0', 'Закрыть', { duration: 3000 });
           return;
         }
-        if (cover.limits.some(l => l.sumInsured === result.sumInsured)) {
+        if (limits.some(l => l.sumInsured === result.sumInsured)) {
           this.snackBar.open('Страховая сумма должна быть уникальной', 'Закрыть', { duration: 3000 });
           return;
         }
-        
-        cover.limits.push(result);
-        this.updateLimitsTable();
-        this.updateChanges();
+        const updatedCover: Cover = {
+          ...cover,
+          limits: [...limits, result],
+          deductibles: cover.deductibles ?? []
+        };
+        this.persistSelectedCover(updatedCover, 'Лимит добавлен', 'Ошибка добавления лимита');
       }
     });
   }
 
   editLimit(limit: Limit, index: number): void {
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
     const dialogRef = this.dialog.open(LimitDialogComponent, {
       width: '500px',
       data: {
@@ -1031,9 +1338,7 @@ export class ProductComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-        if (!cover.limits) {
-          cover.limits = [];
-        }
+        const limits = [...(cover.limits ?? [])];
         
         // Validate: sumInsured must be unique (excluding current index), sumInsured and premium must be > 0
         if (!result.sumInsured || result.sumInsured <= 0) {
@@ -1044,26 +1349,36 @@ export class ProductComponent implements OnInit {
           this.snackBar.open('Премия должна быть больше 0', 'Закрыть', { duration: 3000 });
           return;
         }
-        if (cover.limits.some((l, i) => l.sumInsured === result.sumInsured && i !== index)) {
+        if (limits.some((l, i) => l.sumInsured === result.sumInsured && i !== index)) {
           this.snackBar.open('Страховая сумма должна быть уникальной', 'Закрыть', { duration: 3000 });
           return;
         }
-        
-        cover.limits[index] = result;
-        this.updateLimitsTable();
-        this.updateChanges();
+        limits[index] = result;
+        const updatedCover: Cover = {
+          ...cover,
+          limits,
+          deductibles: cover.deductibles ?? []
+        };
+        this.persistSelectedCover(updatedCover, 'Лимит обновлен', 'Ошибка обновления лимита');
       }
     });
   }
 
   deleteLimit(limit: Limit, index: number): void {
+    if (!this.canRunServerCrud()) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
     if (confirm('Удалить лимит?')) {
       const cover = this.product.packages[this.selectedPackageIndex].covers[this.selectedCoverIndex];
-      if (cover.limits) {
-        cover.limits.splice(index, 1);
-      }
-      this.updateLimitsTable();
-      this.updateChanges();
+      const limits = [...(cover.limits ?? [])];
+      limits.splice(index, 1);
+      const updatedCover: Cover = {
+        ...cover,
+        limits,
+        deductibles: cover.deductibles ?? []
+      };
+      this.persistSelectedCover(updatedCover, 'Лимит удален', 'Ошибка удаления лимита');
     }
   }
 
@@ -1192,6 +1507,13 @@ export class ProductComponent implements OnInit {
     if (!v) {
       return;
     }
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    const originalVarCode = v.varCode;
     this.dialog
       .open(ProductPvVarEditDialogComponent, {
         width: '760px',
@@ -1203,9 +1525,18 @@ export class ProductComponent implements OnInit {
         if (!result) {
           return;
         }
-        this.applyPolicyVarEditFromDialog(v, result);
-        this.updateChanges();
-        this.syncProductTreeFromVars();
+        this.productService.updateVar(productId, versionNo, originalVarCode, result).subscribe({
+          next: (updatedProduct) => {
+            this.product = updatedProduct;
+            this.updateTables();
+            this.hasChanges = false;
+            this.snackBar.open('Переменная обновлена', 'Закрыть', { duration: 2000 });
+          },
+          error: (error: any) => {
+            console.error('Error updating variable:', error);
+            this.snackBar.open('Ошибка обновления переменной', 'Закрыть', { duration: 3000 });
+          }
+        });
       });
   }
 
@@ -1236,49 +1567,78 @@ export class ProductComponent implements OnInit {
     if (!v) {
       return;
     }
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
     const nextValue = !(v.isOptional ?? false);
-    v.isOptional = nextValue;
-    row.isOptional = nextValue;
-    this.updateChanges();
-    this.syncProductTreeFromVars();
+    const payload: PolicyVar = { ...v, isOptional: nextValue };
+    this.productService.updateVar(productId, versionNo, v.varCode, payload).subscribe({
+      next: (updatedProduct) => {
+        this.product = updatedProduct;
+        this.updateTables();
+        this.hasChanges = false;
+      },
+      error: (error: any) => {
+        console.error('Error updating optional flag:', error);
+        this.snackBar.open('Ошибка обновления обязательности', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   /**
    * После встроенного soft-delete в дереве у потомков уже стоит {@code isDeleted} на строках —
    * переносим флаги в {@link Product.vars}.
    */
-  onProductTreeSoftDeleted(_row: TreeTableSourceRow): void {
-    for (const r of this.productTreeTableData) {
-      const v = this.findPolicyVarForTreeRow(r);
-      if (v) {
-        v.isDeleted = !!r.isDeleted;
-      }
+  onProductTreeSoftDeleted(row: TreeTableSourceRow): void {
+    const v = this.findPolicyVarForTreeRow(row);
+    if (!v) {
+      return;
     }
-    this.updateChanges();
-    this.syncProductTreeFromVars();
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    this.productService.deleteVar(productId, versionNo, v.varCode).subscribe({
+      next: (updatedProduct) => {
+        this.product = updatedProduct;
+        this.updateTables();
+        this.hasChanges = false;
+      },
+      error: (error: any) => {
+        console.error('Error deleting variable:', error);
+        this.snackBar.open('Ошибка удаления переменной', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   onProductTreeRestoreNode(row: TreeTableSourceRow): void {
-    let v: PolicyVar | undefined = this.findPolicyVarForTreeRow(row);
-    const seen = new Set<number>();
-    while (v) {
-      const vid = v.id != null ? Number(v.id) : NaN;
-      if (Number.isFinite(vid)) {
-        if (seen.has(vid)) {
-          break;
-        }
-        seen.add(vid);
-      }
-      v.isDeleted = false;
-      const pid = v.parent_id;
-      if (pid == null) {
-        break;
-      }
-      const pNum = Number(pid);
-      v = this.product.vars.find((x) => x.id != null && Number(x.id) === pNum);
+    const v = this.findPolicyVarForTreeRow(row);
+    if (!v) {
+      return;
     }
-    this.updateChanges();
-    this.syncProductTreeFromVars();
+    if (!this.product.id || !this.product.versionNo) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    const payload: PolicyVar = { ...v, isDeleted: false };
+    this.productService.updateVar(productId, versionNo, v.varCode, payload).subscribe({
+      next: (updatedProduct) => {
+        this.product = updatedProduct;
+        this.updateTables();
+        this.hasChanges = false;
+      },
+      error: (error: any) => {
+        console.error('Error restoring variable:', error);
+        this.snackBar.open('Ошибка восстановления переменной', 'Закрыть', { duration: 3000 });
+      }
+    });
   }
 
   get paginatedPolicyVars(): any[] {

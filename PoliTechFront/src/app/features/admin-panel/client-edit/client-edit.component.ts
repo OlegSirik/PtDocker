@@ -133,9 +133,9 @@ export class ClientEditComponent implements OnInit {
 
   client: Client = {
     tid: 0,
-    clientId: '',
+    authClientId: '',
     name: '',
-    isDeleted: false,
+    recordStatus: 'ACTIVE',
     authType: '',
     authLevel: 'CLIENT',
     clientConfiguration: {
@@ -215,7 +215,7 @@ export class ClientEditComponent implements OnInit {
   updateChanges(): void {
     if (this.isNewRecord) {
       // For new records, check if any required fields are filled
-      this.hasChanges = !!(this.client.clientId || this.client.name || this.client.tid);
+      this.hasChanges = !!(this.client.authClientId || this.client.name || this.client.tid);
     } else {
       // For existing records, compare with original
       this.hasChanges = !this.originalClient || 
@@ -229,7 +229,7 @@ export class ClientEditComponent implements OnInit {
 
   save(): void {
     this.client.tid = this.authService.tenantId;
-    if (!this.client.clientId || !this.client.name || this.client.tid < 0 ) {
+    if (!this.client.authClientId || !this.client.name || this.client.tid < 0 ) {
       this.snack.open('Заполните обязательные поля (Code, Name)', 'OK', { duration: 2500 });
       return;
     }

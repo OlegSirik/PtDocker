@@ -45,7 +45,7 @@ public class PolicyReport {
             p.policy_status, 
             p.user_account_id,
             p.client_account_id,
-            p.version_status,
+            p.data_scope,
             p.payment_order_id,
             p.ph_digest,
             p.io_digest,
@@ -98,7 +98,7 @@ public class PolicyReport {
             p.policy_status, 
             p.user_account_id,
             p.client_account_id,
-            p.version_status,
+            p.data_scope,
             p.payment_order_id,
             p.ph_digest,
             p.io_digest,
@@ -110,7 +110,7 @@ public class PolicyReport {
         FROM policy_index p
         WHERE ( p.policy_nr LIKE ? OR p.ph_digest LIKE ? )
         AND p.id_path LIKE ?
-        AND p.version_status = ?
+        AND p.data_scope = ?
         ORDER BY p.policy_nr
         LIMIT 100
         """;

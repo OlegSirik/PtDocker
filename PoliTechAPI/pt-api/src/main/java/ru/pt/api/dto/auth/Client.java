@@ -1,9 +1,8 @@
 package ru.pt.api.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.refs.RecordStatus;
-import ru.pt.api.dto.auth.ClientAuthType;
-import ru.pt.api.dto.auth.ClientAuthLevel;
 
 public class Client {
     private Long id;
@@ -89,8 +88,20 @@ public class Client {
         return authType;
     }
 
+    @JsonSetter("authType")
     public void setAuthType(ClientAuthType authType) {
         this.authType = authType;
+    }
+
+    @JsonSetter("authType")
+    public void setAuthType(String authType) {
+        if (authType == null || authType.trim().isEmpty()) {
+            this.authType = null;
+            return;
+        }
+        String normalized = authType.trim().toUpperCase();
+        
+        this.authType = ClientAuthType.valueOf(normalized);
     }
 
     public Product[] getProducts() {

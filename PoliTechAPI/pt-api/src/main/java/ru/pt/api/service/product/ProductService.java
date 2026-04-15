@@ -2,7 +2,10 @@ package ru.pt.api.service.product;
 
 import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvCover;
+import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.product.ValidatorRule;
 
 import java.util.List;
 
@@ -181,4 +184,28 @@ public interface ProductService {
      * @throws ru.pt.api.dto.exception.UnprocessableEntityException если версия не DEV или обновление недопустимо
      */
     ProductVersionModel reloadVars(Long tenantId, Long productId, Long versionNo, String category);
+
+    ProductVersionModel addPackage(Long tenantId, Long productId, Long versionNo, PvPackage pkg);
+
+    ProductVersionModel updatePackage(Long tenantId, Long productId, Long versionNo, PvPackage pkg);
+
+    ProductVersionModel deletePackage(Long tenantId, Long productId, Long versionNo, String packageCode);
+
+    ProductVersionModel addCover(Long tenantId, Long productId, Long versionNo, String packageCode, PvCover cover);
+
+    ProductVersionModel updateCover(Long tenantId, Long productId, Long versionNo, String packageCode, PvCover cover);
+
+    ProductVersionModel deleteCover(Long tenantId, Long productId, Long versionNo, String packageCode, String coverCode);
+
+    ProductVersionModel addVar(Long tenantId, Long productId, Long versionNo, PvVar var);
+
+    ProductVersionModel updateVar(Long tenantId, Long productId, Long versionNo, PvVar var);
+
+    ProductVersionModel deleteVar(Long tenantId, Long productId, Long versionNo, String varCode);
+
+    ProductVersionModel addValidator(Long tenantId, Long productId, Long versionNo, ValidatorRule validator);
+
+    ProductVersionModel updateValidator(Long tenantId, Long productId, Long versionNo, ValidatorRule validator);
+
+    ProductVersionModel deleteValidator(Long tenantId, Long productId, Long versionNo, ValidatorRule validator);
 }

@@ -9,12 +9,12 @@ import { BaseApiService } from './base-api.service';
 export interface Client {
     id?: number;
     tid: number;
-    clientId: string;
+    authClientId: string;
     name: string;
     defaultAccountId?: number;
     createdAt?: Date | string;
     updateAt?: Date | string;
-    isDeleted: boolean;
+    recordStatus: string;
     clientAccountId?: number;
     clientConfiguration?: ClientConfiguration;
     authType?: string;

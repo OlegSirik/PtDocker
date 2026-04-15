@@ -28,7 +28,7 @@
                 </mat-form-field>
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Client ID</mat-label>
-                  <input matInput [(ngModel)]="client.clientId" (ngModelChange)="onFieldChange()">
+                  <input matInput [(ngModel)]="client.authClientId" (ngModelChange)="onFieldChange()">
                   <mat-hint>client_id приходящее в токене от IdP</mat-hint>
                 </mat-form-field>
               </div>
@@ -39,9 +39,9 @@
                 </mat-form-field>
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Статус</mat-label>
-                  <mat-select [(ngModel)]="client.isDeleted" (ngModelChange)="onFieldChange()">
-                    <mat-option [value]="false">ACTIVE</mat-option>
-                    <mat-option [value]="true">SUSPENDED</mat-option>
+                  <mat-select [(ngModel)]="client.recordStatus" (ngModelChange)="onFieldChange()">
+                    <mat-option [value]="'ACTIVE'">ACTIVE</mat-option>
+                    <mat-option [value]="'SUSPENDED'">SUSPENDED</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
@@ -53,11 +53,9 @@
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Тип авторизации</mat-label>
                   <mat-select [(ngModel)]="client.authType" name="authType" (ngModelChange)="onFieldChange()">
-                    <mat-option value="JWT">JWT</mat-option>
-                    <mat-option value="HEADER">HEADER</mat-option>
+                    <mat-option [value]="null">Как на tenant</mat-option>
+                    <mat-option value="HEADERS">HEADERS</mat-option>
                     <mat-option value="APIKEY">APIKEY</mat-option>
-                    <mat-option value="KEYCLOAK">KEYCLOAK</mat-option>
-                    <mat-option value="NONE">NONE</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>

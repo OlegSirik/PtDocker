@@ -6,7 +6,7 @@ import java.util.Map;
 public class ProcessList {
 
     private String currentOperation;  //quote or save
-    private String productVersionStatus; //prod or dev
+    private String dataScope; //prod or dev
     private String phDigest;
     private String ioDigest;
     private String insCompanyCode;
@@ -15,8 +15,8 @@ public class ProcessList {
     public static String QUOTE = "quote";
     public static String SAVE = "save";
     
-    public static String PROD = "prod";
-    public static String DEV = "dev";
+    public static String PROD = "PROD";
+    public static String DEV = "DEV";
 
     public ProcessList(String currentOperation) {
         this.currentOperation = currentOperation;
@@ -57,12 +57,12 @@ public class ProcessList {
         this.vars.putAll(vars);
     }
 
-    public void setProductVersionStatus(String value){
-        this.productVersionStatus = value;
+    public void setDataScope(String value){
+        this.dataScope = value;
     }
 
-    public String getProductVersionStatus(){
-        return this.productVersionStatus;
+    public String getDataScope(){
+        return this.dataScope;
     }
     public String getInsCompanyCode(){
         return this.insCompanyCode;

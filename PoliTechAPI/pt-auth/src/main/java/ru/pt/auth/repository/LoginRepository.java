@@ -10,8 +10,8 @@ import java.util.Optional;
 
 public interface LoginRepository extends JpaRepository<LoginEntity, Long> {
 
-    @Query("SELECT l FROM LoginEntity l WHERE l.userLogin = :userLogin")
-    Optional<LoginEntity> findByUserLogin(@Param("userLogin") String userLogin);
+//    @Query("SELECT l FROM LoginEntity l WHERE l.userLogin = :userLogin")
+//    Optional<LoginEntity> findByUserLogin(@Param("userLogin") String userLogin);
 
     /**
      * Поиск логина по userLogin и tenant code

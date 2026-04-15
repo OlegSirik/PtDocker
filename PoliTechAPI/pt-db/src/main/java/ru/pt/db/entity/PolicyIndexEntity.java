@@ -59,8 +59,8 @@ public class PolicyIndexEntity {
     @Column(name = "id_path", nullable = false, length = 300)
     private String idPath;
 
-    @Column(name = "version_status", length = 30)
-    private String versionStatus;
+    @Column(name = "data_scope", length = 30)
+    private String dataScope;
 
     @Column(name = "policy_status", length = 20)
     @Enumerated(EnumType.STRING)
@@ -211,12 +211,12 @@ public class PolicyIndexEntity {
         this.idPath = idPath;
     }
 
-    public String getVersionStatus() {
-        return versionStatus;
+    public String getDataScope() {
+        return dataScope;
     }
 
-    public void setVersionStatus(String versionStatus) {
-        this.versionStatus = versionStatus;
+    public void setDataScope(String dataScope) {
+        this.dataScope = dataScope;
     }
 
     public String getPolicyNumber() {

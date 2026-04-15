@@ -37,12 +37,15 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.hibernate.grammars.hql.HqlParser;
+
 import static ru.pt.api.utils.DateTimeUtils.formattedNow;
 import static ru.pt.api.utils.DateTimeUtils.formatter;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
 
 import org.springframework.context.annotation.Lazy;
+
 import lombok.RequiredArgsConstructor;
 
 import jakarta.persistence.Id;
@@ -239,18 +242,6 @@ public class ProductServiceImpl implements ProductService {
 
         // установить id number generator в productVersionModel
         productVersionModel.getNumberGeneratorDescription().setId(numberGeneratorDescription.getId());
- 
-        // Для каждого пакета создать пустой калькулятор
-        productVersionModel.getPackages().forEach(pkg -> {
-            CalculatorModel calc = calculatorService.createCalculatorIfMissing(
-                tenantId,
-                saved.getId(),
-                productVersionModel.getCode(),
-                productVersionModel.getVersionNo(),
-                pkg.getCode()
-            );
-            pkg.setCalculatorId(calc.getId());
-        });
 
         String productJson;
         try {
@@ -262,7 +253,18 @@ public class ProductServiceImpl implements ProductService {
         pv.setProduct(productJson);
 
         productVersionRepository.save(pv);
-
+        
+        // Для каждого пакета создать пустой калькулятор
+        productVersionModel.getPackages().forEach(pkg -> {
+            CalculatorModel calc = calculatorService.createCalculatorIfMissing(
+                tenantId,
+                saved.getId(),
+                productVersionModel.getCode(),
+                productVersionModel.getVersionNo(),
+                pkg.getCode()
+            );
+            pkg.setCalculatorId(calc.getId());
+        });
 
         return productVersionModel;
     }
@@ -430,6 +432,272 @@ public class ProductServiceImpl implements ProductService {
         return newProductVersionModel;
     }
 
+    /******************** */
+    private ProductVersionModel getVersion4Update( Long tenantId, Long productId, Long versionNo ) {
+        authService.check(
+            getCurrentUser(), 
+            ResourceType.PRODUCT, 
+            String.valueOf(productId),  // productVersionModel.getId().toString(),   // resourceId - list all
+            tenantId,   // resourceAccountId - list all
+            Action.MANAGE);
+
+        ProductEntity product = productRepository.findById(tenantId, productId)
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+        if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
+            throw new UnprocessableEntityException("only dev version can be updated");
+        }
+
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
+                .orElseThrow(() -> new NotFoundException("Version not found"));
+                ProductVersionModel productVersionModel;
+        try {
+            productVersionModel = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException("Error reading product version model from JSON", e);
+        }
+
+        return productVersionModel;
+    }
+    private ProductVersionModel saveVersion( Long tenantId, Long productId, Long versionNo, ProductVersionModel productVersionModel ) {
+        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
+            .orElseThrow(() -> new NotFoundException("Version not found"));
+
+        try {
+            pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException("Error writing product version model to JSON", e);
+        }
+        productVersionRepository.save(pv);
+        
+        return productVersionModel;
+    }
+
+
+    @Transactional
+    public ProductVersionModel addPackage( Long tenantId, Long productId, Long versionNo, PvPackage pkg ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        LobModel lob = lobService.getByCode(tenantId, pv.getLob());
+
+        if (pkg.getFiles() == null) {
+            pkg.setFiles(new ArrayList<>());
+        }
+        if (lob != null && lob.getMpFiles() != null) {
+            lob.getMpFiles().forEach(f -> {
+                PvFile file = new PvFile();
+                file.setFileCode(f.getFileCode());
+                file.setFileName(f.getFilename());
+                pkg.getFiles().add(file);
+            });
+        }
+
+        if (pv.getPackages() == null) {
+            pv.setPackages(new ArrayList<>());
+        }
+        pv.getPackages().add(pkg);
+
+        CalculatorModel calculator = calculatorService.createCalculatorIfMissing(tenantId, productId, pv.getCode(), versionNo, pkg.getCode());
+        pkg.setCalculatorId(calculator.getId());
+
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+
+    @Transactional
+    public ProductVersionModel updatePackage( Long tenantId, Long productId, Long versionNo, PvPackage pkg ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getPackages().stream().filter(p -> p.getCode().equals(pkg.getCode())).findFirst().ifPresent(p -> {
+            p.setName(pkg.getName());
+            p.setCalculatorId(pkg.getCalculatorId());
+//            p.setCovers(pkg.getCovers());
+//            p.setFiles(pkg.getFiles());
+        });
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+
+    @Transactional
+    public ProductVersionModel deletePackage( Long tenantId, Long productId, Long versionNo, String packageCode ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getPackages().removeIf(pkg -> pkg.getCode().equals(packageCode));
+
+        calculatorService.deleteCalculator(tenantId, productId, versionNo, packageCode);
+
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    
+    // add update delete covers for package
+    @Transactional
+    public ProductVersionModel addCover( Long tenantId, Long productId, Long versionNo, String packageCode, PvCover cover ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getPackages().stream().filter(p -> p.getCode().equals(packageCode)).findFirst().ifPresent(p -> {
+            p.getCovers().add(cover);
+        });
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel updateCover( Long tenantId, Long productId, Long versionNo, String packageCode, PvCover cover ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getPackages().stream().filter(p -> p.getCode().equals(packageCode)).findFirst().ifPresent(p -> {
+            p.getCovers().stream().filter(c -> c.getCode().equals(cover.getCode())).findFirst().ifPresent(c -> {
+                c.setCode(cover.getCode());
+            });
+        });
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel deleteCover( Long tenantId, Long productId, Long versionNo, String packageCode, String coverCode ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getPackages().stream().filter(p -> p.getCode().equals(packageCode)).findFirst().ifPresent(p -> {
+            p.getCovers().removeIf(c -> c.getCode().equals(coverCode));
+        });
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+
+    // add update delete vars for policy
+    @Transactional
+    public ProductVersionModel addVar( Long tenantId, Long productId, Long versionNo, PvVar var ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        // check var for dublicate code
+        if (pv.getVars().stream().anyMatch(v -> v.getVarCode().equals(var.getVarCode()))) {
+            throw new BadRequestException("Var with code " + var.getVarCode() + " already exists");
+        }
+        pv.getVars().add(var);
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel updateVar( Long tenantId, Long productId, Long versionNo, PvVar var ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getVars().stream().filter(v -> v.getVarCode().equals(var.getVarCode())).findFirst().ifPresent(v -> {
+            
+            v.setVarName(var.getVarName());
+      //      v.setVarPath(var.getVarPath());
+      //      v.setVarType(var.getVarType());
+      //      v.setVarDataType(var.getVarDataType());
+            v.setVarValue(var.getVarValue());
+      //      v.setVarCdm(var.getVarCdm());
+      //      v.setVarNr(var.getVarNr());
+      //      v.setIsSystem(var.getIsSystem());
+            v.setIsDeleted(var.getIsDeleted());
+            v.setIsTarifFactor(var.getIsTarifFactor());
+            v.setIsOptional(var.getIsOptional());
+            v.setName(var.getName());
+        });
+        addValidatorInList(pv, var);
+        addValidatorNotNullSave(pv, var);
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel deleteVar( Long tenantId, Long productId, Long versionNo, String varCode ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        pv.getVars().stream().filter(v -> v.getVarCode().equals(varCode)).findFirst().ifPresent(v -> {
+            v.setIsDeleted(true);
+        });
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+
+    // CRUD for validator
+    @Transactional
+    public ProductVersionModel addValidator( Long tenantId, Long productId, Long versionNo, ValidatorRule validator ) {
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        if (validator.getValidatorType().equals("QUOTE")) {
+            pv.getQuoteValidator().add(validator);
+        } else if (validator.getValidatorType().equals("SAVE")) {
+            pv.getSaveValidator().add(validator);
+        } else {
+            throw new BadRequestException("Invalid validator type: " + validator.getValidatorType());
+        }
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel updateValidator( Long tenantId, Long productId, Long versionNo, ValidatorRule validator ) {
+        if (!validator.isUpdatable()) {
+            throw new BadRequestException("Validator is not updatable");
+        }
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        if (validator.getValidatorType().equals("QUOTE")) {
+            pv.getQuoteValidator().stream().filter(v -> v.getLineNr().equals(validator.getLineNr())).findFirst().ifPresent(v -> {
+                v.setLineNr(validator.getLineNr());
+            });
+        } else if (validator.getValidatorType().equals("SAVE")) {
+            pv.getSaveValidator().stream().filter(v -> v.getLineNr().equals(validator.getLineNr())).findFirst().ifPresent(v -> {
+                v.setLineNr(validator.getLineNr());
+            });
+        } else {
+            throw new BadRequestException("Invalid validator type: " + validator.getValidatorType());
+        }
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    @Transactional
+    public ProductVersionModel deleteValidator( Long tenantId, Long productId, Long versionNo, ValidatorRule validator ) {
+        if (!validator.isUpdatable()) {
+            throw new BadRequestException("Validator is not updatable");
+        }
+        ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+        if (validator.getValidatorType().equals("QUOTE")) {
+            pv.getQuoteValidator().removeIf(v -> v.getLineNr().equals(validator.getLineNr()));
+        } else if (validator.getValidatorType().equals("SAVE")) {
+            pv.getSaveValidator().removeIf(v -> v.getLineNr().equals(validator.getLineNr()));
+        } else {
+            throw new BadRequestException("Invalid validator type: " + validator.getValidatorType());
+        }
+        return saveVersion(tenantId, productId, versionNo, pv);
+    }
+    /******************** */
+    private void addValidatorInList(ProductVersionModel pv, PvVar var) {
+        
+        List<ValidatorRule> validatorRules = pv.getQuoteValidator();
+        List<ValidatorRule> saveValidatorRules = pv.getSaveValidator();
+
+        if (var.getVarList() != null  && !var.getVarList().isEmpty()) {
+
+            saveValidatorRules.removeIf(v -> v.getKeyLeft().equals(var.getVarCode()) && v.getRuleType().equals("IN_LIST") && !v.isUpdatable());
+
+            if (var.getVarValue() != null && !var.getVarValue().isEmpty()) {
+                int nr = pv.getSaveValidator().stream()
+                    .map(ValidatorRule::getLineNr)
+                    .filter(lineNr -> lineNr != null)
+                    .max(Integer::compareTo)
+                    .orElse(0) + 1;
+
+                ValidatorRule vr = new ValidatorRule();
+                vr.setLineNr(nr);
+                vr.setKeyLeft(var.getVarCode());
+                vr.setRuleType("IN_LIST");
+                vr.setValueRight(var.getVarValue());
+                vr.setKeyRightCustomValue(true);
+                vr.setUpdatable(false);
+                vr.setValidatorType("SAVE");
+                vr.setErrorText("Допустимые значения для поля " + var.getName() + " - " + var.getVarValue());
+                saveValidatorRules.add(vr);
+            }
+        }
+    }
+    private void addValidatorNotNullSave(ProductVersionModel pv, PvVar var) {
+        
+        List<ValidatorRule> validatorRules = pv.getQuoteValidator();
+        List<ValidatorRule> saveValidatorRules = pv.getSaveValidator();
+
+            saveValidatorRules.removeIf(v -> v.getKeyLeft().equals(var.getVarCode()) && v.getRuleType().equals("NOT_NULL") && !v.isUpdatable());
+
+            if (!var.getIsOptional()) {
+                int nr = pv.getSaveValidator().stream()
+                    .map(ValidatorRule::getLineNr)
+                    .filter(lineNr -> lineNr != null)
+                    .max(Integer::compareTo)
+                    .orElse(0) + 1;
+
+                ValidatorRule vr = new ValidatorRule();
+                vr.setLineNr(nr);
+                vr.setKeyLeft(var.getVarCode());
+                vr.setRuleType("NOT_NULL");
+                vr.setValueRight(var.getVarValue());
+                vr.setKeyRightCustomValue(true);
+                vr.setUpdatable(false);
+                vr.setValidatorType("SAVE");
+                vr.setErrorText("Поле " + var.getName() + " должно быть заполнено");
+                saveValidatorRules.add(vr);
+            }
+    }
+
+    /******************** */
     @Override
     public void softDeleteProduct(Long tenantId, Long id) {
         

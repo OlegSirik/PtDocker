@@ -41,7 +41,7 @@ export class InsCompanyEditComponent implements OnInit {
   company: InsuranceCompanyDto = {
     code: '',
     name: '',
-    status: 'active',
+    status: 'ACTIVE',
     representativeString: '',
   };
   isNewRecord = true;

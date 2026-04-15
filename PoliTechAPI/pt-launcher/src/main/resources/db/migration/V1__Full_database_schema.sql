@@ -364,7 +364,7 @@ CREATE TABLE policy_index (
     user_account_id    BIGINT,
     client_account_id  BIGINT,
     id_path            VARCHAR(300) NOT NULL,
-    version_status     VARCHAR(30),
+    data_scope         VARCHAR(30),
     policy_status      VARCHAR(20) NOT NULL,
     payment_order_id   VARCHAR(100),
     ins_company        VARCHAR(10),

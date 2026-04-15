@@ -4,6 +4,7 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import {
   BusinessLineCoefficientColumn,
@@ -18,6 +19,7 @@ import {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatAutocompleteModule,
     MatButtonModule,
   ],
   template: `
@@ -40,11 +42,19 @@ import {
 
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Код переменной</mat-label>
-          <mat-select [(ngModel)]="column.varCode" required>
-            @for (varItem of data.vars; track varItem.varCode) {
-              <mat-option [value]="varItem.varCode">{{ varItem.varCode }} — {{ varItem.varName }}</mat-option>
+          <input
+            matInput
+            [(ngModel)]="column.varCode"
+            [matAutocomplete]="varCodeAutocomplete"
+            required
+          />
+          <mat-autocomplete #varCodeAutocomplete="matAutocomplete">
+            @for (varItem of filteredVarOptions; track varItem.varCode) {
+              <mat-option [value]="varItem.varCode">
+                {{ varItem.varCode }} — {{ varItem.varName }}
+              </mat-option>
             }
-          </mat-select>
+          </mat-autocomplete>
         </mat-form-field>
       </div>
 
@@ -114,6 +124,17 @@ export class BusinessLineColumnDialogComponent {
           conditionOperator: '',
           sortOrder: '',
         };
+  }
+
+  get filteredVarOptions(): BusinessLineVar[] {
+    const query = (this.column.varCode ?? '').toLowerCase().trim();
+    if (!query) {
+      return this.data.vars;
+    }
+    return this.data.vars.filter((v) =>
+      v.varCode.toLowerCase().includes(query) ||
+      (v.varName ?? '').toLowerCase().includes(query),
+    );
   }
 
   isValid(): boolean {

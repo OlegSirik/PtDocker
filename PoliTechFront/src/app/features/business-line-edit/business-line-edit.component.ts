@@ -1255,8 +1255,11 @@ export class BusinessLineEditComponent implements OnInit {
       if (!result) {
         return;
       }
-      coef.columns[index] = result;
-      this.selectedLobColumnKey = this.lobColumnKey(result);
+      const cols = coef.columns ?? [];
+      const target = cols[index];
+      Object.assign(target, result);
+      coef.columns = [...cols];
+      this.selectedLobColumnKey = this.lobColumnKey(target);
       this.updateChanges();
     });
   }
@@ -1270,12 +1273,13 @@ export class BusinessLineEditComponent implements OnInit {
     if (this.selectedCoefficientIndex < 0) {
       return;
     }
-    const cols = this.businessLine.mpCoefficients![this.selectedCoefficientIndex].columns;
+    const coef = this.businessLine.mpCoefficients![this.selectedCoefficientIndex];
+    const cols = coef.columns ?? [];
     const index = cols.indexOf(column);
     if (index < 0 || !confirm('Удалить колонку?')) {
       return;
     }
-    cols.splice(index, 1);
+    coef.columns = cols.filter((_, i) => i !== index);
     if (this.selectedLobColumnKey === this.lobColumnKey(column)) {
       this.selectedLobColumnKey = null;
     }

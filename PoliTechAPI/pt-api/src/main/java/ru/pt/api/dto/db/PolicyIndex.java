@@ -25,7 +25,7 @@ public class PolicyIndex {
 
     private Long clientAccountId;
 
-    private String versionStatus;
+    private String dataScope;
 
     private PolicyStatus policyStatus;
 
@@ -34,7 +34,7 @@ public class PolicyIndex {
     public PolicyIndex() {
     }
 
-    public PolicyIndex(UUID policyId, String policyNumber, Long versionNo, String productCode, ZonedDateTime startDate, ZonedDateTime endDate, Long userAccountId, Long clientAccountId, String versionStatus, PolicyStatus policyStatus) {
+    public PolicyIndex(UUID policyId, String policyNumber, Long versionNo, String productCode, ZonedDateTime startDate, ZonedDateTime endDate, Long userAccountId, Long clientAccountId, String dataScope, PolicyStatus policyStatus) {
         this.policyId = policyId;
         this.policyNumber = policyNumber;
         this.versionNo = versionNo;
@@ -43,7 +43,7 @@ public class PolicyIndex {
         this.endDate = endDate;
         this.userAccountId = userAccountId;
         this.clientAccountId = clientAccountId;
-        this.versionStatus = versionStatus;
+        this.dataScope = dataScope;
         this.policyStatus = policyStatus;
         this.paymentOrderId = null;
     }
@@ -112,12 +112,12 @@ public class PolicyIndex {
         this.clientAccountId = clientAccountId;
     }
 
-    public String getVersionStatus() {
-        return versionStatus;
+    public String getDataScope() {
+        return dataScope;
     }
 
-    public void setVersionStatus(String versionStatus) {
-        this.versionStatus = versionStatus;
+    public void setDataScope(String dataScope) {
+        this.dataScope = dataScope;
     }
 
     public PolicyStatus getPolicyStatus() {

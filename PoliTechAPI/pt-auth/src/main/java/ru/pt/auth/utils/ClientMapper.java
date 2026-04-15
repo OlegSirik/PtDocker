@@ -34,8 +34,7 @@ public class ClientMapper {
         entity.setName(dto.getName());
         entity.setRecordStatus(
                 dto.getRecordStatus() != null ? dto.getRecordStatus().getValue() : "ACTIVE");
-        entity.setAuthType(
-                dto.getAuthType() != null ? dto.getAuthType().getValue() : "LOCAL_JWT");
+        entity.setAuthType(dto.getAuthType() != null ? dto.getAuthType().getValue() : null);
         entity.setAuthLevel(
                 dto.getAuthLevel() != null ? dto.getAuthLevel().getValue() : "CLIENT");
         if (dto.getClientConfiguration() != null) {

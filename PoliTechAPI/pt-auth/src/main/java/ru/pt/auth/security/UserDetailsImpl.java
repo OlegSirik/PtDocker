@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.AccountLoginEntity;
+import ru.pt.auth.entity.AccountNodeType;
 import ru.pt.auth.entity.AccountTokenEntity;
 
 import java.util.Collection;
@@ -43,6 +44,7 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
     private final boolean credentialsNonExpired;
     private String impersonatedTenantCode;  
     private Long actingAccountId;  // вершина для дерева доступа, отличается от Id листа account роли
+    private String dataScope; // PROD, DEV, ADMIN
 
     public UserDetailsImpl(Long id, String username, String tenantCode, Long tenantId,
                           Long accountId, String accountName, Long clientId, String clientName,
@@ -65,6 +67,15 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
         this.credentialsNonExpired = true;
         this.actingAccountId = actingAccountId;
         this.accountPath = accountPath; 
+        this.dataScope = "NULL";
+        switch (userRole) {
+            case "SUB", "ACCOUNT", "GROUP_ADMIN":
+                this.dataScope = "PROD";
+                break;
+            case "PRODUCT_ADMIN":
+                this.dataScope = "DEV";
+                break;
+        }
     }
 
     public static UserDetailsImpl build(AccountLoginEntity accountLoginEntity, Set<String> productRoles, AccountEntity actingAccountEntity) {
@@ -237,6 +248,11 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
 
     public String getAccountPath() {
         return this.accountPath;
+    }
+
+    @Override
+    public String getDataScope() {
+        return this.dataScope;
     }
 }
 

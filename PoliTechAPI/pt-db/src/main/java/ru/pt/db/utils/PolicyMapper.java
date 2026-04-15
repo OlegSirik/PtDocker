@@ -42,7 +42,7 @@ public class PolicyMapper {
         dto.setProductCode(entity.getProductCode());
         dto.setClientAccountId(entity.getClientAccountId());
         dto.setUserAccountId(entity.getUserAccountId());
-        dto.setVersionStatus(entity.getVersionStatus());
+        dto.setDataScope(entity.getDataScope());
         dto.setVersionNo(entity.getVersionNo());
         dto.setPaymentOrderId(entity.getPaymentOrderId());
         return dto;
@@ -60,7 +60,7 @@ public class PolicyMapper {
         entity.setProductCode(dto.getProductCode());
         entity.setClientAccountId(dto.getClientAccountId());
         entity.setUserAccountId(dto.getUserAccountId());
-        entity.setVersionStatus(dto.getVersionStatus());
+        entity.setDataScope(dto.getDataScope());
         entity.setVersionNo(dto.getVersionNo());
         entity.setPaymentOrderId(dto.getPaymentOrderId());
         return entity;
@@ -117,7 +117,7 @@ public class PolicyMapper {
         index.setTid(userData.getTenantId());
         index.setUserAccountId(userData.getAccountId());
         index.setClientAccountId(userData.getClientId());
-        index.setVersionStatus(policy.getProcessList().getProductVersionStatus());
+        index.setDataScope(policy.getProcessList().getDataScope());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());
         index.setInsCompany(processList.getInsCompanyCode());

@@ -282,9 +282,13 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         AuthenticatedUser user = getCurrentUser();
         // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
         // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
-        boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+//        boolean iAmTester =         authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
 
+        String dataScope = user.getDataScope();
 
+        if (dataScope == null || dataScope.isEmpty()) {
+            throw new UnprocessableEntityException(new ErrorModel(0, "Data scope is not set", "Calculator", "dataScope=null", "dataScope"));
+        }
 
         // 1. JSON → DTO contract
         PolicyDTO policyDTO;
@@ -313,10 +317,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
 
-        if (iAmTester) {
-            policyDTO.getProcessList().setProductVersionStatus(ProcessList.DEV);
+        if (dataScope.equals("DEV")) {
+            policyDTO.getProcessList().setDataScope(ProcessList.DEV);
         } else {
-            policyDTO.getProcessList().setProductVersionStatus(ProcessList.PROD);
+            policyDTO.getProcessList().setDataScope(ProcessList.PROD);
         }
 
         // 3. Получить продукт
@@ -326,7 +330,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         try {
             // Для тестера ghjlern d cnfnect дев
-            product = productService.getProductByCode(user.getTenantId(), productCode, iAmTester);
+            product = productService.getProductByCode(user.getTenantId(), productCode, dataScope.equals("DEV"));
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (NotFoundException e) {
             // Re-throw NotFoundException as-is
@@ -474,8 +478,13 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
         // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
-        boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+        //boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
         
+        String dataScope = user.getDataScope();
+        if (dataScope == null || dataScope.isEmpty()) {
+            throw new UnprocessableEntityException(new ErrorModel(0, "Data scope is not set", "Calculator", "dataScope=null", "dataScope"));
+        }
+
         logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
         // 1. JSON → DTO core
         PolicyDTO policyDTO = policyFromJson(policy);
@@ -488,23 +497,22 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.setId(null);
         policyDTO.setStatusCode("NEW");
         
-        if (iAmTester) {
-            policyDTO.getProcessList().setProductVersionStatus(ProcessList.DEV);
+        if (dataScope.equals("DEV")) {
+            policyDTO.getProcessList().setDataScope(ProcessList.DEV);
         } else {
-            policyDTO.getProcessList().setProductVersionStatus(ProcessList.PROD);
+            policyDTO.getProcessList().setDataScope(ProcessList.PROD);
         }
 
         // 3. Продукт
         String productCode = policyDTO.getProductCode();
         logger.debug("Fetching product for save. productCode={}", productCode);
-        var product = productService.getProductByCode(user.getTenantId(), productCode, iAmTester);
+        var product = productService.getProductByCode(user.getTenantId(), productCode, dataScope.equals("DEV"));
         logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
 
-        if (!iAmTester) {
+        if (dataScope.equals("PROD")) {
             authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.SELL);
             authorizationService.checkProductAction(user, Long.valueOf(product.getId()), AuthZ.Action.SELL);
         }
-
         // 4. Применение метаданных продукта
         preProcessService.applyProductMetadata(policyDTO, product);
 
@@ -543,7 +551,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);
 
-        // 9. Валидация (lazy!)
+        // 9. Валидация 
         logger.debug("Validating policy for QUOTE and SAVE");
         List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
         errors.addAll(validatorService.validate(ValidatorType.SAVE, product, varCtx));
@@ -557,7 +565,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             );
         }
 
-        // 10. Расчёт премии (lazy!)
+        // 10. Расчёт премии 
         calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
   
         // 11. Рассчет КВ
@@ -860,7 +868,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         for (Cover cover : insObject.getCovers()) {
             if (cover.getSumInsured() != null) {
                 // отрицательная сумма если не сработал какойто валидатор суммы
-                if ( sumInsured.compareTo(cover.getSumInsured()) < 0) {
+                if ( sumInsured.compareTo(cover.getSumInsured()) > 0) {
+                    logger.warn("Sum insured is less than the sum insured of the cover. coverCode={}, sumInsured={}, coverSumInsured={}", cover.getCover().getCode(), sumInsured, cover.getSumInsured());
                     return false;
                 }
             }

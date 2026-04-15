@@ -97,4 +97,6 @@ public interface AuthenticatedUser {
     boolean canPerformAction(String productCode, String action);
 
     String getAccountPath();
+
+    String getDataScope();
 }

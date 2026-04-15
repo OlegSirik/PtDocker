@@ -28,7 +28,7 @@ public class LobVar {
     private String varType;
 
     @JsonProperty("varValue")
-    private String varValue = "";
+    private String varValue;
     
     @JsonProperty("varCdm")
     private String varCdm;

@@ -41,7 +41,7 @@ public class ProductCRUDServiceImpl implements ProductServiceCRUD {
                 throw new NotFoundException("Version not found");
             }
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
-            model.setInsCompanyId(productEntity.getInsCompanyId());
+            //model.setInsCompanyId(productEntity.getInsCompanyId());
             return model;
         } catch (NotFoundException e) {
             throw e;
@@ -62,7 +62,7 @@ public class ProductCRUDServiceImpl implements ProductServiceCRUD {
                 .orElseThrow();
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
-            model.setInsCompanyId(entity.getInsCompanyId());
+            //model.setInsCompanyId(entity.getInsCompanyId());
             model.setVersionNo(versionNo);
             return model;
         } catch (JsonProcessingException e) {

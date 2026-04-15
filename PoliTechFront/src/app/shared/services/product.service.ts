@@ -69,6 +69,10 @@ export interface QuoteValidator {
   isKeyRightCustomValue?: boolean;
   dataType: string;
   errorText: string;
+  /** С бэкенда: системные правила нельзя менять/удалять через API */
+  isUpdatable?: boolean;
+  /** QUOTE | SAVE — задаётся при вызове API */
+  validatorType?: string;
 }
 
 export interface PackageFile {
@@ -265,6 +269,156 @@ export class ProductService {
     // Fallback to mock if http is not available
     this.mockData = { ...product, id };
     return of({ ...this.mockData }).pipe(delay(500));
+  }
+
+  addPackage(productId: number, versionNo: number, pkg: Package): Observable<Product> {
+    return this.http
+      .post<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages`, pkg)
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  updatePackage(productId: number, versionNo: number, packageCode: string, pkg: Package): Observable<Product> {
+    return this.http
+      .put<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${encodeURIComponent(packageCode)}`,
+        pkg
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  deletePackage(productId: number, versionNo: number, packageCode: string): Observable<Product> {
+    return this.http
+      .delete<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${encodeURIComponent(packageCode)}`
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  addCover(productId: number, versionNo: number, packageCode: string, cover: Cover): Observable<Product> {
+    return this.http
+      .post<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${encodeURIComponent(packageCode)}/covers`,
+        cover
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  updateCover(productId: number, versionNo: number, packageCode: string, coverCode: string, cover: Cover): Observable<Product> {
+    return this.http
+      .put<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${encodeURIComponent(packageCode)}/covers/${encodeURIComponent(coverCode)}`,
+        cover
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  deleteCover(productId: number, versionNo: number, packageCode: string, coverCode: string): Observable<Product> {
+    return this.http
+      .delete<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/packages/${encodeURIComponent(packageCode)}/covers/${encodeURIComponent(coverCode)}`
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  addVar(productId: number, versionNo: number, variable: PolicyVar): Observable<Product> {
+    return this.http
+      .post<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/vars`, variable)
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  updateVar(productId: number, versionNo: number, varCode: string, variable: PolicyVar): Observable<Product> {
+    return this.http
+      .put<Product>(
+        `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/vars/${encodeURIComponent(varCode)}`,
+        variable
+      )
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  deleteVar(productId: number, versionNo: number, varCode: string): Observable<Product> {
+    return this.http
+      .delete<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/vars/${encodeURIComponent(varCode)}`)
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  addValidator(productId: number, versionNo: number, rule: QuoteValidator): Observable<Product> {
+    return this.http
+      .post<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/validators`, rule)
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  updateValidator(productId: number, versionNo: number, rule: QuoteValidator): Observable<Product> {
+    return this.http
+      .put<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/validators`, rule)
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
+  }
+
+  deleteValidator(productId: number, versionNo: number, rule: QuoteValidator): Observable<Product> {
+    return this.http
+      .delete<Product>(`${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/validators`, {
+        body: rule,
+      })
+      .pipe(
+        tap((updatedProduct) => {
+          this.mockData = { ...updatedProduct };
+          this.fixProduct();
+        })
+      );
   }
 
   // DELETE - Delete product

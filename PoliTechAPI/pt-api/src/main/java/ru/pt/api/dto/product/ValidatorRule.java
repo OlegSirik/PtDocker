@@ -33,6 +33,12 @@ public class ValidatorRule {
     @JsonProperty("isKeyRightCustomValue")
     private boolean isKeyRightCustomValue;
 
+    @JsonProperty("isUpdatable")
+    private boolean isUpdatable = true;
+
+    @JsonProperty("validatorType")  // QUOTE, SAVE
+    private String validatorType;
+
     public Integer getLineNr() {
         return lineNr;
     }
@@ -97,5 +103,19 @@ public class ValidatorRule {
         this.isKeyRightCustomValue = isKeyRightCustomValue;
     }
 
+    public boolean isUpdatable() {
+        return isUpdatable;
+    }
+
+    public void setUpdatable(boolean isUpdatable) {
+        this.isUpdatable = isUpdatable;
+    }
+    public String getValidatorType() {
+        return validatorType;
+    }
+
+    public void setValidatorType(String validatorType) {
+        this.validatorType = validatorType;
+    }
     // function to calculate sum
 }

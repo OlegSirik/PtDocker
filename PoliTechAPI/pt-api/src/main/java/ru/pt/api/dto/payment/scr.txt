@@ -1,0 +1,50 @@
+public class PaymentData {
+    // вход - номер полиса
+    private String policyNumber;
+    // вход - тип оплаты
+    private PaymentType paymentType;
+    // вход - номер платежного периода - пока что 1 константа
+    private Long installmentNumber;
+    // вход - сумма
+    private BigDecimal amount;
+    // вход - ссылка на редирект после успешной оплате по карте/СБП
+    private String successUrl;
+    // вход - ссылка на редирект при ошибке оплаты по карте/СБП
+    private String failUrl;
+    // выход - ссылка на СБП
+    private String qrLink;
+    // выход - ссылка на платежный шлюз
+    private String paymentLink;
+    // выход - файл счета при оплате по счету
+    private byte[] billBase64;
+    // выход - дата оплаты
+    private ZonedDateTime paymentDate;
+    // выход - идентификатор заявки на оплату
+    private String orderId;
+
+
+
+CREATE TABLE installments (
+    id BIGSERIAL PRIMARY KEY,
+    public_id string guid,
+    policy_id BIGINT NOT NULL REFERENCES policies(id),
+    
+    is_current BOOLEAN DEFAULT TRUE,
+    
+    installment_nr INT NOT NULL,
+    date_from DATE NOT NULL,
+    date_to DATE NOT NULL,
+    
+    -- Вид платежа по способу расчета
+    installment_type VARCHAR(20) NOT NULL,  -- ONCE, MONTHLY, QUARTERLY, ANNUALLY
+    
+    -- Категория платежа: плановый или дополнительный
+    payment_category VARCHAR(20) DEFAULT 'SCHEDULED',  -- SCHEDULED, ADDITIONAL
+    
+    amount DECIMAL(15,2) NOT NULL,
+    paid_to DATE,
+    paid_date DATE,
+    payment_status VARCHAR(20) DEFAULT 'PENDING',
+    
+    -- остальные поля
+);
