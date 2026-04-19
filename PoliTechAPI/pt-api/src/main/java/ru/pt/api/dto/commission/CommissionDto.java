@@ -18,6 +18,9 @@ import java.math.BigDecimal;
 public class CommissionDto {
 
     /* % кВ переданный агентом в рамках снижения премии */
+    @JsonProperty("requestedCommissionDiscount")
+    private BigDecimal requestedCommissionDiscount;
+    /* % кВ переданный агентом в рамках снижения премии */
     @JsonProperty("requestedCommissionRate")
     private BigDecimal requestedCommissionRate;
 

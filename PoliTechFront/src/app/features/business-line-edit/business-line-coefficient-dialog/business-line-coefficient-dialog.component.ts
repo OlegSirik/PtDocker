@@ -59,6 +59,16 @@ import {
           </mat-autocomplete>
         </mat-form-field>
       </div>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Текст ошибки если переменная не найдена</mat-label>
+          <input
+            matInput
+            [(ngModel)]="coefficient.errorTextIfNotFound"
+            placeholder="Введите текст ошибки если нужно прервать выполнение калькулятора"
+          />
+        </mat-form-field>
+      </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button type="button" mat-dialog-close>Отмена</button>
@@ -100,7 +110,7 @@ export class BusinessLineCoefficientDialogComponent {
   ) {
     this.coefficient = data.coefficient
       ? { ...data.coefficient, columns: [...(data.coefficient.columns ?? [])] }
-      : { varCode: '', varName: '', altVarCode: '', altVarValue: '', columns: [] };
+      : { varCode: '', varName: '', altVarCode: '', altVarValue: '', errorTextIfNotFound: '', columns: [] };
     this.initAltInput();
     this.filteredVars = [...(data.vars ?? [])];
   }
@@ -174,6 +184,7 @@ export class BusinessLineCoefficientDialogComponent {
       ...this.coefficient,
       varCode: this.coefficient.varCode.trim(),
       varName: this.coefficient.varName.trim(),
+      errorTextIfNotFound: this.coefficient.errorTextIfNotFound?.trim() || '',
       columns: [...(this.coefficient.columns ?? [])],
     });
   }

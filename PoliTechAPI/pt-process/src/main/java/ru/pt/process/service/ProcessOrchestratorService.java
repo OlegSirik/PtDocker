@@ -241,11 +241,13 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
 
         BigDecimal sumInsured = varCtx.getDecimal("io_sumInsured");
-        if (sumInsured != null && sumInsured.compareTo(BigDecimal.ZERO) > 0) {
-            policyDTO.getInsuredObjects().get(0).setSumInsured(sumInsured);
-            logger.debug("Sum insured calculated. sumInsured={}", sumInsured);
-        } else {
-            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
+        if (sumInsured != null ) {
+            if ( sumInsured.compareTo(BigDecimal.ZERO) > 0) {
+                policyDTO.getInsuredObjects().get(0).setSumInsured(sumInsured);
+                logger.debug("Sum insured calculated. sumInsured={}", sumInsured);
+            } else {
+                throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
+            }
         }
         if (!checkSumInsured(policyDTO)) {
             throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 

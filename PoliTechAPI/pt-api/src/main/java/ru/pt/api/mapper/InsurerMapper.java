@@ -24,10 +24,14 @@ public final class InsurerMapper {
             return null;
         }
         Insurer insurer = new Insurer();
+ 
+        insurer.setContractText(emptyToNull(dto.getContractText()));
+        insurer.setContractRepresentative(emptyToNull(dto.getContractRepresentative()));
+ 
         insurer.setOrganization(toOrganization(dto));
         insurer.setContactInfo(toContactInfo(dto));
         List<Address> addresses = buildAddresses(dto);
-        insurer.setAddresses(addresses.isEmpty() ? null : addresses);
+        insurer.setAddresses(addresses.isEmpty() ? null : addresses); 
         insurer.setIdentifiers(null);
         return insurer;
     }
@@ -57,6 +61,7 @@ public final class InsurerMapper {
         putIfHasText(extra, "bic", dto.getBic());
         putIfHasText(extra, "account", dto.getAccount());
         putIfHasText(extra, "corrAccount", dto.getCorrAccount());
+
         if (!extra.isEmpty()) {
             o.setAdditionalAttributes(extra);
         }

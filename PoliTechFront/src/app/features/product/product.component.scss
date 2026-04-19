@@ -6,59 +6,6 @@
   max-width: 1200px;
   margin: 0 auto;
 
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e0e0e0;
-
-    .page-title {
-      margin: 0;
-      color: #333;
-      font-size: 28px;
-      font-weight: 500;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-
-      .header-btn {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-        height: 40px;
-        font-weight: 500;
-      }
-
-      .header-btn:not(.save-btn) {
-        @include button-secondary;
-      }
-
-      .json-button {
-        min-width: 40px;
-        height: 40px;
-        font-weight: 500;
-      }
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-        width: 100%;
-        gap: 8px;
-
-        .header-btn,
-        .json-button {
-          width: 100%;
-        }
-      }
-    }
-  }
-
   .tab-content {
     padding: 20px 0;
   }
@@ -87,7 +34,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     mat-card-header {
-      background: #f8f9fa;
+//      background: #f8f9fa;
       border-radius: 8px 8px 0 0;
       padding: 16px 20px;
 
@@ -167,19 +114,35 @@
       }
     }
 
-    .table-header {
+    .header-row {
       display: flex;
-      justify-content: space-between;
+      flex-wrap: nowrap;
       align-items: center;
+      gap: $spacing-sm;
+      width: 100%;
       margin-bottom: 20px;
       padding-bottom: 12px;
       border-bottom: 1px solid #e0e0e0;
 
       h3 {
         margin: 0;
+        flex: 1 1 auto;
+        min-width: 0;
         color: #495057;
         font-size: 20px;
         font-weight: 600;
+      }
+
+      .buttons {
+        display: flex;
+        flex: 0 0 auto;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: flex-end;
+        gap: $spacing-sm;
+        flex-wrap: wrap;
+        box-sizing: border-box;
+        min-width: 0;
       }
 
       .search-field {
@@ -232,28 +195,6 @@
 
         &:active {
           background-color: #bbdefb !important;
-        }
-      }
-
-      .action-buttons {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: flex-end;
-
-        .action-button {
-          min-width: 32px;
-          width: 32px;
-          height: 32px;
-          padding: 0;
-          line-height: 32px;
-
-          mat-icon {
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-            line-height: 18px;
-          }
         }
       }
     }
@@ -329,16 +270,6 @@
   @media (max-width: 1024px) {
     padding: 16px;
 
-    .page-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-
-      .page-title {
-        font-size: 24px;
-      }
-    }
-
     .data-card {
       .form-row {
         grid-template-columns: 1fr;
@@ -346,7 +277,7 @@
     }
 
     .datatable-card {
-      .table-header {
+      .header-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
@@ -370,12 +301,6 @@
   @media (max-width: 768px) {
     padding: 12px;
 
-    .page-header {
-      .page-title {
-        font-size: 20px;
-      }
-    }
-
     .action-card {
       .button-section {
         flex-direction: column;
@@ -393,24 +318,6 @@
         th.mat-header-cell,
         td.mat-cell {
           padding: 6px 8px;
-        }
-
-        .action-buttons {
-          flex-direction: column;
-          gap: 4px;
-
-          .action-button {
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-
-            mat-icon {
-              font-size: 16px;
-              width: 16px;
-              height: 16px;
-              line-height: 16px;
-            }
-          }
         }
       }
     }

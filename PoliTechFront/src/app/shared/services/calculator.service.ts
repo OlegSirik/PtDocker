@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, delay, tap } from 'rxjs/operators';
@@ -59,6 +59,7 @@ export interface CalculatorCoefficient {
   altVarName?: string;
   altVarValue?: number;
   columns: CoefficientColumn[];
+  errorTextIfNotFound?: string;
 }
 
 export interface CoefficientColumn {
@@ -73,6 +74,19 @@ export interface CoefficientDataRow {
   id: number;
   conditionValue: (string | null)[];
   resultValue: number;
+}
+
+/** Ответ POST `/admin/calculators/templates` — строки шаблона формулы */
+export interface CalculatorTemplateLine {
+  calculatorId?: number;
+  lineNr?: number;
+  text?: string;
+}
+
+export interface CalculatorTemplate {
+  calculatorId?: number;
+  calculatorName?: string;
+  lines: CalculatorTemplateLine[];
 }
 
 @Injectable({
@@ -102,7 +116,8 @@ export class CalculatorService extends BaseApiService<Calculator> {
   getCalculator(productId: string, versionNo: string, packageNo: string): Observable<Calculator> {
 
     let baseUrl = this.getUrl() + '/products/' + productId + '/versions/' + versionNo + '/packages/' + packageNo;
-    return this.http.get<Calculator>(baseUrl).pipe(
+    const headers = new HttpHeaders({ 'X-Skip-Global-Error': 'true' });
+    return this.http.get<Calculator>(baseUrl, { headers }).pipe(
       tap(data => {
         this.mockData = data;
       }),
@@ -113,12 +128,13 @@ export class CalculatorService extends BaseApiService<Calculator> {
     );
   }
 
-  // POST calculator (create new)
-  createCalculator(productId: string, versionNo: string, packageNo: string): Observable<Calculator> {
+  // POST calculator (create new), optional from template
+  createCalculator(productId: string, versionNo: string, packageNo: string, templateId?: number): Observable<Calculator> {
     const body = {
       productId: productId,
       versionNo: versionNo,
-      packageNo: packageNo
+      packageNo: packageNo,
+      templateId: templateId ?? null
     };
 
     let baseUrl = this.getUrl() + '/products/' + productId + '/versions/' + versionNo + '/packages/' + packageNo;
@@ -222,6 +238,51 @@ export class CalculatorService extends BaseApiService<Calculator> {
     return this.http.get(url, { responseType: 'text' }).pipe(
       catchError(error => {
         console.error('Error fetching coefficient SQL:', error);
+        throw error;
+      })
+    );
+  }
+
+  /** POST: создать шаблон формулы по калькулятору для LOB (бэкенд: createTemplate) */
+  createTemplate(lobCode: string, calculatorId: string | number): Observable<CalculatorTemplate> {
+    const body = {
+      lobCode,
+      calculatorId: typeof calculatorId === 'string' ? Number(calculatorId) : calculatorId,
+    };
+    return this.http.post<CalculatorTemplate>(`${this.getUrl()}/templates`, body).pipe(
+      catchError(error => {
+        console.error('Error creating calculator template:', error);
+        throw error;
+      })
+    );
+  }
+
+  /** GET: получить шаблоны калькуляторов для LOB */
+  getTemplates(lobCode: string): Observable<CalculatorTemplate[]> {
+    const params = new HttpParams().set('lob', lobCode);
+    return this.http.get<CalculatorTemplate[]>(`${this.getUrl()}/templates`, { params }).pipe(
+      catchError(error => {
+        console.error('Error fetching calculator templates:', error);
+        throw error;
+      })
+    );
+  }
+
+  /** PUT: обновить имя шаблона калькулятора */
+  updateTemplateName(templateId: number, templateName: string): Observable<CalculatorTemplate> {
+    return this.http.put<CalculatorTemplate>(`${this.getUrl()}/templates/${templateId}`, { templateName }).pipe(
+      catchError(error => {
+        console.error('Error updating calculator template name:', error);
+        throw error;
+      })
+    );
+  }
+
+  /** DELETE: удалить шаблон калькулятора */
+  deleteTemplate(templateId: number): Observable<void> {
+    return this.http.delete<void>(`${this.getUrl()}/templates/${templateId}`).pipe(
+      catchError(error => {
+        console.error('Error deleting calculator template:', error);
         throw error;
       })
     );

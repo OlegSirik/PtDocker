@@ -54,6 +54,10 @@ import { CalculatorCoefficient, CalculatorVar } from '../../../shared/services/c
             }
           </mat-autocomplete>
         </mat-form-field>
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Текст ошибки если переменная не найдена</mat-label>
+          <input matInput [(ngModel)]="coefficient.errorTextIfNotFound" placeholder="Введите текст ошибки если нужно прервать выполнение калькулятора">
+        </mat-form-field>
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -94,7 +98,8 @@ export class CoefficientDialogComponent {
     this.coefficient = data.coefficient ? { ...data.coefficient } : {
       varCode: '',
       varName: '',
-      columns: []
+      columns: [],
+      errorTextIfNotFound: ''
     };
     this.initAltInput();
     this.filteredVars = [...(data.vars || [])];

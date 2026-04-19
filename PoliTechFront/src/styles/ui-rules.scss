@@ -137,3 +137,174 @@
     }
   }
 }
+
+// -----------------------------------------------------------------------------
+// Шапка страницы: заголовок слева, действия справа
+// Разметка:
+// <div class="page-header">
+//   <h1 class="page-title">...</h1>
+//   <div class="header-actions">
+//     <button mat-icon-button class="header-icon-button" type="button" aria-label="..."><mat-icon>...</mat-icon></button>
+//     <button mat-raised-button color="primary" class="save-button" type="button">...</button>
+//   </div>
+// </div>
+// С подзаголовком / хлебными крошками: обёртка <div class="page-header-lead">...</div>
+// -----------------------------------------------------------------------------
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
+  border-bottom: 2px solid $gray-300;
+  width: 100%;
+  box-sizing: border-box;
+
+  > .page-title {
+    margin: 0;
+    @include heading-1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .page-header-lead {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    > .page-title {
+      margin: 0;
+      @include heading-1;
+    }
+
+    > .page-title + .path-section {
+      margin-top: $spacing-sm;
+    }
+  }
+
+  .header-actions {
+    @include flex-end;
+    flex: 0 0 auto;
+    gap: $spacing-xs;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .header-icon-button.mat-mdc-icon-button {
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      padding: 0;
+    }
+
+    .save-button.mat-mdc-raised-button {
+      min-height: 40px;
+    }
+  }
+
+  .page-subtitle {
+    margin: 0;
+    font-size: $font-size-3xl;
+    font-weight: 500;
+    line-height: 1.2;
+    color: $gray-900;
+  }
+
+  .page-subhead {
+    margin: $spacing-xs 0 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $gray-700;
+  }
+}
+
+@media (max-width: 1024px) {
+  .page-header > .page-title,
+  .page-header .page-header-lead > .page-title {
+    font-size: $font-size-2xl;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    > .page-title,
+    .page-header-lead > .page-title {
+      font-size: $font-size-xl;
+    }
+
+    .header-actions {
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .page-subtitle {
+      font-size: $font-size-xl;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Таблицы: кнопки с иконкой в колонке действий
+// Разметка: <td class="col-actions"><div class="action-buttons">...</div></td>
+// или <span class="lob-table-actions"> (business-line-edit)
+// Кнопки: class="action-button" на mat-button / mat-raised-button / mat-icon-button
+// -----------------------------------------------------------------------------
+
+table.mat-mdc-table,
+table.mat-table {
+  th.mat-mdc-header-cell.col-actions,
+  th.mat-header-cell.col-actions {
+    text-align: right;
+    vertical-align: middle;
+  }
+
+  td.mat-mdc-cell.col-actions,
+  td.mat-cell.col-actions {
+    text-align: right;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .action-buttons,
+  .lob-table-actions {
+    @include table-action-icon-buttons;
+  }
+}
+
+@media (max-width: 768px) {
+  table.mat-mdc-table,
+  table.mat-table {
+    .action-buttons,
+    .lob-table-actions {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+
+      .action-button.mat-mdc-button,
+      .action-button.mat-mdc-raised-button,
+      .action-button.mat-mdc-outlined-button,
+      .action-button.mat-mdc-stroked-button {
+        min-width: 32px;
+        width: 32px;
+        height: 32px;
+
+        mat-icon,
+        .mat-icon {
+          width: 18px;
+          height: 18px;
+          font-size: 18px;
+          line-height: 18px;
+        }
+      }
+
+      .mat-mdc-icon-button.action-button {
+        width: 32px;
+        height: 32px;
+      }
+    }
+  }
+}

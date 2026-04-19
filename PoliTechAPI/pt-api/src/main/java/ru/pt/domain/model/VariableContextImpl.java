@@ -43,6 +43,10 @@ public final class VariableContextImpl implements CalculatorContext
     @Override
     public BigDecimal getDecimal(String code) {
         Object v = get(code);
+        if (v == null) {
+            logger.trace("getDecimal: code='{}' is null, returning null", code);
+            return null;
+        }
         BigDecimal result = safeToBigDecimal(v);
         logger.trace("getDecimal: code='{}', raw='{}', result='{}'", code, v, result);
         return result;
@@ -117,27 +121,23 @@ public final class VariableContextImpl implements CalculatorContext
     public List<PvVarDefinition> getDefinitions() {
         return new ArrayList<>(definitions.values());
     }
-/* 
-    private void setValue(String key, Object value) {
-        PvVarDefinition def = definitions.get(key);
-        if (def == null) {
-            logger.warn("setValue: Unknown variable '{}'", key);
-            throw new IllegalArgumentException("Unknown variable: " + key);
-        }
-    
-        if (def.getSourceType() == PvVarDefinition.VarSourceType.CONST && values.containsKey(key)) {
-            logger.trace("setValue: ignoring update for CONST variable '{}'", key);
-            return; // silently ignore, константа не обновляется
-        }
-    
-        logger.trace("setValue: key='{}', value='{}'", key, value);
-        values.put(key, value);
-        //def.setValue(value);
-    }
-*/
+
     @Override
     public Object getByPath(String path) {
         return JsonPath.read(jsonDocument, path);
+    }
+
+    @Override
+    public void calcEmptyMagic() {
+        definitions.values().stream()
+            .filter(def -> def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC)
+            .forEach(def -> {
+                Object value = evaluate(def.getCode());
+                String code = def.getCode();
+                if (value != null) {
+                    values.put(code, value);
+                }
+            });
     }
     // ---------- Lazy evaluation ----------
 
@@ -155,7 +155,7 @@ public final class VariableContextImpl implements CalculatorContext
             return value;
         } catch (Exception e) {
             logger.warn("get: error evaluating variable '{}': {}", code, e.getMessage());
-            return ""; //"Error evaluating variable: " + code + " " + e.getMessage();
+            return null; //"Error evaluating variable: " + code + " " + e.getMessage();
         }
     }
 

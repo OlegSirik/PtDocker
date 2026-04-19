@@ -6,16 +6,6 @@
   max-width: 1200px;
   margin: 0 auto;
 
-  .page-header {
-    margin-bottom: 20px;
-
-    .page-title {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-    }
-  }
-
   .datatable-card {
     margin-bottom: 20px;
 
@@ -88,14 +78,6 @@
         border-radius: 4px;
         font-size: 12px;
         font-weight: 500;
-      }
-
-      .actions-column {
-        min-width: 50px;
-      }
-
-      .col-actions {
-        min-width: 50px;
       }
     }
   }

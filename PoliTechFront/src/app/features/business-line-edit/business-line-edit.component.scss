@@ -1,10 +1,17 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins';
 
-.business-line-edit-container {
+.page-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+
+  /** Блок как на странице калькулятора (режим «калькулятор не найден»). */
+  .lob-formulas-calc-tab.calculator-container {
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
 
   .tree-table-actions {
     display: inline-flex;
@@ -77,59 +84,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e0e0e0;
-
-    .page-title {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 500;
-      color: #333;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-
-      .header-btn {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-        height: 40px;
-        font-weight: 500;
-      }
-
-      .header-btn:not(.save-btn) {
-        @include button-secondary;
-      }
-
-      .json-button {
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        padding: 0;
-      }
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-        width: 100%;
-        gap: 8px;
-
-        .header-btn {
-          width: 100%;
-        }
-      }
-    }
   }
 
   .data-card {
@@ -292,18 +246,6 @@
           .col-sort { width: 100px; min-width: 88px; }
           .col-dt { width: 100px; min-width: 88px; }
           .col-actions { width: 104px; min-width: 104px; }
-        }
-
-        td.lob-table-actions-cell {
-          white-space: nowrap;
-          vertical-align: middle;
-        }
-
-        .lob-table-actions {
-          display: inline-flex;
-          flex-wrap: nowrap;
-          align-items: center;
-          justify-content: flex-end;
         }
 
         tr.clickable-row {

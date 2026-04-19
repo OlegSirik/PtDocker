@@ -255,6 +255,7 @@ public class ProductServiceImpl implements ProductService {
         productVersionRepository.save(pv);
         
         // Для каждого пакета создать пустой калькулятор
+/* 
         productVersionModel.getPackages().forEach(pkg -> {
             CalculatorModel calc = calculatorService.createCalculatorIfMissing(
                 tenantId,
@@ -265,7 +266,7 @@ public class ProductServiceImpl implements ProductService {
             );
             pkg.setCalculatorId(calc.getId());
         });
-
+*/
         return productVersionModel;
     }
 
@@ -424,11 +425,11 @@ public class ProductServiceImpl implements ProductService {
 
         pv.setProduct(newProductVersionJson);
         productVersionRepository.save(pv);
-
+/* 
         newProductVersionModel.getPackages().forEach(pkg ->
             calculatorService.createCalculatorIfMissing(tenantId, productId, newProductVersionModel.getCode(), versionNo, pkg.getCode())
         );
-
+*/
         return newProductVersionModel;
     }
 
@@ -495,8 +496,8 @@ public class ProductServiceImpl implements ProductService {
         }
         pv.getPackages().add(pkg);
 
-        CalculatorModel calculator = calculatorService.createCalculatorIfMissing(tenantId, productId, pv.getCode(), versionNo, pkg.getCode());
-        pkg.setCalculatorId(calculator.getId());
+        //CalculatorModel calculator = calculatorService.createCalculatorIfMissing(tenantId, productId, pv.getCode(), versionNo, pkg.getCode());
+        //pkg.setCalculatorId(calculator.getId());
 
         return saveVersion(tenantId, productId, versionNo, pv);
     }
@@ -535,9 +536,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductVersionModel updateCover( Long tenantId, Long productId, Long versionNo, String packageCode, PvCover cover ) {
         ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
+
         pv.getPackages().stream().filter(p -> p.getCode().equals(packageCode)).findFirst().ifPresent(p -> {
             p.getCovers().stream().filter(c -> c.getCode().equals(cover.getCode())).findFirst().ifPresent(c -> {
                 c.setCode(cover.getCode());
+                c.setDeductibles(cover.getDeductibles());
+                c.setLimits(cover.getLimits());
             });
         });
         return saveVersion(tenantId, productId, versionNo, pv);

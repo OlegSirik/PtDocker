@@ -41,6 +41,7 @@ export interface BusinessLineCoefficient {
   varName: string;
   altVarCode: string;
   altVarValue: string;
+  errorTextIfNotFound?: string;
   columns: BusinessLineCoefficientColumn[];
 }
 

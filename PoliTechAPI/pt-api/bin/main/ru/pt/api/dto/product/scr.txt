@@ -1,0 +1,32 @@
+create table pt_lob_calculators
+pt_lob_calculators
+id long primary key
+lob_code varchar(30) not null
+calculator_name varchar(300) not null
+calculator_formula_json json ( calculator_id, line nr, text )
+calculator_json json not null
+
+create entity
+
+add to calculator service method create_template(Long, tid, String Lob, Long calculator_id) 
+method check tenant and autorisation ( MANAGE LOB )
+select calculator json from pt_calculators
+build calculator formula ( line_nr, text )
+algorithm for text take from first tab calculator page
+and insert into pt_lob_calculators
+
+add method get_templates (long tid, String Lob) returns [] of calculator_formula_json
+
+
+
+
+add to calculator page button on top "Make a shablon"
+when button pressed save  calculator json to pt_lob_calculators with 
+id - pt_seq.nextval, 
+lob_code - from product,
+calculator_name - product_name + package_name
+calculator_json - calculator_json
+calculator_json - 
+add method to calculator controller and calculator service
+
+add method to calculator controller to return calculator_name, calculator_json formule only by lob

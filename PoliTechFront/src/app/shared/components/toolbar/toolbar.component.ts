@@ -5,8 +5,18 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import {AuthService, Account} from '../../services/auth.service';
+import {AuthService} from '../../services/auth.service';
 import {AsyncPipe} from '@angular/common';
+
+/** Имена ролей с бэкенда (см. JWT /auth/me: userRole, authorities). */
+export const TOOLBAR_ROLE = {
+  SYS_ADMIN: 'SYS_ADMIN',
+  TNT_ADMIN: 'TNT_ADMIN',
+  GROUP_ADMIN: 'GROUP_ADMIN',
+  PRODUCT_ADMIN: 'PRODUCT_ADMIN',  
+  ACCOUNT: 'ACCOUNT',
+  SUB: 'SUB',
+} as const;
 
 @Component({
   selector: 'app-toolbar',
@@ -15,8 +25,20 @@ import {AsyncPipe} from '@angular/common';
   styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
+  /** Для шаблона: `@if (hasRole(TOOLBAR_ROLE.SYS_ADMIN))`. */
+  readonly TOOLBAR_ROLE = TOOLBAR_ROLE;
+
   authService = inject(AuthService);
   router = inject(Router);
+
+  /** Удобно в шаблоне рядом с {@link currentUser$} — перерисовка при смене пользователя. */
+  hasRole(role: string): boolean {
+    return this.authService.hasRole(role);
+  }
+
+  hasAnyRole(roles: string[]): boolean {
+    return this.authService.hasAnyRole(roles);
+  }
 
   login(): void {
     this.router.navigate(['/', this.tenantCode, 'login']);
@@ -33,6 +55,7 @@ export class ToolbarComponent {
 
   setAccountId(accountId: number): void {
     this.authService.setAccountId(accountId);
+    this.authService.getCurrentUser().subscribe();
   }
 
   isCurrentAccount(accountId: number): boolean {

@@ -1,17 +1,20 @@
-<div class="business-line-edit-container">
+<div class="page-container">
   <div class="page-header">
     <h1 class="page-title">Линия бизнеса: {{ businessLine.mpName || 'Новая линия' }}</h1>
+    
     <div class="header-actions">
-      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
-      <button mat-raised-button color="primary" class="header-btn save-btn" [disabled]="!hasChanges" (click)="save()">
-        <mat-icon>save</mat-icon>
-        Сохранить
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Назад" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
       </button>
-      <button mat-icon-button color="accent" class="json-button" (click)="saveToFile()">
+      <button mat-icon-button type="button" class="header-icon-button" color="accent" aria-label="Сохранить в файл" (click)="saveToFile()">
         <mat-icon>file_download</mat-icon>
       </button>
-      <button mat-icon-button color="warn" class="json-button" (click)="loadFromFile()">
+      <button mat-icon-button type="button" class="header-icon-button" color="warn" aria-label="Загрузить из файла" (click)="loadFromFile()">
         <mat-icon>file_upload</mat-icon>
+      </button>
+      <button mat-raised-button type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
+        <mat-icon>save</mat-icon>
+        Сохранить
       </button>
     </div>
   </div>
@@ -35,6 +38,7 @@
               <input matInput [(ngModel)]="businessLine.mpName" (ngModelChange)="updateChanges()">
             </mat-form-field>
           </div>
+<!--
           <div class="form-row">
             <mat-form-field class="form-field" appearance="outline">
               <mat-label>Тип страхователя</mat-label>
@@ -56,13 +60,11 @@
               </mat-select>
             </mat-form-field>
           </div>
-
+-->
         </mat-card-content>
       </mat-card>
-    </mat-tab>
 
-  <mat-tab label="Схема договора">
-    <mat-card class="datatable-card">
+      <mat-card class="datatable-card">
       <mat-card-header>
         <mat-card-title>Схема договора</mat-card-title>
         <mat-card-subtitle>Схема договора, используется для хранения договора и передачи договора по АПИ.</mat-card-subtitle>
@@ -178,14 +180,16 @@
               </ng-container>
 
               <ng-container matColumnDef="coverActions">
-                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-                <td mat-cell *matCellDef="let element" align="end" class="col-actions">
-                  <button mat-icon-button color="primary" (click)="editCover(element); $event.stopPropagation()">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="deleteCover(element); $event.stopPropagation()">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" color="primary" (click)="editCover(element); $event.stopPropagation()">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button class="action-button" color="warn" (click)="deleteCover(element); $event.stopPropagation()">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -236,11 +240,13 @@
             </ng-container>
 
             <ng-container matColumnDef="fileActions">
-              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
-                <button mat-icon-button color="warn" (click)="deleteFile(element); $event.stopPropagation()">
-                  <mat-icon>delete</mat-icon>
-                </button>
+              <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+              <td mat-cell *matCellDef="let element" class="col-actions">
+                <div class="action-buttons">
+                  <button mat-icon-button class="action-button" color="warn" (click)="deleteFile(element); $event.stopPropagation()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
@@ -286,11 +292,13 @@
             </ng-container>
 
             <ng-container matColumnDef="textVarActions">
-              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-              <td mat-cell *matCellDef="let element" align="end" class="col-actions">
-                <button mat-icon-button color="warn" (click)="deleteTextVar(element); $event.stopPropagation()">
-                  <mat-icon>delete</mat-icon>
-                </button>
+              <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+              <td mat-cell *matCellDef="let element" class="col-actions">
+                <div class="action-buttons">
+                  <button mat-icon-button class="action-button" color="warn" (click)="deleteTextVar(element); $event.stopPropagation()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
@@ -299,6 +307,60 @@
           </table>
         </mat-card-content>
       </mat-card>
+    </mat-tab>
+
+    <mat-tab label="Формулы расчета">
+      <div class="calculator-container lob-formulas-calc-tab">
+        <div class="page-header">
+          <h1 class="page-title">Создать тарифный калькулятор</h1>
+        </div>
+        @if (templatesLoading) {
+          <mat-card class="datatable-card">
+            <mat-card-content>Загрузка шаблонов...</mat-card-content>
+          </mat-card>
+        } @else if (!(businessLine.mpCode || '').trim()) {
+          <mat-card class="datatable-card">
+            <mat-card-content>Укажите код продуктовой группы (mpCode) и сохраните линию бизнеса — шаблоны привязаны к коду LOB.</mat-card-content>
+          </mat-card>
+        } @else if (calculatorTemplates.length === 0) {
+          <mat-card class="datatable-card">
+            <mat-card-content>Шаблоны калькулятора не найдены</mat-card-content>
+          </mat-card>
+        } @else {
+          @for (template of calculatorTemplates; track template.calculatorId) {
+            <mat-card class="datatable-card">
+              <mat-card-header style="display: block;">
+                <div style="display: flex; width: 100%; align-items: center; gap: 12px;">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    aria-label="Редактировать имя шаблона"
+                    [disabled]="creatingCalculator || updatingTemplateName"
+                    (click)="editTemplateName(template)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <h3 style="margin: 0;">{{ template.calculatorId }} - {{ template.calculatorName || 'Без названия' }}</h3>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                @for (line of sortedTemplateLines(template); track $index) {
+                  <div>{{ line.lineNr }}. {{ line.text }}</div>
+                }
+              </mat-card-content>
+              <mat-card-actions align="end">
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Удалить шаблон"
+                  [disabled]="creatingCalculator || updatingTemplateName"
+                  (click)="deleteTemplate(template)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        }
+      </div>
     </mat-tab>
 
     <mat-tab label="Коэффициенты">
@@ -340,16 +402,16 @@
             </ng-container>
 
             <ng-container matColumnDef="coeffActions">
-              <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-              <td mat-cell *matCellDef="let element" align="end" class="col-actions lob-table-actions-cell">
-                <span class="lob-table-actions">
-                  <button mat-icon-button color="primary" type="button" (click)="editCoefficient(element, $event)">
+              <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+              <td mat-cell *matCellDef="let element" class="col-actions">
+                <div class="action-buttons">
+                  <button mat-icon-button class="action-button" color="primary" type="button" (click)="editCoefficient(element, $event)">
                     <mat-icon>edit</mat-icon>
                   </button>
-                  <button mat-icon-button color="warn" type="button" (click)="deleteCoefficient(element, $event)">
+                  <button mat-icon-button class="action-button" color="warn" type="button" (click)="deleteCoefficient(element, $event)">
                     <mat-icon>delete</mat-icon>
                   </button>
-                </span>
+                </div>
               </td>
             </ng-container>
 
@@ -363,7 +425,7 @@
             ></tr>
           </table>
 
-          @if (selectedCoefficientIndex !== -1) {
+<!--          @if (selectedCoefficientIndex !== -1) { -->
             <div class="table-header lob-columns-toolbar">
               <h3>Колонки: {{ selectedCoefficientVarCode }}</h3>
               <div class="button-section lob-columns-actions">
@@ -405,16 +467,16 @@
               </ng-container>
 
               <ng-container matColumnDef="columnActions">
-                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-                <td mat-cell *matCellDef="let element" align="end" class="col-actions lob-table-actions-cell">
-                  <span class="lob-table-actions">
-                    <button mat-icon-button color="primary" type="button" (click)="editColumn(element, $event)">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" color="primary" type="button" (click)="editColumn(element, $event)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" type="button" (click)="deleteColumn(element, $event)">
+                    <button mat-icon-button class="action-button" color="warn" type="button" (click)="deleteColumn(element, $event)">
                       <mat-icon>delete</mat-icon>
                     </button>
-                  </span>
+                  </div>
                 </td>
               </ng-container>
 
@@ -427,10 +489,11 @@
                 (click)="editColumn(row)"
               ></tr>
             </table>
-          }
+<!--          } -->
         </mat-card-content>
       </mat-card>
     </mat-tab>
 
+  
   </mat-tab-group>
 </div> 

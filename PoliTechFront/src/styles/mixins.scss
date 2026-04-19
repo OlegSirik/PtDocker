@@ -130,6 +130,47 @@
   border-bottom: 1px solid $gray-200;
 }
 
+/** Контейнер кнопок в ячейке таблицы: иконка-only (mat-button / mat-raised-button с mat-icon). */
+@mixin table-action-icon-buttons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-xs;
+  flex-wrap: nowrap;
+
+  .action-button.mat-mdc-button,
+  .action-button.mat-mdc-raised-button,
+  .action-button.mat-mdc-outlined-button,
+  .action-button.mat-mdc-stroked-button {
+    min-width: $table-action-icon-btn-size;
+    width: $table-action-icon-btn-size;
+    height: $table-action-icon-btn-size;
+    padding: 0;
+
+    mat-icon,
+    .mat-icon {
+      margin: 0;
+      width: $table-action-icon-size;
+      height: $table-action-icon-size;
+      font-size: $table-action-icon-size;
+      line-height: $table-action-icon-size;
+    }
+  }
+
+  .mat-mdc-icon-button.action-button {
+    width: $table-action-icon-btn-size;
+    height: $table-action-icon-btn-size;
+    padding: 0;
+
+    mat-icon,
+    .mat-icon {
+      width: $table-action-icon-size;
+      height: $table-action-icon-size;
+      font-size: $table-action-icon-size;
+    }
+  }
+}
+
 // Responsive Mixins
 @mixin responsive($breakpoint) {
   @if $breakpoint == sm {

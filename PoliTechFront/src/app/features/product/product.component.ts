@@ -46,28 +46,30 @@ import { VarsService } from '../../shared/services/vars.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
 import { TreeTableComponent, isObjectVarTypeRow } from '../../shared/components/tree-table';
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
+import { MatDivider } from "@angular/material/divider";
 
 @Component({
     selector: 'app-product',
     imports: [
-        CommonModule,
-        FormsModule,
-        MatTabsModule,
-        MatCardModule,
-        MatButtonModule,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatCheckboxModule,
-        MatTableModule,
-        MatPaginatorModule,
-        MatDialogModule,
-        MatBadgeModule,
-        MatSlideToggleModule,
-        MatTooltipModule,
-        TreeTableComponent,
-    ],
+    CommonModule,
+    FormsModule,
+    MatTabsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatDialogModule,
+    MatBadgeModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
+    TreeTableComponent,
+    MatDivider
+],
     templateUrl: './product.component.html',
     styleUrls: ['./product.component.scss']
 })

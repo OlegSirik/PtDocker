@@ -6,42 +6,6 @@
   max-width: 1200px;
   margin: 0 auto;
 
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e0e0e0;
-
-    .page-title {
-      margin: 0;
-      color: #333;
-      font-size: 28px;
-      font-weight: 500;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-
-      .header-btn {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-        height: 40px;
-        font-weight: 500;
-      }
-
-      .header-btn:not(.save-btn) {
-        @include button-secondary;
-      }
-    }
-  }
-
   .tab-content {
     padding: 20px 0;
   }

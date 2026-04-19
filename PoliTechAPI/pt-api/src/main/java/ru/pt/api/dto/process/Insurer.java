@@ -15,6 +15,12 @@ import lombok.Setter;
 @Setter
 public class Insurer {
     
+    @JsonProperty("contractText")
+    private String contractText;
+
+    @JsonProperty("contractRepresentative")
+    private String contractRepresentative;
+
     @JsonProperty("organization")
     private Organization organization;
 

@@ -3,16 +3,18 @@
   <div class="page-header">
     <h1 class="page-title">Настройка продукта: {{ product.name || 'Новый продукт' }}<span *ngIf="currentPackage"> - {{ currentPackage.name }}</span></h1>
     <div class="header-actions">
-      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
-      <button mat-raised-button color="primary" class="header-btn save-btn" [disabled]="!hasChanges" (click)="save()">
-        <mat-icon>save</mat-icon>
-        Сохранить
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Назад" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
       </button>
-      <button mat-raised-button color="accent" class="json-button" (click)="saveToFile()">
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Сохранить в файл" (click)="saveToFile()">
         <mat-icon>file_download</mat-icon>
       </button>
-      <button mat-raised-button color="warn" class="json-button" (click)="loadFromFile()">
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Загрузить из файла" (click)="loadFromFile()">
         <mat-icon>file_upload</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
+        <mat-icon>save</mat-icon>
+        Сохранить
       </button>
     </div>
   </div>
@@ -203,12 +205,13 @@
     <mat-tab label="Правила и проверки">
       <div class="tab-content">
 
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Правила договора</mat-card-title>
-          </mat-card-header>
+        <mat-card class="datatable-card">
 
           <mat-card-content>
+            <div class="header-row">
+              <h3>Правила договора</h3>
+            </div>
+  
             <mat-checkbox [(ngModel)]="product.rules.insuredEqualsPolicyHolder" name="insuredEqualsPolicyHolder"
               [disabled]="product.phType !== product.ioType" (ngModelChange)="updateChanges()" >
               Страхователь = Застрахованный
@@ -219,15 +222,14 @@
         <mat-card class="datatable-card">
           <mat-card-content>
 
-            <div class="table-header">
+            <div class="header-row">
               <h3>Проверки предрасчета</h3>
-              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
+              <div class="buttons">
                 <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave || !product.id || product.versionNo == null" (click)="addQuoteValidator()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
               </div>
-
             </div>
 
             <table mat-table [dataSource]="paginatedQuoteValidators" class="product-table">
@@ -249,8 +251,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" [disabled]="!validatorRowMutable(element)" (click)="editQuoteValidator(element, i); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
@@ -270,9 +272,9 @@
 
         <mat-card class="datatable-card">
           <mat-card-content>
-            <div class="table-header">
+            <div class="header-row">
               <h3>Проверки договора</h3>
-              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
+              <div class="buttons">
                 <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave || !product.id || product.versionNo == null" (click)="addSaveValidator()">
                   <mat-icon>add</mat-icon>
                   Добавить
@@ -299,8 +301,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" [disabled]="!validatorRowMutable(element)" (click)="editSaveValidator(element, i)">
                       <mat-icon>edit</mat-icon>
@@ -326,15 +328,12 @@
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-header>
-            <mat-card-title>Схема договора</mat-card-title>
-            <mat-card-subtitle>
-              Иерархия переменных продукта (product.vars). Редактирование и скрытие узлов — только здесь; новые узлы не создаются.
-              @if (productTreeMutationsLocked) {
-                <span class="pv-vars-tree-readonly-hint"> Версия в проде — изменения дерева недоступны.</span>
-              }
-            </mat-card-subtitle>
+            <div class="header-row">
+              <h3>Схема договора</h3>
+            </div>            
           </mat-card-header>
           <mat-card-content>
+
             <div class="pv-vars-tree-toolbar">
               <mat-slide-toggle
                 [(ngModel)]="showDeletedProductTree"
@@ -431,15 +430,18 @@
       <div class="tab-content">
         <!-- Packages Card -->
         <mat-card class="datatable-card">
-          <mat-card-content>
-            <div class="table-header">
+          <mat-card-header>
+            <div class="header-row">
               <h3>Пакеты покрытий</h3>
-              <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addPackage()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
+              <div class="buttons">
+                <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addPackage()">
+                  <mat-icon>add</mat-icon>
+                  Добавить
+                </button>
+              </div>
             </div>
-
+          </mat-card-header>
+          <mat-card-content>
             <table mat-table [dataSource]="paginatedPackages" class="product-table">
               <ng-container matColumnDef="code">
                 <th mat-header-cell *matHeaderCellDef>Код</th>
@@ -452,17 +454,16 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element" class="col-actions">
                   <div class="action-buttons">
-                    <button mat-button color="accent" class="action-button1" [disabled]="crudLockedPendingSave" (click)="openCalculator(element); $event.stopPropagation()">
-                      <mat-icon>calculator</mat-icon>
-                      Калькулятор
+                    <button mat-icon-button class="action-button" [disabled]="crudLockedPendingSave" (click)="openCalculator(element); $event.stopPropagation()">
+                      <mat-icon>settings</mat-icon>
                     </button>
-                    <button mat-button color="primary" class="action-button" [disabled]="crudLockedPendingSave" (click)="editPackage(element, getPackageIndex(element)); $event.stopPropagation()">
+                    <button mat-icon-button class="action-button"  [disabled]="crudLockedPendingSave" (click)="editPackage(element, getPackageIndex(element)); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-button color="warn" class="action-button" [disabled]="crudLockedPendingSave" (click)="deletePackage(element, getPackageIndex(element)); $event.stopPropagation()">
+                    <button mat-icon-button class="action-button"  [disabled]="crudLockedPendingSave" (click)="deletePackage(element, getPackageIndex(element)); $event.stopPropagation()">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -478,56 +479,18 @@
         </mat-card>
 
         <!-- Package Details Tabs -->
-        @if (selectedPackageIndex !== -1 && currentPackage) {
+        
           <mat-card class="datatable-card">
             <mat-card-content>
-              <mat-tab-group>
-                <!-- Files Tab -->
-                <mat-tab label="Файлы">
                   <div class="tab-content" style="padding: 16px;">
-                    <div class="table-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                      <h3>Файлы</h3>
-                      <button mat-icon-button color="primary" [disabled]="crudLockedPendingSave" (click)="refreshFiles()" title="Обновить файлы">
-                        <mat-icon>refresh</mat-icon>
-                      </button>
-                    </div>
-                    <table mat-table [dataSource]="paginatedFiles" class="product-table">
-                      <ng-container matColumnDef="fileCode">
-                        <th mat-header-cell *matHeaderCellDef>fileCode</th>
-                        <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="fileName">
-                        <th mat-header-cell *matHeaderCellDef>fileName</th>
-                        <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef>...</th>
-                        <td mat-cell *matCellDef="let element; let i = index">
-                          <div class="action-buttons">
-                            <button mat-button color="primary" class="action-button" [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Загрузить файл">
-                              <mat-icon>upload</mat-icon>
-                            </button>
-                            <button mat-button color="accent" class="action-button" (click)="downloadFile(element); $event.stopPropagation()" title="Скачать файл">
-                              <mat-icon>download</mat-icon>
-                            </button>
-                          </div>
-                        </td>
-                      </ng-container>
-                      <tr mat-header-row *matHeaderRowDef="filesDisplayedColumns"></tr>
-                      <tr mat-row *matRowDef="let row; columns: filesDisplayedColumns;"></tr>
-                    </table>
-                  </div>
-                </mat-tab>
-
-                <!-- Covers Tab -->
-                <mat-tab label="Покрытия">
-                  <div class="tab-content" style="padding: 16px;">
-                    <div class="table-header">
+                    <div class="header-row">
                       <h3>Покрытия</h3>
-                      <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addCover()">
-                        <mat-icon>add</mat-icon>
-                        Добавить
-                      </button>
+                      <div class="buttons">
+                        <button mat-stroked-button class="add-button" [disabled]="crudLockedPendingSave" (click)="addCover()">
+                          <mat-icon>add</mat-icon>
+                          Добавить
+                        </button>
+                      </div>
                     </div>
                     <table mat-table [dataSource]="paginatedCovers" class="product-table">
                       <ng-container matColumnDef="code">
@@ -551,13 +514,13 @@
                         <td mat-cell *matCellDef="let element">{{element.isDeductibleMandatory ? 'Да' : 'Нет'}}</td>
                       </ng-container>
                       <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef>...</th>
-                        <td mat-cell *matCellDef="let element; let i = index">
+                        <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                        <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                           <div class="action-buttons">
-                            <button mat-button color="primary" class="action-button" [disabled]="crudLockedPendingSave" (click)="editCover(element, i); $event.stopPropagation()">
+                            <button mat-icon-button class="action-button" [disabled]="crudLockedPendingSave" (click)="editCover(element, i); $event.stopPropagation()">
                               <mat-icon>edit</mat-icon>
                             </button>
-                            <button mat-button color="warn" class="action-button" [disabled]="crudLockedPendingSave" (click)="deleteCover(element, i); $event.stopPropagation()">
+                            <button mat-icon-button class="action-button" [disabled]="crudLockedPendingSave" (click)="deleteCover(element, i); $event.stopPropagation()">
                               <mat-icon>delete</mat-icon>
                             </button>
                           </div>
@@ -567,53 +530,15 @@
                       <tr mat-row *matRowDef="let row; columns: coversDisplayedColumns;" (click)="selectCover(row, getCoverIndex(row))" class="clickable-row" [class.selected-row]="selectedCoverIndex === getCoverIndex(row)"></tr>
                     </table>
 
-                    <!-- Limits Card -->
-                    @if (selectedCoverIndex !== -1) {
                       <div style="margin-top: 24px;">
-                        <div class="table-header">
-                          <h3>Лимиты</h3>
-                          <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addLimit()">
-                            <mat-icon>add</mat-icon>
-                            Добавить
-                          </button>
-                        </div>
-                        <table mat-table [dataSource]="paginatedLimits" class="product-table">
-                          <ng-container matColumnDef="sumInsured">
-                            <th mat-header-cell *matHeaderCellDef>Страховая сумма</th>
-                            <td mat-cell *matCellDef="let element">{{element.sumInsured}}</td>
-                          </ng-container>
-                          <ng-container matColumnDef="premium">
-                            <th mat-header-cell *matHeaderCellDef>Премия</th>
-                            <td mat-cell *matCellDef="let element">{{element.premium}}</td>
-                          </ng-container>
-                          <ng-container matColumnDef="actions">
-                            <th mat-header-cell *matHeaderCellDef>...</th>
-                            <td mat-cell *matCellDef="let element; let i = index">
-                              <div class="action-buttons">
-                                <button mat-button color="primary" class="action-button" [disabled]="crudLockedPendingSave" (click)="editLimit(element, i); $event.stopPropagation()">
-                                  <mat-icon>edit</mat-icon>
-                                </button>
-                                <button mat-button color="warn" class="action-button" [disabled]="crudLockedPendingSave" (click)="deleteLimit(element, i); $event.stopPropagation()">
-                                  <mat-icon>delete</mat-icon>
-                                </button>
-                              </div>
-                            </td>
-                          </ng-container>
-                          <tr mat-header-row *matHeaderRowDef="limitsDisplayedColumns"></tr>
-                          <tr mat-row *matRowDef="let row; columns: limitsDisplayedColumns;"></tr>
-                        </table>
-                      </div>
-                    }
-
-                    <!-- Deductibles Card -->
-                    @if (selectedCoverIndex !== -1) {
-                      <div style="margin-top: 24px;">
-                        <div class="table-header">
+                        <div class="header-row">
                           <h3>Франшизы</h3>
-                          <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addDeductible()">
-                            <mat-icon>add</mat-icon>
-                            Добавить
-                          </button>
+                          <div class="buttons">
+                            <button mat-raised-button color="primary" class="add-button" [disabled]="crudLockedPendingSave" (click)="addDeductible()">
+                              <mat-icon>add</mat-icon>
+                              Добавить
+                            </button>
+                          </div>
                         </div>
                         <table mat-table [dataSource]="paginatedDeductibles" class="product-table">
                           <ng-container matColumnDef="id">
@@ -625,8 +550,8 @@
                             <td mat-cell *matCellDef="let element">{{element.text}}</td>
                           </ng-container>
                           <ng-container matColumnDef="actions">
-                            <th mat-header-cell *matHeaderCellDef>...</th>
-                            <td mat-cell *matCellDef="let element; let i = index">
+                            <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                            <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                               <div class="action-buttons">
                                 <button mat-button color="primary" class="action-button" [disabled]="crudLockedPendingSave" (click)="editDeductible(element, i); $event.stopPropagation()">
                                   <mat-icon>edit</mat-icon>
@@ -641,13 +566,47 @@
                           <tr mat-row *matRowDef="let row; columns: deductiblesDisplayedColumns;"></tr>
                         </table>
                       </div>
-                    }
+                    
                   </div>
-                </mat-tab>
-              </mat-tab-group>
-            </mat-card-content>
+                  <div class="tab-content" style="padding: 16px;">
+                    <div class="header-row">
+                      <h3>Файлы</h3>
+                      <div class="buttons">
+                        <button mat-icon-button color="primary" [disabled]="crudLockedPendingSave" (click)="refreshFiles()" title="Обновить файлы">
+                          <mat-icon>refresh</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                    <table mat-table [dataSource]="paginatedFiles" class="product-table">
+                      <ng-container matColumnDef="fileCode">
+                        <th mat-header-cell *matHeaderCellDef>fileCode</th>
+                        <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="fileName">
+                        <th mat-header-cell *matHeaderCellDef>fileName</th>
+                        <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                        <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
+                          <div class="action-buttons">
+                            <button mat-icon-button class="action-button" [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Загрузить файл">
+                              <mat-icon>upload</mat-icon>
+                            </button>
+                            <button mat-icon-button class="action-button" (click)="downloadFile(element); $event.stopPropagation()" title="Скачать файл">
+                              <mat-icon>download</mat-icon>
+                            </button>
+                          </div>
+                        </td>
+                      </ng-container>
+                      <tr mat-header-row *matHeaderRowDef="filesDisplayedColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: filesDisplayedColumns;"></tr>
+                    </table>
+                  </div>
+
+                </mat-card-content>
           </mat-card>
-        }
+        
       </div>
     </mat-tab>
 
@@ -656,10 +615,10 @@
       <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
-            <div class="table-header">
+            <div class="header-row">
               <h3>Шаблоны для печати</h3>
-              <div style="display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px;">
-                <button mat-raised-button color="accent" class="action-button" [disabled]="crudLockedPendingSave" (click)="reloadPolicyVars()">
+              <div class="buttons">
+                <button mat-raised-button class="action-button" [disabled]="crudLockedPendingSave" (click)="reloadPolicyVars()">
                   <mat-icon>refresh</mat-icon>
                 </button>
               </div>
@@ -687,8 +646,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let element; let i = index">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" (click)="showPolicyVarDetails(element); $event.stopPropagation()">
                       <mat-icon>visibility</mat-icon>

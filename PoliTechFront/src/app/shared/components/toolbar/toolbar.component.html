@@ -2,18 +2,32 @@
   <div class="toolbar-content">
     <div class="tenant-code">{{ tenantCode }}</div>
     <div class="nav-sections">
-      <button mat-button [routerLink]="['/', tenantCode, 'business-line']" class="nav-button">Группа продуктов</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'dashboard']" class="nav-button">Dashboard</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'products']" class="nav-button">Продукты</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'lk', 'quotes']" class="nav-button">Quotes</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'admin', 'addon', 'sp-list']" class="nav-button">Доп.продукты</button>
-      <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
-      @if ((currentUser$ | async); as user) {
-        <button mat-button [matMenuTriggerFor]="userMenu" class="nav-button">{{user.username}}</button>
+      @let user = currentUser$ | async;
+
+      @if (user && hasRole(TOOLBAR_ROLE.PRODUCT_ADMIN)) {
+        <button mat-button [routerLink]="['/', tenantCode, 'business-line']" class="nav-button">Группа продуктов</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'products']" class="nav-button">Продукты</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'addon', 'sp-list']" class="nav-button">Доп.продукты</button>
+      }
+
+      @if (user && hasRole(TOOLBAR_ROLE.GROUP_ADMIN) || hasRole(TOOLBAR_ROLE.ACCOUNT)) {
+        <button mat-button [routerLink]="['/', tenantCode, 'dashboard']" class="nav-button">Dashboard</button>
+      }
+
+      @if (user && hasRole(TOOLBAR_ROLE.PRODUCT_ADMIN) || hasRole(TOOLBAR_ROLE.GROUP_ADMIN) || hasRole(TOOLBAR_ROLE.ACCOUNT)) {
+        <button mat-button [routerLink]="['/', tenantCode, 'lk', 'quotes']" class="nav-button">Quotes</button>
+      }
+
+      @if (user && hasRole(TOOLBAR_ROLE.SYS_ADMIN) || hasRole(TOOLBAR_ROLE.TNT_ADMIN) ) {
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
+      }
+
+      @if (user) {
+        <button mat-button [matMenuTriggerFor]="userMenu" class="nav-button">{{ user.username }}</button>
         <mat-menu #userMenu="matMenu">
-          <div class="menu-username">{{user.username}}</div>
+          <div class="menu-username">{{ user.username }}</div>
           <mat-divider></mat-divider>
           <button mat-menu-item (click)="navigateToProfile()">
             <mat-icon>person</mat-icon>
@@ -26,7 +40,7 @@
                 @if (isCurrentAccount(account.id)) {
                   <mat-icon>check</mat-icon>
                 }
-                <span [class.bold-account]="isCurrentAccount(account.id)">{{account.name}}</span>
+                <span [class.bold-account]="isCurrentAccount(account.id)">{{ account.name }}</span>
               </button>
             }
           }

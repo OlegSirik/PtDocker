@@ -9,9 +9,14 @@ import { ErrorHandlerService } from '../services/error-handler.service';
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const errorHandler = inject(ErrorHandlerService);
+  const skipGlobalError = req.headers.get('X-Skip-Global-Error') === 'true';
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (skipGlobalError) {
+        return throwError(() => error);
+      }
+
       // Skip error handling for specific status codes that are handled elsewhere
       // (e.g., 401/403 are handled by auth.interceptor)
       if (error.status === 401 || error.status === 403) {

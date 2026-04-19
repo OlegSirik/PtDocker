@@ -9,6 +9,7 @@ public class CoefficientDef {
     private String varName;
     private String altVarCode;
     private BigDecimal altVarValue;
+    private String errorTextIfNotFound;
 
     private List<CoefficientColumn> columns = new ArrayList<>();
 
@@ -50,5 +51,13 @@ public class CoefficientDef {
 
     public BigDecimal getAltVarValue() {
         return this.altVarValue;
+    }
+
+    public String getErrorTextIfNotFound() {
+        return errorTextIfNotFound;
+    }
+
+    public void setErrorTextIfNotFound(String errorTextIfNotFound) {
+        this.errorTextIfNotFound = errorTextIfNotFound;
     }
 }

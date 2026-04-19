@@ -14,8 +14,8 @@ public final class InsuranceCompanyMapper {
     public static final String K_SHORT_NAME = "shortName";
     public static final String K_FULL_NAME = "fullName";
     public static final String K_EGR = "egr";
-    public static final String K_POSTAL_ADDRESS = "postal_address";
-    public static final String K_LEGAL_ADDRESS = "legal_address";
+    public static final String K_POSTAL_ADDRESS = "postalAddress";
+    public static final String K_LEGAL_ADDRESS = "legalAddress";
     public static final String K_PHONE = "phone";
     public static final String K_MAIL = "mail";
     public static final String K_INN = "inn";
@@ -25,9 +25,9 @@ public final class InsuranceCompanyMapper {
     public static final String K_ACCOUNT = "account";
     public static final String K_BANK = "bank";
     public static final String K_BIC = "bic";
-    public static final String K_CORR_ACCOUNT = "corr_account";
-    public static final String K_DISPLAY_NAME = "display_name";
-    public static final String K_REPRESENTATIVE_STRING = "representative_string";
+    public static final String K_CORR_ACCOUNT = "corrAccount";
+    public static final String K_CONTRACT_TEXT = "contractText";
+    public static final String K_CONTRACT_REPRESENTATIVE = "contractRepresentative";
 
     private InsuranceCompanyMapper() {
     }
@@ -58,8 +58,8 @@ public final class InsuranceCompanyMapper {
                 .bank(p.get(K_BANK))
                 .bic(p.get(K_BIC))
                 .corrAccount(p.get(K_CORR_ACCOUNT))
-                .displayName(p.get(K_DISPLAY_NAME))
-                .representativeString(p.get(K_REPRESENTATIVE_STRING))
+                .contractText(p.get(K_CONTRACT_TEXT))
+                .contractRepresentative(p.get(K_CONTRACT_REPRESENTATIVE))
                 .build();
     }
 
@@ -87,8 +87,8 @@ public final class InsuranceCompanyMapper {
         putIfNotBlank(m, K_BANK, dto.getBank());
         putIfNotBlank(m, K_BIC, dto.getBic());
         putIfNotBlank(m, K_CORR_ACCOUNT, dto.getCorrAccount());
-        putIfNotBlank(m, K_DISPLAY_NAME, dto.getDisplayName());
-        putIfNotBlank(m, K_REPRESENTATIVE_STRING, dto.getRepresentativeString());
+        putIfNotBlank(m, K_CONTRACT_TEXT, dto.getContractText());
+        putIfNotBlank(m, K_CONTRACT_REPRESENTATIVE, dto.getContractRepresentative());
         return m;
     }
 

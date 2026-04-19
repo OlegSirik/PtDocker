@@ -95,6 +95,34 @@ public class ComputedVars {
                     logger.trace("pl_TermDays result: {} days", days);
                     return result;
 
+                case "io_travelRoutes":   // полный маршрут для печати
+                    String io_departureCity = ctx.getString("io_departureCity");
+                    String io_arrivalCity = ctx.getString("io_arrivalCity");
+                    String[] departureCity = io_departureCity.split(",");
+                    String[] arrivalCity = io_arrivalCity.split(",");
+                    String travelRoute = "";
+                    for (int i = 0; i < departureCity.length; i++) {
+                        if (i < arrivalCity.length) {
+                            travelRoute += departureCity[i] + " - " + arrivalCity[i] + "\n";
+                        } else {
+                            travelRoute += departureCity[i] + "\n";
+                        }
+                    }
+                    return travelRoute;
+
+                case "io_travelTimetable":   // расписание перелетов для печати
+                    String io_departureDate = ctx.getString("io_departureDate");
+                    String io_arrivalDate = ctx.getString("io_arrivalDate");
+                    String[] departureDate = io_departureDate.split(",");
+                    String[] arrivalDate = io_arrivalDate.split(",");
+                    String travelTimetable = "";
+                    for (int i = 0; i < departureDate.length; i++) {
+                        if (i < arrivalDate.length) {
+                            travelTimetable += departureDate[i] + " - " + arrivalDate[i] + "\n";
+                        }
+                    }
+                    return travelTimetable;
+
                 case "gross_up_factor": {
                     try {
                     String val = ctx.getString("pl_commRate");
@@ -123,20 +151,6 @@ public class ComputedVars {
                         return "1";
                     }
                 }
-                /*     
-                case "io_legs":
-                    Object io = ctx.get("io_ticketNr");
-                    logger.trace("Computing io_legs: io_ticketNr type={}, value={}", 
-                        io != null ? io.getClass().getSimpleName() : "null", io);
-                    if (io instanceof Collection) {
-                        int size = ((Collection<?>) io).size();
-                        result = Integer.toString(size);
-                        logger.trace("io_legs result: {} (collection size)", size);
-                        return result;
-                    }
-                    logger.trace("io_legs result: 0 (not a collection)");
-                    return "0";
-                */    
                 default:
                     logger.warn("Unknown computed variable key: '{}', returning 'Not Found' message", key);
                     return null;

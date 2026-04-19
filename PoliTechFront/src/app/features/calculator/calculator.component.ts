@@ -16,14 +16,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { CalculatorService, Calculator, CalculatorVar, CalculatorFormula, FormulaLine, CalculatorCoefficient, CoefficientColumn, CoefficientDataRow } from '../../shared/services/calculator.service';
+import { CalculatorService, Calculator, CalculatorVar, CalculatorFormula, FormulaLine, CalculatorCoefficient, CoefficientColumn, CoefficientDataRow, CalculatorTemplate } from '../../shared/services/calculator.service';
 import { VarDialogComponent } from './var-dialog/var-dialog.component';
 import { FormulaDialogComponent } from './formula-dialog/formula-dialog.component';
 import { LineDialogComponent } from './line-dialog/line-dialog.component';
 import { CoefficientDialogComponent } from './coefficient-dialog/coefficient-dialog.component';
 import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
 import { SqlDialogComponent } from './sql-dialog/sql-dialog.component';
-import { ProductService } from '../../shared/services/product.service';
+import { TemplateNameDialogComponent } from './template-name-dialog/template-name-dialog.component';
+import { Product, ProductService } from '../../shared/services/product.service';
 import { TextProcessorService } from './text-processor';
 
 import * as XLSX from 'xlsx';
@@ -49,6 +50,11 @@ import * as XLSX from 'xlsx';
     styleUrls: ['./calculator.component.scss']
 })
 export class CalculatorComponent implements OnInit {
+  product: Product | null = null;
+
+  productName: string = '';
+  packageName: string = '';
+  
   calculator: Calculator = {
     productId: '',
     productCode: '',
@@ -60,6 +66,15 @@ export class CalculatorComponent implements OnInit {
   };
 
   hasChanges = false;
+  calculatorNotFound = false;
+  calculatorTemplates: CalculatorTemplate[] = [];
+  templatesLoading = false;
+  creatingCalculator = false;
+  updatingTemplateName = false;
+
+  /** LOB продукта (для createTemplate на бэкенде) */
+  productLob: string | null = null;
+  templateSaving = false;
 
   // Dropdown options
   varTypeOptions: string[] = [];
@@ -153,6 +168,7 @@ export class CalculatorComponent implements OnInit {
     const packageNo = this.route.snapshot.paramMap.get('packageNo');
     
     if (productId && versionNo && packageNo) {
+      this.loadProductVersion(productId, versionNo);
       this.loadCalculator(productId, versionNo, packageNo);
     }
   }
@@ -166,29 +182,41 @@ export class CalculatorComponent implements OnInit {
   }
 
   loadCalculator(productId: string, versionNo: string, packageNo: string): void {
-    
+    this.calculatorNotFound = false;
+    this.calculatorTemplates = [];
     this.calculatorService.getCalculator(productId, versionNo, packageNo).subscribe({
       next: (calculator) => {
-        
+        this.calculatorNotFound = false;
         this.calculator = calculator;
+        
         this.updateTables();
+        this.refreshProductLob(productId, versionNo);
       },
       error: (error) => {
-        
-        // If GET fails, try POST to create new calculator
-        this.calculatorService.createCalculator(productId, versionNo, packageNo).subscribe({
-          next: (newCalculator) => {
-            this.calculator = newCalculator;
-            this.updateTables();
-          },
-          error: (createError) => {
-            
-            this.snackBar.open('Ошибка загрузки калькулятора', 'Закрыть', { duration: 3000 });
-          }
-        });
+        if ((error as any)?.status === 404) {
+          this.calculatorNotFound = true;
+          this.loadTemplatesForCurrentProduct(productId, versionNo);
+          return;
+        }
+      }
+
+    });
+  }
+
+  loadProductVersion(productId: string, versionNo: string): void {
+    this.productService.getProduct(+productId, +versionNo).subscribe({
+      next: (product) => {
+        this.product = product;
+        const packageName = product.packages?.find(p => p.code === this.calculator.packageNo)?.name ?? '';
+        this.productName = product.name ?? '';
+        this.packageName = packageName ?? '';
+      },
+      error: () => {
+        this.product = null;
       }
     });
   }
+
 
   updateChanges(): void {
     this.hasChanges = true;
@@ -200,6 +228,212 @@ export class CalculatorComponent implements OnInit {
       this.calculator.vars[varIndex].varValue = newValue;
       this.updateChanges();
     }
+  }
+
+  private refreshProductLob(productId: string, versionNo: string): void {
+    this.productService.getProduct(+productId, +versionNo).subscribe({
+      next: (product) => {
+        this.productLob = product.lob ?? null;
+      },
+      error: () => {
+        this.productLob = null;
+      }
+    });
+  }
+
+  private loadTemplatesForCurrentProduct(productId: string, versionNo: string): void {
+    this.templatesLoading = true;
+    this.productService.getProduct(+productId, +versionNo).subscribe({
+      next: (product) => {
+        const lob = product.lob;
+        this.productLob = lob ?? null;
+        if (!lob) {
+          this.templatesLoading = false;
+          this.calculatorTemplates = [];
+          return;
+        }
+        this.calculatorService.getTemplates(lob).subscribe({
+          next: (templates) => {
+            this.calculatorTemplates = templates ?? [];
+            this.templatesLoading = false;
+          },
+          error: () => {
+            this.calculatorTemplates = [];
+            this.templatesLoading = false;
+            this.snackBar.open('Ошибка загрузки шаблонов калькулятора', 'Закрыть', { duration: 3000 });
+          }
+        });
+      },
+      error: () => {
+        this.templatesLoading = false;
+        this.calculatorTemplates = [];
+        this.snackBar.open('Не удалось определить LOB текущего продукта', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  createCalculatorFromNotFound(): void {
+    const productId = this.route.snapshot.paramMap.get('productId');
+    const versionNo = this.route.snapshot.paramMap.get('versionNo');
+    const packageNo = this.route.snapshot.paramMap.get('packageNo');
+    if (!productId || !versionNo || !packageNo) {
+      this.snackBar.open('Не удалось определить параметры калькулятора', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.creatingCalculator = true;
+    this.calculatorService.createCalculator(productId, versionNo, packageNo).subscribe({
+      next: () => {
+        this.creatingCalculator = false;
+        window.location.reload();
+      },
+      error: () => {
+        this.creatingCalculator = false;
+        this.snackBar.open('Ошибка создания калькулятора', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  createCalculatorFromTemplate(template: CalculatorTemplate): void {
+    const productId = this.route.snapshot.paramMap.get('productId');
+    const versionNo = this.route.snapshot.paramMap.get('versionNo');
+    const packageNo = this.route.snapshot.paramMap.get('packageNo');
+    if (!productId || !versionNo || !packageNo) {
+      this.snackBar.open('Не удалось определить параметры калькулятора', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    if (!template?.calculatorId) {
+      this.snackBar.open('Шаблон не содержит calculatorId', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.creatingCalculator = true;
+    this.calculatorService.createCalculator(productId, versionNo, packageNo, template.calculatorId).subscribe({
+      next: () => {
+        this.creatingCalculator = false;
+        window.location.reload();
+      },
+      error: () => {
+        this.creatingCalculator = false;
+        this.snackBar.open('Ошибка создания калькулятора из шаблона', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+  editTemplateName(template: CalculatorTemplate): void {
+    if (!template?.calculatorId) {
+      this.snackBar.open('Не удалось определить id шаблона', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(TemplateNameDialogComponent, {
+      width: '520px',
+      data: {
+        templateName: template.calculatorName ?? ''
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((newName?: string) => {
+      if (!newName || newName === (template.calculatorName ?? '')) {
+        return;
+      }
+
+      this.updatingTemplateName = true;
+      this.calculatorService.updateTemplateName(template.calculatorId as number, newName).subscribe({
+        next: (updatedTemplate) => {
+          const updatedName = updatedTemplate?.calculatorName ?? newName;
+
+          // Update visible row immediately.
+          this.calculatorTemplates = this.calculatorTemplates.map(t => {
+            if (t === template) {
+              return { ...t, calculatorName: updatedName };
+            }
+            return t;
+          });
+
+          // Reload list from backend to guarantee actual data is shown.
+          const productId = this.route.snapshot.paramMap.get('productId');
+          const versionNo = this.route.snapshot.paramMap.get('versionNo');
+          if (productId && versionNo) {
+            this.loadTemplatesForCurrentProduct(productId, versionNo);
+          }
+
+          this.updatingTemplateName = false;
+          this.snackBar.open('Имя шаблона обновлено', 'Закрыть', { duration: 2500 });
+        },
+        error: () => {
+          this.updatingTemplateName = false;
+          this.snackBar.open('Ошибка обновления имени шаблона', 'Закрыть', { duration: 3000 });
+        }
+      });
+    });
+  }
+
+  deleteTemplate(template: CalculatorTemplate): void {
+    if (!template?.calculatorId) {
+      this.snackBar.open('Не удалось определить id шаблона', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.updatingTemplateName = true;
+    this.calculatorService.deleteTemplate(template.calculatorId as number).subscribe({
+      next: () => {
+        this.calculatorTemplates = this.calculatorTemplates.filter(t => t !== template);
+        this.updatingTemplateName = false;
+        this.snackBar.open('Шаблон удален', 'Закрыть', { duration: 2500 });
+      },
+      error: () => {
+        this.updatingTemplateName = false;
+        this.snackBar.open('Ошибка удаления шаблона', 'Закрыть', { duration: 3000 });
+      }
+    });
+  }
+
+
+  sortedTemplateLines(template: CalculatorTemplate): { lineNr: number; text: string }[] {
+    const lines = template?.lines ?? [];
+    return [...lines]
+      .map((line) => ({
+        lineNr: Number(line.lineNr ?? 0),
+        text: line.text ?? ''
+      }))
+      .sort((a, b) => a.lineNr - b.lineNr);
+  }
+
+  makeTemplate(): void {
+    const id = this.calculator.id;
+    if (!id) {
+      this.snackBar.open('Нет id калькулятора — сохраните продукт и откройте калькулятор снова', 'Закрыть', { duration: 4000 });
+      return;
+    }
+    const run = (lob: string) => {
+      this.templateSaving = true;
+      this.calculatorService.createTemplate(lob, id).subscribe({
+        next: (template) => {
+          this.templateSaving = false;
+          this.snackBar.open(`Шаблон создан (${template?.lines?.length ?? 0} строк)`, 'Закрыть', { duration: 3000 });
+        },
+        error: () => {
+          this.templateSaving = false;
+          this.snackBar.open('Ошибка создания шаблона', 'Закрыть', { duration: 4000 });
+        }
+      });
+    };
+    if (this.productLob) {
+      run(this.productLob);
+      return;
+    }
+    this.productService.getProduct(+this.calculator.productId, +this.calculator.versionNo).subscribe({
+      next: (product) => {
+        const lob = product.lob;
+        if (!lob) {
+          this.snackBar.open('У продукта не задан LOB', 'Закрыть', { duration: 4000 });
+          return;
+        }
+        this.productLob = lob;
+        run(lob);
+      },
+      error: () => {
+        this.snackBar.open('Не удалось загрузить продукт для определения LOB', 'Закрыть', { duration: 4000 });
+      }
+    });
   }
 
   save(): void {

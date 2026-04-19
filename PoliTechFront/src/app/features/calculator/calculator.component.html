@@ -1,18 +1,20 @@
+@if (!calculatorNotFound) {
 <div class="calculator-container">
   <div class="page-header">
-    <h1 class="page-title">Калькулятор: {{ calculator.productCode }}:{{ calculator.versionNo }}:package{{ calculator.packageNo }}</h1>
+    <h1 class="page-title">Калькулятор: {{ productName }}::{{ packageName }}</h1>
     <div class="header-actions">
-      <button mat-raised-button color="primary" class="save-button" [disabled]="!hasChanges" (click)="save()">
+      <button mat-icon-button type="button" class="header-icon-button" color="accent" aria-label="Save to file" (click)="saveToFile()">
+        <mat-icon>file_download</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="header-icon-button" color="warn" aria-label="Load from file" (click)="loadFromFile()">
+        <mat-icon>file_upload</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Make template" [disabled]="!calculator.id || templateSaving" (click)="makeTemplate()">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
         <mat-icon>save</mat-icon>
         Save
-      </button>
-      <button mat-raised-button color="accent" class="json-button" (click)="saveToFile()">
-        <mat-icon>file_download</mat-icon>
-        File
-      </button>
-      <button mat-raised-button color="warn" class="json-button" (click)="loadFromFile()">
-        <mat-icon>file_upload</mat-icon>
-        File
       </button>
     </div>
   </div>
@@ -22,6 +24,18 @@
     <!-- Constants Tab -->
     <mat-tab label="Тариф">
       <div class="tab-content">
+
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>Тариф</h3>
+            </div>
+            <pre>{{ toReadableText() }}</pre>
+          </mat-card-content>
+        </mat-card>
+
+@if (constants.length > 0) {
+
         <mat-card class="datatable-card">
           <mat-card-content>
             <div class="table-header">
@@ -51,20 +65,8 @@
             </div>
           </mat-card-content>
         </mat-card>
-        <mat-card class="datatable-card">
-          <mat-card-content>
-            <div class="table-header">
-              <h3>Тариф</h3>
-            </div>
-            <pre>{{ toReadableText() }}</pre>
-          </mat-card-content>
-        </mat-card>
-      </div>
-    </mat-tab>
+}
 
-    <!-- Tariff tables Tab -->
-    <mat-tab label="Тарифные таблицы">
-      <div class="tab-content">
         <mat-card class="datatable-card">
           <mat-card-content>
             <div class="table-header">
@@ -215,8 +217,8 @@
                   <td mat-cell *matCellDef="let element">{{element.postProcessor || ''}}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
-                  <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
+                  <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                  <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                     <div class="action-buttons">
                       <button mat-button color="primary" class="action-button" (click)="editLine(element, i)">
                         <mat-icon>edit</mat-icon>
@@ -306,9 +308,9 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
-                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
-                  <div class="action-buttons" (click)="$event.stopPropagation()" style="display: flex; justify-content: flex-end; gap: 8px;">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
+                  <div class="action-buttons" (click)="$event.stopPropagation()">
                     <button mat-button color="primary" class="action-button" (click)="editCoefficient(element, i)">
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -367,9 +369,9 @@
                   <td mat-cell *matCellDef="let element">{{element.varDataType}}</td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
-                  <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
-                    <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
+                  <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                  <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
+                    <div class="action-buttons">
                       <button mat-button color="primary" class="action-button" (click)="editColumn(element, i)">
                         <mat-icon>edit</mat-icon>
                       </button>
@@ -495,9 +497,9 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef style="text-align: right;"></th>
-                <td mat-cell *matCellDef="let element; let i = index" style="text-align: right;">
-                  <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 8px;">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
+                  <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" (click)="editVar(element, i)">
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -528,3 +530,75 @@
 
   </mat-tab-group>
 </div>
+} @else {
+  <div class="calculator-container">
+    <div class="page-header">
+      <h1 class="page-title">Создать тарифный калькулятор</h1>
+    </div>
+    <mat-card class="datatable-card">
+      <mat-card-content>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <h3 style="margin: 0;">Создать новый тарифный калькулятор (сам все настрою)</h3>
+          <button mat-raised-button color="primary" [disabled]="creatingCalculator" (click)="createCalculatorFromNotFound()">
+            <mat-icon>check</mat-icon>
+            Выбрать
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    @if (templatesLoading) {
+      <mat-card class="datatable-card">
+        <mat-card-content>Загрузка шаблонов...</mat-card-content>
+      </mat-card>
+    } @else if (calculatorTemplates.length === 0) {
+      <mat-card class="datatable-card">
+        <mat-card-content>Шаблоны калькулятора не найдены</mat-card-content>
+      </mat-card>
+    } @else {
+      @for (template of calculatorTemplates; track template.calculatorId) {
+        <mat-card class="datatable-card">
+          <mat-card-header style="display: block;">
+            <div style="display: flex; width: 100%; align-items: center; gap: 12px;">
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Редактировать имя шаблона"
+                [disabled]="creatingCalculator || updatingTemplateName"
+                (click)="editTemplateName(template)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <h3 style="margin: 0;">{{ template.calculatorId }} - {{ template.calculatorName || 'Без названия' }}</h3>
+              <button
+                mat-raised-button
+                color="primary"
+                style="margin-left: auto;"
+                [disabled]="creatingCalculator || updatingTemplateName"
+                (click)="createCalculatorFromTemplate(template)">
+                <mat-icon>check</mat-icon>
+                Выбрать
+              </button>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            @for (line of sortedTemplateLines(template); track $index) {
+              <div>{{ line.lineNr }}. {{ line.text }}</div>
+            }
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Удалить шаблон"
+              [disabled]="creatingCalculator || updatingTemplateName"
+              (click)="deleteTemplate(template)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    }
+  </div>
+}
+
+
+

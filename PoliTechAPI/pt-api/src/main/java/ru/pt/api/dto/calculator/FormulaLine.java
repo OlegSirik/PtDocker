@@ -1,7 +1,7 @@
 package ru.pt.api.dto.calculator;
 
 public class FormulaLine {
-    private Integer nr;
+    private Long nr;
     private String conditionLeft;
     private String conditionOperator;
     private String conditionRight;
@@ -11,11 +11,11 @@ public class FormulaLine {
     private String expressionRight;
     private String postProcessor;
 
-    public Integer getNr() {
+    public Long getNr() {
         return nr;
     }
 
-    public void setNr(Integer nr) {
+    public void setNr(Long nr) {
         this.nr = nr;
     }
 

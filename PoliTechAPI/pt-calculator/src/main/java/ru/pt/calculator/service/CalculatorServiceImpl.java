@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CalculatorTemplate;
 import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
+import ru.pt.api.dto.calculator.CalculatorTemplateLine;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.dto.product.LobCoefficientColumn;
@@ -33,7 +35,9 @@ import ru.pt.api.service.product.ProductServiceCRUD;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.calculator.entity.CalculatorEntity;
+import ru.pt.calculator.entity.LobCalculatorTemplateEntity;
 import ru.pt.calculator.repository.CalculatorRepository;
+import ru.pt.calculator.repository.LobCalculatorTemplateRepository;
 import ru.pt.calculator.utils.ValidatorImpl;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.CalculatorContext;
@@ -56,6 +60,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     private static final Logger logger = LoggerFactory.getLogger(CalculatorServiceImpl.class);
 
     private final CalculatorRepository calculatorRepository;
+    private final LobCalculatorTemplateRepository lobCalculatorTemplateRepository;
     private final CoefficientService coefficientService;
     private final ProductServiceCRUD productServiceCRUD;
     private final ObjectMapper objectMapper;
@@ -177,121 +182,139 @@ public class CalculatorServiceImpl implements CalculatorService {
         return getCalculator(tenantId, entity.getProductId(), entity.getVersionNo(), entity.getPackageNo());       
     }
 
+    private CalculatorEntity createCalculatorEntity(Long tenantId, Long productId, String productCode,Long versionNo, String packageNo) {
+        ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+        LobModel lobModel = lobService.getByCode(tenantId, productVersionModel.getLob());
+
+        // create empty calculator JSON as per spec
+        CalculatorModel calculatorModel = new CalculatorModel();
+        calculatorModel.setProductId(productId);
+        calculatorModel.setProductCode(productCode);
+        calculatorModel.setVersionNo(versionNo);
+        calculatorModel.setPackageNo(packageNo);
+        calculatorModel.setVars(new ArrayList<>());
+        calculatorModel.setFormulas(new ArrayList<>());
+        calculatorModel.setCoefficients(new ArrayList<>());
+
+        FormulaDef formulaDef = new FormulaDef();
+        formulaDef.setVarCode("pkg" + packageNo + "_formula");
+        formulaDef.setVarName("Calculator for package:" + packageNo);
+
+        formulaDef.setLines(new ArrayList<>());
+        calculatorModel.getFormulas().add(formulaDef);
+
+        if (lobModel != null && lobModel.getMpCoefficients() != null) {
+            lobModel.getMpCoefficients().forEach(coefficient -> {
+                CoefficientDef coefficientDef = new CoefficientDef();
+                coefficientDef.setVarCode(coefficient.getVarCode());
+                coefficientDef.setVarName(coefficient.getVarName());
+                coefficientDef.setAltVarCode(coefficient.getAltVarCode());
+                coefficientDef.setAltVarValue(coefficient.getAltVarValue());
+                coefficientDef.setErrorTextIfNotFound(coefficient.getErrorTextIfNotFound());
+
+                List<CoefficientColumn> columns = new ArrayList<>();
+                
+                if (coefficient.getColumns() != null) {
+                    for (LobCoefficientColumn col : coefficient.getColumns()) {
+                        CoefficientColumn cc = new CoefficientColumn();
+                        cc.setVarCode(col.getVarCode());
+                        cc.setVarDataType(col.getVarDataType());
+                        cc.setNr(col.getNr());
+                        cc.setConditionOperator(col.getConditionOperator());
+                        cc.setSortOrder(col.getSortOrder());
+                        columns.add(cc);
+                    }
+                }
+                coefficientDef.setColumns(columns);
+                calculatorModel.getCoefficients().add(coefficientDef);
+                    
+                calculatorModel.getVars().add(
+                    new PvVar(
+                        coefficient.getVarCode(),
+                        coefficient.getVarName(),
+                        "",
+                        "COEFFICIENT",
+                        "",
+                        VarDataType.NUMBER,
+                        "CALCULATOR",
+                        "100"
+                    )
+                );
+            });
+        }
+
+        CalculatorEntity e = new CalculatorEntity();
+        e.setTId(tenantId);
+        e.setProductId(productId);
+        e.setProductCode(productCode);
+        e.setVersionNo(versionNo);
+        e.setPackageNo(packageNo);
+        e.setCalculator("{}");
+        return e;
+    }
+
+
     @Override
     @Transactional
-    public CalculatorModel createCalculatorIfMissing(Long tenantId, Long productId, String productCode, Long versionNo, String packageNo) {
-       
+    public CalculatorModel createCalculator(Long tenantId, Long productId, Long versionNo, String packageNo, Long templateId)
+    {
         logger.info("Creating calculator if missing: tenantId={}, productId={}, productCode={}, versionNo={}, packageNo={}",
-                tenantId, productId, productCode, versionNo, packageNo);
-        return calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo)
-                .map(CalculatorEntity::getCalculator)
-                .map(c -> {
-                    try {
-                        logger.debug("Calculator already exists, returning existing");
-                        return objectMapper.readValue(c, CalculatorModel.class);
-                    } catch (JsonProcessingException e) {
-                        logger.error("Failed to parse existing calculator: {}", e.getMessage(), e);
-                        throw new RuntimeException(e);
-                    }
-                })
-                .orElseGet(() -> {
-                    logger.info("Calculator not found, creating new one");
+                tenantId, productId, versionNo, packageNo);
+        ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
 
-                    
-                    ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
-                    LobModel lobModel = lobService.getByCode(tenantId, productVersionModel.getLob());
+        Optional<CalculatorEntity> existingOpt = calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo);
+        if (existingOpt.isPresent()) {
+            try {
+                logger.debug("Calculator already exists, returning existing");
+                return objectMapper.readValue(existingOpt.get().getCalculator(), CalculatorModel.class);
+            } catch (JsonProcessingException e) {
+                logger.error("Failed to parse existing calculator: {}", e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }
 
-                    // create empty calculator JSON as per spec
-                    CalculatorModel calculatorModel = new CalculatorModel();
-                    calculatorModel.setProductId(productId);
-                    calculatorModel.setProductCode(productCode);
-                    calculatorModel.setVersionNo(versionNo);
-                    calculatorModel.setPackageNo(packageNo);
-                    calculatorModel.setVars(new ArrayList<>());
-                    calculatorModel.setFormulas(new ArrayList<>());
-                    calculatorModel.setCoefficients(new ArrayList<>());
+        logger.info("Calculator not found, creating new one");
+        CalculatorEntity e = createCalculatorEntity(tenantId, productId, productVersionModel.getCode(), versionNo, packageNo);
+        CalculatorModel calculatorModel;
 
-                    FormulaDef formulaDef = new FormulaDef();
-                    formulaDef.setVarCode("pkg" + packageNo + "_formula");
-                    formulaDef.setVarName("Calculator for package:" + packageNo);
+        if (templateId != null) {
+            LobCalculatorTemplateEntity templateEntity = lobCalculatorTemplateRepository.findById(templateId)
+                    .orElseThrow(() -> new NotFoundException("Template not found: " + templateId));
+            try {
+                calculatorModel = objectMapper.readValue(templateEntity.getCalculatorJson(), CalculatorModel.class);
+                e.setCalculator(objectMapper.writeValueAsString(calculatorModel));
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException("Failed to parse template calculator JSON", ex);
+            }
+        } else {
+            try {
+                calculatorModel = objectMapper.readValue(e.getCalculator(), CalculatorModel.class);
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException("Failed to parse default calculator JSON", ex);
+            }
+        }
 
-                    formulaDef.setLines(new ArrayList<>());
-                    calculatorModel.getFormulas().add(formulaDef);
+        CalculatorEntity saved = calculatorRepository.save(e);
+        calculatorModel.setId(saved.getId());
 
-                    if (lobModel != null && lobModel.getMpCoefficients() != null) {
-                        lobModel.getMpCoefficients().forEach(coefficient -> {
-                            CoefficientDef coefficientDef = new CoefficientDef();
-                            coefficientDef.setVarCode(coefficient.getVarCode());
-                            coefficientDef.setVarName(coefficient.getVarName());
-                            coefficientDef.setAltVarCode(coefficient.getAltVarCode());
-                            coefficientDef.setAltVarValue(coefficient.getAltVarValue());
+        try {
+            saved.setCalculator(objectMapper.writeValueAsString(calculatorModel));
+        } catch (JsonProcessingException ex) {
+            throw new RuntimeException(ex);
+        }
+        saved = calculatorRepository.save(saved);
 
-                            List<CoefficientColumn> columns = new ArrayList<>();
-                            
-                            if (coefficient.getColumns() != null) {
-                                for (LobCoefficientColumn col : coefficient.getColumns()) {
-                                    CoefficientColumn cc = new CoefficientColumn();
-                                    cc.setVarCode(col.getVarCode());
-                                    cc.setVarDataType(col.getVarDataType());
-                                    cc.setNr(col.getNr());
-                                    cc.setConditionOperator(col.getConditionOperator());
-                                    cc.setSortOrder(col.getSortOrder());
-                                    columns.add(cc);
-                                }
-                            }
-                            coefficientDef.setColumns(columns);
-                            calculatorModel.getCoefficients().add(coefficientDef);
-                                
-                            calculatorModel.getVars().add(
-                                new PvVar(
-                                    coefficient.getVarCode(),
-                                    coefficient.getVarName(),
-                                    "",
-                                    "COEFFICIENT",
-                                    "",
-                                    VarDataType.NUMBER,
-                                    "CALCULATOR",
-                                    "100"
-                                )
-                            );
-                        });
-                    }
-
-                    CalculatorEntity e = new CalculatorEntity();
-                    e.setTId(tenantId);
-                    e.setProductId(productId);
-                    e.setProductCode(productCode);
-                    e.setVersionNo(versionNo);
-                    e.setPackageNo(packageNo);
-                    e.setCalculator("{}");
-                    CalculatorEntity saved = calculatorRepository.save(e);
-
-                    calculatorModel.setId(saved.getId());
-                    String calculatorJson;
-                    try {
-                        calculatorJson = objectMapper.writeValueAsString(calculatorModel);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    saved.setCalculator(calculatorJson);
-                    saved = calculatorRepository.save(saved);
-                    //calculatorModel.setId(saved.getId());
-
-                    String savedCalculatorJson = saved.getCalculator();
-                    
-
-                    try {
-                        CalculatorModel model = objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
-                        logger.info("Calculator created successfully: id={}, productId={}", saved.getId(), productId);
-                        return model;               
-                    } catch (JsonProcessingException ex) {
-                        logger.error("Failed to parse saved calculator JSON: {}", ex.getMessage(), ex);
-                        throw new RuntimeException(ex);
-                    } catch (Exception ex) {
-                        logger.error("Unexpected error creating calculator: {}", ex.getMessage(), ex);
-                        throw new RuntimeException(ex);
-                    }
-                });
+        try {
+            CalculatorModel model = objectMapper.readValue(saved.getCalculator(), CalculatorModel.class);
+            logger.info("Calculator created successfully: id={}, productId={}", saved.getId(), productId);
+            return model;
+        } catch (JsonProcessingException ex) {
+            logger.error("Failed to parse saved calculator JSON: {}", ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        } catch (Exception ex) {
+            logger.error("Unexpected error creating calculator: {}", ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -515,6 +538,210 @@ public class CalculatorServiceImpl implements CalculatorService {
 */
 /*********************************/    
     @Override
+    @Transactional
+    public CalculatorTemplate createTemplate(Long tenantId, String lobCode, Long calculatorId) {
+        if (lobCode == null || lobCode.isBlank()) {
+            throw new BadRequestException("lobCode is required");
+        }
+        if (calculatorId == null) {
+            throw new BadRequestException("calculatorId is required");
+        }
+
+        authService.check(
+                getCurrentUser(),
+                ResourceType.LOB,
+                lobCode,
+                tenantId,
+                Action.MANAGE);
+
+        CalculatorEntity calculatorEntity = calculatorRepository.findById(calculatorId)
+                .orElseThrow(() -> new NotFoundException("Calculator not found: " + calculatorId));
+        if (!tenantId.equals(calculatorEntity.getTId())) {
+            throw new ForbiddenException("Calculator does not belong to tenant");
+        }
+
+        CalculatorModel model;
+        try {
+            model = objectMapper.readValue(calculatorEntity.getCalculator(), CalculatorModel.class);
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException("Calculator JSON is invalid");
+        }
+
+        FormulaDef firstFormula = model.getFormulas() == null || model.getFormulas().isEmpty()
+                ? null
+                : model.getFormulas().getFirst();
+        if (firstFormula == null || firstFormula.getLines() == null) {
+            throw new BadRequestException("Calculator has no formula lines");
+        }
+
+        List<FormulaLine> sortedLines = new ArrayList<>(firstFormula.getLines());
+        sortedLines.sort(Comparator.comparing(FormulaLine::getNr, Comparator.nullsLast(Long::compareTo)));
+        List<CalculatorTemplateLine> templateLines = sortedLines.stream()
+                .map(line -> new CalculatorTemplateLine(
+                        calculatorId,
+                        line.getNr(),
+                        formatTemplateLine(line, model.getVars())
+                ))
+                .toList();
+
+        LobCalculatorTemplateEntity templateEntity = new LobCalculatorTemplateEntity();
+        templateEntity.setTId(tenantId);
+        templateEntity.setLobCode(lobCode);
+        templateEntity.setCalculatorId(calculatorId);
+        templateEntity.setCalculatorName(
+                firstFormula.getVarName() != null && !firstFormula.getVarName().isBlank()
+                        ? firstFormula.getVarName()
+                        : "calculator-" + calculatorId
+        );
+        try {
+            templateEntity.setCalculatorFormulaJson(objectMapper.writeValueAsString(templateLines));
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException("Failed to serialize template lines");
+        }
+        String rawCalculatorJson = calculatorEntity.getCalculator();
+        templateEntity.setCalculatorJson(
+                rawCalculatorJson != null && !rawCalculatorJson.isBlank() ? rawCalculatorJson : "{}");
+        lobCalculatorTemplateRepository.save(templateEntity);
+        return new CalculatorTemplate(
+                calculatorId,
+                templateEntity.getCalculatorName(),
+                templateLines
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CalculatorTemplate> getTemplates(Long tenantId, String lobCode) {
+        if (lobCode == null || lobCode.isBlank()) {
+            throw new BadRequestException("lobCode is required");
+        }
+
+        authService.check(
+                getCurrentUser(),
+                ResourceType.LOB,
+                lobCode,
+                tenantId,
+                Action.VIEW);
+
+        List<LobCalculatorTemplateEntity> templates = lobCalculatorTemplateRepository
+                .findByTIdAndLobCodeOrderByIdDesc(tenantId, lobCode);
+
+        List<CalculatorTemplate> result = new ArrayList<>();
+
+        
+        for (LobCalculatorTemplateEntity template : templates) {
+            List<CalculatorTemplateLine> lines = new ArrayList<CalculatorTemplateLine>();
+
+            try {
+                lines = objectMapper.readerForListOf(CalculatorTemplateLine.class)
+                        .readValue(template.getCalculatorFormulaJson());
+            } catch (JsonProcessingException e) {
+                logger.warn("Skipping broken template id={}: {}", template.getId(), e.getMessage());
+                continue;
+            }
+
+            CalculatorTemplate calculatorTemplate = new CalculatorTemplate(
+                    template.getId(),
+                    template.getCalculatorName(),
+                    lines
+                );
+
+            result.add(calculatorTemplate);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public CalculatorTemplate updateTemplateName(Long tenantId, Long templateId, String templateName) {
+        if (templateId == null) {
+            throw new BadRequestException("templateId is required");
+        }
+        if (templateName == null || templateName.isBlank()) {
+            throw new BadRequestException("templateName is required");
+        }
+
+        LobCalculatorTemplateEntity template = lobCalculatorTemplateRepository.findById(templateId)
+                .orElseThrow(() -> new NotFoundException("Template not found: " + templateId));
+        if (!tenantId.equals(template.getTId())) {
+            throw new ForbiddenException("Template does not belong to tenant");
+        }
+
+        authService.check(
+                getCurrentUser(),
+                ResourceType.LOB,
+                template.getLobCode(),
+                tenantId,
+                Action.MANAGE);
+
+        template.setCalculatorName(templateName.trim());
+        LobCalculatorTemplateEntity saved = lobCalculatorTemplateRepository.save(template);
+
+        List<CalculatorTemplateLine> lines;
+        try {
+            lines = objectMapper.readerForListOf(CalculatorTemplateLine.class)
+                    .readValue(saved.getCalculatorFormulaJson());
+        } catch (JsonProcessingException e) {
+            lines = new ArrayList<>();
+        }
+        return new CalculatorTemplate(saved.getCalculatorId(), saved.getCalculatorName(), lines);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTemplate(Long tenantId, Long templateId) {
+        if (templateId == null) {
+            throw new BadRequestException("templateId is required");
+        }
+
+        LobCalculatorTemplateEntity template = lobCalculatorTemplateRepository.findById(templateId)
+                .orElseThrow(() -> new NotFoundException("Template not found: " + templateId));
+        if (!tenantId.equals(template.getTId())) {
+            throw new ForbiddenException("Template does not belong to tenant");
+        }
+
+        authService.check(
+                getCurrentUser(),
+                ResourceType.LOB,
+                template.getLobCode(),
+                tenantId,
+                Action.MANAGE);
+
+        lobCalculatorTemplateRepository.delete(template);
+    }
+
+    private String formatTemplateLine(FormulaLine line, List<PvVar> vars) {
+        StringBuilder sb = new StringBuilder();
+        if (line.hasCondition()) {
+            sb.append("IF ")
+                    .append(safe(resolveVar(line.getConditionLeft(), vars))).append(' ')
+                    .append(safe(line.getConditionOperator())).append(' ')
+                    .append(safe(resolveVar(line.getConditionRight(), vars)))
+                    .append(" THEN ");
+        }
+        if (line.hasResult()) {
+            sb.append(safe(resolveVar(line.getExpressionResult(), vars))).append(" = ");
+        }
+        sb.append(safe(resolveVar(line.getExpressionLeft(), vars)));
+        if (line.getExpressionOperator() != null && !line.getExpressionOperator().isBlank()) {
+            sb.append(' ').append(line.getExpressionOperator()).append(' ');
+            sb.append(safe(resolveVar(line.getExpressionRight(), vars)));
+        }
+        return sb.toString().trim();
+    }
+
+    private String resolveVar(String varCode, List<PvVar> vars) {
+        PvVar var = vars.stream().filter(v -> v.getVarCode().equals(varCode)).findFirst().orElse(null);
+        if (var == null) {
+            return varCode;
+        }
+        return var.getVarName();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
+    }
+    @Override
     public void runCalculator(
         Long tenantId,
         Long productId,
@@ -555,7 +782,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         logger.debug("Executing formula: {}", formula.getVarCode());
 
         List<FormulaLine> lines = new ArrayList<>(formula.getLines());
-        lines.sort(Comparator.comparing(FormulaLine::getNr, Comparator.nullsLast(Integer::compareTo)));
+        lines.sort(Comparator.comparing(FormulaLine::getNr, Comparator.nullsLast(Long::compareTo)));
         logger.trace("Sorted {} formula lines", lines.size());
 
         for (FormulaLine line : lines) {
@@ -637,6 +864,8 @@ public class CalculatorServiceImpl implements CalculatorService {
                     s = cd.getAltVarValue().toString();
                 } else if (cd.getAltVarCode() != null && !cd.getAltVarCode().isBlank()) {
                     s = (ctx.getDecimal(cd.getAltVarCode())).toString();
+                } else if (cd.getErrorTextIfNotFound() != null && !cd.getErrorTextIfNotFound().isBlank()) {
+                    throw new BadRequestException(cd.getErrorTextIfNotFound());
                 }
             }
             try {

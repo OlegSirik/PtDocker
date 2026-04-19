@@ -253,6 +253,9 @@ public class FileServiceImpl implements FileService {
                     //String fName = pdfield.getPartialName();
                     String fName = pdfield.getValueAsString();
                     String fieldValue = textDocumentView.get(keyValues, fName);
+
+                    logger.debug("Field name: {}, value: {}", fName, fieldValue);
+
                     if (fieldValue != null) {
                         String fValue = fieldValue.toString();
                         try {
@@ -285,6 +288,7 @@ public class FileServiceImpl implements FileService {
             throw new NotFoundException("File ID is not found");
         }
 
+        keyValues.calcEmptyMagic();
         return process(fileId.longValue(), keyValues);
     }
 

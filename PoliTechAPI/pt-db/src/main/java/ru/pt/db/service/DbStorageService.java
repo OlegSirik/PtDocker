@@ -269,13 +269,7 @@ public class DbStorageService implements StorageService {
         // Есть права на получения списка договоров
         authService.check(userData, AuthZ.ResourceType.POLICY, null, accountId, AuthZ.Action.LIST);
 
-        if ( authService.userHasPermition(userData, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST) ) {
-            // это тестировщик
-            return policyReport.findPoliciesByAccountPath(userData.getAccountPath(), "dev" , qstr);
-        }
-
-//        return policyReport.findPoliciesByAccountRecursive(accountId, qstr);
-        return policyReport.findPoliciesByAccountPath(userData.getAccountPath(), "prod" , qstr);
+        return policyReport.findPoliciesByAccountPath(userData.getAccountPath(),  userData.getDataScope() , qstr);
 
     }
 

@@ -3,14 +3,8 @@
 
 .quotes-container {
   padding: $spacing-lg;
-  max-width: 1600px;
+  max-width: 1200px;
   margin: 0 auto;
-}
-
-.page-title {
-  @include heading-1;
-  text-align: left;
-  margin-bottom: $spacing-lg;
 }
 
 .datatable-card {
@@ -155,10 +149,6 @@
 @include responsive(sm) {
   .quotes-container {
     padding: $spacing-xl;
-  }
-  
-  .page-title {
-    font-size: $font-size-4xl;
   }
 }
 

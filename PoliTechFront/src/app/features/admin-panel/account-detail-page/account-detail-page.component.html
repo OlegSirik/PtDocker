@@ -3,8 +3,9 @@
   
   <div *ngIf="!loading && account">
     <div class="page-header">
-      <h1 class="page-title">{{ account.name }}</h1>
-      <div class="path-section">
+      <div class="page-header-lead">
+        <h1 class="page-title">{{ account.name }}</h1>
+        <div class="path-section">
         <mat-chip-listbox>
           @for (item of path; track item.id; let last = $last) {
             <mat-chip-option (click)="goToAccount(item.id)">
@@ -13,6 +14,7 @@
             </mat-chip-option>
           }
         </mat-chip-listbox>
+        </div>
       </div>
     </div>
 
@@ -38,8 +40,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let group">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let group" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" (click)="editGroup(group); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
@@ -82,8 +84,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let account">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let account" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" (click)="editAccount(account); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>
@@ -147,11 +149,13 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="actions-column">Действия</th>
-                <td mat-cell *matCellDef="let product" class="actions-column">
-                  <button mat-icon-button (click)="editProduct(product); $event.stopPropagation()" color="primary">
-                    <mat-icon>edit</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions">Действия</th>
+                <td mat-cell *matCellDef="let product" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" (click)="editProduct(product); $event.stopPropagation()" color="primary">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  </div>
 <!--
                   <button mat-icon-button (click)="deleteProduct(product); $event.stopPropagation()" color="warn">
                     <mat-icon>delete</mat-icon>
@@ -188,11 +192,13 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-                <td mat-cell *matCellDef="let login" class="actions-column">
-                  <button mat-icon-button (click)="deleteLogin(login); $event.stopPropagation()" color="warn">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <td mat-cell *matCellDef="let login" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" (click)="deleteLogin(login); $event.stopPropagation()" color="warn">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -225,11 +231,13 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-                <td mat-cell *matCellDef="let token" class="actions-column">
-                  <button mat-icon-button (click)="deleteToken(token); $event.stopPropagation()" color="warn">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <td mat-cell *matCellDef="let token" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" (click)="deleteToken(token); $event.stopPropagation()" color="warn">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -262,11 +270,13 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
-                <td mat-cell *matCellDef="let admin; let i = index" class="actions-column">
-                  <button mat-icon-button (click)="deleteAdmin(i); $event.stopPropagation()" color="warn">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <td mat-cell *matCellDef="let admin; let i = index" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" (click)="deleteAdmin(i); $event.stopPropagation()" color="warn">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -299,8 +309,8 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>...</th>
-                <td mat-cell *matCellDef="let sub">
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let sub" class="col-actions">
                   <div class="action-buttons">
                     <button mat-button color="primary" class="action-button" (click)="viewAccount(sub); $event.stopPropagation()">
                       <mat-icon>edit</mat-icon>

@@ -38,6 +38,6 @@ public class InsuranceCompanyDto {
     private String bank;
     private String bic;
     private String corrAccount;
-    private String displayName;
-    private String representativeString; // ФИО представителя страховой компании для печати внизу договора
+    private String contractText;
+    private String contractRepresentative; // ФИО представителя страховой компании для печати внизу договора
 }

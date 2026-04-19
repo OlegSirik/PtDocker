@@ -87,6 +87,7 @@ export interface Package {
   name: string;
   covers: Cover[];
   files: PackageFile[];
+  calculatorId?: number | null;
 }
 
 export interface Limit {

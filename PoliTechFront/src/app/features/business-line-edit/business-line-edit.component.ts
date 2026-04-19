@@ -24,7 +24,8 @@ import {
   BusinessLineCoefficient,
   BusinessLineCoefficientColumn,
 } from '../../shared';
-import { CalculatorService } from '../../shared/services/calculator.service';
+import { CalculatorService, CalculatorTemplate } from '../../shared/services/calculator.service';
+import { TemplateNameDialogComponent } from '../calculator/template-name-dialog/template-name-dialog.component';
 import { BusinessLineCoefficientDialogComponent } from './business-line-coefficient-dialog/business-line-coefficient-dialog.component';
 import { BusinessLineColumnDialogComponent } from './business-line-column-dialog/business-line-column-dialog.component';
 import { buildCoefficientDataSqlTemplate } from './coefficient-sql.util';
@@ -45,6 +46,7 @@ import {
 } from '../../shared/components/tree-table';
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 import { AuthService } from '../../shared/services/auth.service';
+import { MatDivider } from "@angular/material/divider";
 
 @Component({
     selector: 'app-business-line-edit',
@@ -64,7 +66,8 @@ import { AuthService } from '../../shared/services/auth.service';
     MatSlideToggleModule,
     MatTooltipModule,
     TreeTableComponent,
-  ],
+    MatDivider
+],
     templateUrl: './business-line-edit.component.html',
     styleUrls: ['./business-line-edit.component.scss']
 })
@@ -94,6 +97,12 @@ export class BusinessLineEditComponent implements OnInit {
   originalBusinessLine: BusinessLineEdit | null = null;
   isNewRecord = true;
   hasChanges = false;
+
+  /** Вкладка «Формулы расчета» — шаблоны калькулятора по коду LOB (как экран «калькулятор не найден»). */
+  calculatorTemplates: CalculatorTemplate[] = [];
+  templatesLoading = false;
+  creatingCalculator = false;
+  updatingTemplateName = false;
 
   varDisplayedColumns: string[] = ['varCode', 'varType', 'varPath', 'varName', 'varDataType', 'varActions'];
   coverDisplayedColumns: string[] = ['coverCode', 'coverName', 'risks', 'coverActions'];
@@ -239,6 +248,7 @@ export class BusinessLineEditComponent implements OnInit {
         this.selectedCoefficientVarCode = null;
         this.selectedLobColumnKey = null;
         this.syncTreeTableFromMpVars();
+        this.loadCalculatorTemplatesForLob();
         /*
         this.businessLine = {
           ...doc,
@@ -684,6 +694,7 @@ export class BusinessLineEditComponent implements OnInit {
           this.normalizeMpCoefficients();
           this.isNewRecord = false;
           this.clearSchemaTreeUnsavedFlags();
+          this.loadCalculatorTemplatesForLob();
           this.updateChanges();
           this.snack.open('Сохранено', 'OK', { duration: 2000 });
         },
@@ -788,6 +799,8 @@ export class BusinessLineEditComponent implements OnInit {
             const jsonData = JSON.parse(e.target.result);
             jsonData.id = -1;
             this.businessLine = { ...this.businessLine, ...jsonData };
+            this.normalizeMpCoefficients();
+            this.loadCalculatorTemplatesForLob();
             this.updateChanges();
             this.syncTreeTableFromMpVars();
             this.snack.open('JSON файл загружен успешно', 'Закрыть', { duration: 2000 });
@@ -815,6 +828,117 @@ export class BusinessLineEditComponent implements OnInit {
   openConfirm(message: string, onYes: ()=>void) {
     const ref = this.dialog.open(ConfirmDialog, { data: { message } });
     ref.afterClosed().subscribe((yes) => { if (yes) onYes(); });
+  }
+
+  /** Шаблоны калькулятора для текущего кода LOB ({@link BusinessLineEdit.mpCode}). */
+  loadCalculatorTemplatesForLob(): void {
+    const code = (this.businessLine.mpCode ?? '').trim();
+    if (!code) {
+      this.calculatorTemplates = [];
+      this.templatesLoading = false;
+      return;
+    }
+    this.templatesLoading = true;
+    this.calculatorService.getTemplates(code).subscribe({
+      next: (templates) => {
+        this.calculatorTemplates = templates ?? [];
+        this.templatesLoading = false;
+      },
+      error: () => {
+        this.calculatorTemplates = [];
+        this.templatesLoading = false;
+        this.snack.open('Ошибка загрузки шаблонов калькулятора', 'Закрыть', { duration: 3000 });
+      },
+    });
+  }
+
+  createCalculatorFromNotFound(): void {
+    this.snack.open(
+      'Создание калькулятора пакета выполняется на странице калькулятора в карточке продукта (версия и пакет тарифа).',
+      'Закрыть',
+      { duration: 5500 },
+    );
+  }
+
+  createCalculatorFromTemplate(template: CalculatorTemplate): void {
+    if (!template?.calculatorId) {
+      this.snack.open('Шаблон не содержит calculatorId', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.snack.open(
+      'Подключение шаблона к пакету тарифа выполняется на странице калькулятора соответствующего продукта.',
+      'Закрыть',
+      { duration: 5500 },
+    );
+  }
+
+  editTemplateName(template: CalculatorTemplate): void {
+    if (!template?.calculatorId) {
+      this.snack.open('Не удалось определить id шаблона', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(TemplateNameDialogComponent, {
+      width: '520px',
+      data: {
+        templateName: template.calculatorName ?? '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((newName?: string) => {
+      if (!newName || newName === (template.calculatorName ?? '')) {
+        return;
+      }
+
+      this.updatingTemplateName = true;
+      this.calculatorService.updateTemplateName(template.calculatorId as number, newName).subscribe({
+        next: (updatedTemplate) => {
+          const updatedName = updatedTemplate?.calculatorName ?? newName;
+          this.calculatorTemplates = this.calculatorTemplates.map((t) => {
+            if (t === template) {
+              return { ...t, calculatorName: updatedName };
+            }
+            return t;
+          });
+          this.loadCalculatorTemplatesForLob();
+          this.updatingTemplateName = false;
+          this.snack.open('Имя шаблона обновлено', 'Закрыть', { duration: 2500 });
+        },
+        error: () => {
+          this.updatingTemplateName = false;
+          this.snack.open('Ошибка обновления имени шаблона', 'Закрыть', { duration: 3000 });
+        },
+      });
+    });
+  }
+
+  deleteTemplate(template: CalculatorTemplate): void {
+    if (!template?.calculatorId) {
+      this.snack.open('Не удалось определить id шаблона', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.updatingTemplateName = true;
+    this.calculatorService.deleteTemplate(template.calculatorId as number).subscribe({
+      next: () => {
+        this.calculatorTemplates = this.calculatorTemplates.filter((t) => t !== template);
+        this.updatingTemplateName = false;
+        this.snack.open('Шаблон удален', 'Закрыть', { duration: 2500 });
+      },
+      error: () => {
+        this.updatingTemplateName = false;
+        this.snack.open('Ошибка удаления шаблона', 'Закрыть', { duration: 3000 });
+      },
+    });
+  }
+
+  sortedTemplateLines(template: CalculatorTemplate): { lineNr: number; text: string }[] {
+    const lines = template?.lines ?? [];
+    return [...lines]
+      .map((line) => ({
+        lineNr: Number(line.lineNr ?? 0),
+        text: line.text ?? '',
+      }))
+      .sort((a, b) => a.lineNr - b.lineNr);
   }
 
   onGetExample(): void {

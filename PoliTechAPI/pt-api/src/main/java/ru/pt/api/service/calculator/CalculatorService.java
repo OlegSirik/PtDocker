@@ -1,7 +1,10 @@
 package ru.pt.api.service.calculator;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CalculatorTemplateLine;
+import ru.pt.api.dto.calculator.CalculatorTemplate;
 import ru.pt.domain.model.CalculatorContext;
+import java.util.List;
 
 /**
  * Методы для CRUD операций с калькуляторами и для расчета страховой премии договора
@@ -25,7 +28,7 @@ public interface CalculatorService {
      * @param packageNo номер пакета
      * @return созданный или найденный калькулятор
      */
-    CalculatorModel createCalculatorIfMissing(Long tenantId, Long productId, String productCode, Long versionNo, String packageNo);
+    CalculatorModel createCalculator(Long tenantId, Long productId, Long versionNo, String packageNo, Long templateId);
 
     /**
      * копирует калькулятор в другой продукт версию
@@ -75,5 +78,27 @@ public interface CalculatorService {
     CalculatorModel getCalculatorById(Long tenantId, Long calculatorId);
 
     void deleteCalculator(Long tenantId, Long productId, Long versionNo, String packageNo);
+
+    /**
+     * Создать шаблон формулы по существующему калькулятору для заданной линии бизнеса.
+     */
+    CalculatorTemplate createTemplate(Long tenantId, String lobCode, Long calculatorId);
+
+    /**
+     * Получить все шаблонные строки формул для линии бизнеса.
+     */
+    List<CalculatorTemplate> getTemplates(Long tenantId, String lobCode);
+
+    /**
+     * Создать шаблон формулы по существующему калькулятору для заданной линии бизнеса.
+     */
+    CalculatorTemplate updateTemplateName(Long tenantId, Long templateId, String templateName);
+
+    /**
+     * Удалить шаблон формулы
+     * @param tenantId айди тенанта
+     * @param templateId идентификатор шаблона
+     */
+    void deleteTemplate(Long tenantId, Long templateId);
 
 }

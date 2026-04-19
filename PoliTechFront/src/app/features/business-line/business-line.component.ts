@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BusinessLineService, BusinessLine } from '../../shared/services/business-line.service';
+import { BusinessLineEdit, BusinessLineEditService } from '../../shared/services/business-line-edit.service';
 import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
@@ -37,6 +38,7 @@ export class BusinessLineComponent implements OnInit {
 
   constructor(
     private businessLineService: BusinessLineService,
+    private businessLineEditService: BusinessLineEditService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {}
@@ -67,6 +69,47 @@ export class BusinessLineComponent implements OnInit {
 
   addBusinessLine(): void {
     this.router.navigate(['/', this.authService.tenant, 'lob-edit']);
+  }
+
+  loadBusinessLineFromFile(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json,text/plain';
+    input.onchange = (event: Event) => {
+      const file = (event.target as HTMLInputElement)?.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(String(reader.result ?? '{}')) as BusinessLineEdit;
+          this.businessLineEditService.create(payload).subscribe({
+            next: (created) => {
+              const id = created?.id;
+              if (!id) {
+                this.snackBar.open('Ответ API не содержит id', 'OK', { duration: 3000 });
+                return;
+              }
+              this.snackBar.open('Группа продуктов загружена', 'OK', { duration: 2000 });
+              this.router.navigate(['/', this.authService.tenant, 'lob-edit', id]);
+            },
+            error: (error) => {
+              const message = error?.error?.message || error?.message || 'Ошибка загрузки из файла';
+              this.snackBar.open(message, 'OK', { duration: 4000 });
+            }
+          });
+        } catch {
+          this.snackBar.open('Файл содержит некорректный JSON', 'OK', { duration: 4000 });
+        }
+      };
+      reader.onerror = () => {
+        this.snackBar.open('Не удалось прочитать файл', 'OK', { duration: 4000 });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   editBusinessLine(row: BusinessLine): void {

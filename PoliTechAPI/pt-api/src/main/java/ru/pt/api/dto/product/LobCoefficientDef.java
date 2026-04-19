@@ -27,6 +27,9 @@ public class LobCoefficientDef {
 
     @JsonProperty("altVarValue")
     private BigDecimal altVarValue;
+
+    @JsonProperty("errorTextIfNotFound")
+    private String errorTextIfNotFound;
     
     @JsonProperty("columns")
     private List<LobCoefficientColumn> columns = new ArrayList<>();

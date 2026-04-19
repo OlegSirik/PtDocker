@@ -2,8 +2,10 @@
   <div class="page-header">
     <h1 class="page-title">Клиент: {{ client.name || 'Новый клиент' }}</h1>
     <div class="header-actions">
-      <button mat-raised-button class="header-btn" (click)="goBack()">Назад</button>
-      <button mat-raised-button color="primary" class="header-btn save-btn" (click)="save()" [disabled]="loading">
+      <button mat-icon-button type="button" class="header-icon-button" aria-label="Назад" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" type="button" class="save-button" (click)="save()" [disabled]="loading">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
@@ -194,11 +196,13 @@
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-                <td mat-cell *matCellDef="let element" align="end" class="col-actions">
-                  <button mat-icon-button color="warn" (click)="deleteProduct(element); $event.stopPropagation()">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let element" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" color="warn" (click)="deleteProduct(element); $event.stopPropagation()">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -261,14 +265,16 @@
                 <td mat-cell *matCellDef="let el" class="col-fixed">{{ el.fixedAmount ?? '-' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-                <td mat-cell *matCellDef="let el" align="end" class="col-actions">
-                  <button mat-icon-button (click)="openEditCommissionDialog(el); $event.stopPropagation()">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="deleteCommission(el, $event)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let el" class="col-actions">
+                  <div class="action-buttons">
+                    <button mat-icon-button class="action-button" (click)="openEditCommissionDialog(el); $event.stopPropagation()">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button class="action-button" color="warn" (click)="deleteCommission(el, $event)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 
@@ -327,17 +333,20 @@
                 <td mat-cell *matCellDef="let row" class="col-position">{{ row.position || '—' }}</td>
               </ng-container>
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef align="end" class="col-actions">...</th>
-                <td mat-cell *matCellDef="let row" align="end" class="col-actions">
-                  <button
-                    mat-icon-button
-                    type="button"
-                    color="warn"
-                    (click)="deleteAdmin(row, $event)"
-                    [attr.aria-label]="'Удалить ' + row.userLogin"
-                  >
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                <td mat-cell *matCellDef="let row" class="col-actions">
+                  <div class="action-buttons">
+                    <button
+                      mat-icon-button
+                      class="action-button"
+                      type="button"
+                      color="warn"
+                      (click)="deleteAdmin(row, $event)"
+                      [attr.aria-label]="'Удалить ' + row.userLogin"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </ng-container>
 

@@ -49,7 +49,7 @@ public class LobVar {
     private boolean isSystem;
 
     @JsonProperty("isDeleted")
-    private boolean isDeleted = false;
+    private boolean isDeleted;
 
     @JsonProperty("name")
     private String name;
@@ -64,6 +64,7 @@ public class LobVar {
         this.varPath = varPath;
         this.varType = varType;
         this.varDataType = varDataType;
+        this.isDeleted = false;
     }
 
     public LobVar(String varCode, String varName, String varPath, String varType, String varValue, VarDataType varDataType) {
@@ -73,6 +74,7 @@ public class LobVar {
         this.varType = varType;
         this.varValue = varValue;
         this.varDataType = varDataType;
+        this.isDeleted = false;
     }
 
     public String getVarValue() {

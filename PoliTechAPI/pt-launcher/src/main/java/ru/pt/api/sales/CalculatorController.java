@@ -6,17 +6,18 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CalculatorTemplate;
 import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.api.dto.calculator.CoefficientDef;
-import ru.pt.api.security.SecuredController;
+import ru.pt.api.dto.calculator.CalculatorTemplateLine;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
+import java.util.List;
 
 
 /**
@@ -123,9 +124,10 @@ public class CalculatorController  {
             @PathVariable("productId") Long productId,
             @PathVariable("versionNo") Long versionNo,
             @PathVariable("packageNo") String packageNo,
-            @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode) {
+            @RequestBody CreateCalculatorRequest request) {
+        
         //requireAdmin(user);
-        CalculatorModel json = calculateService.createCalculatorIfMissing(user.getTenantId(), productId, productCode, versionNo, packageNo);
+        CalculatorModel json = calculateService.createCalculator(user.getTenantId(), productId, versionNo, packageNo, request.templateId);
         return ResponseEntity.ok(json);
         
     }
@@ -144,7 +146,7 @@ public class CalculatorController  {
         return ResponseEntity.ok(json);
     }
 
-    @PostMapping("/{calculatorId}/prc/syncvars")
+    @PostMapping("/{calculatorId}/cmd/syncvars")
     public ResponseEntity<Void> syncVars(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
@@ -153,6 +155,55 @@ public class CalculatorController  {
         calculateService.syncVars(user.getTenantId(), calculatorId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/templates")
+    public ResponseEntity<CalculatorTemplate> createTemplate(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody CreateTemplateRequest request) {
+        return ResponseEntity.ok(calculateService.createTemplate(user.getTenantId(), request.lobCode, request.calculatorId));
+    }
+
+    @GetMapping("/templates")
+    public ResponseEntity<List<CalculatorTemplate>> getTemplates(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestParam("lob") String lobCode) {
+        return ResponseEntity.ok(calculateService.getTemplates(user.getTenantId(), lobCode));
+    }
+
+    @PutMapping("/templates/{id}")
+    public ResponseEntity<CalculatorTemplate> updateTemplateName(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("id") Long templateId,
+            @RequestBody UpdateTemplateNameRequest request) {
+        return ResponseEntity.ok(calculateService.updateTemplateName(user.getTenantId(), templateId, request.templateName));
+    }
+
+    @DeleteMapping("/templates/{id}")
+    public ResponseEntity<Void> deleteTemplate(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("id") Long templateId) {
+        calculateService.deleteTemplate(user.getTenantId(), templateId);
+        return ResponseEntity.noContent().build();
+    }
+
+    record CreateTemplateRequest(
+        String lobCode,
+        Long calculatorId
+    ) {
+    }
+
+    record UpdateTemplateNameRequest(
+        String templateName
+    ) {
+    }
+
+    record CreateCalculatorRequest(
+        Long templateId
+    ){}
 
 }
 
