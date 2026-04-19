@@ -796,14 +796,13 @@ export class CalculatorComponent implements OnInit {
   }
 
   updateLinesTable(): void {
-/*
-    if (this.selectedFormulaIndex === -1) {
+    if (this.selectedFormulaIndex === -1 || !this.calculator.formulas[this.selectedFormulaIndex]) {
       this.filteredLines = [];
       this.paginatedLines = [];
       return;
     }
-*/
-    const lines = this.calculator.formulas[0].lines.slice();
+    const formula = this.calculator.formulas[this.selectedFormulaIndex];
+    const lines = (formula.lines ?? []).slice();
 
     // Sort by nr (as number, fallback to 0 if not a number)
     lines.sort((a, b) => {

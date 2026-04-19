@@ -249,7 +249,11 @@ public class CalculatorServiceImpl implements CalculatorService {
         e.setProductCode(productCode);
         e.setVersionNo(versionNo);
         e.setPackageNo(packageNo);
-        e.setCalculator("{}");
+        try {
+            e.setCalculator(objectMapper.writeValueAsString(calculatorModel));
+        } catch (JsonProcessingException ex) {
+            throw new RuntimeException(ex);
+        }
         return e;
     }
 
@@ -289,6 +293,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         } else {
             try {
                 calculatorModel = objectMapper.readValue(e.getCalculator(), CalculatorModel.class);
+                
             } catch (JsonProcessingException ex) {
                 throw new RuntimeException("Failed to parse default calculator JSON", ex);
             }

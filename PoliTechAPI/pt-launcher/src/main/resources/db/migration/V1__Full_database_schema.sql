@@ -438,7 +438,7 @@ COMMENT ON TABLE po_addon_policies IS 'Policy add-ons (NEW, BOOKED, PAID)';
 -- =============================================================================
 -- CONTRACT MODEL & ATTRIBUTE TREE (post-V21)
 -- =============================================================================
-CREATE SEQUENCE IF NOT EXISTS mt_seq START WITH 1000 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS mt_seq START WITH 10000 INCREMENT BY 1;
 
 CREATE TABLE mt_contract_model (
     id   BIGINT PRIMARY KEY DEFAULT nextval('mt_seq'),
