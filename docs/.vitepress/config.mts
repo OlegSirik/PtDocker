@@ -7,7 +7,7 @@ export default defineConfig({
   lang: 'ru-RU',
   
   // Базовый путь для GitHub Pages
-  base: '/PoliTech/',
+  base: '/PtDocker/',
   
   // Настройки темы
   themeConfig: {
@@ -19,7 +19,7 @@ export default defineConfig({
       { text: 'Главная', link: '/' },
       { text: 'Руководства', link: '/user-docs/' },
       { text: 'API', link: '/api/' },
-      { text: 'GitHub', link: 'https://github.com/olegsirik/PoliTech' }
+      { text: 'GitHub', link: 'https://github.com/olegsirik/PtDocker' }
     ],
     
     // Боковое меню
@@ -93,18 +93,18 @@ export default defineConfig({
     
     // Социальные ссылки
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/olegsirik/PoliTech' }
+      { icon: 'github', link: 'https://github.com/olegsirik/PtDocker' }
     ],
     
     // Футер
     footer: {
-      message: 'PoliTech — Direct Insurance Platform',
+      message: 'PxP PoliTech — Direct Insurance Platform',
       copyright: 'Copyright © 2024'
     },
     
     // Редактировать на GitHub
     editLink: {
-      pattern: 'https://github.com/olegsirik/PoliTech/edit/main/docs/:path',
+      pattern: 'https://github.com/olegsirik/PtDocker/edit/main/docs/:path',
       text: 'Редактировать эту страницу на GitHub'
     },
     
