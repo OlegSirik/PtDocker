@@ -17,7 +17,19 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# Явно указываем все страницы в навигации
+nav:
+  - Главная: index.md
+  - Установка: README.md
+  - Руководства:
+      - Начало работы: authN/README.md
+      - Продвинутые настройки: guides/advanced.md
+  - Справочник:
+      - API: reference/api.md
+      - FAQ: reference/faq.md
 
+# Где лежат файлы (по умолчанию docs)
+docs_dir: docs
 
 
 
