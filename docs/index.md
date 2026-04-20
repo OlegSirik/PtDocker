@@ -5,16 +5,13 @@ hero:
   name: "PxP Policy.Tech"
   text: "Direct Insurance Platform"
   tagline: Платформа для прямого страхования без границ и кода
-  image:
-    src: /logo.png
-    alt: PoliTech
   actions:
     - theme: brand
       text: Начать работу
-      link: /installation
+      link: http://185.130.212.179/demo/login
     - theme: alt
       text: GitHub
-      link: https://github.com/olegsirik/PoliTech
+      link: https://github.com/olegsirik/PtDocker
 
 features:
   - title: 🚀 Быстрый вывод в прод
@@ -30,6 +27,13 @@ features:
   - title: 📱 Мини-личный кабинет
     details: Просмотр продаж и выплат для агентов
 ---
+
+
+
+
+
+
+
 
 # Страховая платформа
 
