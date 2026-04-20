@@ -22,15 +22,13 @@ nav:
   - Главная: index.md
   - Установка: README.md
   - Руководства:
-      - Начало работы: authN/README.md
-      - Продвинутые настройки: authZ/README.md
+      - Руководство пользователя: user-docs/README.md
+      - Руководство администратора: doc_admin/tenant.md
+      - Руководство разработчика:
+        - Аутентификация: authN/README.md
+        - Авторизация: authZ/README.md
+        - Шаблонизатор: development/Text-Template.md
+        - Калькулятор : development/Calculator.md
   - Справочник:
       - API: api/api-overview.md
       
-
-# Где лежат файлы (по умолчанию docs)
-docs_dir: docs
-
-
-
-
