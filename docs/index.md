@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "PoliTech"
+  name: "PxP Policy.Tech"
   text: "Direct Insurance Platform"
   tagline: Платформа для прямого страхования без границ и кода
   image:
