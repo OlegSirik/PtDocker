@@ -115,7 +115,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             // Добавить переменные с договора
             productVersionModel.getVars().forEach(var -> {
                 if (var.getIsTarifFactor() == true) {
-                    var.setVarCdm("CALCULATOR");
+                    //var.setVarCdm("CALCULATOR");
                     model.getVars().add(var);
                 }
             });
@@ -130,16 +130,19 @@ public class CalculatorServiceImpl implements CalculatorService {
                     pkg.getCovers().forEach(cover -> {
                         PvVar varSumInsured = PvVar.varSumInsured(cover.getCode());
                         if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
+                            varSumInsured.setVarCdm("CALCULATOR");
                             model.getVars().add(varSumInsured);
                         }
 
                         PvVar varPremium = PvVar.varPremium(cover.getCode());
                         if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
+                            varPremium.setVarCdm("CALCULATOR");
                             model.getVars().add(varPremium);
                         }
 
                         PvVar varDeductibleNr = PvVar.varDeductibleNr(cover.getCode());
                         if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
+                            varDeductibleNr.setVarCdm("CALCULATOR");
                             model.getVars().add(varDeductibleNr);
                         }
 
@@ -286,6 +289,12 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .orElseThrow(() -> new NotFoundException("Template not found: " + templateId));
             try {
                 calculatorModel = objectMapper.readValue(templateEntity.getCalculatorJson(), CalculatorModel.class);
+                calculatorModel.setId(null);
+                calculatorModel.setProductId(productId);
+                calculatorModel.setProductCode(productVersionModel.getCode());
+                calculatorModel.setVersionNo(versionNo);
+                calculatorModel.setPackageNo(packageNo);
+                
                 e.setCalculator(objectMapper.writeValueAsString(calculatorModel));
             } catch (JsonProcessingException ex) {
                 throw new RuntimeException("Failed to parse template calculator JSON", ex);
@@ -324,7 +333,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     @Override
     @Transactional
-    public CalculatorModel replaceCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
+    public CalculatorModel updateCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
                                              String packageNo, CalculatorModel newJson) {
         
         authService.check(
@@ -340,6 +349,13 @@ public class CalculatorServiceImpl implements CalculatorService {
         newJson.setProductCode(productCode);
         newJson.setVersionNo(versionNo);
         newJson.setPackageNo(packageNo);
+
+        // delete newJson vars where varCdm is not CALCULATOR
+        String a1 = Integer.toString(newJson.getVars().size());
+        
+        newJson.getVars().removeIf(var -> !var.getVarCdm().equalsIgnoreCase("CALCULATOR"));
+
+        String a2 = Integer.toString(newJson.getVars().size());
 
         String calculatorJson;
         try {
@@ -483,64 +499,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         }
     }
 
-    @Override
-    @Transactional
-    public void syncVars(Long tenantId, Long calculatorId) {
-        return;
-    }
-/*
-        CalculatorEntity entity = calculatorRepository.findById(calculatorId)
-                .orElseThrow(() -> new IllegalArgumentException("Calculator not found for id=" + calculatorId));
-        if (!tenantId.equals(entity.getTId())) {
-            throw new ForbiddenException("Calculator does not belong to the requested tenant");
-        }
-        authService.check(
-                getCurrentUser(),
-                ResourceType.PRODUCT,
-                String.valueOf(entity.getProductId()),
-                tenantId,
-                Action.MANAGE);
-        String calculatorModelJson = entity.getCalculator();
-        CalculatorModel calculatorModel;
-        try {
-            calculatorModel = objectMapper.readValue(calculatorModelJson, CalculatorModel.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        if (calculatorModel == null) {
-            throw new IllegalStateException("Calculator JSON is null for id=" + calculatorId);
-        }
-        ProductVersionModel productVersionModel = productServiceCRUD.getProduct(tenantId, entity.getProductId(), false);
-        if (productVersionModel == null) {
-            throw new NotFoundException("Product not found for id=" + entity.getProductId());
-        }
 
-        // get productVersionModel version from repository
-        ProductVersionModel productVersion = productServiceCRUD.getVersion(tenantId, entity.getProductId(), entity.getVersionNo());
-        if (productVersion == null) {
-            throw new NotFoundException("Product version not found for id=" + entity.getProductId() + " and versionNo=" + entity.getVersionNo());
-        }
-
-
-        // get lob from repository
-        //LobModel lobModel = lobService.getByCode(productVersionModel.getLob());
-        //if (lobModel == null) {
-        //    throw new IllegalArgumentException("LOB not found for code=" + productVersionModel.getLob());
-        //}
-
-
-        // get vars from lob
-        List<PvVar> vars = productVersion.getVars();
-        // add vars to calculator if it not found by code
-        for (PvVar var : vars) {
-            if (calculatorModel.getVars().stream().noneMatch(v -> v.getVarCode().equals(var.getVarCode()))) {
-                calculatorModel.getVars().add(var);
-            }
-        }
-        // save calculator
-        calculatorRepository.save(entity);
-    }
-*/
 /*********************************/    
     @Override
     @Transactional

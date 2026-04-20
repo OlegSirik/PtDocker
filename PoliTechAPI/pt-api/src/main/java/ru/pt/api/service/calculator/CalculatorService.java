@@ -61,14 +61,8 @@ public interface CalculatorService {
      * @param newJson новая модель калькулятора
      * @return сохраненная модель
      */
-    CalculatorModel replaceCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
+    CalculatorModel updateCalculator(Long tenantId, Long productId, String productCode, Long versionNo,
                                       String packageNo, CalculatorModel newJson);
-
-    /**
-     * Синхронизировать переменные калькулятора с продуктом
-     * @param calculatorId идентификатор калькулятора
-     */
-    void syncVars(Long tenantId, Long calculatorId);
 
     /**
      * Получить калькулятор по идентификатору

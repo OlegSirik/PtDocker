@@ -1,0 +1,9 @@
+site_name: My Documentation
+site_url: https://olegsirik.github.io/PoliTech/
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - API: README.md

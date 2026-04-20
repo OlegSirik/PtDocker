@@ -133,7 +133,7 @@ public class CalculatorController  {
     }
 
     @PutMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
-    public ResponseEntity<CalculatorModel> replaceCalculator(
+    public ResponseEntity<CalculatorModel> updateCalculator(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("productId") Long productId,
@@ -142,18 +142,8 @@ public class CalculatorController  {
             @RequestParam(name = "productCode", required = false, defaultValue = "") String productCode,
             @RequestBody CalculatorModel newJson) {
         //requireAdmin(user);
-        CalculatorModel json = calculateService.replaceCalculator(user.getTenantId(), productId, productCode, versionNo, packageNo, newJson);
+        CalculatorModel json = calculateService.updateCalculator(user.getTenantId(), productId, productCode, versionNo, packageNo, newJson);
         return ResponseEntity.ok(json);
-    }
-
-    @PostMapping("/{calculatorId}/cmd/syncvars")
-    public ResponseEntity<Void> syncVars(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("calculatorId") Long calculatorId) {
-        //requireAdmin(user);
-        calculateService.syncVars(user.getTenantId(), calculatorId);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/templates")
