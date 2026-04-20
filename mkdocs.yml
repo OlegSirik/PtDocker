@@ -1,34 +1,51 @@
 site_name: My Documentation
 site_url: https://olegsirik.github.io/PoliTech/
 
+# 👇 Важно: указать где лежат файлы
+docs_dir: docs
+
 theme:
   name: material
   features:
-    - navigation.instant
+    - navigation.instant   # ✅ актуальное название
     - navigation.sections
+    - navigation.tabs      # добавил для лучшей навигации
     - content.code.copy
+    - navigation.top       # кнопка "наверх"
+    - navigation.tracking  # подсветка текущей секции
+  language: ru
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
 
 plugins:
   - search
+  # 👇 Добавить для автоматической навигации (опционально)
+  # - literate-nav:
+  #     nav_file: SUMMARY.md
 
 markdown_extensions:
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - tables
   - toc:
       permalink: true
+  - attr_list
+  - md_in_html
 
-# Явно указываем все страницы в навигации
+# 👇 Важно: все пути относительно docs_dir
 nav:
   - Главная: index.md
-  - Установка: README.md
+  - Установка: installation.md   # переименуйте README.md → installation.md
   - Руководства:
       - Руководство пользователя: user-docs/README.md
       - Руководство администратора: doc_admin/tenant.md
       - Руководство разработчика:
-        - Аутентификация: authN/README.md
-        - Авторизация: authZ/README.md
-        - Шаблонизатор: development/Text-Template.md
-        - Калькулятор : development/Calculator.md
+          - Аутентификация: authN/README.md
+          - Авторизация: authZ/README.md
+          - Шаблонизатор: development/Text-Template.md
+          - Калькулятор: development/Calculator.md
   - Справочник:
       - API: api/api-overview.md
-      
