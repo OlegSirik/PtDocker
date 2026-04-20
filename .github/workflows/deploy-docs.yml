@@ -1,4 +1,4 @@
-name: deploy-docs
+name: Deploy MkDocs
 
 on:
   push:
@@ -13,12 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.x
 
-      - run: pip install mkdocs-material
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs-material
 
-      - run: mkdocs gh-deploy --force
+      - name: Deploy documentation
+        run: |
+          mkdocs gh-deploy --force
