@@ -11,7 +11,7 @@ export default defineConfig({
     logo: null,  // 👈 отключаем логотип
     
     nav: [
-      { text: 'Главная', link: '/' },
+      { text: 'Главная', link: '/about.md' },
       { text: 'Руководства', link: '/user-docs/README.md' },
       { text: 'API', link: '/api/api-overview.md' },  // ← существующий файл
       { text: 'GitHub', link: 'https://github.com/olegsirik/PtDocker' }
