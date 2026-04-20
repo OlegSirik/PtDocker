@@ -23,10 +23,10 @@ nav:
   - Установка: README.md
   - Руководства:
       - Начало работы: authN/README.md
-      - Продвинутые настройки: guides/advanced.md
+      - Продвинутые настройки: authZ/README.md
   - Справочник:
-      - API: reference/api.md
-      - FAQ: reference/faq.md
+      - API: api/api-overview.md
+      
 
 # Где лежат файлы (по умолчанию docs)
 docs_dir: docs
