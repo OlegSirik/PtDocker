@@ -1,3 +1,36 @@
+---
+layout: home
+
+hero:
+  name: "PoliTech"
+  text: "Direct Insurance Platform"
+  tagline: Платформа для прямого страхования без границ и кода
+  image:
+    src: /logo.png
+    alt: PoliTech
+  actions:
+    - theme: brand
+      text: Начать работу
+      link: /installation
+    - theme: alt
+      text: GitHub
+      link: https://github.com/olegsirik/PoliTech
+
+features:
+  - title: 🚀 Быстрый вывод в прод
+    details: Создавайте и публикуйте новые продукты без написания кода за 15 минут
+  - title: 📄 Конструктор печатных форм
+    details: Загружайте шаблоны Word и получайте готовые PDF-документы
+  - title: 📊 Дашборды и отчетность
+    details: Встроенные отчеты и дашборды для анализа продаж
+  - title: 🔗 Кросс-продажи
+    details: Выводите и рекомендуйте нестраховые продукты
+  - title: 🛡️ Мультитенантность
+    details: Полная изоляция данных между клиентами
+  - title: 📱 Мини-личный кабинет
+    details: Просмотр продаж и выплат для агентов
+---
+
 # Страховая платформа
 
 ## Обзор

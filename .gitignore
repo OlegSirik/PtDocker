@@ -1,2 +1,8 @@
 .idea
 .env
+node_modules
+.DS_Store
+dist
+.vitepress/dist
+.vitepress/cache
+*.log
