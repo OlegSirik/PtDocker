@@ -1,63 +1,50 @@
-@import '../../../../styles/variables';
-@import '../../../../styles/mixins';
-
-.sp-list-container {
+.page-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 
-  .datatable-card {
+  .pt-box {
     margin-bottom: 20px;
 
-    .button-section {
-      @include card-base;
-      display: flex;
-      justify-content: flex-end;
-      padding: $spacing-md;
-      margin-bottom: $spacing-lg;
-      background-color: $gray-50;
-
-      .add-button {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-      }
+    &.pt-box-section-divider {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 20px;
     }
 
-    .table-header {
+    .pt-box-title-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      justify-content: space-between;
+      gap: 12px 16px;
+      flex-wrap: wrap;
 
-      h3 {
+      .pt-box-title {
         margin: 0;
-        font-size: 20px;
-        font-weight: 500;
+        margin-top: 5px;
+        color: rgb(73, 80, 87);
+        font-family: Roboto, 'Helvetica Neue', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 28px;
+      }
+
+      .pt-box-title-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: flex-end;
       }
     }
+  }
 
-    .business-table {
+  .pt-box-table-box {
+    width: 100%;
+    margin-top: 16px;
+
+    .pt-table {
       width: 100%;
       margin-bottom: 16px;
       table-layout: fixed;
-
-      &.providers-table {
-        .col-id { width: 100px; min-width: 100px; }
-        .col-name { width: 100%; }
-        .col-status { width: 100px; min-width: 100px; }
-        .col-actions { width: 100px; min-width: 100px; }
-      }
-
-      &.pricelist-table {
-        .col-id { width: 100px; min-width: 100px; }
-        .col-code { width: 100px; min-width: 100px; }
-        .col-name { width: 100%; }
-        .col-price { width: 100px; min-width: 100px; }
-        .col-status { width: 100px; min-width: 100px; }
-        .col-actions { width: 100px; min-width: 100px; }
-      }
 
       .clickable-row {
         cursor: pointer;
@@ -68,38 +55,90 @@
         }
       }
 
-      .row-selected {
-        background-color: rgba(63, 81, 181, 0.05);
-      }
-
-      .status-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
+      tr.ins-company-row-selected {
+        background-color: rgba(63, 81, 181, 0.12);
       }
     }
   }
 
-  .status-active {
-    background-color: #4caf50 !important;
-    color: white !important;
-  }
-
-  .status-suspended {
-    background-color: #ff9800 !important;
-    color: white !important;
-  }
-
-  .status-deleted {
-    background-color: #f44336 !important;
-    color: white !important;
-  }
-
-  .loading {
+  .pt-loading {
     padding: 20px;
     text-align: center;
     color: #666;
+  }
+
+  .pt-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pt-status-active {
+    background-color: #4caf50 !important;
+    color: #fff !important;
+  }
+
+  .pt-status-suspended {
+    background-color: #ff9800 !important;
+    color: #fff !important;
+  }
+
+  .pt-status-deleted {
+    background-color: #f44336 !important;
+    color: #fff !important;
+  }
+
+  .providers-table {
+    .col-id {
+      width: 100px;
+      min-width: 100px;
+    }
+
+    .col-name {
+      width: 100%;
+    }
+
+    .col-status {
+      width: 120px;
+      min-width: 120px;
+    }
+
+    .col-actions {
+      width: 140px;
+      min-width: 140px;
+    }
+  }
+
+  .pricelist-table {
+    .col-id {
+      width: 100px;
+      min-width: 100px;
+    }
+
+    .col-code {
+      width: 100px;
+      min-width: 100px;
+    }
+
+    .col-name {
+      width: 100%;
+    }
+
+    .col-price {
+      width: 100px;
+      min-width: 100px;
+    }
+
+    .col-status {
+      width: 100px;
+      min-width: 100px;
+    }
+
+    .col-actions {
+      width: 140px;
+      min-width: 140px;
+    }
   }
 }

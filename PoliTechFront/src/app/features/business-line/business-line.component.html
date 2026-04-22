@@ -1,22 +1,15 @@
 <div class="page-container">
   <div class="page-header">
     <h1 class="page-title">Группы продуктов</h1>
+
+    <div class="header-actions">
+      <button mat-button (click)="loadBusinessLineFromFile()">Загрузить из файла</button>
+      <button mat-button (click)="addBusinessLine()">Создать</button>
+    </div>
   </div>
 
-  <mat-card class="datatable-card">
-    <mat-card-content>
-      <div class="button-section">
-        <button mat-raised-button class="icon-button" (click)="loadBusinessLineFromFile()">
-          <mat-icon>upload_file</mat-icon>
-        </button>
-        <button mat-raised-button class="add-button" (click)="addBusinessLine()">
-          <mat-icon>add</mat-icon>
-          Создать
-        </button>
-      </div>
 
       <div class="table-header">
-        <h3>Список продуктовых групп</h3>
         <mat-form-field class="search-field" appearance="outline">
           <mat-label>Поиск</mat-label>
           <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск по названию или коду">
@@ -59,6 +52,5 @@
             (click)="editBusinessLine(row)"
             class="clickable-row"></tr>
       </table>
-    </mat-card-content>
-  </mat-card>
+
 </div>

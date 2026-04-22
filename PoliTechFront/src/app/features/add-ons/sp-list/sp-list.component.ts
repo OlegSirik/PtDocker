@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChip } from '@angular/material/chips';
 import { AuthService } from '../../../shared/services/auth.service';
 import { AddonProvidersService, ProviderListDto } from '../../../shared/services/api/addon-providers.service';
 import { AddonPricelistService, PricelistListDto } from '../../../shared/services/api/addon-pricelist.service';
@@ -15,7 +13,6 @@ import { AddonPricelistService, PricelistListDto } from '../../../shared/service
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
     MatTableModule,
     MatIconModule,
     MatButtonModule,
@@ -71,6 +68,25 @@ export class SpListComponent implements OnInit {
     this.router.navigate(['/', tenantCode, 'admin', 'addon', 'sp-provider', provider.id.toString()]);
   }
 
+  deleteProvider(provider: ProviderListDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!confirm(`Удалить поставщика «${provider.name}»?`)) {
+      return;
+    }
+    this.providersService.delete(provider.id).subscribe({
+      next: () => {
+        if (this.selectedProvider?.id === provider.id) {
+          this.selectedProvider = null;
+          this.pricelists = [];
+        }
+        this.loadProviders();
+      },
+      error: (err: unknown) => {
+        console.error('Error deleting provider:', err);
+      },
+    });
+  }
+
   selectProvider(provider: ProviderListDto) {
     this.selectedProvider = this.selectedProvider?.id === provider.id ? null : provider;
     if (this.selectedProvider) {
@@ -109,15 +125,31 @@ export class SpListComponent implements OnInit {
     this.router.navigate(['/', tenantCode, 'admin', 'addon', 'pricelist-edit', pl.id.toString()]);
   }
 
+  deletePricelist(pl: PricelistListDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!confirm(`Удалить услугу «${pl.name}»?`)) {
+      return;
+    }
+    this.pricelistService.deletePricelist(pl.id).subscribe({
+      next: () => {
+        this.loadPricelists();
+      },
+      error: (err: unknown) => {
+        console.error('Error deleting pricelist:', err);
+      },
+    });
+  }
+
   selectPricelist(pl: PricelistListDto) {
     this.editPricelist(pl);
   }
 
   getStatusClass(status: string): string {
-    if (!status) return 'status-active';
+    if (!status) return 'pt-status-active';
     const s = (status || '').toUpperCase();
-    if (s === 'ACTIVE') return 'status-active';
-    if (s === 'SUSPENDED' || s === 'ORANGE') return 'status-suspended';
-    return 'status-active';
+    if (s === 'ACTIVE') return 'pt-status-active';
+    if (s === 'SUSPENDED' || s === 'ORANGE') return 'pt-status-suspended';
+    if (s === 'DELETED') return 'pt-status-deleted';
+    return 'pt-status-active';
   }
 }

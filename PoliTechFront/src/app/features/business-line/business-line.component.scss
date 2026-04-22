@@ -1,95 +1,52 @@
-
 @import '../../../styles/variables';
-@import '../../../styles/mixins';
-
-
 
 .page-container {
   padding: $spacing-lg;
   max-width: 1200px;
   margin: 0 auto;
 
-  .datatable-card {
-    margin-bottom: 20px;
+  .table-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 16px;
 
-    .button-section {
-      @include card-base;
-      @include flex-end;
-      gap: 12px;
-      padding: $spacing-md;
-      margin-bottom: $spacing-lg;
-      background-color: $gray-50;
+    .search-field {
+      width: 300px;
+      max-width: 100%;
+    }
+  }
 
-      .add-button {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-        height: 40px;
-        font-weight: 500;
+  .business-table {
+    width: 100%;
+    margin-bottom: 16px;
+    table-layout: fixed;
+
+    &.business-line-table {
+      .col-id {
+        width: 100px;
+        min-width: 100px;
       }
-      .icon-button {
-        @include button-secondary;
-        @include flex-center;
-        gap: $spacing-sm;
-        width: 40px;
-        height: 40px;
+      .col-code {
+        width: 100px;
+        min-width: 100px;
       }
-      .other-button {
-        @include button-secondary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
-        height: 40px;
-        font-weight: 500;
+      .col-name {
+        width: 100%;
       }
-      .other-button:hover {
-        background-color: $gray-200;
-        border-color: $gray-400;
+      .col-actions {
+        width: 140px;
+        min-width: 140px;
       }
     }
 
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
 
-      h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 500;
+      &:hover {
+        background-color: rgba(63, 81, 181, 0.05);
       }
-
-      .search-field {
-        width: 300px;
-      }
-    }
-
-    .business-table {
-      width: 100%;
-      margin-bottom: 16px;
-      table-layout: fixed;
-
-      &.business-line-table {
-        .col-id { width: 100px; min-width: 100px; }
-        .col-code { width: 100px; min-width: 100px; }
-        .col-name { width: 100%; }
-        .col-actions { width: 140px; min-width: 140px; }
-      }
-
-      .clickable-row {
-        cursor: pointer;
-        transition: background-color 0.2s;
-
-        &:hover {
-          background-color: rgba(63, 81, 181, 0.05);
-        }
-      }
-    }
-
-    mat-paginator {
-      border-top: 1px solid #e0e0e0;
     }
   }
 }

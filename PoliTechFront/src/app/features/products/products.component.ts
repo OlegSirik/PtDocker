@@ -234,8 +234,8 @@ export class ProductsComponent implements OnInit {
 
   getInsStatusClass(status: string | undefined): string {
     const s = (status ?? '').toLowerCase();
-    if (s === 'suspended') return 'status-suspended';
-    return 'status-active';
+    if (s === 'suspended') return 'pt-status-suspended';
+    return 'pt-status-active';
   }
 }
 

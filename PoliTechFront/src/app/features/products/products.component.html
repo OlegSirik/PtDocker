@@ -1,29 +1,24 @@
-<div class="products-container">
+<div class="page-container">
   <div class="page-header">
     <h1 class="page-title">Продукты</h1>
-
   </div>
 
-  <mat-card class="datatable-card ins-companies-card">
-    <mat-card-content>
-      <div class="button-section">
-        <button mat-raised-button color="primary" class="add-button" type="button" (click)="addInsuranceCompany()">
-          <mat-icon>add</mat-icon>
-          Создать
-        </button>
+  <div class="pt-box">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Страховые компании</h3>
+      <div class="pt-box-title-buttons">
+        <button mat-flat-button (click)="addInsuranceCompany()">Добавить</button>
       </div>
-
-      <div class="table-header">
-        <h3>Страховые компании</h3>
-      </div>
-
-      <div *ngIf="loadingInsCompanies" class="loading-ins">Загрузка...</div>
-
-      <table
+    </div>
+  </div>
+  
+  <div class="pt-box-table-box">
+    <div *ngIf="loadingInsCompanies" class="pt-loading">Загрузка...</div>
+    <table
         *ngIf="!loadingInsCompanies"
         mat-table
         [dataSource]="insCompanies"
-        class="business-table ins-companies-table"
+        class="pt-table ins-companies-table"
       >
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
@@ -38,7 +33,7 @@
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
           <td mat-cell *matCellDef="let c" class="col-status">
-            <span class="status-badge" [ngClass]="getInsStatusClass(c.status)">
+            <span class="pt-status-badge" [ngClass]="getInsStatusClass(c.status)">
               {{ c.status || '—' }}
             </span>
           </td>
@@ -66,37 +61,31 @@
           class="clickable-row"
           [class.ins-company-row-selected]="selectedInsCompId != null && row.id != null && selectedInsCompId === +row.id"
         ></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+    </table>
+  </div>
+  
 
-  <mat-card class="datatable-card">
-    <mat-card-content>
-      <div class="button-section">
-        <button mat-raised-button color="primary" class="add-button" (click)="createNewProduct()">
-          <mat-icon>add</mat-icon>
-          Создать
-        </button>
+  <div class="pt-box" style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Список продуктов</h3>
+      <div class="pt-box-title-buttons">
+        <button mat-stroked-button (click)="createNewProduct()">Из файла</button>
+        <button mat-flat-button (click)="createNewProduct()">Добавить</button>
       </div>
+    </div>
+  </div>  
 
-      <div class="table-header">
-        <div class="products-table-title">
-          <h3>Список продуктов</h3>
-          @if (selectedInsCompId != null) {
-            <span class="ins-comp-filter-chip">
-              {{ selectedInsCompanyName() || ('ID ' + selectedInsCompId) }}
-              <button mat-stroked-button type="button" class="chip-clear" (click)="clearInsCompFilter()">Сбросить</button>
-            </span>
-          }
-        </div>
-        <mat-form-field class="search-field" appearance="outline">
-          <mat-label>Поиск</mat-label>
-          <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
+  <div class="pt-box-title-search">
+      <mat-form-field class="search-field" appearance="outline">
+        <mat-label>Поиск</mat-label>
+        <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearch($event)" placeholder="Поиск">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+  </div>
 
-      <table mat-table [dataSource]="paginatedProducts" class="business-table products-table">
+  <div class="pt-box-table-box">
+
+      <table mat-table [dataSource]="paginatedProducts" class="pt-table products-table">
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
           <td mat-cell *matCellDef="let element" class="col-id">{{element.id}}</td>
@@ -156,7 +145,6 @@
         (page)="onPageChange($event)"
         showFirstLastButtons>
       </mat-paginator>
-    </mat-card-content>
-  </mat-card>
+  </div>
+  </div>
 
-</div>

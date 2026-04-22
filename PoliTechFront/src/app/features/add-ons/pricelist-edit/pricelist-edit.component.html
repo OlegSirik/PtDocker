@@ -1,4 +1,4 @@
-<div class="pricelist-edit-container">
+<div class="page-container">
   <div class="page-header">
     <h1 class="page-title">{{ headerTitle }}</h1>
     <div class="header-actions">
@@ -14,110 +14,106 @@
 
   <mat-tab-group>
     <mat-tab label="Описание продукта">
-      <div class="tab-content">
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Данные прайс-листа</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div *ngIf="loading" class="loading">Загрузка...</div>
-            <div *ngIf="!loading">
-              <div class="form-row">
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>ID</mat-label>
-                  <input matInput [value]="pricelist.id || ''" readonly>
-                </mat-form-field>
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Категория</mat-label>
-                  <input matInput [(ngModel)]="pricelist.categoryCode">
-                </mat-form-field>
-              </div>
-              <div class="form-row">
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Код продукта</mat-label>
-                  <input matInput [(ngModel)]="pricelist.code" required>
-                </mat-form-field>
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Название</mat-label>
-                  <input matInput [(ngModel)]="pricelist.name" required>
-                </mat-form-field>
-              </div>
-              <div class="form-row">
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Цена</mat-label>
-                  <input matInput type="number" [(ngModel)]="pricelist.price">
-                </mat-form-field>
-              </div>
-              <div class="form-row">
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Количество доступных к продаже</mat-label>
-                  <input matInput type="number" [(ngModel)]="pricelist.amountFree">
-                </mat-form-field>
-                <mat-form-field class="form-field" appearance="outline">
-                  <mat-label>Статус</mat-label>
-                  <mat-select [(ngModel)]="pricelist.status">
-                    <mat-option value="ACTIVE">ACTIVE</mat-option>
-                    <mat-option value="SUSPENDED">SUSPENDED</mat-option>
-                    <mat-option value="DELETED">DELETED</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+      <div class="pt-box">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Данные прайс-листа</h3>
+        </div>
+        <div *ngIf="loading" class="pt-loading">Загрузка...</div>
+        <div class="pt-box-card" *ngIf="!loading">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>ID</mat-label>
+            <input matInput [value]="pricelist.id || ''" readonly>
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Категория</mat-label>
+            <input matInput [(ngModel)]="pricelist.categoryCode">
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Код продукта</mat-label>
+            <input matInput [(ngModel)]="pricelist.code" required>
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Название</mat-label>
+            <input matInput [(ngModel)]="pricelist.name" required>
+          </mat-form-field>
+          <mat-form-field class="form-field form-field-span-2" appearance="outline">
+            <mat-label>Цена</mat-label>
+            <input matInput type="number" [(ngModel)]="pricelist.price">
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Количество доступных к продаже</mat-label>
+            <input matInput type="number" [(ngModel)]="pricelist.amountFree">
+          </mat-form-field>
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Статус</mat-label>
+            <mat-select [(ngModel)]="pricelist.status">
+              <mat-option value="ACTIVE">ACTIVE</mat-option>
+              <mat-option value="SUSPENDED">SUSPENDED</mat-option>
+              <mat-option value="DELETED">DELETED</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
     </mat-tab>
 
     <mat-tab label="Связанные страховые продукты" [disabled]="isNewRecord">
-      <div class="tab-content">
-        <mat-card class="datatable-card">
-          <mat-card-content>
-            <div class="table-header">
-              <h3>К каким продуктам предлагать</h3>
-              <button mat-raised-button color="primary" class="add-button"
-                      (click)="openAddProductDialog()" [disabled]="loadingProducts || isNewRecord">
-                <mat-icon>add</mat-icon>
-                Добавить продукт
-              </button>
-            </div>
+      <div class="pt-box">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">К каким продуктам предлагать</h3>
+          <div class="pt-box-title-buttons">
+            <button mat-flat-button type="button" (click)="openAddProductDialog()" [disabled]="loadingProducts || isNewRecord">
+              Добавить продукт
+            </button>
+          </div>
+        </div>
+        <div class="pt-box-table-box">
+          <div *ngIf="loadingProducts" class="pt-loading">Загрузка...</div>
+          <div *ngIf="!loadingProducts && addonProducts.length === 0" class="empty-state">
+            Нет продуктов
+          </div>
+          <table
+            mat-table
+            [dataSource]="addonProducts"
+            class="pt-table addon-products-table"
+            *ngIf="!loadingProducts && addonProducts.length"
+          >
+            <ng-container matColumnDef="productId">
+              <th mat-header-cell *matHeaderCellDef class="col-product-id">Product ID</th>
+              <td mat-cell *matCellDef="let ap" class="col-product-id">{{ ap.productId }}</td>
+            </ng-container>
 
-            <div *ngIf="loadingProducts" class="loading">Загрузка...</div>
-            <div *ngIf="!loadingProducts && addonProducts.length === 0" class="empty-state">
-              Нет продуктов
-            </div>
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef class="col-product-name">Страховой продукт</th>
+              <td mat-cell *matCellDef="let ap" class="col-product-name">{{ getProductName(ap.productId) }}</td>
+            </ng-container>
 
-            <table mat-table [dataSource]="addonProducts" class="business-table addon-products-table" *ngIf="!loadingProducts && addonProducts.length">
-              <ng-container matColumnDef="productId">
-                <th mat-header-cell *matHeaderCellDef class="col-product-id">Product ID</th>
-                <td mat-cell *matCellDef="let ap" class="col-product-id">{{ ap.productId }}</td>
-              </ng-container>
+            <ng-container matColumnDef="preconditions">
+              <th mat-header-cell *matHeaderCellDef class="col-preconditions">Условие отбора</th>
+              <td mat-cell *matCellDef="let ap" class="col-preconditions">{{ ap.preconditions || '-' }}</td>
+            </ng-container>
 
-              <ng-container matColumnDef="productName">
-                <th mat-header-cell *matHeaderCellDef class="col-product-name">Страховой продукт</th>
-                <td mat-cell *matCellDef="let ap" class="col-product-name">{{ getProductName(ap.productId) }}</td>
-              </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+              <td mat-cell *matCellDef="let ap" class="col-actions">
+                <div class="action-buttons">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="action-button"
+                    color="warn"
+                    [attr.aria-label]="'Удалить продукт ' + ap.productId"
+                    (click)="removeProduct(ap.productId); $event.stopPropagation()"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
 
-              <ng-container matColumnDef="preconditions">
-                <th mat-header-cell *matHeaderCellDef class="col-preconditions">Условие отбора</th>
-                <td mat-cell *matCellDef="let ap" class="col-preconditions">{{ ap.preconditions || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
-                <td mat-cell *matCellDef="let ap" class="col-actions">
-                  <div class="action-buttons">
-                    <button mat-icon-button class="action-button" color="warn" (click)="removeProduct(ap.productId)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="productColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: productColumns" class="clickable-row"></tr>
-            </table>
-          </mat-card-content>
-        </mat-card>
+            <tr mat-header-row *matHeaderRowDef="productColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: productColumns" class="clickable-row"></tr>
+          </table>
+        </div>
       </div>
     </mat-tab>
   </mat-tab-group>

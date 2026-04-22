@@ -21,7 +21,7 @@ export default defineConfig({
       {
         text: 'Начало работы',
         items: [
-          { text: 'Введение', link: '/' },
+          { text: 'Что такое PoliTech', link: '/start/what-the.md' },
           { text: 'Установка', link: '/installation' }
         ]
       },

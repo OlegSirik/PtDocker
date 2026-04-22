@@ -1,180 +1,161 @@
 @import '../../../styles/variables';
-@import '../../../styles/mixins';
 
-.products-container {
+.page-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 
-  .datatable-card {
+  .pt-box {
     margin-bottom: 20px;
 
-    .button-section {
-      @include card-base;
-      @include flex-end;
-      padding: $spacing-md;
-      margin-bottom: $spacing-lg;
-      background-color: $gray-50;
+    .pt-box-subtitle {
+      margin: 4px 0 0;
+      color: rgb(108, 117, 125);
+      font-family: Roboto, 'Helvetica Neue', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      letter-spacing: 0.14px;
+    }
 
-      .add-button {
-        @include button-primary;
-        @include flex-center;
-        gap: $spacing-sm;
-        min-width: 150px;
+    .pt-box-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 16px;
+      flex-wrap: wrap;
+
+      .pt-box-title {
+        margin: 0;
+        margin-top: 5px;
+        color: rgb(73, 80, 87);
+        font-family: Roboto, 'Helvetica Neue', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 28px;
+      }
+  
+      .pt-box-title-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+ 
+      .button1 {
+        flex-shrink: 0;
+        min-width: 120px;
+      }
+
+      .button2 {
+        flex-shrink: 0;
+        min-width: 120px;
+        background-color: transparent;
+        border: 1px solid rgba(29, 30, 31, 0.4);
+        color: rgba(73, 80, 87, 0.4);
       }
     }
 
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 12px;
+    .pt-box-card {
+       
+      width: 100%;
+      margin-top: 16px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
 
-      .products-table-title {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-
-        h3 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 500;
-        }
-
-        .ins-comp-filter-chip {
-          display: inline-flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 8px;
-          font-size: 14px;
-          color: $gray-700;
-
-          .chip-clear {
-            min-height: 28px;
-            line-height: 28px;
-            padding: 0 10px;
-            font-size: 12px;
-          }
-        }
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
       }
 
-      h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 500;
+      .form-field {
+        width: 100%;
       }
+    }
+  }
 
+  .pt-box-title-search {
       .search-field {
         width: 300px;
+        max-width: 100%;
+        margin-top: 12px;
+        margin-left: auto;
+        display: block;
       }
-    }
+  }
 
-    .business-table {
+  .pt-box-table-box {
+    width: 100%;
+    margin-top: 16px;
+
+    .pt-table {
       width: 100%;
       margin-bottom: 16px;
       table-layout: fixed;
-
-      &.products-table {
-        .col-id { width: 100px; min-width: 100px; }
-        .col-lob { width: 100px; min-width: 100px; }
-        .col-name { width: 100%; }
-        .col-code { width: 150px; min-width: 150px; }
-        .col-prod-version { width: 100px; min-width: 100px; }
-        .col-dev-version { width: 100px; min-width: 100px; }
-        .col-actions { width: 100px; min-width: 100px; }
-      }
-
+  
       .clickable-row {
         cursor: pointer;
         transition: background-color 0.2s;
-
+  
         &:hover {
           background-color: rgba(63, 81, 181, 0.05);
         }
       }
+  
+      tr.ins-company-row-selected {
+        background-color: rgba(63, 81, 181, 0.12);
+      }
+        
     }
-
-    mat-paginator {
-      border-top: 1px solid #e0e0e0;
-    }
-
-    &.ins-companies-card {
-      .button-section {
-        @include card-base;
-        @include flex-end;
-        padding: $spacing-md;
-        margin-bottom: $spacing-lg;
-        background-color: $gray-50;
-
-        .add-button {
-          @include button-primary;
-          @include flex-center;
-          gap: $spacing-sm;
-          min-width: 150px;
-        }
-      }
-
-      .table-header {
-        margin-bottom: 16px;
-
-        h3 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 500;
-        }
-      }
-
-      .loading-ins {
-        padding: 20px;
-        text-align: center;
-        color: #666;
-      }
-
-      .business-table.ins-companies-table {
-        .col-id {
-          width: 100px;
-          min-width: 100px;
-        }
-
-        .col-name {
-          width: 100%;
-        }
-
-        .col-status {
-          width: 120px;
-          min-width: 120px;
-        }
-
-        .col-actions {
-          width: 120px;
-          min-width: 120px;
-        }
-
-        .status-badge {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .status-active {
-          background-color: #4caf50 !important;
-          color: white !important;
-        }
-
-        .status-suspended {
-          background-color: #ff9800 !important;
-          color: white !important;
-        }
-
-        tr.ins-company-row-selected {
-          background-color: rgba(63, 81, 181, 0.12);
-        }
-      }
-    }
+  
   }
+
+  .pt-loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+  }
+
+  .pt-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pt-status-active {
+    background-color: #4caf50 !important;
+    color: #fff !important;
+  }
+
+  .pt-status-suspended {
+    background-color: #ff9800 !important;
+    color: #fff !important;
+  }
+
+
 }
+
+  .ins-companies-table {
+    .col-id { width: 100px; min-width: 100px; }
+    .col-name { width: 100%; }
+    .col-status { width: 120px; min-width: 120px; }
+    .col-actions { width: 120px; min-width: 120px; }
+  }
+
+  .products-table {
+    
+
+    .col-id { width: 100px; min-width: 100px; }
+    .col-lob { width: 100px; min-width: 100px; }
+    .col-code { width: 150px; min-width: 150px; }
+    .col-name { width: 100%; }
+    .col-prod-version { width: 100px; min-width: 100px; }
+    .col-dev-version { width: 100px; min-width: 100px; }
+    .col-actions { width: 100px; min-width: 100px; }
+  }
+
+

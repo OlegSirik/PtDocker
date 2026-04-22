@@ -1,122 +1,136 @@
-<div class="sp-list-container">
+<div class="page-container">
   <div class="page-header">
     <h1 class="page-title">Доп.продукты</h1>
   </div>
 
-  <mat-card class="datatable-card">
-    <mat-card-content>
-      <div class="button-section">
-        <button mat-raised-button color="primary" class="add-button" (click)="addProvider()">
-          <mat-icon>add</mat-icon>
-          Добавить
-        </button>
+  <div class="pt-box">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Поставщики услуг</h3>
+      <div class="pt-box-title-buttons">
+        <button mat-flat-button (click)="addProvider()">Добавить</button>
       </div>
+    </div>
+  </div>
 
-      <div class="table-header">
-        <h3>Поставщики услуг</h3>
+  <div class="pt-box-table-box">
+    <div *ngIf="loading" class="pt-loading">Загрузка...</div>
+    <table
+      *ngIf="!loading"
+      mat-table
+      [dataSource]="providers"
+      class="pt-table providers-table"
+    >
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
+        <td mat-cell *matCellDef="let p" class="col-id">{{ p.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef class="col-name">Название</th>
+        <td mat-cell *matCellDef="let p" class="col-name">{{ p.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
+        <td mat-cell *matCellDef="let p" class="col-status">
+          <span class="pt-status-badge" [ngClass]="getStatusClass(p.status)">
+            {{ p.status || 'ACTIVE' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+        <td mat-cell *matCellDef="let p" class="col-actions">
+          <div class="action-buttons">
+            <button mat-icon-button type="button" class="action-button" color="primary" (click)="editProvider(p, $event)" [attr.aria-label]="'Изменить ' + p.name">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" class="action-button" color="warn" (click)="deleteProvider(p, $event)" [attr.aria-label]="'Удалить ' + p.name">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="selectProvider(row)"
+        class="clickable-row"
+        [class.ins-company-row-selected]="selectedProvider?.id === row.id"
+      ></tr>
+    </table>
+  </div>
+
+  <div class="pt-box pt-box-section-divider">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Список услуг</h3>
+      <div class="pt-box-title-buttons">
+        <button mat-flat-button (click)="addPricelist()">Добавить</button>
       </div>
+    </div>
+  </div>
 
-      <div *ngIf="loading" class="loading">Загрузка...</div>
-      <table mat-table [dataSource]="providers" class="business-table providers-table" *ngIf="!loading">
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
-          <td mat-cell *matCellDef="let p" class="col-id">{{ p.id }}</td>
-        </ng-container>
+  <div class="pt-box-table-box">
+    <div *ngIf="loadingPricelists" class="pt-loading">Загрузка...</div>
+    <table
+      *ngIf="!loadingPricelists"
+      mat-table
+      [dataSource]="pricelists"
+      class="pt-table pricelist-table"
+    >
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
+        <td mat-cell *matCellDef="let pl" class="col-id">{{ pl.id }}</td>
+      </ng-container>
 
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef class="col-name">Название</th>
-          <td mat-cell *matCellDef="let p" class="col-name">{{ p.name }}</td>
-        </ng-container>
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef class="col-code">Code</th>
+        <td mat-cell *matCellDef="let pl" class="col-code">{{ pl.code }}</td>
+      </ng-container>
 
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
-          <td mat-cell *matCellDef="let p" class="col-status">
-            <span class="status-badge" [ngClass]="getStatusClass(p.status)">
-              {{ p.status || 'ACTIVE' }}
-            </span>
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef class="col-name">Название</th>
+        <td mat-cell *matCellDef="let pl" class="col-name">{{ pl.name }}</td>
+      </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
-          <td mat-cell *matCellDef="let p" class="col-actions">
-            <div class="action-buttons">
-              <button mat-icon-button class="action-button" (click)="editProvider(p, $event)">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef class="col-price">Цена</th>
+        <td mat-cell *matCellDef="let pl" class="col-price">{{ pl.price ?? '-' }}</td>
+      </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"
-            (click)="selectProvider(row)"
-            [class.row-selected]="selectedProvider?.id === row.id"
-            class="clickable-row"></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
+        <td mat-cell *matCellDef="let pl" class="col-status">
+          <span class="pt-status-badge" [ngClass]="getStatusClass(pl.status)">
+            {{ pl.status || 'ACTIVE' }}
+          </span>
+        </td>
+      </ng-container>
 
-  <mat-card class="datatable-card pricelist-card" > <!--</mat-card>*ngIf="selectedProvider">-->
-    <mat-card-content>
-      <div class="button-section">
-        <button mat-raised-button color="primary" class="add-button" (click)="addPricelist()">
-          <mat-icon>add</mat-icon>
-          Добавить
-        </button>
-      </div>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="col-actions">Действия</th>
+        <td mat-cell *matCellDef="let pl" class="col-actions">
+          <div class="action-buttons">
+            <button mat-icon-button type="button" class="action-button" color="primary" (click)="editPricelist(pl, $event)" [attr.aria-label]="'Изменить ' + pl.name">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" class="action-button" color="warn" (click)="deletePricelist(pl, $event)" [attr.aria-label]="'Удалить ' + pl.name">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
 
-      <div class="table-header">
-        <h3>Список услуг</h3>
-      </div>
-
-      <div *ngIf="loadingPricelists" class="loading">Загрузка...</div>
-      <table mat-table [dataSource]="pricelists" class="business-table pricelist-table" *ngIf="!loadingPricelists">
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
-          <td mat-cell *matCellDef="let pl" class="col-id">{{ pl.id }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="code">
-          <th mat-header-cell *matHeaderCellDef class="col-code">Code</th>
-          <td mat-cell *matCellDef="let pl" class="col-code">{{ pl.code }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef class="col-name">Название</th>
-          <td mat-cell *matCellDef="let pl" class="col-name">{{ pl.name }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef class="col-price">Цена</th>
-          <td mat-cell *matCellDef="let pl" class="col-price">{{ pl.price ?? '-' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef class="col-status">Статус</th>
-          <td mat-cell *matCellDef="let pl" class="col-status">
-            <span class="status-badge" [ngClass]="getStatusClass(pl.status)">
-              {{ pl.status || 'ACTIVE' }}
-            </span>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="col-actions">Действия</th>
-          <td mat-cell *matCellDef="let pl" class="col-actions">
-            <div class="action-buttons">
-              <button mat-icon-button class="action-button" (click)="editPricelist(pl, $event)">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="pricelistColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: pricelistColumns"
-            (click)="selectPricelist(row)"
-            class="clickable-row"></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+      <tr mat-header-row *matHeaderRowDef="pricelistColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: pricelistColumns"
+        (click)="selectPricelist(row)"
+        class="clickable-row"
+      ></tr>
+    </table>
+  </div>
 </div>

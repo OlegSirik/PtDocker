@@ -2,7 +2,6 @@ import { Component, OnInit, inject, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -25,7 +24,6 @@ import { ProductList } from '../../../shared/services/products.service';
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,

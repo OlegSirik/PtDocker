@@ -1,5 +1,6 @@
 <div class="page-container">
   <div class="page-header">
+    
     <h1 class="page-title">Линия бизнеса: {{ businessLine.mpName || 'Новая линия' }}</h1>
     
     <div class="header-actions">
@@ -22,13 +23,14 @@
   <mat-tab-group>
     <!-- Main Info Tab -->
     <mat-tab label="Основная информация">
-      <mat-card class="data-card">
-        <mat-card-header>
-          <mat-card-title>Название группы продуктов</mat-card-title>
-          <mat-card-subtitle>Код используется для краткой ссылки на группу.</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="form-row">
+
+    <div class="pt-box">
+      <div class="pt-box-title-row">
+        <h3 class="pt-box-title">Название группы продуктов</h3>
+      </div>
+      <h4 class="pt-box-subtitle">Код используется для краткой ссылки на группу.</h4>
+
+      <div class="pt-box-card">
             <mat-form-field class="form-field" appearance="outline">
               <mat-label>Код продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpCode" [disabled]="!isNewRecord" (ngModelChange)="updateChanges()">
@@ -37,39 +39,14 @@
               <mat-label>Название продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpName" (ngModelChange)="updateChanges()">
             </mat-form-field>
-          </div>
-<!--
-          <div class="form-row">
-            <mat-form-field class="form-field" appearance="outline">
-              <mat-label>Тип страхователя</mat-label>
-              <mat-select [(ngModel)]="businessLine.mpPhType" name="mpPhType" (ngModelChange)="phTypeChanged()">
-                <mat-option value="person">физик</mat-option>
-                <mat-option value="organization">юрик</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="form-row">
-            <mat-form-field class="form-field" appearance="outline">
-              <mat-label>Тип объекта страхования</mat-label>
-              <mat-select [(ngModel)]="businessLine.mpInsObjectType" name="mpInsObjectType" (ngModelChange)="ioChanged()">
-                <mat-option value="person">Физ.лицо</mat-option>
-                <mat-option value="device">Техника</mat-option>
-                <mat-option value="property">Имущество</mat-option>
-                <mat-option value="avia-ns">Авиаперевозки НС</mat-option>
-                <mat-option value="Car">Car</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
--->
-        </mat-card-content>
-      </mat-card>
+      </div>  
+    </div>
 
-      <mat-card class="datatable-card">
-      <mat-card-header>
-        <mat-card-title>Схема договора</mat-card-title>
-        <mat-card-subtitle>Схема договора, используется для хранения договора и передачи договора по АПИ.</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
+    <div class="pt-box">
+      <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Схема договора</h3>
+      </div>
+      <h4 class="pt-box-subtitle">Схема договора, используется для хранения договора и передачи договора по АПИ.</h4>
         <div class="schema-tree-toolbar">
           <mat-slide-toggle
             [(ngModel)]="showDeletedSchemaTree"
@@ -77,11 +54,8 @@
           >
             Показывать скрытые
           </mat-slide-toggle>
-          <span class="schema-tree-legend">
-            <span class="schema-tree-legend-item legend-new"><span class="legend-bar"></span> новый узел</span>
-            <span class="schema-tree-legend-item legend-modified"><span class="legend-bar"></span> изменён, документ не сохранён</span>
-          </span>
         </div>
+
         <app-tree-table
           #schemaTreeTable
           [rows]="treeTableData"
@@ -141,28 +115,23 @@
             </span>
           </ng-template>
         </app-tree-table>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    
   </mat-tab>
 
   <!-- Covers Tab -->
       <mat-tab label="Покрытия">
-        <mat-card class="datatable-card">
-          <mat-card-header>
-            <mat-card-title>Список покрытий, применимых к группе продуктов</mat-card-title>
-            <mat-card-subtitle>Полный список покрытий, используемых для данной группы продуктов. Используется далее при настройке конкретных продуктов.</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="table-header">
-              <h3>Справочник покрытий</h3>
-              <div class="button-section">
-                <button mat-raised-button color="primary" class="add-button" (click)="addCover()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
-              </div>
-            </div>
 
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Список покрытий, применимых к группе продуктов</h3>
+            <button mat-flat-button (click)="addCover()">
+              Добавить
+            </button>
+          </div>
+          <h4 class="pt-box-subtitle">Полный список покрытий, используемых для данной группы продуктов. Используется далее при настройке конкретных продуктов.</h4>
+
+          <div class="pt-box-table-box">
             <table mat-table [dataSource]="paginatedCovers" class="business-table covers-table">
               <ng-container matColumnDef="coverCode">
                 <th mat-header-cell *matHeaderCellDef class="col-cover-code">Код покрытия</th>
@@ -196,38 +165,21 @@
               <tr mat-header-row *matHeaderRowDef="coverDisplayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: coverDisplayedColumns;" (click)="editCover(row)" class="clickable-row"></tr>
             </table>
-<!--
-            <mat-paginator 
-              [length]="filteredCovers.length"
-              [pageSize]="coverPageSize"
-              [pageIndex]="coverPageIndex"
-              [pageSizeOptions]="[5, 10, 25]"
-              (page)="onCoverPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
-            -->
-          </mat-card-content>
-        </mat-card>
+          </div>
+          </div>
       </mat-tab>
     
     <!-- Files Tab -->
     <mat-tab label="Файлы">
-      <mat-card class="datatable-card">
-        <mat-card-header>
-          <mat-card-title>Справочник типов документов</mat-card-title>
-          <mat-card-subtitle>Справочник типов документов, применимых к группе продуктов. Код и название. Код используется для доступа по АПИ.</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="table-header">
-            <h3>Файлы</h3>
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addFile()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
-          </div>
 
+      <div class="pt-box">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Справочник типов документов</h3>
+          <button mat-flat-button (click)="addFile()">Добавить</button>
+        </div>
+        <h4 class="pt-box-subtitle">Справочник типов документов, применимых к группе продуктов. Код и название. Код используется для доступа по АПИ.</h4>
+   
+        <div class="pt-box-table-box">
           <table mat-table [dataSource]="files" class="business-table files-table">
             <ng-container matColumnDef="fileCode">
               <th mat-header-cell *matHeaderCellDef class="col-file-code">Код</th>
@@ -243,6 +195,9 @@
               <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
               <td mat-cell *matCellDef="let element" class="col-actions">
                 <div class="action-buttons">
+                  <button mat-icon-button class="action-button" color="primary" (click)="editFile(element); $event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
                   <button mat-icon-button class="action-button" color="warn" (click)="deleteFile(element); $event.stopPropagation()">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -253,27 +208,20 @@
             <tr mat-header-row *matHeaderRowDef="fileDisplayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: fileDisplayedColumns;" (click)="editFile(row)" class="clickable-row"></tr>
           </table>
-        </mat-card-content>
-      </mat-card>
+        </div>
+        </div>
     </mat-tab>
 
     <!-- Text Vars Tab -->
     <mat-tab label="Строки">
-      <mat-card class="datatable-card">
-        <mat-card-header>
-          <mat-card-title>Справочник строковых шаблонов</mat-card-title>
-          <mat-card-subtitle>Строковые шаблоны можно использовать при проектировании печатных документов. Если нужно отформатировать текст или собрать служебную строку. Код используется как placeholder в ПФ.</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="table-header">
-            <h3>Строки</h3>
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addTextVar()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
-          </div>
+      <div class="pt-box">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Справочник строковых шаблонов</h3>
+          <button mat-flat-button (click)="addTextVar()">Добавить</button>
+        </div>
+        <h4 class="pt-box-subtitle">Строковые шаблоны можно использовать при проектировании печатных документов. Если нужно отформатировать текст или собрать служебную строку. Код используется как placeholder в ПФ.</h4>
+      
+        <div class="pt-box-table-box">
 
           <table mat-table [dataSource]="textVars" class="business-table text-vars-table">
             <ng-container matColumnDef="varCode">
@@ -295,6 +243,9 @@
               <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
               <td mat-cell *matCellDef="let element" class="col-actions">
                 <div class="action-buttons">
+                  <button mat-icon-button class="action-button" color="primary" (click)="editTextVar(element); $event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
                   <button mat-icon-button class="action-button" color="warn" (click)="deleteTextVar(element); $event.stopPropagation()">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -305,14 +256,14 @@
             <tr mat-header-row *matHeaderRowDef="textVarDisplayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: textVarDisplayedColumns;" (click)="editTextVar(row)" class="clickable-row"></tr>
           </table>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
     </mat-tab>
 
     <mat-tab label="Формулы расчета">
       <div class="calculator-container lob-formulas-calc-tab">
         <div class="page-header">
-          <h1 class="page-title">Создать тарифный калькулятор</h1>
+          <h1 class="page-title">Тарифные формулы</h1>
         </div>
         @if (templatesLoading) {
           <mat-card class="datatable-card">
@@ -363,23 +314,16 @@
       </div>
     </mat-tab>
 
-    <mat-tab label="Коэффициенты">
-      <mat-card class="datatable-card">
-        <mat-card-header>
-          <mat-card-title>Коэффициенты</mat-card-title>
-          <mat-card-subtitle>Коэффициенты линии бизнеса и колонки таблицы условий (как в калькуляторе продуктов).</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="table-header">
-            <h3>Коэффициенты</h3>
-            <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" type="button" (click)="addCoefficient()">
-                <mat-icon>add</mat-icon>
-                Добавить
-              </button>
-            </div>
-          </div>
+    <mat-tab label="Тарифные таблицы">
+      <div class="pt-box">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Тарифные таблицы</h3>
+          <button mat-flat-button (click)="addCoefficient()">Добавить</button>
+        </div>
+        <h4 class="pt-box-subtitle">Коэффициенты линии бизнеса и колонки таблицы условий (как в калькуляторе продуктов).</h4>
+        <div class="pt-box-table-box">
 
+        <div class="pt-box-table-box">
           <table mat-table [dataSource]="businessLine.mpCoefficients || []" class="business-table lob-coefficients-table">
             <ng-container matColumnDef="varCode">
               <th mat-header-cell *matHeaderCellDef class="col-var-code">Код переменной</th>
@@ -424,22 +368,20 @@
               (click)="onCoefficientRowClick(row)"
             ></tr>
           </table>
+        </div>
+      </div>
 
-<!--          @if (selectedCoefficientIndex !== -1) { -->
-            <div class="table-header lob-columns-toolbar">
+      <div class="pt-box">
+        <div class="pt-box-title-box">
+            <div class="pt-box-title-row">
               <h3>Колонки: {{ selectedCoefficientVarCode }}</h3>
-              <div class="button-section lob-columns-actions">
-                <button mat-raised-button color="primary" class="add-button" type="button" (click)="addColumn()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
-                <button mat-raised-button color="accent" class="add-button" type="button" (click)="showLobCoefficientSql()">
-                  <mat-icon>code</mat-icon>
-                  Show SQL
-                </button>
-              </div>
+              <div class="pt_box_title-button-section">
+              <button mat-flat-button class="button1" (click)="addColumn()">Добавить</button>
+              <button mat-flat-button class="button2" (click)="showLobCoefficientSql()">Show SQL</button>
             </div>
-
+          </div>
+        </div>
+        <div class="pt-box-table-box">
             <table mat-table [dataSource]="selectedCoefficientColumns" class="business-table lob-coeff-columns-table">
               <ng-container matColumnDef="nr">
                 <th mat-header-cell *matHeaderCellDef class="col-nr">№</th>
@@ -489,9 +431,9 @@
                 (click)="editColumn(row)"
               ></tr>
             </table>
-<!--          } -->
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
+      </div>
     </mat-tab>
 
   
