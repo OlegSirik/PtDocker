@@ -45,7 +45,7 @@ export default defineConfig({
         text: 'Разработчику',
         items: [
           { text: 'Аутентификация', link: '/authN/' },
-          { text: 'Авторизация', link: '/authZ/' },
+          { text: 'Авторизация', link: '/authZ/README.md' },
           { text: 'Шаблонизатор', link: '/development/Text-Template' },
           { text: 'Калькулятор', link: '/development/Calculator' }
         ]
@@ -53,7 +53,7 @@ export default defineConfig({
       {
         text: 'Типовые решения',
         items: [
-            { text: 'Страхование от несчастных случаев', link: '/user-docs/product-ns' },
+            { text: 'Страхование от несчастных случаев', link: '/user-docs/product-acc' },
             { text: 'Страхование пассажиров', link: '/user-docs/product-pax' },
             { text: 'Страхование бытовой электроники', link: '/user-docs/product-gad' }
           ]
@@ -61,7 +61,9 @@ export default defineConfig({
       {
         text: 'API',
         items: [
-          { text: 'Обзор API', link: '/api/api-overview.md' }
+          { text: 'Обзор API', link: '/api/api-overview.md' },
+          { text: 'Стандарты API', link: '/api/rest-conventions.md' },
+          { text: 'Формат ошибок', link: '/api/error-model.md' }
         ]
       }
     ],
