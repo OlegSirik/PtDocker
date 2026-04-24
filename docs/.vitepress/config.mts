@@ -31,6 +31,11 @@ export default defineConfig({
           { text: 'Обзор', link: '/user-docs/README.md' },
           { text: 'Личный кабинет', link: '/user-docs/personal-cabinet' },
           { text: 'Оформление договора', link: '/user-docs/contract-issuance' }
+          { text: 'Продукты', items: [
+            { text: 'Страхование от несчастных случаев', link: '/user-docs/product-ns' },
+            { text: 'Страхование пассажиров', link: '/user-docs/product-pax' },
+            { text: 'Страхование бытовой электроники', link: '/user-docs/product-gad' }
+          ] }
         ]
       },
       {
