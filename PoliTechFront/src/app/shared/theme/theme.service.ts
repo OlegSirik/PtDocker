@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 
 export interface TenantTheme {
@@ -20,14 +21,43 @@ fontFamily?: string;
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
+  private readonly themeStorageKey = 'pt-ui-theme';
   private styleElement: HTMLStyleElement | null = null;
+  private readonly darkModeSubject = new BehaviorSubject<boolean>(false);
+  readonly darkMode$ = this.darkModeSubject.asObservable();
+
+  constructor() {
+    if (typeof document === 'undefined') return;
+    const savedTheme = localStorage.getItem(this.themeStorageKey);
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    this.setDarkMode(isDark, false);
+  }
+
+  get isDarkMode(): boolean {
+    return this.darkModeSubject.value;
+  }
+
+  toggleTheme(): void {
+    this.setDarkMode(!this.darkModeSubject.value);
+  }
+
+  setDarkMode(enabled: boolean, persist = true): void {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('theme-dark', enabled);
+    }
+    if (persist && typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.themeStorageKey, enabled ? 'dark' : 'light');
+    }
+    this.darkModeSubject.next(enabled);
+  }
 
   applyCustomTheme(theme: TenantTheme) {
     console.log('Applying theme:', theme);
     
     // Remove any previous tenant-* classes to avoid conflicts
     Array.from(document.body.classList)
-      .filter(c => c.startsWith('tenant-') || c === 'theme-dark')
+      .filter(c => c.startsWith('tenant-'))
       .forEach(c => document.body.classList.remove(c));
 
     // Remove existing dynamic style element if present
@@ -129,5 +159,7 @@ export class ThemeService {
       this.styleElement.textContent = cssRules.join('\n');
       document.head.appendChild(this.styleElement);
     }
+
+    document.body.classList.toggle('theme-dark', this.darkModeSubject.value);
   }
 }

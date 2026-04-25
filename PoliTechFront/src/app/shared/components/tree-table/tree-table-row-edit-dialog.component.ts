@@ -66,8 +66,8 @@ const VAR_DATA_TYPES = ['STRING', 'NUMBER', 'DATE', 'TIME', 'OBJECT'] as const;
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close type="button">Отмена</button>
-      <button mat-raised-button color="primary" type="button" [disabled]="!isValid()" (click)="save()">
+      <button mat-stroked-button mat-dialog-close type="button">Отмена</button>
+      <button mat-flat-button color="primary" type="button" [disabled]="!isValid()" (click)="save()">
         Сохранить
       </button>
     </mat-dialog-actions>

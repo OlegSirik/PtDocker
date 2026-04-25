@@ -26,8 +26,8 @@ import { MatButtonModule } from '@angular/material/button';
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="textValue" [disabled]="!textValue">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [mat-dialog-close]="textValue" [disabled]="!textValue">
         {{ data.title?.includes('Добавить') ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>

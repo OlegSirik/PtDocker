@@ -1,287 +1,52 @@
-.tenants-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-
-  .tab-content {
-    padding: 20px 0;
-  }
-
-  .data-card {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    mat-card-header {
-      background: #f8f9fa;
-      border-radius: 8px 8px 0 0;
-      padding: 16px 20px;
-
-      mat-card-title {
-        margin: 0;
-        color: #495057;
-        font-size: 18px;
-        font-weight: 600;
-      }
-    }
-
-    mat-card-content {
-      padding: 20px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 16px;
-
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .form-field {
-        width: 100%;
-      }
-    }
-  }
-
-  .datatable-card {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    mat-card-content {
-      padding: 20px;
-    }
-
-    .button-section {
-      margin-bottom: 20px;
-
-      .add-button {
-        min-width: 140px;
-        height: 40px;
-        font-weight: 500;
-      }
-    }
-
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e0e0e0;
-
-      h3 {
-        margin: 0;
-        color: #495057;
-        font-size: 20px;
-        font-weight: 600;
-      }
-
-      .search-field {
-        width: 300px;
-        min-width: 250px;
-
-        @media (max-width: 768px) {
-          width: 100%;
-          margin-top: 12px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-    }
-
-    .business-table {
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-
-      th.mat-header-cell {
-        background: #f8f9fa;
-        color: #495057;
-        font-weight: 600;
-        padding: 12px 16px;
-        border-bottom: 2px solid #dee2e6;
-      }
-
-      td.mat-cell {
-        padding: 12px 16px;
-        border-bottom: 1px solid #e9ecef;
-      }
-
-      tr.mat-row:hover {
-        background-color: #f8f9fa;
-      }
-
-      tr.clickable-row {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background-color: #e3f2fd !important;
-        }
-
-        &:active {
-          background-color: #bbdefb !important;
-        }
-      }
-
-      // Align status, createdAt to the right
-      th.mat-column-status,
-      td.mat-column-status {
-        text-align: right;
-      }
-
-      th.mat-column-createdAt,
-      td.mat-column-createdAt {
-        text-align: right;
-      }
-    }
-
-    mat-paginator {
-      margin-top: 16px;
-      border-radius: 8px;
-      background: #f8f9fa;
-    }
-  }
-
-  .tenant-edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px;
-
-    .full-width {
-      width: 100%;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 16px;
-    }
-  }
-
-  .loading {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-  }
-
-  .status-active {
-    background-color: #4caf50 !important;
-    color: white !important;
-  }
-
-  .status-suspended {
-    background-color: #ff9800 !important;
-    color: white !important;
-  }
-
-  .status-deleted {
-    background-color: #f44336 !important;
-    color: white !important;
-  }
-
-  // Responsive design
-  @media (max-width: 1024px) {
-    padding: 16px;
-
-    .data-card {
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .datatable-card {
-      .table-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-
-        .search-field {
-          width: 100%;
-        }
-      }
-
-      .business-table {
-        font-size: 14px;
-
-        th.mat-header-cell,
-        td.mat-cell {
-          padding: 8px 12px;
-        }
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 12px;
-
-    .datatable-card {
-      .business-table {
-        font-size: 12px;
-
-        th.mat-header-cell,
-        td.mat-cell {
-          padding: 6px 8px;
-        }
-      }
-    }
-  }
+//create style for aech table and set column width
+.tenants-table {
+  width: 100%;
+  table-layout: fixed;
+  .col-id { width: 100px; min-width: 100px; }
+  .col-name { width: 100px; min-width: 100px; }
+  .col-code { width: 100px; min-width: 100px; }
+  .col-status { width: 100px; min-width: 100px; }
+  .col-actions { width: 100px; min-width: 100px; }
+}
+.sys-admins-table {
+  width: 100%;
+  table-layout: fixed;
+  .col-id { width: 100px; min-width: 100px; }
+  .col-userLogin { width: 200px; min-width: 200px; }
+  .col-fullName { width: 100%; }
+  .col-position { width: 200px; min-width: 200px; }
+  .col-status { width: 100px; min-width: 100px; }
+  .col-actions { width: 100px; min-width: 100px; }
+}
+.tenant-admins-table {  width: 100%;
+  table-layout: fixed;
+  .col-id { width: 100px; min-width: 100px; }
+  .col-userLogin { width: 200px; min-width: 200px; }
+  .col-fullName { width: 100%; }
+  .col-position { width: 200px; min-width: 200px; }
+  .col-status { width: 100px; min-width: 100px; }
+  .col-actions { width: 100px; min-width: 100px; }
+}
+.product-admins-table {  width: 100%;
+  table-layout: fixed;
+  .col-id { width: 100px; min-width: 100px; }
+  .col-userLogin { width: 200px; min-width: 200px; }
+  .col-fullName { width: 100%; }
+  .col-position { width: 200px; min-width: 200px; }
+  .col-actions { width: 100px; min-width: 100px; }
+}
+.logins-table {  width: 100%;
+  table-layout: fixed;
+  .col-id { width: 100px; min-width: 100px; }
+  .col-userLogin { width: 200px; min-width: 200px; }
+  .col-fullName { width: 100%; }
+  .col-position { width: 200px; min-width: 200px; }
+  .col-tenantCode { width: 100px; min-width: 100px; }
+  .col-actions { width: 100px; min-width: 100px; }
 }
 
-// Material Design overrides
-::ng-deep {
-  .mat-mdc-tab-group {
-    .mat-mdc-tab-header {
-      border-bottom: 2px solid #e0e0e0;
-      background: #f8f9fa;
-      border-radius: 8px 8px 0 0;
-    }
-
-    .mat-mdc-tab-label {
-      font-weight: 500;
-      color: #495057;
-      min-width: 120px;
-    }
-
-    .mat-mdc-tab-label-active {
-      color: #1976d2;
-    }
-
-    .mat-mdc-ink-bar {
-      background-color: #1976d2;
-      height: 3px;
-    }
-  }
-
-  .mat-mdc-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .mat-mdc-form-field {
-    .mat-mdc-form-field-wrapper {
-      padding-bottom: 0;
-    }
-  }
-
-  .mat-mdc-button {
-    border-radius: 6px;
-    font-weight: 500;
-  }
-
-  .mat-mdc-raised-button {
-    border-radius: 6px;
-    font-weight: 500;
-  }
+.search-field {
+  min-width: 300px;
+  appearance: outline;
 }
+

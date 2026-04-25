@@ -12,7 +12,7 @@
       <button mat-icon-button type="button" class="header-icon-button" aria-label="Make template" [disabled]="!calculator.id || templateSaving" (click)="makeTemplate()">
         <mat-icon>content_copy</mat-icon>
       </button>
-      <button mat-raised-button color="primary" type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
+      <button mat-flat-button color="primary" type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
         <mat-icon>save</mat-icon>
         Save
       </button>
@@ -111,15 +111,15 @@
               <div class="table-header">
                 <h3 style="text-align: start; margin: 0;">Таблица: {{ selectedCoefficientCode }}</h3>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <button mat-raised-button color="primary" class="add-button" (click)="saveCoefficientData()">
+                  <button mat-flat-button color="primary" class="add-button" (click)="saveCoefficientData()">
                     <mat-icon>save</mat-icon>
                     Save
                   </button>
-                  <button mat-raised-button color="accent" class="add-button" (click)="exportCoefficientDataCsv()">
+                  <button mat-stroked-button color="accent" class="add-button" (click)="exportCoefficientDataCsv()">
                     <mat-icon>file_download</mat-icon>
                     To Excel
                   </button>
-                  <button mat-raised-button color="accent" class="add-button" (click)="importCoefficientDataCsv()">
+                  <button mat-stroked-button color="accent" class="add-button" (click)="importCoefficientDataCsv()">
                     <mat-icon>file_upload</mat-icon>
                     From Excel
                   </button>
@@ -160,7 +160,7 @@
             <mat-card-content>
               <div class="table-header">
                 <h3>Порядок расчета премии</h3>
-                <button mat-raised-button color="primary" class="add-button" (click)="addLine()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addLine()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
@@ -244,10 +244,10 @@
               -->
               <div class="text-processor-section">
                 <div class="text-processor-buttons">
-                  <button mat-raised-button color="primary" (click)="toText()">
+                  <button mat-stroked-button color="primary" (click)="toText()">
                     to_text
                   </button>
-                  <button mat-raised-button color="primary" (click)="fromText()">
+                  <button mat-stroked-button color="primary" (click)="fromText()">
                     from_text
                   </button>
 
@@ -276,7 +276,7 @@
         <mat-card class="datatable-card">
           <mat-card-content>
             <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addCoefficient()">
+              <button mat-flat-button color="primary" class="add-button" (click)="addCoefficient()">
                 <mat-icon>add</mat-icon>
                 Add coefficients
               </button>
@@ -335,11 +335,11 @@
           <mat-card class="datatable-card">
             <mat-card-content>
               <div class="button-section" style="display: flex; justify-content: flex-end; gap: 8px; align-items: center;">
-                <button mat-raised-button color="primary" class="add-button" (click)="addColumn()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addColumn()">
                   <mat-icon>add</mat-icon>
                   Add column
                 </button>
-                <button mat-raised-button color="accent" class="add-button" (click)="showSql()">
+                <button mat-stroked-button color="accent" class="add-button" (click)="showSql()">
                   <mat-icon>code</mat-icon>
                   Show SQL
                 </button>
@@ -393,15 +393,15 @@
           <mat-card class="datatable-card">
             <mat-card-content>
               <div class="button-section" style="display: flex; justify-content: flex-end; gap: 8px; align-items: center;">
-                <button mat-raised-button color="primary" class="add-button" (click)="exportCoefficientDataCsv()">
+                <button mat-stroked-button color="primary" class="add-button" (click)="exportCoefficientDataCsv()">
                   <mat-icon>file_download</mat-icon>
                   To Excel
                 </button>
-                <button mat-raised-button color="warn" class="add-button" (click)="importCoefficientDataCsv()">
+                <button mat-stroked-button color="warn" class="add-button" (click)="importCoefficientDataCsv()">
                   <mat-icon>file_upload</mat-icon>
                   From Excel
                 </button>
-                <button mat-raised-button color="accent" class="add-button" (click)="saveCoefficientData()">
+                <button mat-flat-button color="accent" class="add-button" (click)="saveCoefficientData()">
                   <mat-icon>save</mat-icon>
                   Save
                 </button>
@@ -445,11 +445,11 @@
           <mat-card-content>
             <div class="button-section">
               <div class="button-section" style="display: flex; gap: 12px;">
-                <button mat-raised-button color="primary" class="add-button" (click)="addVar()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addVar()">
                   <mat-icon>add</mat-icon>
                   Add var
                 </button>
-                <button mat-raised-button color="primary" class="add-button" (click)="syncVars()">
+                <button mat-stroked-button color="primary" class="add-button" (click)="syncVars()">
                   <mat-icon>sync</mat-icon>
                   Sync vars
                 </button>
@@ -539,7 +539,7 @@
       <mat-card-content>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
           <h3 style="margin: 0;">Создать новый тарифный калькулятор (сам все настрою)</h3>
-          <button mat-raised-button color="primary" [disabled]="creatingCalculator" (click)="createCalculatorFromNotFound()">
+          <button mat-flat-button color="primary" [disabled]="creatingCalculator" (click)="createCalculatorFromNotFound()">
             <mat-icon>check</mat-icon>
             Выбрать
           </button>
@@ -569,7 +569,7 @@
               </button>
               <h3 style="margin: 0;">{{ template.calculatorId }} - {{ template.calculatorName || 'Без названия' }}</h3>
               <button
-                mat-raised-button
+                mat-flat-button
                 color="primary"
                 style="margin-left: auto;"
                 [disabled]="creatingCalculator || updatingTemplateName"

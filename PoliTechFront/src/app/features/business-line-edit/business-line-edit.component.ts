@@ -2,7 +2,6 @@ import { Component, OnInit, Inject, inject, ViewChild } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -52,7 +51,6 @@ import { MatDivider } from "@angular/material/divider";
     selector: 'app-business-line-edit',
     imports: [
     FormsModule,
-    MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
@@ -1450,8 +1448,8 @@ export class BusinessLineEditComponent implements OnInit {
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model">Сохранить</button>
+    <button mat-stroked-button mat-dialog-close>Отмена</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="model">Сохранить</button>
   </div>
   `
 })
@@ -1480,8 +1478,8 @@ export class VarEditDialog {
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model">Сохранить</button>
+    <button mat-stroked-button mat-dialog-close>Отмена</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="model">Сохранить</button>
   </div>
   `
 })
@@ -1497,8 +1495,8 @@ export class CoverEditDialog {
   <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Подтверждение</h2>
   <div mat-dialog-content style="padding-top: 20px;">{{data.message}}</div>
   <div mat-dialog-actions align="end">
-    <button mat-button [mat-dialog-close]="false">Нет</button>
-    <button mat-raised-button color="warn" [mat-dialog-close]="true">Да</button>
+    <button mat-stroked-button [mat-dialog-close]="false">Нет</button>
+    <button mat-flat-button color="warn" [mat-dialog-close]="true">Да</button>
   </div>
   `
 })
@@ -1519,7 +1517,7 @@ export class ConfirmDialog {
         <mat-icon>content_copy</mat-icon>
         Копировать
       </button>
-      <button mat-raised-button color="primary" mat-dialog-close>Закрыть</button>
+      <button mat-flat-button color="primary" mat-dialog-close>Закрыть</button>
     </div>
   `,
     styles: [`
@@ -1565,8 +1563,8 @@ export class JsonViewDialog {
       </p>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button
               color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
@@ -1601,8 +1599,8 @@ export class AddPolicyHolderVarDialog {
       </p>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button
               color="primary"
               [mat-dialog-close]="{varCode: varCode, varName: varName}"
               [disabled]="!varCode || !varName">
@@ -1635,8 +1633,8 @@ export class AddInsObjectVarDialog {
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
+    <button mat-stroked-button mat-dialog-close>Отмена</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
   </div>
   `
 })
@@ -1697,8 +1695,8 @@ export class FileEditDialog {
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
+    <button mat-stroked-button mat-dialog-close>Отмена</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">Сохранить</button>
   </div>
   `
 })

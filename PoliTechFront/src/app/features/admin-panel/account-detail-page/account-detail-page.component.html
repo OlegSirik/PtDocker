@@ -22,12 +22,12 @@
     <mat-tab-group mat-align-tabs="start">
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
       <mat-tab label="Группы пользователей">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="table-header">
               <h3>Группы</h3>
               <div class="header-actions">
-                <button mat-raised-button color="primary" class="add-button" (click)="addGroup()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addGroup()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
@@ -59,19 +59,19 @@
                   class="clickable-row"></tr>
             </table>
             <div *ngIf="groups.length === 0" class="empty-message">Группы не найдены</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
 
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
       <mat-tab label="Аккаунты">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="table-header">
               <h3>Аккаунты</h3>
               <div class="header-actions">
-                <button mat-raised-button color="primary" class="add-button" (click)="addAccount()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addAccount()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
@@ -103,17 +103,17 @@
                   class="clickable-row"></tr>
             </table>
             <div *ngIf="accounts.length === 0" class="empty-message">Аккаунты не найдены</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
 
       <mat-tab label="Products">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <!--
             <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addProduct()">
+              <button mat-flat-button color="primary" class="add-button" (click)="addProduct()">
                 <mat-icon>add</mat-icon>
                 Добавить продукт
               </button>
@@ -168,16 +168,16 @@
               <tr mat-row *matRowDef="let row; columns: productsColumns" class="clickable-row" (click)="editProduct(row)"></tr>
             </table>
             <div *ngIf="products.length === 0" class="empty-message">No products found</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB'">
       <mat-tab label="Logins">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addLogin()">
+              <button mat-flat-button color="primary" class="add-button" (click)="addLogin()">
                 <mat-icon>add</mat-icon>
                 Add Login
               </button>
@@ -206,17 +206,17 @@
               <tr mat-row *matRowDef="let row; columns: loginsColumns"></tr>
             </table>
             <div *ngIf="logins.length === 0" class="empty-message">No logins found</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB'">
       <mat-tab label="Tokens">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addToken()">
+              <button mat-flat-button color="primary" class="add-button" (click)="addToken()">
                 <mat-icon>add</mat-icon>
                 Add Token
               </button>
@@ -245,17 +245,17 @@
               <tr mat-row *matRowDef="let row; columns: tokensColumns"></tr>
             </table>
             <div *ngIf="tokens.length === 0" class="empty-message">No tokens found</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
 
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
       <mat-tab label="Admins">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="button-section">
-              <button mat-raised-button color="primary" class="add-button" (click)="addAdmin()">
+              <button mat-flat-button color="primary" class="add-button" (click)="addAdmin()">
                 <mat-icon>add</mat-icon>
                 Add Admin
               </button>
@@ -284,19 +284,19 @@
               <tr mat-row *matRowDef="let row; columns: adminsColumns; let i = index" class="clickable-row" (click)="editAdmin(row, i)"></tr>
             </table>
             <div *ngIf="admins.length === 0" class="empty-message">No admins found</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT'">
       <mat-tab label="Субаккаунты">
-        <mat-card class="datatable-card">
-          <mat-card-content>
+        <div class="pt-box datatable-card">
+          <div class="pt-box-body">
             <div class="table-header">
               <h3>Субаккаунты</h3>
               <div class="header-actions">
-                <button mat-raised-button color="primary" class="add-button" (click)="addSub()">
+                <button mat-flat-button color="primary" class="add-button" (click)="addSub()">
                   <mat-icon>add</mat-icon>
                   Добавить
                 </button>
@@ -328,8 +328,8 @@
                   class="clickable-row"></tr>
             </table>
             <div *ngIf="subs.length === 0" class="empty-message">Субаккаунты не найдены</div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       </mat-tab>
       </ng-container>
     </mat-tab-group>

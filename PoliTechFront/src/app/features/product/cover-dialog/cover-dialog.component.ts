@@ -59,8 +59,8 @@ import { Cover } from '../../../shared/services/product.service';
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="cover" [disabled]="!isValid()">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [mat-dialog-close]="cover" [disabled]="!isValid()">
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>

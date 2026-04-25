@@ -71,8 +71,8 @@ import {
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" type="button" [disabled]="!isValid()" (click)="submit()">
+      <button mat-stroked-button type="button" mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" type="button" [disabled]="!isValid()" (click)="submit()">
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>

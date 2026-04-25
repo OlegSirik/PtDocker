@@ -2,8 +2,8 @@
 <mat-dialog-content>
   <form [formGroup]="loginForm">
     <!-- Main Information Card -->
-    <mat-card class="info-card">
-      <mat-card-content>
+    <div class="pt-box info-card">
+      <div class="pt-box-body">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>ФИО</mat-label>
           <input matInput formControlName="fullName" required>
@@ -19,12 +19,12 @@
             Должность обязательна для заполнения
           </mat-error>
         </mat-form-field>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
     <!-- Login and Password Card -->
-    <mat-card class="credentials-card">
-      <mat-card-content>
+    <div class="pt-box credentials-card">
+      <div class="pt-box-body">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Логин</mat-label>
           <input matInput formControlName="userLogin" [readonly]="isEditMode" required>
@@ -49,16 +49,16 @@
             Пароль обязателен для заполнения
           </mat-error>
         </mat-form-field>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Отмена</button>
-  <button mat-raised-button color="warn" *ngIf="isEditMode" (click)="onDelete()">
+  <button mat-flat-button color="warn" *ngIf="isEditMode" (click)="onDelete()">
     Удалить
   </button>
-  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loginForm.invalid">
+  <button mat-flat-button color="primary" (click)="onSave()" [disabled]="loginForm.invalid">
     {{ isEditMode ? 'Сохранить' : 'Создать' }}
   </button>
 </mat-dialog-actions>

@@ -669,8 +669,8 @@ export class FormlyFormsComponent implements OnInit {
       </div>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="segment">Сохранить</button>
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [mat-dialog-close]="segment">Сохранить</button>
     </div>
   `,
   styles: [`
@@ -781,7 +781,7 @@ export class TravelSegmentDialog {
         <mat-icon>content_copy</mat-icon>
         Copy
       </button>
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-flat-button color="primary" mat-dialog-close>Close</button>
     </div>
   `,
   styles: [`

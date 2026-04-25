@@ -6,7 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatCardModule } from '@angular/material/card';
 import { LoginService, Login } from '../../../../shared/services/api/logins.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { take } from 'rxjs/operators';
@@ -23,7 +22,6 @@ import { take } from 'rxjs/operators';
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatCardModule
   ],
   templateUrl: './login-dialog.component.html',
   styleUrls: ['./login-dialog.component.scss']

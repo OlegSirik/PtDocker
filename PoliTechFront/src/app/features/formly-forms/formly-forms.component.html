@@ -694,7 +694,7 @@
     @if (getShowIoTravelSegments()) {
       <h3>Авиа перевозки</h3>
       <div class="button-section grid-full">
-        <button mat-raised-button color="primary" class="add-button" (click)="addTravelSegment()">
+        <button mat-flat-button color="primary" class="add-button" (click)="addTravelSegment()">
           <mat-icon>add</mat-icon>
           Add
         </button>
@@ -818,9 +818,9 @@
 
   <!-- Action Buttons -->
   <div class="action-buttons-container">
-    <button mat-raised-button color="primary" (click)="onSubmit()">Submit</button>
-    <button mat-raised-button color="accent" (click)="onFastCalc()">Fast Calc</button>
-    <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+    <button mat-flat-button color="primary" (click)="onSubmit()">Submit</button>
+    <button mat-stroked-button color="accent" (click)="onFastCalc()">Fast Calc</button>
+    <button mat-stroked-button color="primary" (click)="onSave()">Save</button>
   </div>
 
 </div>

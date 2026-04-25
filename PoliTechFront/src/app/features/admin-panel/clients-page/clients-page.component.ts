@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +11,6 @@ import { ClientsService, Client } from '../../../shared/services/api/clients.ser
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
     MatTableModule,
     MatIconModule,
     MatButtonModule,

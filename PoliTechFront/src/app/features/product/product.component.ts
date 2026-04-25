@@ -2088,7 +2088,7 @@ console.log(pkg)
         <mat-icon>content_copy</mat-icon>
         Copy to Clipboard
       </button>
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-flat-button color="primary" mat-dialog-close>Close</button>
     </div>
   `,
     styles: [`
@@ -2146,7 +2146,7 @@ export class TestRequestDialog {
       }
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-flat-button color="primary" mat-dialog-close>Close</button>
     </div>
   `
 })

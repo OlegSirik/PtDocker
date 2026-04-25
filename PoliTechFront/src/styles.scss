@@ -55,6 +55,639 @@ $ng-front4-theme: mat.define-theme((
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+mat-dialog-actions .mat-mdc-button.mat-mdc-button-base {
+  border: 1px solid rgba(0, 0, 0, 0.28);
+}
+
+mat-dialog-actions .mat-mdc-raised-button.mat-mdc-button-base {
+  box-shadow: none !important;
+}
+
+body.theme-dark mat-dialog-actions .mat-mdc-button.mat-mdc-button-base {
+  border-color: rgba(230, 230, 230, 0.35);
+}
+
+table.mat-mdc-table,
+table.mat-table,
+.pt-table,
+.business-table {
+  tr.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(63, 81, 181, 0.05) !important;
+    }
+
+    &:active {
+      background-color: rgba(63, 81, 181, 0.1) !important;
+    }
+
+    &.row-selected {
+      background-color: rgba(25, 118, 210, 0.12) !important;
+
+      &:hover {
+        background-color: rgba(25, 118, 210, 0.16) !important;
+      }
+    }
+  }
+}
+
+body.theme-dark {
+  color-scheme: dark;
+  --mat-sys-color-background: #121212;
+  --mat-sys-color-surface: #1e1e1e;
+  --mat-sys-color-surface-container: #242424;
+  --mat-sys-color-surface-container-high: #2a2a2a;
+  --mat-sys-color-on-surface: #e6e6e6;
+  --mat-sys-color-on-background: #e6e6e6;
+  /* Autocomplete panel uses var(--mat-autocomplete-background-color, var(--mat-app-surface-container)) */
+  --mat-autocomplete-background-color: #1f1f1f;
+  background-color: #1e1e1e !important;
+  color: #98989f !important;
+}
+
+html:has(body.theme-dark) {
+  background-color: #1e1e1e !important;
+}
+
+body.theme-dark .mat-app-background,
+body.theme-dark app-root,
+body.theme-dark .page-container {
+  background-color: #1e1e1e !important;
+}
+
+body.theme-dark .mat-toolbar {
+  background-color: #4f46b5 !important;
+}
+
+body.theme-dark .mat-mdc-card,
+body.theme-dark mat-card {
+  background-color: #242424 !important;
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-card-title,
+body.theme-dark .mat-mdc-card-subtitle,
+body.theme-dark .mat-mdc-card-header,
+body.theme-dark .mat-mdc-card-content,
+body.theme-dark .mat-mdc-card-actions {
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark h1,
+body.theme-dark h2,
+body.theme-dark h3,
+body.theme-dark h4,
+body.theme-dark .pt-box-title,
+body.theme-dark .pt-box-subtitle,
+body.theme-dark .table-header h3 {
+  color: #98989f !important;
+}
+
+body.theme-dark .mat-mdc-tab .mdc-tab__text-label,
+body.theme-dark .mat-mdc-tab-header .mat-mdc-tab-labels .mat-mdc-tab {
+  color: #98989f !important;
+}
+
+body.theme-dark table.mat-mdc-table,
+body.theme-dark table.mat-table {
+  background-color: #1e1e1e !important;
+}
+
+body.theme-dark .mat-mdc-header-row,
+body.theme-dark .mat-mdc-row,
+body.theme-dark .mat-header-row,
+body.theme-dark .mat-row {
+  background-color: #1e1e1e !important;
+}
+
+body.theme-dark .mat-mdc-header-cell,
+body.theme-dark .mat-mdc-cell,
+body.theme-dark .mat-header-cell,
+body.theme-dark .mat-cell {
+  color: #98989f !important;
+  border-bottom-color: rgba(230, 230, 230, 0.12) !important;
+}
+
+.pt-box-table-box {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.pt-box-table-box table {
+  width: 100%;
+  margin-bottom: 16px;
+  table-layout: fixed;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pt-box-table-box  th.mat-header-cell {
+  background: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.pt-box-table-box  td.mat-cell {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.pt-box-table-box  tr.mat-row:hover {
+  background-color: #f8f9fa;
+}
+
+.pt-box-table-box  tr.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pt-box-table-box  tr.clickable-row:hover {
+  background-color: rgba(63, 81, 181, 0.05) !important;
+}
+
+.pt-box-table-box  tr.clickable-row:active {
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+.pt-box-table-box  tr.selected-row {
+  background-color: rgba(25, 118, 210, 0.12) !important;
+}
+
+.pt-box-table-box tr.selected-row:hover {
+  background-color: rgba(25, 118, 210, 0.16) !important;
+}
+
+body.theme-dark .pt-box-table-box table {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .pt-box-table-box th.mat-header-cell {
+  background: #242424 !important;
+  color: #e6e6e6 !important;
+  border-bottom-color: rgba(230, 230, 230, 0.18) !important;
+}
+
+body.theme-dark .pt-box-table-box td.mat-cell {
+  color: #e6e6e6 !important;
+  border-bottom-color: rgba(230, 230, 230, 0.12) !important;
+}
+
+body.theme-dark .pt-box-table-box tr.mat-row:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+body.theme-dark .pt-box-table-box tr.clickable-row:hover {
+  background-color: rgba(142, 137, 255, 0.2) !important;
+}
+
+body.theme-dark .pt-box-table-box tr.clickable-row:active {
+  background-color: rgba(142, 137, 255, 0.28) !important;
+}
+
+body.theme-dark .pt-box-table-box tr.selected-row {
+  background-color: rgba(142, 137, 255, 0.28) !important;
+}
+
+body.theme-dark .pt-box-table-box tr.selected-row:hover {
+  background-color: rgba(142, 137, 255, 0.34) !important;
+}
+
+body.theme-dark .mat-mdc-form-field {
+  --mdc-filled-text-field-input-text-color: #e6e6e6;
+  --mdc-outlined-text-field-input-text-color: #e6e6e6;
+  --mdc-filled-text-field-label-text-color: rgba(230, 230, 230, 0.7);
+  --mdc-outlined-text-field-label-text-color: rgba(230, 230, 230, 0.7);
+  --mdc-outlined-text-field-outline-color: rgba(230, 230, 230, 0.35);
+  --mdc-outlined-text-field-hover-outline-color: rgba(230, 230, 230, 0.55);
+  --mdc-outlined-text-field-focus-outline-color: #8e89ff;
+  --mat-select-enabled-trigger-text-color: #e6e6e6;
+  --mat-select-enabled-arrow-color: rgba(230, 230, 230, 0.7);
+}
+
+body.theme-dark .mat-mdc-input-element,
+body.theme-dark .mat-mdc-select-value-text,
+body.theme-dark .mat-mdc-form-field .mdc-floating-label,
+body.theme-dark .mat-mdc-form-field .mat-mdc-form-field-hint,
+body.theme-dark .mat-mdc-form-field .mat-mdc-form-field-error {
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-input-element::placeholder {
+  color: rgba(230, 230, 230, 0.55) !important;
+}
+
+body.theme-dark .mat-mdc-dialog-surface,
+body.theme-dark .mat-mdc-dialog-container {
+  background-color: #1f1f1f !important;
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-dialog-title,
+body.theme-dark .mat-mdc-dialog-content,
+body.theme-dark .mat-mdc-dialog-actions {
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .cdk-overlay-backdrop.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+body.theme-dark .mat-mdc-paginator,
+body.theme-dark .mat-mdc-paginator-container {
+  background-color: #1e1e1e !important;
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-paginator .mat-mdc-select-value,
+body.theme-dark .mat-mdc-paginator .mat-mdc-paginator-range-label,
+body.theme-dark .mat-mdc-paginator .mat-mdc-select-arrow,
+body.theme-dark .mat-mdc-paginator .mat-mdc-icon-button {
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-select-panel,
+body.theme-dark div.mat-mdc-select-panel {
+  background-color: #1f1f1f !important;
+}
+
+body.theme-dark .mat-mdc-autocomplete-panel,
+body.theme-dark div.mat-mdc-autocomplete-panel {
+  background-color: #1f1f1f !important;
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-autocomplete-panel.mdc-menu-surface {
+  background-color: #1f1f1f !important;
+}
+
+body.theme-dark .mat-mdc-option {
+  color: #e6e6e6 !important;
+}
+
+body.theme-dark .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+body.theme-dark .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled),
+body.theme-dark .mat-mdc-option.mdc-list-item--activated:not(.mdc-list-item--disabled) {
+  background-color: rgba(142, 137, 255, 0.2) !important;
+}
+
+// Slide toggle / checkbox labels use --mat-* tokens on .mat-internal-form-field (see Angular Material source).
+body.theme-dark .mat-mdc-slide-toggle {
+  --mat-switch-label-text-color: #e6e6e6;
+  --mdc-switch-disabled-label-text-color: rgba(230, 230, 230, 0.38);
+}
+
+body.theme-dark .mat-mdc-checkbox {
+  --mat-checkbox-label-text-color: #e6e6e6;
+  --mat-checkbox-disabled-label-color: rgba(230, 230, 230, 0.38);
+}
+
+/* Plain div "cards" (admin pages; replaces mat-card for simpler theming without piercing encapsulation) */
+.pt-box {
+  margin-bottom: 20px;
+  //border-radius: 8px;
+  //box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  //background-color: #fff;
+  //overflow: hidden;
+}
+
+body.theme-dark .pt-box {
+  margin-bottom: 20px;
+  //background-color: #242424;
+  //box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.pt-box-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  background-color: #f8f9fa;
+  padding: 16px 20px;
+  border-radius: 8px 8px 0 0;
+}
+
+body.theme-dark .pt-box-title-row {
+  background-color: #2a2a2a;
+}
+
+.pt-box-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #495057;
+}
+
+body.theme-dark .pt-box-title {
+  color: #e6e6e6;
+}
+
+.pt-box-body {
+  padding: 20px;
+}
+
+.pt-box-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 20px 16px;
+}
+
+.pt-box-card-row {
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field {
+    width: 100%;
+  }
+}
+
+/*
+  Material internals scoped by page wrapper (replaces deprecated ::ng-deep in feature SCSS).
+  Keep selectors tied to a route/container class so they do not leak app-wide.
+*/
+.page-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .mat-mdc-tab-label {
+    font-weight: 500;
+    color: #495057;
+    min-width: 120px;
+  }
+
+  .mat-mdc-tab-label-active {
+    color: #1976d2;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #1976d2;
+    height: 3px;
+  }
+
+  .mat-mdc-tab-body-content {
+    padding: 20px 0;
+  }
+}
+
+body.theme-dark .page-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    background: #1f1f1f !important;
+    border-bottom-color: rgba(230, 230, 230, 0.2) !important;
+  }
+
+  .mat-mdc-tab-label {
+    color: #e6e6e6 !important;
+  }
+
+  .mat-mdc-tab-label-active,
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #8e89ff !important;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #8e89ff !important;
+  }
+}
+
+.page-container .mat-mdc-form-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.page-container .mat-mdc-button,
+.page-container .mat-mdc-raised-button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.page-container .mat-mdc-paginator {
+  background-color: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+body.theme-dark .page-container .mat-mdc-paginator {
+  background-color: #1e1e1e !important;
+  border-top-color: rgba(230, 230, 230, 0.12) !important;
+}
+
+.calculator-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .mat-mdc-tab-label {
+    font-weight: 500;
+    color: #495057;
+    min-width: 120px;
+  }
+
+  .mat-mdc-tab-label-active {
+    color: #1976d2;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #1976d2;
+    height: 3px;
+  }
+}
+
+body.theme-dark .calculator-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    background: #1f1f1f !important;
+    border-bottom-color: rgba(230, 230, 230, 0.2) !important;
+  }
+
+  .mat-mdc-tab-label {
+    color: #e6e6e6 !important;
+  }
+
+  .mat-mdc-tab-label-active,
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #8e89ff !important;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #8e89ff !important;
+  }
+}
+
+.calculator-container .mat-mdc-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calculator-container .mat-mdc-form-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.calculator-container .mat-mdc-button,
+.calculator-container .mat-mdc-raised-button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.tenants-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .mat-mdc-tab-label {
+    font-weight: 500;
+    color: #495057;
+    min-width: 120px;
+  }
+
+  .mat-mdc-tab-label-active {
+    color: #1976d2;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #1976d2;
+    height: 3px;
+  }
+}
+
+body.theme-dark .tenants-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    background: #1f1f1f !important;
+    border-bottom-color: rgba(230, 230, 230, 0.2) !important;
+  }
+
+  .mat-mdc-tab-label {
+    color: #e6e6e6 !important;
+  }
+
+  .mat-mdc-tab-label-active,
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #8e89ff !important;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #8e89ff !important;
+  }
+}
+
+.tenants-container .mat-mdc-form-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.tenants-container .mat-mdc-button,
+.tenants-container .mat-mdc-raised-button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.client-edit-container .mat-mdc-form-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.client-edit-container .mat-mdc-button,
+.client-edit-container .mat-mdc-raised-button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.account-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .mat-mdc-tab-label {
+    font-weight: 500;
+    color: #495057;
+    min-width: 120px;
+  }
+
+  .mat-mdc-tab-label-active {
+    color: #1976d2;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #1976d2;
+    height: 3px;
+  }
+}
+
+body.theme-dark .account-container .mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    background: #1f1f1f !important;
+    border-bottom-color: rgba(230, 230, 230, 0.2) !important;
+  }
+
+  .mat-mdc-tab-label {
+    color: #e6e6e6 !important;
+  }
+
+  .mat-mdc-tab-label-active,
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #8e89ff !important;
+  }
+
+  .mat-mdc-ink-bar {
+    background-color: #8e89ff !important;
+  }
+}
+
+.quotes-container .quotes-list .quote-panel .mat-expansion-panel-header {
+  height: 100px;
+  padding: 0 16px;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.quotes-container .quotes-list .quote-panel .mat-expansion-panel-header-content {
+  width: 100% !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+}
+
+.quotes-container .quotes-list .quote-panel .mat-expansion-panel-header-title {
+  width: 100% !important;
+  margin: 0 !important;
+  flex: 1 1 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+}
+
+body.theme-dark .quotes-container .quotes-list .quote-panel .mat-expansion-panel-header,
+body.theme-dark .quotes-container .quotes-list .quote-panel .mat-expansion-panel-header.mat-expanded,
+body.theme-dark .quotes-container .quotes-list .quote-panel .mat-expansion-panel-content {
+  background-color: #242424 !important;
+  color: #e6e6e6 !important;
+}
+
+.quotes-container .commands-list .command-text-button .mat-button-wrapper,
+.quotes-container .commands-list .command-text-button .mdc-button__label {
+  text-align: left;
+  width: 100%;
+}
+
 // Error snackbar styles
 /* Календарь из mat-dialog: панель в CDK overlay должна быть выше окна диалога */
 .cdk-overlay-pane.mat-datepicker-popup {
@@ -73,4 +706,49 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   .mat-mdc-button {
     color: white !important;
   }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.status-suspended {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.status-deleted {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-state {
+  padding: 16px;
+  color: #666;
+}
+
+.page-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.table-search {
+  display: flex;
+  justify-content: flex-end;
 }

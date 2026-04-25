@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, Inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,7 +28,6 @@ import { take } from 'rxjs/operators';
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
     MatTableModule,
     MatIconModule,
     MatButtonModule,
@@ -735,8 +733,8 @@ export class TenantsPageComponent implements OnInit {
     <h2 mat-dialog-title>Подтверждение</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="warn" [mat-dialog-close]="true">Удалить</button>
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="warn" [mat-dialog-close]="true">Удалить</button>
     </mat-dialog-actions>
   `
 })
@@ -771,7 +769,7 @@ export class ConfirmDialogComponent {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Отмена</button>
-      <button mat-raised-button color="primary" [disabled]="!isValid()" (click)="onSave()">
+      <button mat-flat-button color="primary" [disabled]="!isValid()" (click)="onSave()">
         {{ data.isNew ? 'Создать' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>
@@ -828,7 +826,7 @@ export class TenantDialogComponent {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
+      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
     </mat-dialog-actions>
   `
 })
@@ -872,7 +870,7 @@ export class SysAdminAddDialogComponent {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
+      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
     </mat-dialog-actions>
   `
 })
@@ -916,7 +914,7 @@ export class TntAdminAddDialogComponent {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Отмена</button>
-      <button mat-raised-button color="primary" [disabled]="!userLogin" (click)="onSave()">
+      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onSave()">
         {{ data?.admin ? 'Сохранить' : 'Добавить' }}
       </button>
     </mat-dialog-actions>

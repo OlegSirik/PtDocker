@@ -185,8 +185,8 @@ import { CommonModule } from '@angular/common';
       @if (hasPrecondition && selectedTabIndex === 1) {
         <button mat-button (click)="clearCondition()">Очистить условие</button>
       }
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="line" [disabled]="!isValid()">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [mat-dialog-close]="line" [disabled]="!isValid()">
         {{ data.isNew ? 'Добавить' : 'Сохранить' }}
       </button>
     </mat-dialog-actions>

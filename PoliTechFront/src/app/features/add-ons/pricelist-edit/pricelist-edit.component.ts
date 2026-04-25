@@ -260,8 +260,8 @@ export class PricelistEditComponent implements OnInit {
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [disabled]="!selectedProductId" (click)="onSave()">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [disabled]="!selectedProductId" (click)="onSave()">
         Сохранить
       </button>
     </mat-dialog-actions>

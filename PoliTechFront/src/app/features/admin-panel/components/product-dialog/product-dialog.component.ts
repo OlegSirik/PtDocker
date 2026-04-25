@@ -35,8 +35,8 @@ import { Product } from '../../../../shared/services/account.service';
 
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="getResult()">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [mat-dialog-close]="getResult()">
         {{ data.product ? 'Сохранить' : 'Добавить' }}
       </button>
     </mat-dialog-actions>

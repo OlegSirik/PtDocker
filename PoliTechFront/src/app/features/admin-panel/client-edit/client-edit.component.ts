@@ -2,7 +2,6 @@ import { Component, OnInit, inject, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -41,8 +40,8 @@ import { ACTION_OPTIONS } from '../commission-edit/commission-edit.component';
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отменить</button>
-      <button mat-raised-button color="primary" [disabled]="!userLogin.trim()" (click)="submit()">Добавить</button>
+      <button mat-stroked-button mat-dialog-close>Отменить</button>
+      <button mat-flat-button color="primary" [disabled]="!userLogin.trim()" (click)="submit()">Добавить</button>
     </mat-dialog-actions>
   `,
   styles: [
@@ -83,7 +82,7 @@ export class AddClientAdminDialogComponent {
       <p><strong>ID:</strong> {{ data.member.id }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отменить</button>
+      <button mat-stroked-button mat-dialog-close>Отменить</button>
     </mat-dialog-actions>
   `,
   styles: [
@@ -104,7 +103,6 @@ export class ViewClientMemberDialogComponent {
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
@@ -588,8 +586,8 @@ export class ClientEditComponent implements OnInit {
     <h2 mat-dialog-title>Подтверждение</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="warn" [mat-dialog-close]="true">Удалить</button>
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="warn" [mat-dialog-close]="true">Удалить</button>
     </mat-dialog-actions>
   `
 })
@@ -621,8 +619,8 @@ export class ConfirmDialogComponent {
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-raised-button color="primary" [disabled]="!selectedProductId" (click)="onSave()">
+      <button mat-stroked-button mat-dialog-close>Отмена</button>
+      <button mat-flat-button color="primary" [disabled]="!selectedProductId" (click)="onSave()">
         Сохранить
       </button>
     </mat-dialog-actions>

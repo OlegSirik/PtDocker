@@ -29,8 +29,8 @@ import { Limit } from '../../../shared';
     </mat-form-field>
   </div>
   <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Отмена</button>
-    <button mat-raised-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">{{ data.isNew ? 'Добавить' : 'Сохранить' }}</button>
+    <button mat-stroked-button mat-dialog-close>Отмена</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="model" [disabled]="!isValid()">{{ data.isNew ? 'Добавить' : 'Сохранить' }}</button>
   </div>
   `
 })

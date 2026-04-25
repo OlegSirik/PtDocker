@@ -29,7 +29,7 @@ type TemplateNameDialogData = {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="cancel()">Отмена</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="!templateName.trim()">Сохранить</button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="!templateName.trim()">Сохранить</button>
     </mat-dialog-actions>
   `
 })

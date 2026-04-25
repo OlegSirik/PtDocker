@@ -1,0 +1,31 @@
+<div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">{{ pageTitle }}</h1>      
+    </div>
+  
+  
+    <div class="pt-box">
+        <div class="pt-box-title-row">
+            <h3 class="pt-box-title">{{ boxTitle }}</h3>
+            <div class="pt-box-title-buttons">
+              <button mat-flat-button >Flat Button</button>
+              <button mat-stroked-button >Strocked Button</button>
+            </div>
+        </div>
+        <h4 class="pt-box-subtitle">{{ boxSubtitle }}</h4>
+  
+        <div class="pt-box-card">
+            <div class="pt-box-card-row" style="margin-top: 10px;">
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>{{ formLabel1 }}</mat-label>
+                    <input matInput [(ngModel)]="formValue1" [disabled]="!isNewRecord" (ngModelChange)="onFormValue1Change()">
+                </mat-form-field>
+                <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>{{ formLabel2 }}</mat-label>
+                    <input matInput [(ngModel)]="formValue2" (ngModelChange)="">
+                </mat-form-field>
+            </div>   
+        </div>  
+    </div>
+</div>
+  

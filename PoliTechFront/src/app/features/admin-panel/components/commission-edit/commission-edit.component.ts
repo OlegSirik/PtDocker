@@ -104,8 +104,8 @@ export interface CommissionEditData {
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отменить</button>
-      <button mat-raised-button color="primary" (click)="onSave()">Сохранить</button>
+      <button mat-stroked-button mat-dialog-close>Отменить</button>
+      <button mat-flat-button color="primary" (click)="onSave()">Сохранить</button>
     </mat-dialog-actions>
   `,
   styles: [`

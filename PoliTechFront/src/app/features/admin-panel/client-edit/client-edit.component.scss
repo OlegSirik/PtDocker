@@ -1,63 +1,30 @@
 @import '../../../../styles/variables';
 @import '../../../../styles/mixins';
 
-.client-edit-container {
+.page-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+}
 
-  .tab-content {
-    padding: 20px 0;
-  }
 
-  .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e0e0e0;
-
-    h3 {
-      margin: 0;
-      color: #495057;
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .add-button {
-      @include button-primary;
-      @include flex-center;
-      gap: $spacing-sm;
-      min-width: 150px;
-      height: 40px;
-      font-weight: 500;
-    }
-  }
-
-  .business-table {
-    width: 100%;
-    margin-bottom: 16px;
-    table-layout: fixed;
-
-    &.products-table {
+.products-table {
       .col-id { width: 100px; min-width: 100px; }
       .col-product-name { width: 100%; }
-      .col-status { width: 100px; min-width: 100px; }
+      .col-status { width: 150px; min-width: 150px; }
       .col-actions { width: 100px; min-width: 100px; }
-    }
+}
 
-    &.admins-table {
+.admins-table {
       .col-id { width: 80px; min-width: 80px; }
       .col-login { width: 160px; min-width: 140px; }
       .col-name { width: 100%; }
       .col-position { width: 140px; min-width: 120px; }
       .col-role { width: 120px; min-width: 100px; }
       .col-actions { width: 72px; min-width: 72px; }
-    }
+}
 
-    &.commissions-table {
+.commissions-table {
       .col-agd { width: 100px; min-width: 100px; }
       .col-action { width: 100px; min-width: 100px; }
       .col-rate { width: 80px; min-width: 80px; }
@@ -67,158 +34,8 @@
       .col-max-amount { width: 110px; min-width: 110px; }
       .col-fixed { width: 110px; min-width: 110px; }
       .col-actions { width: 100px; min-width: 100px; }
-    }
-  }
-
-  .datatable-card {
-    margin-bottom: 20px;
-  }
-
-  .status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .status-active {
-    background-color: #4caf50 !important;
-    color: white !important;
-  }
-
-  .status-suspended {
-    background-color: #ff9800 !important;
-    color: white !important;
-  }
-
-  .status-deleted {
-    background-color: #f44336 !important;
-    color: white !important;
-  }
-
-  .empty-state {
-    padding: 16px;
-    color: #666;
-  }
-
-  .products-table .clickable-row,
-  .admins-table .clickable-row {
-    cursor: pointer;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-    &.row-selected {
-      background-color: rgba(25, 118, 210, 0.12);
-    }
-  }
-
-  .commissions-table .clickable-row {
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: rgba(63, 81, 181, 0.05);
-    }
-  }
-
-  .commissions-card {
-    margin-top: 20px;
-  }
-
-  .commissions-card .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-
-  .data-card {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    mat-card-header {
-      background: #f8f9fa;
-      border-radius: 8px 8px 0 0;
-      padding: 16px 20px;
-
-      mat-card-title {
-        margin: 0;
-        color: #495057;
-        font-size: 18px;
-        font-weight: 600;
-      }
-    }
-
-    mat-card-content {
-      padding: 20px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 16px;
-
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .form-field {
-        width: 100%;
-      }
-    }
-
-    .form-action-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .loading {
-      padding: 20px;
-      text-align: center;
-      color: #666;
-    }
-  }
-
-  // Responsive design
-  @media (max-width: 1024px) {
-    padding: 16px;
-
-    .data-card {
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 12px;
-  }
 }
 
-// Material Design overrides
-::ng-deep {
-  .mat-mdc-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
 
-  .mat-mdc-form-field {
-    .mat-mdc-form-field-wrapper {
-      padding-bottom: 0;
-    }
-  }
 
-  .mat-mdc-button {
-    border-radius: 6px;
-    font-weight: 500;
-  }
-
-  .mat-mdc-raised-button {
-    border-radius: 6px;
-    font-weight: 500;
-  }
-}
 

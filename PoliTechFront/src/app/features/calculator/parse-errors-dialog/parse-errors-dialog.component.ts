@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
       <pre class="error-text">{{ data.message }}</pre>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-raised-button color="primary" mat-dialog-close>OK</button>
+      <button mat-flat-button color="primary" mat-dialog-close>OK</button>
     </mat-dialog-actions>
   `,
   styles: [`

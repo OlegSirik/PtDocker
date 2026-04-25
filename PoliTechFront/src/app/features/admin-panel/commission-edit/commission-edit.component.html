@@ -5,18 +5,18 @@
       <button mat-icon-button type="button" class="header-icon-button" aria-label="Назад" (click)="goBack()">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <button mat-raised-button color="primary" type="button" class="save-button" (click)="save()" [disabled]="loading">
+      <button mat-flat-button color="primary" type="button" class="save-button" (click)="save()" [disabled]="loading">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
     </div>
   </div>
 
-  <mat-card class="data-card">
-    <mat-card-header>
-      <mat-card-title>Агентский договор с: {{ clientName }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <div class="pt-box data-card">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Агентский договор с: {{ clientName }}</h3>
+    </div>
+    <div class="pt-box-body">
       <div *ngIf="loading" class="loading">Загрузка...</div>
       <div *ngIf="!loading">
         <div class="form-row">
@@ -94,6 +94,6 @@
       </div>
     </div>
 
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 </div>

@@ -64,14 +64,6 @@
       margin-bottom: 16px;
       table-layout: fixed;
 
-      .clickable-row {
-        cursor: pointer;
-        transition: background-color 0.2s;
-
-        &:hover {
-          background-color: rgba(63, 81, 181, 0.05);
-        }
-      }
     }
   }
 

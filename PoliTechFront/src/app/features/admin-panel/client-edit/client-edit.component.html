@@ -1,11 +1,11 @@
-<div class="client-edit-container">
+<div class="page-container">
   <div class="page-header">
     <h1 class="page-title">Клиент: {{ client.name || 'Новый клиент' }}</h1>
     <div class="header-actions">
       <button mat-icon-button type="button" class="header-icon-button" aria-label="Назад" (click)="goBack()">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <button mat-raised-button color="primary" type="button" class="save-button" (click)="save()" [disabled]="loading">
+      <button mat-flat-button color="primary" type="button" class="save-button" (click)="save()" [disabled]="loading">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
@@ -14,16 +14,17 @@
 
   <mat-tab-group>
     <mat-tab label="Основные данные">
-      <div class="tab-content">
-        <!-- Main Client Data Card -->
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Основные данные клиента</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
+
+        <div class="pt-box data-card">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Основные данные клиента</h3>
+          </div>
+
+          <div class="pt-box-card">
             <div *ngIf="loading" class="loading">Загрузка...</div>
             <div *ngIf="!loading">
-              <div class="form-row">
+
+              <div class="pt-box-card-row" style="margin-top: 15px;">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>ID</mat-label>
                   <input matInput [value]="client.id || ''" readonly>
@@ -34,7 +35,7 @@
                   <mat-hint>client_id приходящее в токене от IdP</mat-hint>
                 </mat-form-field>
               </div>
-              <div class="form-row">
+              <div class="pt-box-card-row">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Название</mat-label>
                   <input matInput [(ngModel)]="client.name" (ngModelChange)="onFieldChange()" required>
@@ -47,7 +48,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="form-row">
+              <div class="pt-box-card-row">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Account ID</mat-label>
                   <input matInput [value]="client.clientAccountId || ''" readonly>
@@ -61,7 +62,7 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div class="form-row">
+              <div class="pt-box-card-row">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Уровень авторизации</mat-label>
                   <mat-select [(ngModel)]="client.authLevel" (ngModelChange)="onFieldChange()" required>
@@ -71,9 +72,9 @@
                 </mat-form-field>
               </div>
             </div>
-            <div *ngIf="!loading && client.clientAccountId" class="form-row">
+            <div *ngIf="!loading && client.clientAccountId" class="pt-box-card-row">
               <div class="form-action-row">
-                <button mat-raised-button color="primary" type="button" 
+                <button mat-flat-button color="primary" type="button" 
                         [disabled]="loading || !client.clientAccountId"
                         (click)="gotoAccount(client)">
                   <mat-icon>account_circle</mat-icon>
@@ -81,25 +82,25 @@
                 </button>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
 
         <!-- Configuration Card -->
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Конфигурация клиента</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
+        <div class="pt-box data-card">
+          <div class="pt-box-title-row" style="margin-top: 15px;">
+            <h3 class="pt-box-title">Конфигурация клиента</h3>
+          </div>
+          <div class="pt-box-card ">
             <div *ngIf="loading" class="loading">Загрузка...</div>
 
             <div *ngIf="!loading && client.clientConfiguration">
-              <div class="form-row">
+              <div class="pt-box-card-row" style="margin-top: 15px;">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Email сотрудника</mat-label>
                   <input matInput type="email" [(ngModel)]="client.clientConfiguration.employeeEmail" (ngModelChange)="onFieldChange()">
                 </mat-form-field>
               </div>
-              <div class="form-row">
+              <div class="pt-box-card-row">
               <mat-form-field class="form-field" appearance="outline">
                 <mat-label>Отправлять email после покупки</mat-label>
                 <mat-select [(ngModel)]="client.clientConfiguration.sendEmailAfterBuy" (ngModelChange)="onFieldChange()">
@@ -116,18 +117,18 @@
               </mat-form-field>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
 
         <!-- Configuration Card -->
-        <mat-card class="data-card">
-          <mat-card-header>
-            <mat-card-title>Платежный шлюз</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
+        <div class="pt-box data-card">
+          <div class="pt-box-title-row" style="margin-top: 15px;">
+            <h3 class="pt-box-title">Платежный шлюз</h3>
+          </div>
+          <div class="pt-box-card">
             <div *ngIf="loading" class="loading">Загрузка...</div>
             <div *ngIf="!loading && client.clientConfiguration">
-              <div class="form-row">
+              <div class="pt-box-card-row" style="margin-top: 15px;">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Платежный шлюз</mat-label>
                 <mat-select [(ngModel)]="client.clientConfiguration.paymentGate" (ngModelChange)="onFieldChange()">
@@ -140,7 +141,7 @@
                 <input matInput [(ngModel)]="client.clientConfiguration.paymentGateAgentNumber" (ngModelChange)="onFieldChange()">
               </mat-form-field>
               </div>
-              <div class="form-row">
+              <div class="pt-box-card-row">
                 <mat-form-field class="form-field" appearance="outline">
                   <mat-label>Логин платежного шлюза</mat-label>
                 <input matInput [(ngModel)]="client.clientConfiguration.paymentGateLogin" (ngModelChange)="onFieldChange()">
@@ -152,30 +153,29 @@
               </div>
             </div>
 
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
 
-      </div>
     </mat-tab>
     <mat-tab label="Страховые продукты" [disabled]="isNewRecord">
-      <div class="tab-content">
-        <mat-card class="datatable-card">
-          <mat-card-content>
-            <div class="table-header">
-              <h3>Доступные продукты</h3>
-              <button mat-raised-button color="primary" class="add-button"
-                      (click)="openAddProductDialog()" [disabled]="loadingProductList || isNewRecord">
-                <mat-icon>add</mat-icon>
+
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Доступные продукты</h3>
+            <div class="pt-box-title-buttons">
+              <button mat-flat-button  (click)="openAddProductDialog()" [disabled]="loadingProductList || isNewRecord">
                 Добавить продукт
               </button>
             </div>
+          </div>
+          <div class="pt-box-table-box">
 
             <div *ngIf="loadingProducts" class="loading">Загрузка...</div>
             <div *ngIf="!loadingProducts && clientProducts.length === 0" class="empty-state">
               Нет продуктов
             </div>
 
-            <table mat-table [dataSource]="clientProducts" class="business-table products-table" *ngIf="!loadingProducts && clientProducts.length">
+            <table mat-table [dataSource]="clientProducts" class="pt-table products-table" *ngIf="!loadingProducts && clientProducts.length">
               <ng-container matColumnDef="id">
                 <th mat-header-cell *matHeaderCellDef class="col-id">ID</th>
                 <td mat-cell *matCellDef="let element" class="col-id">{{ element.roleProductId }}</td>
@@ -212,26 +212,25 @@
                   [class.row-selected]="selectedProduct?.id === row.id"
                   class="clickable-row"></tr>
             </table>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
 
-        <mat-card class="datatable-card commissions-card" *ngIf="selectedProduct">
-          <mat-card-content>
-            <div class="table-header">
-              <h3>Агентский договор: {{ selectedProduct.productName || selectedProduct.roleProductName || '' }}</h3>
-              <button mat-raised-button color="primary" class="add-button"
-                      (click)="openAddCommissionDialog()" [disabled]="loadingCommissions">
-                <mat-icon>add</mat-icon>
+        <div class="pt-box" *ngIf="selectedProduct">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Агентский договор: {{ selectedProduct.productName || selectedProduct.roleProductName || '' }}</h3>
+            <div class="pt-box-title-buttons">
+              <button mat-flat-button (click)="openAddCommissionDialog()" [disabled]="loadingCommissions">
                 Добавить АГД
               </button>
             </div>
-
+          </div>
+          <div class="pt-box-table-box">
             <div *ngIf="loadingCommissions" class="loading">Загрузка...</div>
             <div *ngIf="!loadingCommissions && commissions.length === 0" class="empty-state">
               Нет комиссий
             </div>
 
-            <table mat-table [dataSource]="commissions" class="business-table commissions-table" *ngIf="!loadingCommissions && commissions.length">
+            <table mat-table [dataSource]="commissions" class="pt-table commissions-table" *ngIf="!loadingCommissions && commissions.length">
               <ng-container matColumnDef="agdNumber">
                 <th mat-header-cell *matHeaderCellDef class="col-agd">№ АгД</th>
                 <td mat-cell *matCellDef="let el" class="col-agd">{{ el.agdNumber || '-' }}</td>
@@ -283,37 +282,30 @@
                   (click)="openEditCommissionDialog(row)"
                   class="clickable-row"></tr>
             </table>
-          </mat-card-content>
-        </mat-card>
-      </div>
+          </div>
+        </div>
+      
     </mat-tab>
 
     <mat-tab label="Админы" [disabled]="isNewRecord">
-      <div class="tab-content">
-        <mat-card class="datatable-card">
-          <mat-card-content>
-            <div class="table-header">
-              <h3>Администраторы (GROUP_ADMIN)</h3>
-              <button
-                mat-raised-button
-                color="primary"
-                class="add-button"
-                type="button"
-                (click)="openAddAdminDialog()"
-                [disabled]="loadingAdmins || isNewRecord"
-              >
-                <mat-icon>add</mat-icon>
+
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Администраторы (GROUP_ADMIN)</h3>
+            <div class="pt-box-title-buttons">
+              <button mat-flat-button (click)="openAddAdminDialog()" [disabled]="loadingAdmins || isNewRecord">
                 Добавить
               </button>
             </div>
-
+          </div>
+          <div class="pt-box-table-box">
             <div *ngIf="loadingAdmins" class="loading">Загрузка...</div>
             <div *ngIf="!loadingAdmins && clientAdmins.length === 0" class="empty-state">Нет записей</div>
 
             <table
               mat-table
               [dataSource]="clientAdmins"
-              class="business-table admins-table"
+              class="pt-table admins-table"
               *ngIf="!loadingAdmins && clientAdmins.length"
             >
               <ng-container matColumnDef="id">
@@ -358,9 +350,8 @@
                 class="clickable-row"
               ></tr>
             </table>
-          </mat-card-content>
-        </mat-card>
-      </div>
+          </div>
+        </div>
     </mat-tab>
   </mat-tab-group>
 </div>

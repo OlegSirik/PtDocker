@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
       <pre class="sql-text">{{ data.sql }}</pre>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-flat-button color="primary" mat-dialog-close>Close</button>
     </mat-dialog-actions>
   `,
   styles: [`

@@ -13,7 +13,7 @@
       <button mat-icon-button type="button" class="header-icon-button" color="warn" aria-label="Загрузить из файла" (click)="loadFromFile()">
         <mat-icon>file_upload</mat-icon>
       </button>
-      <button mat-raised-button type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
+      <button mat-flat-button type="button" class="save-button" [disabled]="!hasChanges" (click)="save()">
         <mat-icon>save</mat-icon>
         Сохранить
       </button>
@@ -31,6 +31,7 @@
       <h4 class="pt-box-subtitle">Код используется для краткой ссылки на группу.</h4>
 
       <div class="pt-box-card">
+        <div class="pt-box-card-row" style="margin-top: 10px;">
             <mat-form-field class="form-field" appearance="outline">
               <mat-label>Код продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpCode" [disabled]="!isNewRecord" (ngModelChange)="updateChanges()">
@@ -39,6 +40,7 @@
               <mat-label>Название продуктовой группы</mat-label>
               <input matInput [(ngModel)]="businessLine.mpName" (ngModelChange)="updateChanges()">
             </mat-form-field>
+          </div>   
       </div>  
     </div>
 
@@ -266,21 +268,21 @@
           <h1 class="page-title">Тарифные формулы</h1>
         </div>
         @if (templatesLoading) {
-          <mat-card class="datatable-card">
-            <mat-card-content>Загрузка шаблонов...</mat-card-content>
-          </mat-card>
+          <div class="pt-box datatable-card">
+            <div class="pt-box-body">Загрузка шаблонов...</div>
+          </div>
         } @else if (!(businessLine.mpCode || '').trim()) {
-          <mat-card class="datatable-card">
-            <mat-card-content>Укажите код продуктовой группы (mpCode) и сохраните линию бизнеса — шаблоны привязаны к коду LOB.</mat-card-content>
-          </mat-card>
+          <div class="pt-box datatable-card">
+            <div class="pt-box-body">Укажите код продуктовой группы (mpCode) и сохраните линию бизнеса — шаблоны привязаны к коду LOB.</div>
+          </div>
         } @else if (calculatorTemplates.length === 0) {
-          <mat-card class="datatable-card">
-            <mat-card-content>Шаблоны калькулятора не найдены</mat-card-content>
-          </mat-card>
+          <div class="pt-box datatable-card">
+            <div class="pt-box-body">Шаблоны калькулятора не найдены</div>
+          </div>
         } @else {
           @for (template of calculatorTemplates; track template.calculatorId) {
-            <mat-card class="datatable-card">
-              <mat-card-header style="display: block;">
+            <div class="pt-box datatable-card">
+              <div class="pt-box-title-row" style="display: block;">
                 <div style="display: flex; width: 100%; align-items: center; gap: 12px;">
                   <button
                     mat-icon-button
@@ -292,13 +294,13 @@
                   </button>
                   <h3 style="margin: 0;">{{ template.calculatorId }} - {{ template.calculatorName || 'Без названия' }}</h3>
                 </div>
-              </mat-card-header>
-              <mat-card-content>
+              </div>
+              <div class="pt-box-body">
                 @for (line of sortedTemplateLines(template); track $index) {
                   <div>{{ line.lineNr }}. {{ line.text }}</div>
                 }
-              </mat-card-content>
-              <mat-card-actions align="end">
+              </div>
+              <div class="pt-box-actions">
                 <button
                   mat-icon-button
                   type="button"
@@ -307,8 +309,8 @@
                   (click)="deleteTemplate(template)">
                   <mat-icon>delete</mat-icon>
                 </button>
-              </mat-card-actions>
-            </mat-card>
+              </div>
+            </div>
           }
         }
       </div>
@@ -376,8 +378,8 @@
             <div class="pt-box-title-row">
               <h3>Колонки: {{ selectedCoefficientVarCode }}</h3>
               <div class="pt_box_title-button-section">
-              <button mat-flat-button class="button1" (click)="addColumn()">Добавить</button>
-              <button mat-flat-button class="button2" (click)="showLobCoefficientSql()">Show SQL</button>
+              <button mat-flat-button  (click)="addColumn()">Добавить</button>
+              <button mat-stroked-button  (click)="showLobCoefficientSql()">Show SQL</button>
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import {AuthService} from '../../services/auth.service';
 import {AsyncPipe} from '@angular/common';
+import { ThemeService } from '../../theme/theme.service';
 
 /** Имена ролей с бэкенда (см. JWT /auth/me: userRole, authorities). */
 export const TOOLBAR_ROLE = {
@@ -30,6 +31,7 @@ export class ToolbarComponent {
 
   authService = inject(AuthService);
   router = inject(Router);
+  themeService = inject(ThemeService);
 
   /** Удобно в шаблоне рядом с {@link currentUser$} — перерисовка при смене пользователя. */
   hasRole(role: string): boolean {
@@ -47,6 +49,10 @@ export class ToolbarComponent {
   logout(): void {
     this.authService.logout();
     this.login();
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
   }
 
   navigateToProfile(): void {
@@ -68,5 +74,9 @@ export class ToolbarComponent {
   }
   get currentUser$() {
     return this.authService.currentUser$;
+  }
+
+  get isDarkMode(): boolean {
+    return this.themeService.isDarkMode;
   }
 }
