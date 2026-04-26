@@ -1,0 +1,1547 @@
+openapi: 3.0.0
+ 
+info:
+  version: 1.0.0
+  title: Policy.Tech public API v3
+  description: Описание всех REST сервисов Policy.Tech
+ 
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/insur/PoliTechPublic/1.0.0
+
+paths:
+ 
+  /sales/v3/policies:
+    post:
+      tags:
+        - politech
+ 
+      summary: Создание страхового полиса.
+      description: |
+        Выполняет расчет стоимости страхового полиса по переданным параметрам и создает страховой полис.
+        Полис в статусе NEW. Номер сгенерен.
+        Его можно оплатить
+        Можно получить киды и черновик ПФ
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      requestBody:
+        description: Содержит данные для расчета и создания страхового полиса, например, фамилию, имя и дату рождения застрахованного и т.д.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicyV3'
+ 
+ 
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+  /sales/v3/policies/{policy_nr}/addendums:
+    post:
+      tags:
+        - politech
+      summary: Создать дополнительное соглашение
+      description: |
+        Создает дополнительное соглашение к договору страхования
+        Допник создается в статусе WIP ( work in progress )
+        Может быть только одна версия договора в таком статусе, иначе вернуть ошибку.
+        Завершение создания допника через put \status
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyV3'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+  /sales/v3/policies/{policy_nr}/prolongations:
+    post:
+      tags:
+        - politech
+      summary: Создать пролонгацию договора
+      description: |
+        Создает новый договор как копию-продолжение к договору страхования
+        Политика формирования номера задается на продукте.
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyV3'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+  /sales/v3/policies/{policy_nr}/cancellations:
+    post:
+      tags:
+        - politech
+      description: |
+        Создает заявление на расторжение договора.
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+ 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyV3'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+
+  /sales/v3/policies/{policy_nr}:
+    get:
+      tags:
+        - poliTech
+      description: |
+        Получить данные по договору страхования.
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+ 
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+    put:
+      tags:
+        - politech
+      description: |
+        Изменить данные по версии договора. Менять данные можно только по договору в статусе WIP. 
+        Иначе нужно создавать допник.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyV3'
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+  /sales/v3/policies/{policy_nr}/files:
+    get:
+      tags:
+        - politech
+      description: получение списка файлов
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+        - in: query
+          name: file_id
+          schema:
+            type: string
+          description: GUID файла в хранилище
+        - in: query
+          name: file_type
+          schema:
+            type: string
+          description: код типа файла. например POLICY
+ 
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyFiles'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+    post:
+      tags:
+        - mortgage
+      description: добавить файл к договору.
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      requestBody:
+        description: добавить файл к договору. В ответе будет содержаться присвоенный файлу ИД
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyFile'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyFile'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+ 
+  /sales/v3/policies/{policy_nr}/files/{file_id}:
+    delete:
+      tags:
+        - politech
+      description: удалить файл из списка
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/fileId'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/Http-200'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+  /sales/v3/policies/{policy_nr}/installments/{installment_nr}:
+    get:
+      tags:
+        - politech
+      description: получить информацию об очередном взносе
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/installmentNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/Installment'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+    put:
+      tags:
+        - politech
+      description: задать метод оплаты для очередного взноса
+ 
+      parameters:
+        - $ref: '#/components/parameters/policyNr'
+        - $ref: '#/components/parameters/installmentNr'
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/userId'
+
+      requestBody:
+        content:
+         application/json:
+            schema:
+              $ref: '#/components/schemas/Installment'
+ 
+      responses:
+        '200':
+          $ref: '#/components/responses/Installment'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+ 
+
+components:
+ 
+  schemas:
+ 
+    CreatePolicyV3:
+      description: договор страхования 
+      type: object
+      properties:
+        draftId:
+          type: string
+          description: код проекта договора
+        previousPolicyNumber:
+          type: string
+          description: номер пред договора
+        productCode:
+          type: string
+          description: код страхового продукта (accident_1, acident_2 )
+        waitingPeriod:
+          type: string
+          description: период между датой выпуска и датой начала действия договора
+        policyTerm:
+          type: string
+          description: период страхования    
+        startDate:
+          description: дата начала действия договора
+          type: string
+        endDate:
+          description: дата окончания действия  договора
+          type: string
+        issueDate:
+          description: дата продажи полиса. заполняется партнером
+          type: string
+        issueTimezome:
+          type: string
+          description: часой пояс, где был выпущен договор  
+
+        installmentType:
+          type: string
+          description: тип рассрочки. периодичность.
+        insurer:
+          $ref: '#/components/schemas/PolicyParty'
+        policyHolder:
+          $ref: '#/components/schemas/PolicyParty'
+        insuredObjects:
+          type: array
+          items:
+              $ref: '#/components/schemas/InsuredObject'
+
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: "ROADSIDE_ASSISTANCE"
+              name:
+                type: string
+                example: "Помощь на дороге"
+              category:
+                type: string
+                #enum: [assistance, legal, medical]
+                description: "категория опции. если будет слишком много, можно разбить на группы."
+              premium:
+                type: number
+                format: float
+                description: "стоимость опции"
+              contractNr:
+                type: string
+                description: "номер договора/сертификата не оказание услуги, если это применимо"
+              isSelected:
+                type: boolean
+                description: при запросе на котироку, признак что опция выбрана
+                
+                
+
+ 
+  
+
+    PolicyV3:
+      description: договор страхования 
+      type: object
+      properties:
+        draftId:
+          type: string
+          description: код проекта договора
+        policyNumber:
+          type: string
+          description: номер договора
+        previousPolicyNumber:
+          type: string
+          description: номер пред договора
+        productCode:
+          type: string
+          description: код страхового продукта (accident_1, acident_2 )
+        status:
+          type: string
+          description: статус договора
+
+        waitingPeriod:
+          type: string
+          description: период между датой выпуска и датой начала действия договора
+        policyTerm:
+          type: string
+          description: период страхования    
+        startDate:
+          description: дата начала действия договора
+          type: string
+        endDate:
+          description: дата окончания действия  договора
+          type: string
+        issueDate:
+          description: дата продажи полиса. заполняется партнером
+          type: string
+
+        createDate:
+          description: дата создания полиса в системе страховщика.
+          type: string
+        paymentDate:
+          description: дата оплаты. первый взнос
+          type: string
+        cancellationDate:
+          description: дата расторжения договора по любой причине
+          type: string
+        premium:
+          type: number
+          description: размер премии по договору в рублях
+          example: 1000
+        installmentType:
+          type: string
+          description: тип рассрочки. периодичность.
+        insurer:
+          $ref: '#/components/schemas/PolicyParty'
+        policyHolder:
+          $ref: '#/components/schemas/PolicyParty'
+        insuredObjects:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/Person'
+              - $ref: '#/components/schemas/Identifier'
+              - $ref: '#/components/schemas/Address'     
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: "ROADSIDE_ASSISTANCE"
+              name:
+                type: string
+                example: "Помощь на дороге"
+              category:
+                type: string
+                #enum: [assistance, legal, medical]
+                description: "категория опции. если будет слишком много, можно разбить на группы."
+              premium:
+                type: number
+                format: float
+                description: "стоимость опции"
+              contractNr:
+                type: string
+                description: "номер договора/сертификата не оказание услуги, если это применимо"
+              isSelected:
+                type: boolean
+                description: при запросе на котироку, признак что опция выбрана
+                
+                
+
+ 
+  
+    Installment:
+      description: очередной взнос по договору страхования
+      type: object
+      properties:
+        id:
+          type: string
+          description: GUID для совместимости с легаси системами
+        nr:
+          type: number
+          description: порядковый номер взноса
+        scheduled:
+          type: string
+          description: ожидаемая дата оплаты взноса. Дата.
+        paidAt:
+          type: string
+          description: фактическая дата оплаты
+        currencyCode:
+          type: string
+          description: код валюты
+          default: 'RUB'
+        amount:
+          type: number
+          description: сумма взноса
+        orderId:
+          type: string
+          description: номер счета
+        paymentType:
+          type: string
+          description: тип оплаты
+        paymentLink:
+          type: string
+          description: ссылка на оплату
+        sbpLink:
+          type: string
+          description: ссылка на оплату cбп
+        successUrl:
+          type: string
+          description: для оплаты картой, страница редиректа если оплата прошла
+        failUrl:
+          type: string
+          description: для оплаты картой, страница редиректа при ошибках
+        receiptLink:
+          type: string
+          description: ссылка на кассовый чек, если это применимо для способа оплаты.
+        fileId:
+          type: string
+          description: ссылка на сформированный счет, если применимо
+        sendSms:
+          type: boolean
+          description: отправить смс клиенту с платежной ссылкой
+          default: false
+        sendEmail:
+          type: boolean
+          description: отправить email клиенту с платежной ссылкой
+          default: false
+        otherPolicies:
+          type: array
+          items:
+            type: object
+            properties:
+              policyNumber:
+                type: string
+              amount:
+                type: number
+ 
+    Address:
+      description: Адрес
+      type: object
+      properties:
+        isPrimary:
+          type: boolean
+          default: false
+          description: признак основного документа в массиве
+        typeCode:
+          description: тип адреса (код)
+          type: string
+          example: 'REGISTRATION'
+        countryCode:
+          description: код страны (ISO2)
+          type: string
+          example: 'RU'
+          default: 'RU'
+        region:
+          type: string
+          description: наименование региона
+          example: 'г Москва'
+        city:
+          type: string
+          description: город
+          example: 'Москва'
+        street:
+          type: string
+          description: улица
+          example: 'Академика Королева'
+        house:
+          type: string
+          description: номер дома
+          example: '3'
+        building:
+          type: string
+          description: строение
+          example: '2'
+        flat:
+          type: string
+          description: квартира
+          example: '25'
+        room:
+          type: string
+          description: комната
+          example: '2'
+        zipCode:
+          type: string
+          description: индекс
+          example: '129515'
+        kladrId:
+          type: string
+          description: код по кладр
+          example: '7700000000015450062'
+        fiasId:
+          type: string
+          description: код по фиас
+          example: 'f64c75cd-a640-41ed-9893-c1aaef58e638'
+        addressStr:
+          type: string
+          description: строка адреса
+          example: '129515, г.Москва, ул.Академика Королева, д.2, к.3, кв.25'
+        addressStrEn:
+          description: адресная строка по английски
+          type: string
+          example: '129515, г.Moscow'
+        ext_id:
+          type: string
+          description: ID записи, присваивается внешней ИТ системой
+ 
+    Identifier:
+      type: object
+      description: документ
+      properties:
+        isPrimary:
+          type: boolean
+          default: false
+          description: признак основного документа в массиве
+        typeCode:
+          type: string
+          description: код типа документа (справочник)
+        serial:
+          type: string
+          description: серия документа
+        number:
+          type: string
+          description: номер документа
+        dateIssue:
+          type: string
+          description: дата выдачи
+        validUntil:
+          type: string
+          description: действительно до
+        whom:
+          type: string
+          description: кем выдан
+        divisionCode:
+          type: string
+          description: код подразделения
+        ext_id:
+          type: string
+          description: ID записи, присваивается внешней ИТ системой
+        countryCode:
+          description: Страна, в которой выдан документ. код страны (ISO2)
+          type: string
+          example: 'RU'
+        documentOwner:
+          $ref: '#/components/schemas/Person'
+          description: кому выдан документ
+ 
+    Person:
+      type: object
+      description: объект - физ лицо
+      properties:
+        firstName:
+          type: string
+          description: имя
+        lastName:
+          type: string
+          description: фамилия
+        middleName:
+          type: string
+          description: отчество
+        birthDate:
+          type: string
+          description: дата рождения
+        fullName:
+          description: полное ФИО.
+          type: string
+        fullNameEn:
+          description: полное ФИО аннгл.
+          type: string
+        birthPlace:
+          description: 'Место рождения'
+          type: string
+          example: 'Москва'
+        citizenship:
+          description: 'Гражданство. Код страны. ISO2'
+          type: string
+          example: 'RU'
+          default: 'RU'
+        gender:
+          description: пол
+          type: string
+          # enum: ['M','F']
+        familyState:
+          type: string
+          description: семейное положение
+          # enum: ['SINGLE', 'MARRIED']
+          default: 'SINGLE'
+        isPublicOfficial:
+          type: boolean
+          description: признак ПДЛ (публичного должностного лица).
+        isResident:
+          type: boolean
+          default: true
+          description: резидент РФ
+        ext_id:
+          type: string
+          description: ID записи, присваивается внешней ИТ системой
+ 
+    Organization:
+      type: object
+      description: объект юр лицо
+      required:
+        - fullname
+      properties:
+        country:
+          type: string
+          description: код страны регистрации (ISO2)
+        inn:
+          type: string
+          description: ИНН
+        fullName:
+          type: string
+          description: полное наименование юл.лица
+        fullNameEn:
+          description: полное наименование аннгл.
+          type: string
+        shortName:
+          type: string
+          description: краткое наименование юр.лица
+        legalForm:
+          type: string
+          description: организацинно правовая форма
+          example: 'OOO'
+        kpp:
+          type: string
+          description: кпп
+        ogrn:
+          type: string
+          description: огрн
+        okpo:
+          type: string
+          description: окпо
+        bic:
+          type: string
+          description: бик
+        isResident:
+          type: boolean
+          default: true
+          description: резидент РФ
+        ext_id:
+          type: string
+          description: ID записи, присваивается внешней ИТ системой
+ 
+    Coverage:
+      type: object
+      description: покрытие по объекту страхования
+      properties:
+        cover:
+          type: object
+          description: код и наименование покрытия
+          properties:
+            code:
+              type: string
+              description: код покрытия
+            description:
+              type: string
+              description: описание
+        risk:
+          type: string
+          description: список покрываемых рисков, коды через ,
+        startDate:
+          type: string
+          description: дата начала покрытия
+        endDate:
+          type: string
+          description: дата окончая покрытия
+        sumInsured:
+          type: number
+          description: страховая сумма в рублях
+          example: 1000
+        premium:
+          type: number
+          description: премия по покрытию
+          example: 1000
+        deductible:
+          type: object
+          properties:
+            code:
+              type: string
+              description: код по справочнику, применим только в контексте текущего покрытия. Будет валидироваться по настройкам продукта.
+            text:
+              type: string
+              description: описание франшизы как в ПФ
+ 
+    InsuredObject:
+      description: объект страхования. В зависимости от типа объекта, ioType, собирается набор из вложенных объектов.
+      type: object
+      properties:
+        sumInsured:
+          type: string
+          description: Страховая стоимость объекта
+        packageCode:
+          type: string
+          description: "Код страхового пакета - набора обязательных покрытий "
+          default: "0"
+        coverage:
+          type: array
+          description: набор покрытий по объекту страхования
+          items:
+            $ref: '#/components/schemas/Coverage'
+        objectId:
+          type: string
+          description: Идентификатор объекта для ссылки на этот объект страхования
+      
+        persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactInfo'
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        device:
+          $ref: '#/components/schemas/Device'
+        property:
+          $ref: '#/components/schemas/Property'
+        pet:
+          $ref: '#/components/schemas/Pet'
+        travelSegments:
+          type: array
+          items: 
+            $ref: '#/components/schemas/TravelSegment'
+        riskFactors:
+          type: object
+          properties:
+            sport1:
+              type: string
+              description: "наименование вида спорта"
+            sport2:
+              type: string
+              description: "наименование вида спорта"
+            sport3:
+              type: string
+              description: "наименование вида спорта"
+
+    TravelSegment:
+      type: object
+      properties:
+        ticketNr:
+          type: string
+        ticketPrice:
+          type: string
+        departureDate:
+          type: string
+        departureTime:
+          type: string
+        departureCity:
+          type: string
+        arrivalCity:
+          type: string
+
+
+    Device:
+          type: object
+          properties:
+            deviceName:
+              description: наименование устройства
+              type: string
+            deviceTypeCode:
+              description: тип устройства ( код )
+              type: string
+            tradeMark:
+              description: производитель
+              type: string
+            model:
+              description: модель
+              type: string
+            serialNr:
+              description: серийный номер
+              type: string
+            licenseKey:
+              description: ключ
+              type: string
+            imei:
+              description: код имеа
+              type: string
+            osName:
+              description: название операционной системы
+              type: string
+            osVersion:
+              description: версия ОС
+              type: string
+            countryCode:
+              description: код страны производителя
+              type: string
+            devicePrice:
+              description: стоимость устройства в рублях
+              type: number
+ 
+
+    ConsentPersonalData:
+      type: object
+      description: Информация о согласии клиента на обработку персональных данных
+      properties:
+        listOfPDforProcessing:
+          type: array
+          description: список перс данных, которые можно собирать. например ФИО, дата рождения и т.д.
+          items:
+            type: string
+        purposeOfPDprocessing:
+          type: array
+          description: цуль сбора ПД. сбор, анализ, передача 3м лицам т т.д.
+          items:
+            type: string
+        pdProcessingMethods:
+          description: методы обработки перс данных
+          type: array
+          items:
+            type: string
+        consentFlag:
+          description: согласие получено
+          type: boolean
+          default: false
+        dateIssue:
+          type: string
+          description: дата выдачи
+        validUntil:
+          type: string
+          description: действительно до
+        consentResponsibilityFlag:
+          description: Флаг предупреждения клиента об ответственности
+          type: boolean
+          default: false
+ 
+    ContactInfo:
+      type: object
+      description: контактная информация, phone & email - основные средства коммуникации. Другие способы удут бобавляться по мере поступления
+      properties:
+        phone: 
+          type: string
+          description: основной номер телефона, используемый для связи и отправки сообщений
+          format: phone
+        email:
+          type: string
+          format: email
+          description: основной email для всех автоматических коммуникаций, он же логин, если это применимо
+        telegram:
+          type: string
+          description: для примера, телега
+ 
+    PlaceOfWork:
+      type: object
+      description: место работы
+      properties:
+        organization:
+          type: string
+          description: место работы
+        occupationType:
+          type: string
+          description: Фиксированное значение = по найму | собственное дело | нет
+        occupation:
+          type: string
+          description: должность, профессия
+        address:
+          type: string
+          description: юр. адрес работодателя
+        phone:
+          type: string
+          description: телефон
+ 
+    PlaceOfStudy:
+      type: object
+      description: place of study
+      properties:
+        university:
+          type: string
+          description: university
+        faculty:
+          type: string
+          description: faculty
+        course:
+          type: string
+          description: course
+ 
+    PolicyParty:
+      type: object
+      description: сторона договора 
+      properties:
+
+        person:
+          $ref: '#/components/schemas/Person'
+        contacts:
+          $ref: '#/components/schemas/ContactInfo'
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        placeOfWork:
+          $ref: '#/components/schemas/PlaceOfWork'
+        organization:
+          $ref: '#/components/schemas/Organization'
+        representative:
+          $ref: '#/components/schemas/RepresentativePerson'
+ 
+    RepresentativePerson:
+      type: object
+      description: представитель юр лица
+      properties:
+        person:
+          $ref: '#/components/schemas/Person'
+        position:
+          description: Должность
+          type: string
+          example: Директор по продажам
+ 
+ 
+    Property:
+      type: object
+      description: Объект недвижимости.
+      properties:
+        propertyType:
+          type: string
+          description: значение из справочника
+        cadastrNr:
+          type: string
+          description: Кадастровый номер квартиры.
+          example: "77:07:0018002:2590"
+        wallsMaterial:
+          type: string
+          description: Материал строения. Обязательное для всех типов недвижимости, кроме LAND_PLOT
+          example: "Каменные, кирпичные"
+        ceilingMaterial:
+          type: string
+          description: Материал перекрытия.
+          example: "Смешанные"
+        constructionYear:
+          type: string
+          description: Год постройки.
+        repairYear:
+          type: string
+          description: Год кап ремонта.
+        buildingArea:
+          type: number
+          description: Площадь объекта (кв м).
+        landArea:
+          type: number
+          description: Площадь земельного участка (кв м).
+        wearCoefficient:
+          type: number
+          description: Износ объекта (в %).
+        numberOfFloors:
+          type: number
+          description: Количество этажей в здании
+        propertyLocation:
+          type: string
+          description: Расположение объекта.
+          example: В многоквартирном доме
+        isNewBuilding:
+          type: string
+          description: признак новостройки
+        propertyValue:
+          type: number
+          description: Стоимость объекта
+        commissioningDate:
+          type: string
+          description: Дата ввода в эксплуатацию объекта недвижимости
+        floor:
+          type: number
+          description: этаж
+        
+ 
+ 
+    PolicyFile:
+      description: получение печатной формы
+      type: object
+      properties:
+        fileTypeCode:
+          type: string
+          ## POLICY, DRAFT, UW
+        policyPDF:
+          type: string
+        fileId:
+          description: указатель на файл в хранилище
+          type: string
+        fileName:
+          description: наименование файла
+          type: string
+        sourceSystem:
+          description: система-источник получения файла
+          type: string
+ 
+    PolicyFiles:
+      description: получение печатной формы
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyFile'
+ 
+    Infolist:
+      description: доп информация о продавце
+      type: object
+      properties:
+        partnerCode:
+          type: string
+          description: Код партнера
+        partnerClientId:
+          type: string
+          description: Код партнера, полученный из токена
+        policyKind:
+          type: string
+          description: Тип полиса ((1) - онлайн, (2) - офлайн)
+        channelId:
+          type: string
+        channelTypeId:
+          type: string
+          description: "# Канал продаж"
+          example: 410
+        contractDivisionId:
+          type: string
+          description: ID подразделения ВСК, ответственного за договор
+          example: "00.97.01.12.01"
+        contractResponsibleId:
+          type: string
+          description: ID пользователя ВСК, ответственного за договор
+          example: 0000122562
+        agentKV:
+          type: string
+          description: "# Комиссионное вознаграждение агента"
+          example: 55
+        agentKvRetention:
+          type: string
+          description: "RETENTION # Булевый тип. Удержание в КВ Агента. Агентов по договору "
+          example: false
+        agentContractNumber:
+          type: string
+          description: "AGENT_CONTRACT_NUMBER: Номер агентского договора"
+          example: 16539460001
+        agentLogin:
+          type: string
+          description: логин агента
+        typeOfAgents:
+          type: string
+          description: тип агента - ФЛ, ЮЛ, ИП
+        partnerNumber:
+          type: string
+          description: Номер партнера
+        agentName:
+          type: string
+        partnerDivision:
+          type: string
+        generalContractNumber:
+          type: string
+        agentId:
+          type: string
+          description: ИД агента из профилятора
+        agentUuid:
+          type: string
+        apiVersion:
+          type: string
+        applicationId:
+          type: string
+        agreementId:
+          type: string
+        nsiCode:
+          type: string
+        fullNsiCode:
+          type: string
+        custodianId:
+          type: string
+        wsmCode:
+          type: string
+        filial:
+          type: object
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+        department:
+          type: object
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+        salespoint:
+          type: object
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+        holding:
+          type: object
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+        legal_entity:
+          type: string
+        partnerType:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorDescription:
+          type: string
+ 
+    Errors:
+      type: array
+      items:
+        $ref: '#/components/schemas/Error'
+ 
+    ErrorDetail:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: "Это просто название enum-значения. /[A-Z0-9_]+/. "
+        domain:
+          type: string
+          description: "'vsk.my-best-service',  - сервис, вызвавший ошибку"
+        metadata:
+          type: object
+          properties:
+            field:
+              type: string
+              description: "Код ошибочного поля"
+            description:
+              type: string
+              description: "Произвольное краткое описание"
+ 
+    Pet:
+      type: object
+      description: Объект животное.
+      properties:
+        species:
+          type: string
+          description: Вид животного.
+          example: "Собака"
+        breed:
+          type: string
+          description: Порода.
+          example: "Алабай"
+        namePet:
+          type: string
+          description: Кличка.
+          example: "Рекс"
+        genderPet:
+          type: string
+          description: Пол.
+          example: "Самец"
+        age:
+          type: string
+          description: Возраст.
+          example: "2"
+        distinguishingMark:
+          type: string
+          description: Дополнительно (окрас,чип,особые приметы).
+          example: "длинношёрстная собака, номер чипа: 643094100156084"
+ 
+    Payment:
+      description: Заявка на оплату
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: ид заявки на оплату
+        payerId:
+          type: string
+          description: ид плательщика
+        payerEmail:
+          type: string
+          description: email плательщика
+        payerPhone:
+          type: string
+          description: телефон плательщика
+        paymentType:
+          type: string
+          description: тип оплаты
+        successUrl:
+          type: string
+          description: для оплаты картой, страница редиректа если оплата прошла
+        failUrl:
+          type: string
+          description: для оплаты картой, страница редиректа при ошибках
+        paymentLink:
+          type: string
+          description: ссылка на оплату
+        fileId:
+          type: string
+          description: ссылка на сформированный счет, если применимо
+        status:
+          type: string
+          description: статус заявки на оплату
+        items:
+          type: array
+          description: для оплаты картой, страница редиректа если оплата прошла
+          items:
+            type: object
+            properties:
+              docNumber:
+                type: string
+                description: номер полиса
+              amount:
+                type: number
+                description: сумма к оплате
+
+
+
+    ###############################
+    # responces
+    ###############################
+ 
+    HttpBadResponse:
+      properties:
+        code:
+          type: string
+          description: "Код типа ошибки. 1-16 из стандартного справочника Марлин ВСК"
+        code_c:
+          type: string
+          description: "Название ошибки. Для читабельности.из стандартного справочника Марлин ВСК"
+        id:
+          type: string
+          description: "дополнительный код ошибки. если это полезно для чего-то"
+        message:
+          type: string
+          description: "Этот текст должен помочь стороннему техническому специалисту быстро и просто понять что случилось в вашем API."
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+ 
+        errors:
+          $ref: '#/components/schemas/Errors'
+ 
+    HttpAccepted:
+      type: object
+      properties:
+        href:
+          type: string
+          description: URL. ссылка на результат запущенной по запросу операции.
+        method:
+          type: string
+          description: HTTP-метод для запроса URL из ключа href.
+ 
+  ###############################
+  # parameters
+  ###############################
+ 
+  parameters:
+    policyNr:
+      name: policy_nr
+      in: path
+      description: Номер договора.
+      required: true
+      schema:
+        type: string
+ 
+    draftId:
+      name: draft_id
+      in: path
+      description: Номер проекта страхового полиса.
+      required: true
+      schema:
+        type: string
+ 
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+ 
+    typeId:
+      name: type_id
+      in: path
+      description: тип.
+      required: true
+      schema:
+        type: string
+ 
+    fileId:
+      name: file_id
+      in: path
+      description: ид файла.
+      required: true
+      schema:
+        type: string
+        # POLICY
+ 
+    installmentNr:
+      name: installment_nr
+      in: path
+      description: номер взноса.
+      required: true
+      schema:
+        type: string
+ 
+    userId:
+      name: Partner-User-ID
+      in: header
+      description: логин внешнего пользака
+      required: false
+      schema:
+        type: string
+ 
+    accountId:
+      name: Partner-Account-ID
+      in: header
+      description: название партнерской системы
+      required: false
+      schema:
+        type: string
+
+###############################
+# responces
+###############################
+ 
+  responses:
+    'PolicyV3':
+      description: Очередной взнос по договору.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyV3'
+
+    'OperationBody':
+      description: Результат выполнения процесса.
+      content:
+        application/json:
+          schema:
+            type: string
+ 
+    'Installment':
+      description: Очередной взнос по договору.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Installment'
+ 
+    'PdfFile':
+      description: A PDF file
+      content:
+        application/pdf:
+          schema:
+            type: string
+            format: binary
+ 
+    'PolicyFile':
+      description: A PDF file
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyFile'
+ 
+    'PolicyFiles':
+      description: list of files
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyFiles'
+ 
+    'PolicyStatus':
+      description: статус договора
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyStatus'
+ 
+
+    'Http-200':
+      description: OK.
+ 
+    'Http-202':
+      description: Операция начата, но не завершена к таймауту. Статус выполнения можно запросить позже.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpAccepted'
+          example:
+            href: "http://.../v2/operations?id=214123412341223"
+            method: "GET"
+ 
+    'Http-204':
+      description: OK. No content. Response after deleting resource
+ 
+    'Http-400':
+      description: Bad Request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpBadResponse'
+ 
+    'Http-401':
+      description: Unauthorized (JWT not valid).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpBadResponse'
+ 
+    'Http-404':
+      description: Данные не найдены.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpBadResponse'
+          example:
+            errorCode: ERR-00005
+            errorDescription: Данные не найдены.
+ 
+    'Http-503':
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpBadResponse'
+          x-example:
+            errorCode: ERR-00105
+            errorDescription: сервер недоступен
