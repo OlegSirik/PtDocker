@@ -4,7 +4,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { withBase } from 'vitepress'
+import specUrl from './openapi/policy-api.yaml?url'
 
 const REDOC_SCRIPT_ID = 'redoc-standalone-script'
 const REDOC_SCRIPT_SRC = 'https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js'
@@ -34,13 +34,23 @@ function loadRedocScript() {
 }
 
 onMounted(async () => {
-  await loadRedocScript()
-
   const container = document.getElementById('redoc-container')
-  if (!container || !window.Redoc) return
+  if (!container) return
+
+  try {
+    await loadRedocScript()
+  } catch {
+    container.innerHTML = '<p>Failed to load ReDoc script.</p>'
+    return
+  }
+
+  if (!window.Redoc) {
+    container.innerHTML = '<p>ReDoc is not available in browser context.</p>'
+    return
+  }
 
   window.Redoc.init(
-    withBase('/api/openapi/policy-api.yaml'),
+    specUrl,
     {
       hideHostname: true,
       expandResponses: '200,201',
