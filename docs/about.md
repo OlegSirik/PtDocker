@@ -160,7 +160,10 @@
 * Document Service
 * Integration Service
 
-Диаграмма взаимодействия участников представлена в следующем разделе документации.
+<div style="max-width: 1200px; margin: 0 auto;">
+  <img src="./view1.png" alt="Схема архитектуры" style="width: 100%; height: auto;" />
+</div>
+
 
 ---
 
