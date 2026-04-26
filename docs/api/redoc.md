@@ -1,6 +1,8 @@
 ---
 aside: false
 sidebar: false
+nav: false
+footer: false
 ---
 
 # API Reference
@@ -8,12 +10,13 @@ sidebar: false
 <div id="redoc-container" style="min-height: 70vh;">Loading API reference...</div>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { withBase } from 'vitepress'
 import specUrl from './openapi/policy-api.yaml?url'
 
 const REDOC_SCRIPT_ID = 'redoc-standalone-script'
 const REDOC_SCRIPT_SRC = withBase('/redoc/redoc.standalone.js')
+const REDOC_PAGE_CLASS = 'redoc-page'
 
 function loadRedocScript() {
   return new Promise((resolve, reject) => {
@@ -40,6 +43,8 @@ function loadRedocScript() {
 }
 
 onMounted(async () => {
+  document.body.classList.add(REDOC_PAGE_CLASS)
+
   const container = document.getElementById('redoc-container')
   if (!container) return
 
@@ -60,6 +65,7 @@ onMounted(async () => {
       specUrl,
       {
         hideHostname: true,
+        hideRightPanel: true,
         expandResponses: '200,201',
         nativeScrollbars: true
       },
@@ -73,6 +79,10 @@ onMounted(async () => {
     container.textContent = `ReDoc init failed: ${String(error)}`
   }
 })
+
+onUnmounted(() => {
+  document.body.classList.remove(REDOC_PAGE_CLASS)
+})
 </script>
 
 <style>
@@ -84,16 +94,26 @@ onMounted(async () => {
   width: 100%;
 }
 
-.VPDoc.has-aside .content-container {
-  max-width: 100% !important;
+.vp-doc._PtDocker_api_redoc {
+  max-width: none !important;
+  padding: 0 !important;
 }
 
-.VPContent.has-sidebar {
-  padding-left: 0 !important;
+body.redoc-page .VPDoc:not(.has-sidebar) .content {
+  max-width: 1600px !important;
 }
 
-.VPDoc.has-sidebar .container {
-  max-width: 100% !important;
+body.redoc-page .VPDoc .container {
+  max-width: 1600px !important;
+}
+
+#redoc-container .redoc-wrap {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+#redoc-container .menu-content {
+  width: 280px !important;
 }
 </style>
 
