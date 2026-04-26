@@ -13,7 +13,7 @@ export default defineConfig({
     nav: [
       { text: 'Главная', link: '/about.md' },
       { text: 'Руководства', link: '/user-docs/README.md' },
-      { text: 'API', link: '/api/redoc.html' },  // ← существующий файл
+      { text: 'API', link: '/api/redoc' },  // ← существующий файл
       { text: 'GitHub', link: 'https://github.com/olegsirik/PtDocker' }
     ],
     
