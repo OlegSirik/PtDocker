@@ -1,7 +1,7 @@
 {
-  "id": 1000,
-  "mpCode": "ACC",
-  "mpName": "НС",
+  "id": -1,
+  "mpCode": "PAX",
+  "mpName": "Страхование пассажиров",
   "mpVars": [
     {
       "varDataType": "OBJECT",
@@ -272,7 +272,7 @@
       "parent_id": 3,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Контакты"
     },
     {
@@ -304,7 +304,7 @@
       "parent_id": 3,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Документ"
     },
     {
@@ -320,7 +320,7 @@
       "parent_id": 3,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Адрес"
     },
     {
@@ -464,7 +464,7 @@
       "parent_id": 5,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Юр.лицо"
     },
     {
@@ -512,24 +512,8 @@
       "parent_id": 5,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
-      "name": "Адрес"
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "covers",
-      "varName": "покрытия",
-      "varPath": "insuredObjects[0].covers",
-      "varType": "IN",
-      "varValue": "0",
-      "varCdm": "insuredObjects.covers",
-      "varNr": "24",
-      "id": 500,
-      "parent_id": 5,
-      "varList": null,
-      "isSystem": false,
       "isDeleted": true,
-      "name": "covers"
+      "name": "Адрес"
     },
     {
       "varDataType": "OBJECT",
@@ -576,7 +560,7 @@
       "parent_id": 5,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Сегмент авиаперевозки"
     },
     {
@@ -592,7 +576,7 @@
       "parent_id": 5,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп. риски"
     },
     {
@@ -672,7 +656,7 @@
       "parent_id": 341,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное фио"
     },
     {
@@ -688,7 +672,7 @@
       "parent_id": 341,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное фио англ"
     },
     {
@@ -704,7 +688,7 @@
       "parent_id": 341,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Место рождения"
     },
     {
@@ -752,7 +736,7 @@
       "parent_id": 341,
       "varList": "familyState",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Семейное положение"
     },
     {
@@ -768,7 +752,7 @@
       "parent_id": 341,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Страхователь.признак пдл"
     },
     {
@@ -784,7 +768,7 @@
       "parent_id": 341,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Страхователь.резидент рф"
     },
     {
@@ -800,7 +784,7 @@
       "parent_id": 341,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
@@ -880,7 +864,7 @@
       "parent_id": 343,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код страны регистрации"
     },
     {
@@ -912,7 +896,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное наименование юр.лица"
     },
     {
@@ -928,7 +912,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное наименование  юр.лица англ"
     },
     {
@@ -944,7 +928,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Краткое наименование юр.лица"
     },
     {
@@ -960,7 +944,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Организационно-правовая форма"
     },
     {
@@ -976,7 +960,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Кпп"
     },
     {
@@ -992,7 +976,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Огрн"
     },
     {
@@ -1008,7 +992,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Окпо"
     },
     {
@@ -1024,7 +1008,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Бик"
     },
     {
@@ -1040,7 +1024,7 @@
       "parent_id": 343,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Резидент рф юр.лица"
     },
     {
@@ -1056,7 +1040,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Gруппа страхователя юл"
     },
     {
@@ -1072,7 +1056,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id (юрик)"
     },
     {
@@ -1088,7 +1072,7 @@
       "parent_id": 343,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Нси код"
     },
     {
@@ -1216,7 +1200,7 @@
       "parent_id": 344,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
@@ -1264,7 +1248,7 @@
       "parent_id": 345,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код страны"
     },
     {
@@ -1280,7 +1264,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Регион"
     },
     {
@@ -1296,7 +1280,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Город"
     },
     {
@@ -1312,7 +1296,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Улица"
     },
     {
@@ -1328,7 +1312,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Дом"
     },
     {
@@ -1344,7 +1328,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Строение"
     },
     {
@@ -1360,7 +1344,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Квартира"
     },
     {
@@ -1376,7 +1360,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Комната"
     },
     {
@@ -1392,7 +1376,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Индекс"
     },
     {
@@ -1408,7 +1392,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код кладр"
     },
     {
@@ -1424,7 +1408,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код фиас"
     },
     {
@@ -1456,7 +1440,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Адресная строка англ"
     },
     {
@@ -1472,7 +1456,7 @@
       "parent_id": 345,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
@@ -1552,7 +1536,7 @@
       "parent_id": 346,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное фио"
     },
     {
@@ -1568,7 +1552,7 @@
       "parent_id": 346,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное фио англ"
     },
     {
@@ -1584,7 +1568,7 @@
       "parent_id": 346,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Место рождения"
     },
     {
@@ -1648,7 +1632,7 @@
       "parent_id": 346,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Признак пдл"
     },
     {
@@ -1680,7 +1664,7 @@
       "parent_id": 346,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
@@ -1904,7 +1888,7 @@
       "parent_id": 350,
       "varList": "addressType",
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Тип адреса"
     },
     {
@@ -1920,7 +1904,7 @@
       "parent_id": 350,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Код страны"
     },
     {
@@ -1936,7 +1920,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Регион"
     },
     {
@@ -1952,7 +1936,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Город"
     },
     {
@@ -1968,7 +1952,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Улица"
     },
     {
@@ -1984,7 +1968,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Дом"
     },
     {
@@ -2000,7 +1984,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Строение"
     },
     {
@@ -2016,7 +2000,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Квартира"
     },
     {
@@ -2032,7 +2016,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Комната"
     },
     {
@@ -2048,7 +2032,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Индекс"
     },
     {
@@ -2064,7 +2048,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Код кладр"
     },
     {
@@ -2080,7 +2064,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Код фиас"
     },
     {
@@ -2096,7 +2080,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Адресная строка"
     },
     {
@@ -2112,7 +2096,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Адресная строка англ"
     },
     {
@@ -2128,7 +2112,7 @@
       "parent_id": 350,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Внешний id"
     },
     {
@@ -2608,7 +2592,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Стоимость билета"
     },
     {
@@ -2624,7 +2608,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Количество перелетов"
     },
     {
@@ -2640,7 +2624,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Номер билета"
     },
     {
@@ -2656,7 +2640,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Дата вылета"
     },
     {
@@ -2672,7 +2656,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Время вылета"
     },
     {
@@ -2688,7 +2672,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Город вылета"
     },
     {
@@ -2704,7 +2688,7 @@
       "parent_id": 353,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Город прилета"
     },
     {
@@ -2720,7 +2704,7 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп.риск спорт #1"
     },
     {
@@ -2736,7 +2720,7 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп.риск спорт #2"
     },
     {
@@ -2752,7 +2736,7 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп.риск спорт #3"
     },
     {
@@ -2768,7 +2752,7 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп.риск спорт #4"
     },
     {
@@ -2784,7 +2768,7 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Доп.риск спорт #5"
     },
     {
@@ -2800,8 +2784,24 @@
       "parent_id": 354,
       "varList": null,
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "name": "Профессиональный спорт"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ic_displayName",
+      "varName": "Строка для страхового договора",
+      "varPath": "insurer.organization.displayName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insurer.organization.displayName",
+      "varNr": "0",
+      "id": 1745,
+      "parent_id": 357,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "name": "Строка для страхового договора"
     },
     {
       "varDataType": "STRING",
@@ -2816,7 +2816,7 @@
       "parent_id": 357,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код страны регистрации"
     },
     {
@@ -2832,7 +2832,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Инн юр.лица"
     },
     {
@@ -2848,7 +2848,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное наименование юр.лица"
     },
     {
@@ -2864,7 +2864,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Полное наименование  юр.лица англ"
     },
     {
@@ -2880,7 +2880,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Краткое наименование юр.лица"
     },
     {
@@ -2896,7 +2896,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Организационно-правовая форма"
     },
     {
@@ -2912,7 +2912,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Кпп"
     },
     {
@@ -2928,7 +2928,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Огрн"
     },
     {
@@ -2944,7 +2944,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Окпо"
     },
     {
@@ -2960,7 +2960,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Бик"
     },
     {
@@ -2976,7 +2976,7 @@
       "parent_id": 357,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Резидент рф юр.лица"
     },
     {
@@ -2992,7 +2992,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Gруппа страхователя юл"
     },
     {
@@ -3008,7 +3008,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id (юрик)"
     },
     {
@@ -3024,7 +3024,7 @@
       "parent_id": 357,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Нси код"
     },
     {
@@ -3040,7 +3040,7 @@
       "parent_id": 358,
       "varList": "identifierType",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код типа документа"
     },
     {
@@ -3056,7 +3056,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Серия документа"
     },
     {
@@ -3072,7 +3072,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Номер документа"
     },
     {
@@ -3088,7 +3088,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Дата выдачи"
     },
     {
@@ -3104,7 +3104,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Действительно до"
     },
     {
@@ -3120,7 +3120,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Кем выдан"
     },
     {
@@ -3136,7 +3136,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код подразделения"
     },
     {
@@ -3152,7 +3152,7 @@
       "parent_id": 358,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
@@ -3168,7 +3168,7 @@
       "parent_id": 358,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Страна выдачи документа"
     },
     {
@@ -3184,7 +3184,7 @@
       "parent_id": 360,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Телефон"
     },
     {
@@ -3200,7 +3200,7 @@
       "parent_id": 360,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Email"
     },
     {
@@ -3216,7 +3216,7 @@
       "parent_id": 361,
       "varList": "addressType",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Тип адреса"
     },
     {
@@ -3232,7 +3232,7 @@
       "parent_id": 361,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код страны"
     },
     {
@@ -3248,7 +3248,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Регион"
     },
     {
@@ -3264,7 +3264,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Город"
     },
     {
@@ -3280,7 +3280,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Улица"
     },
     {
@@ -3296,7 +3296,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Дом"
     },
     {
@@ -3312,7 +3312,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Строение"
     },
     {
@@ -3328,7 +3328,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Квартира"
     },
     {
@@ -3344,7 +3344,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Комната"
     },
     {
@@ -3360,7 +3360,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Индекс"
     },
     {
@@ -3376,7 +3376,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код кладр"
     },
     {
@@ -3392,7 +3392,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Код фиас"
     },
     {
@@ -3408,7 +3408,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Адресная строка"
     },
     {
@@ -3424,7 +3424,7 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Адресная строка англ"
     },
     {
@@ -3440,13 +3440,13 @@
       "parent_id": 361,
       "varList": null,
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "name": "Внешний id"
     },
     {
       "varDataType": "STRING",
       "varCode": "txt_insurer",
-      "varName": "Страхователь",
+      "varName": "Страховщик",
       "varPath": "",
       "varType": "TEXT",
       "varValue": "САО ВСК",
@@ -3461,27 +3461,11 @@
     },
     {
       "varDataType": "STRING",
-      "varCode": "txt_insured",
-      "varName": "Страховщик",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{#if ph_fullName}}{{ph_fullName}}{{/if}}{{#if !ph_fullName}}{{ph_lastName}} {{ph_firstName}} {{ph_middleName}} {{/if}}\n\n",
-      "varCdm": "strings.txt_insured",
-      "varNr": "1117",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
       "varCode": "txt_header",
       "varName": "Шапка номер от дата",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "Полис страхования № {{pl_policyNumber}} от {{pl_issueDate|dd MMMM yyyy}}г.",
+      "varValue": "Договор страхования № {{pl_policyNumber}} от {{pl_issueDate|dd MMMM yyyy}}г.",
       "varCdm": "strings.txt_header",
       "varNr": "1119",
       "id": null,
@@ -3497,7 +3481,7 @@
       "varName": "Номер договора",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "№ {{pl_policyNumber}} от {{pl_issueDate|dd.MM.yyyy}}",
+      "varValue": "Договор страхования № {{pl_policyNumber}} от {{pl_issueDate|dd.MM.yyyy}}",
       "varCdm": "strings.txt_policy_number",
       "varNr": "1101",
       "id": null,
@@ -3513,7 +3497,7 @@
       "varName": "Страхователь гражданство",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": " {{ph_citizenship|country2}}",
+      "varValue": "{{ph_citizenship|country2}}",
       "varCdm": "strings.txt_ph_citizenship",
       "varNr": "1122",
       "id": null,
@@ -3545,7 +3529,7 @@
       "varName": "Страхователь адрес регистрации",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "{{ph_addr_addressStr}}",
+      "varValue": "Адрес регистрации: {{ph_addr_addressStr}}",
       "varCdm": "strings.txt_ph_address",
       "varNr": "1105",
       "id": null,
@@ -3561,7 +3545,7 @@
       "varName": "Страхователь телефон",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "{{ph_phone}}",
+      "varValue": "Телефон: {{ph_phone}}",
       "varCdm": "strings.txt_ph_phone",
       "varNr": "1106",
       "id": null,
@@ -3593,7 +3577,7 @@
       "varName": "Страхователь документ, удостоверяющий личность наименование",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "Наименование: {{ph_doc_typeCode|fns-dul}}",
+      "varValue": "{{#if ph_doc_serial}}серия: {{ph_doc_serial}}{{/if}}{{#if ph_doc_number}}  номер: {{ph_doc_number}}{{/if}}{{#if ph_doc_whom}}  кем выдан: {{ph_doc_whom}}{{/if}}{{#if ph_doc_dateIssue}}  дата выдачи:{{ph_doc_dateIssue|dd.MM.yyyy}}{{/if}}\n",
       "varCdm": "strings.txt_ph_id",
       "varNr": "1108",
       "id": null,
@@ -3660,134 +3644,6 @@
       "varValue": "{{ph_doc_whom}}",
       "varCdm": "strings.txt_ph_id_whom",
       "varNr": "1112",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_citizenship",
-      "varName": "Застрахованное лицо гражданство",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{io_citizenship|country2}}",
-      "varCdm": "strings.txt_io_citizenship",
-      "varNr": "1113",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_dob",
-      "varName": "Застрахованное лицо дата рождения",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{io_birthDate|dd.MM.yyyy}}",
-      "varCdm": "strings.txt_io_dob",
-      "varNr": "1114",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_address",
-      "varName": "Застрахованное лицо адрес регистрации",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{io_addr_addressStr}}",
-      "varCdm": "strings.txt_io_address",
-      "varNr": "1115",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_id",
-      "varName": "Застрахованное лицо документ наименование",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{#if io_doc_serial}}серия: {{io_doc_serial}}{{/if}}{{#if io_doc_number}}  номер: {{io_doc_number}}{{/if}}{{#if io_doc_whom}}  кем выдан: {{io_doc_whom}}{{/if}}{{#if io_doc_dateIssue}}  дата выдачи:{{io_doc_dateIssue|dd.MM.yyyy}}{{/if}}\n",
-      "varCdm": "strings.txt_io_id",
-      "varNr": "1116",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_id_serial",
-      "varName": "Застрахованное лицо документ серия",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "Серия: {{io_doc_serial}}",
-      "varCdm": "strings.txt_io_id_serial",
-      "varNr": "1117",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_id_number",
-      "varName": "Застрахованное лицо документ номер",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "Номер: {{io_doc_number}}",
-      "varCdm": "strings.txt_io_id_number",
-      "varNr": "1118",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_id_date",
-      "varName": "Застрахованное лицо документ дата выдачи",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "Дата выдачи: {{io_doc_dateIssue|dd.MM.yyyy}}",
-      "varCdm": "strings.txt_io_id_date",
-      "varNr": "1119",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_id_whom",
-      "varName": "Застрахованное лицо документ кем выдан",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{io_doc_whom}}",
-      "varCdm": "strings.txt_io_id_whom",
-      "varNr": "1120",
       "id": null,
       "parent_id": null,
       "varList": null,
@@ -3909,22 +3765,6 @@
     },
     {
       "varDataType": "STRING",
-      "varCode": "txt_period",
-      "varName": "Период ответственности Страховщика:",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "Круглосуточно{{#if rf_sport1}}, включая тренировки и соревнования по следующим видам спорта: {{txt_sports}}{{/if}}",
-      "varCdm": "strings.txt_period",
-      "varNr": "1147",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
       "varCode": "txt_sports",
       "varName": "Все виды спорта",
       "varPath": "",
@@ -3945,7 +3785,7 @@
       "varName": "Объект страхования",
       "varPath": "",
       "varType": "TEXT",
-      "varValue": "{{io_lastName}} {{io_firstName}} {{io_middleName}}",
+      "varValue": "{{io_device_model}} {{io_device_name}}",
       "varCdm": "strings.io_digest",
       "varNr": "1147",
       "id": null,
@@ -3973,77 +3813,61 @@
     },
     {
       "varDataType": "STRING",
-      "varCode": "ic_displayName",
-      "varName": "Строка для страхового договора",
-      "varPath": "insurer.organization.displayName",
-      "varType": "IN",
-      "varValue": "",
-      "varCdm": "insurer.organization.displayName",
-      "varNr": "0",
-      "id": 1745,
-      "parent_id": 357,
+      "varCode": "txt_pl_territory",
+      "varName": "Территория страхования",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Весь мир",
+      "varCdm": "strings.txt_pl_territory",
+      "varNr": "1240",
+      "id": null,
+      "parent_id": null,
       "varList": null,
       "isSystem": false,
       "isDeleted": false,
-      "name": "Строка для страхового договора"
+      "name": null
     },
     {
       "varDataType": "STRING",
-      "varCode": "txt_ph_name",
-      "varName": "ФИО страхователя",
+      "varCode": "txt_pl_payment_frequency",
+      "varName": "Порядок уплаты премии",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "единовременно",
+      "varCdm": "strings.txt_pl_payment_frequency",
+      "varNr": "1241",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "name": null
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_productName",
+      "varName": "Название продукта",
+      "varPath": "productName",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "productName",
+      "varNr": "2",
+      "id": 1746,
+      "parent_id": 1,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "name": "Название продукта"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph",
+      "varName": "Страхователь",
       "varPath": "",
       "varType": "TEXT",
       "varValue": "{{ph_lastName}} {{ph_firstName}} {{ph_middleName}}",
-      "varCdm": "strings.txt_ph_name",
-      "varNr": "1249",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt2_ph_id",
-      "varName": "Документ страхователя",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{#if ph_doc_serial}}серия: {{ph_doc_serial}}{{/if}}{{#if ph_doc_number}}  номер: {{ph_doc_number}}{{/if}}{{#if ph_doc_whom}}  кем выдан: {{ph_doc_whom}}{{/if}}{{#if ph_doc_dateIssue}}  дата выдачи:{{ph_doc_dateIssue|dd.MM.yyyy}}{{/if}}\n",
-      "varCdm": "strings.txt2_ph_id",
-      "varNr": "1250",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_io_name",
-      "varName": "Застрахованный ФИО",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{io_lastName}} {{io_firstName}} {{io_middleName}}",
-      "varCdm": "strings.txt_io_name",
-      "varNr": "1251",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_header2",
-      "varName": "Шапка договора 2",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "{{pl_productName}}",
-      "varCdm": "strings.txt_header2",
-      "varNr": "1252",
+      "varCdm": "strings.txt_ph",
+      "varNr": "1243",
       "id": null,
       "parent_id": null,
       "varList": null,
@@ -4054,28 +3878,12 @@
     {
       "varDataType": "STRING",
       "varCode": "txt",
-      "varName": "пустая строка",
+      "varName": "txt",
       "varPath": "",
       "varType": "TEXT",
       "varValue": "",
       "varCdm": "strings.txt",
-      "varNr": "1253",
-      "id": null,
-      "parent_id": null,
-      "varList": null,
-      "isSystem": false,
-      "isDeleted": false,
-      "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "txt_policy_period",
-      "varName": "срок действия договора",
-      "varPath": "",
-      "varType": "TEXT",
-      "varValue": "с 00:00 {{pl_startDate|dd MMMM yyyy}}г. до 23:59:59 {{pl_endDate|dd MMMM yyyy}}г.",
-      "varCdm": "strings.txt_policy_period",
-      "varNr": "1254",
+      "varNr": "1243",
       "id": null,
       "parent_id": null,
       "varList": null,
@@ -4086,134 +3894,34 @@
   ],
   "mpCovers": [
     {
-      "risks": "",
-      "coverCode": "COMPLEX_ACCIDENT",
-      "coverName": "Покрытие по договору НС (комплексное)"
+      "risks": "ACCIDENT_DEATH, ACCIDENT_DISABILITY",
+      "coverCode": "PAX_ACCIDENT",
+      "coverName": "Несчастный случай с пассажиром"
     },
     {
       "risks": "ACCIDENT_DEATH",
-      "coverCode": "ACCIDENT_DEATH",
-      "coverName": "Смерть Застрахованного в результате несчастного случая, происшедшего в период страхования"
+      "coverCode": "PAX_DEATH",
+      "coverName": "Смерть пассажира в результате несчастного случая"
     },
     {
       "risks": "ACCIDENT_DISABILITY",
-      "coverCode": "ACCIDENT_DISABILITY",
-      "coverName": "Установление Застрахованному I или II группы инвалидности в результате несчастного случая, происшедшего в период страхования"
+      "coverCode": "PAX_DISABILITY",
+      "coverName": "Инвалидность пассажира вследствие несчастного случая"
     },
     {
-      "risks": "ACCIDENT_TEMP_DISABILITY",
-      "coverCode": "ACCIDENT_TEMP_DISABILITY",
-      "coverName": "Временная нетрудоспособность в результате несчастного случая (выплата по таблице травм)"
+      "risks": "ACCIDENT_INJURY",
+      "coverCode": "PAX_INJURY",
+      "coverName": "Травмы пассажира"
     },
     {
-      "risks": "ACCIDENT_BURNS_FRACTURES",
-      "coverCode": "ACCIDENT_BURNS_FRACTURES",
-      "coverName": "Тяжелые ожоги и переломы, полученные в результате несчастного случая"
-    },
-    {
-      "risks": "ACCIDENT_INTERNAL_INJURY",
-      "coverCode": "ACCIDENT_INTERNAL_INJURY",
-      "coverName": "Внутренние повреждения органов, полученные в результате несчастного случая"
-    },
-    {
-      "risks": "ACCIDENT_DISMEMBERMENT",
-      "coverCode": "ACCIDENT_DISMEMBERMENT",
-      "coverName": "Утрата конечностей или зрения в результате несчастного случая"
-    },
-    {
-      "risks": "ACCIDENT_FACIAL_SCARS",
-      "coverCode": "ACCIDENT_FACIAL_SCARS",
-      "coverName": "Шрамы и обезображивание лица в результате несчастного случая"
-    },
-    {
-      "risks": "DISEASE_DEATH",
-      "coverCode": "DISEASE_DEATH",
-      "coverName": "Смерть Застрахованного в результате заболевания, впервые диагностированного в период страхования"
-    },
-    {
-      "risks": "DISEASE_DISABILITY",
-      "coverCode": "DISEASE_DISABILITY",
-      "coverName": "Установление Застрахованному инвалидности I или II группы в связи с заболеванием, впервые диагностированным в период страхования"
-    },
-    {
-      "risks": "DISEASE_CRITICAL",
-      "coverCode": "DISEASE_CRITICAL",
-      "coverName": "Диагностирование критического заболевания (онкология, инфаркт, инсульт и др.)"
-    },
-    {
-      "risks": "DISEASE_SURGERY",
-      "coverCode": "DISEASE_SURGERY",
-      "coverName": "Проведение хирургической операции в связи с заболеванием, впервые диагностированным в период страхования"
-    },
-    {
-      "risks": "JOB_LOSS",
-      "coverCode": "JOB_LOSS",
-      "coverName": "Потеря Застрахованным лицом дохода от заработной платы по бессрочному трудовому договору вследствие прекращения данного трудового договора (потери работы)"
-    },
-    {
-      "risks": "BONE_FRACTURE_SENIORS",
-      "coverCode": "BONE_FRACTURE_SENIORS",
-      "coverName": "Переломы у Застрахованных в возрасте 65+ лет в результате несчастного случая"
-    },
-    {
-      "risks": "INJURY_CHILDREN",
-      "coverCode": "INJURY_CHILDREN",
-      "coverName": "Травмы детей на спортивных секциях и соревнованиях"
-    },
-    {
-      "risks": "UCI_INJURY",
-      "coverCode": "UCI_INJURY",
-      "coverName": "Травма в результате дорожно-транспортного происшествия (ДТП)"
-    },
-    {
-      "risks": "PUBLIC_TRANSPORT_ACCIDENT",
-      "coverCode": "PUBLIC_TRANSPORT_ACCIDENT",
-      "coverName": "Травма в результате несчастного случая в общественном транспорте"
-    },
-    {
-      "risks": "MEDEXPENSE_ACCIDENT",
-      "coverCode": "MEDEXPENSE_ACCIDENT",
-      "coverName": "Медицинские расходы при несчастном случае (включая экстренную помощь за рубежом)"
-    },
-    {
-      "risks": "EVACUATION_REPATRIATION",
-      "coverCode": "EVACUATION_REPATRIATION",
-      "coverName": "Эвакуация и репатриация (транспортировка в клинику или на родину)"
-    },
-    {
-      "risks": "TRAVEL_DELAY",
-      "coverCode": "TRAVEL_DELAY",
-      "coverName": "Задержка рейса (компенсация суточных и дополнительных расходов)"
-    },
-    {
-      "risks": "BAGGAGE_LOSS",
-      "coverCode": "BAGGAGE_LOSS",
-      "coverName": "Утрата или кража багажа во время поездки"
-    },
-    {
-      "risks": "CIVIL_LIABILITY",
-      "coverCode": "CIVIL_LIABILITY",
-      "coverName": "Гражданская ответственность за вред, причиненный третьим лицам (в поездке или по месту жительства)"
-    },
-    {
-      "risks": "TERROR_ACT",
-      "coverCode": "TERROR_ACT",
-      "coverName": "Травма или смерть в результате террористического акта или диверсии"
-    },
-    {
-      "risks": "SPORT_EXTENSION",
-      "coverCode": "SPORT_EXTENSION",
-      "coverName": "Занятие спортом (включая любительские соревнования и активный отдых)"
-    },
-    {
-      "risks": "ICU_DAILY_BENEFIT",
-      "coverCode": "ICU_DAILY_BENEFIT",
-      "coverName": "Пребывание в отделении реанимации и интенсивной терапии (фиксированная выплата за сутки)"
+      "risks": "MEDICAL_EXPENSE",
+      "coverCode": "PAX_MEDICAL",
+      "coverName": "Медицинские расходы пассажира"
     },
     {
       "risks": "",
-      "coverCode": "COMPLEX_DISEASE",
-      "coverName": "Покрытие по договору НС (комплексное)"
+      "coverCode": "RATING_COVER",
+      "coverName": "Техническое покрытие для расчета премии"
     }
   ],
   "mpPhType": "",
@@ -4222,155 +3930,7 @@
     {
       "fileCode": "policy",
       "fileName": "policy"
-    },
-    {
-      "fileCode": "kid",
-      "fileName": "kid"
     }
   ],
-  "mpCoefficients": [
-    {
-      "varCode": "k_age",
-      "varName": "Возрастной тариф НС",
-      "altVarCode": "",
-      "altVarValue": 0,
-      "errorTextIfNotFound": null,
-      "columns": [
-        {
-          "nr": 1,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": "<=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 2,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        }
-      ]
-    },
-    {
-      "varCode": "k_period",
-      "varName": "Коэф. за период",
-      "altVarCode": "",
-      "altVarValue": 0,
-      "errorTextIfNotFound": null,
-      "columns": [
-        {
-          "nr": 1,
-          "varCode": "pl_TermMonths",
-          "varDataType": "NUMBER",
-          "conditionOperator": "=",
-          "sortOrder": "NONE"
-        }
-      ]
-    },
-    {
-      "varCode": "k_Nsib_Tariff",
-      "varName": "НСиБ тариф ( возраст, пол, период страхования )",
-      "altVarCode": "",
-      "altVarValue": 0,
-      "errorTextIfNotFound": null,
-      "columns": [
-        {
-          "nr": 1,
-          "varCode": "pl_TermMonths",
-          "varDataType": "NUMBER",
-          "conditionOperator": "<=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 2,
-          "varCode": "pl_TermMonths",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 3,
-          "varCode": "io_gender",
-          "varDataType": "STRING",
-          "conditionOperator": "=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 4,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": "=",
-          "sortOrder": "NONE"
-        }
-      ]
-    },
-    {
-      "varCode": "SI_ACCIDENT_Check",
-      "varName": "Проверка страх.сумм. для покрытий НС",
-      "altVarCode": "",
-      "altVarValue": null,
-      "errorTextIfNotFound": "Страховая сумма не соответствует условиям тарифа",
-      "columns": [
-        {
-          "nr": 1,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": "<=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 2,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 3,
-          "varCode": "io_sumInsured",
-          "varDataType": "NUMBER",
-          "conditionOperator": "<=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 4,
-          "varCode": "io_sumInsured",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        }
-      ]
-    },
-    {
-      "varCode": "SI_DISEASE_Check",
-      "varName": "Лимит страх.сумм. для болезней",
-      "altVarCode": "",
-      "altVarValue": null,
-      "errorTextIfNotFound": "Страховая сумма не соответствует условиям тарифа",
-      "columns": [
-        {
-          "nr": 1,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": "<=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 2,
-          "varCode": "io_age_issue",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        },
-        {
-          "nr": 3,
-          "varCode": "io_sumInsured",
-          "varDataType": "NUMBER",
-          "conditionOperator": ">=",
-          "sortOrder": "NONE"
-        }
-      ]
-    }
-  ]
+  "mpCoefficients": []
 }

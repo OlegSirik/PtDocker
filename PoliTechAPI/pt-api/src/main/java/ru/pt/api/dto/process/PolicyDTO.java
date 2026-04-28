@@ -73,8 +73,8 @@ public class PolicyDTO {
     @JsonProperty("statusCode")
     private String statusCode;
 
-    @JsonProperty("insCompanyId")
-    private Long insCompanyId;
+//    @JsonProperty("insCompanyId")
+//    private Long insCompanyId;
 
     private ProcessList processList;
 
@@ -126,13 +126,13 @@ public class PolicyDTO {
         this.productCode = productCode;
     }
 
-    public Long getInsCompanyId() {
-            return insCompanyId;
-    }
+ ///  public Long getInsCompanyId() {
+ //           return insCompanyId;
+ //   }
 
-    public void setInsCompanyId(Long insCompanyId) {
-        this.insCompanyId = insCompanyId;
-    }
+ //   public void setInsCompanyId(Long insCompanyId) {
+ //       this.insCompanyId = insCompanyId;
+ //   }
     
     public String getWaitingPeriod() {
         return waitingPeriod;

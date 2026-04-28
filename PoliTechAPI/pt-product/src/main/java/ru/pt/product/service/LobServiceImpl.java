@@ -26,8 +26,10 @@ import ru.pt.product.repository.LobRepository;
 import ru.pt.api.dto.product.LobVar;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import ru.pt.api.dto.exception.UnauthorizedException;
@@ -138,6 +140,39 @@ public class LobServiceImpl implements LobService {
         payload.setId(nextId);
 
         //payload = syncCoversVars(payload);
+        // проблема при импорте продукта с другой БД не совпадают id и иззза этого не работают некоторые фичи.
+        // поэтому при создании лоба берем модель документа из справочника и по varCode удаляем ненужное
+        List<LobVar> schemaLob = schemaService.getAttributes( tenantId, SchemaService.INSURANCE_CONTRACT);
+        if (schemaLob == null) {
+            throw new UnprocessableEntityException("Schema LOB not found", "SCHEMA", "NOT_FOUND", "schemaLob");
+        }
+
+        Set<String> payloadVarCodes = new HashSet<>();
+        for (LobVar payloadVar : payload.getMpVars()) {
+            if (!payloadVar.getIsDeleted()) {
+                payloadVarCodes.add(payloadVar.getVarCode());
+            }
+        }
+
+        Set<String> schemaVarCodes = new HashSet<>();
+        for (LobVar schemaVar : schemaLob) {
+            schemaVarCodes.add(schemaVar.getVarCode());
+        }
+
+        for (LobVar schemaVar : schemaLob) {
+            if (!payloadVarCodes.contains(schemaVar.getVarCode())) {
+                schemaVar.setIsDeleted(true);
+            }
+        }
+
+        // добавить в новый массив текстовые переменные из старого
+        for ( LobVar mpVar : payload.getMpVars()) {
+            if ( "TEXT".equals(mpVar.getVarType()) && !schemaVarCodes.contains(mpVar.getVarCode()) ) {
+                schemaLob.add(mpVar);
+            }
+        }
+
+        payload.setMpVars(schemaLob);
 
         LobEntity lob = new LobEntity();
         lob.setId(nextId);

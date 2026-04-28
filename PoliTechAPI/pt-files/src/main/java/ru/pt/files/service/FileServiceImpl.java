@@ -207,6 +207,11 @@ public class FileServiceImpl implements FileService {
     @Override
     public byte[] process(Long id, VariableContext keyValues) {
         
+        logger.debug("#####################  PROCESS ###################################");
+        keyValues.getValues().forEach(
+            (code, value) -> logger.debug("Processing variable: code={}, value={}", code, value)
+        );
+
         logger.debug("Processing PDF file with id: {}", id);
         FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), id)
                 .orElseThrow(() -> new NotFoundException("File not found"));
@@ -283,6 +288,10 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public byte[] getFile(Integer fileId, VariableContext keyValues) {
+
+        keyValues.getValues().forEach(
+            (code, value) -> logger.debug("Processing variable: code={}, value={}", code, value)
+        );
 
         if (fileId == null) {
             throw new NotFoundException("File ID is not found");

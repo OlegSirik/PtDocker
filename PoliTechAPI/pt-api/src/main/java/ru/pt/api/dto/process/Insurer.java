@@ -21,15 +21,10 @@ public class Insurer {
     @JsonProperty("contractRepresentative")
     private String contractRepresentative;
 
-    @JsonProperty("organization")
-    private Organization organization;
+    @JsonProperty("code")
+    private String code;
 
-    @JsonProperty("addresses")
-    private List<Address> addresses;
-
-    @JsonProperty("identifiers")
-    private List<Identifier> identifiers;
-
-    @JsonProperty("contactInfo")
-    private ContactInfo contactInfo;
+    @JsonProperty("name")
+    private String name;
+    
 }

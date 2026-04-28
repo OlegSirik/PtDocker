@@ -27,4 +27,9 @@ public class UnprocessableEntityException extends RuntimeException {
     public ErrorModel getErrorModel() {
         return errorModel;
     }
+
+    public UnprocessableEntityException(String message, String domain, String reason, String field) {
+        super(message);
+        this.errorModel = new ErrorModel(422, message, domain, reason, field);
+    }
 }

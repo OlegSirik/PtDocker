@@ -42,7 +42,8 @@ export class InsCompanyEditComponent implements OnInit {
     code: '',
     name: '',
     status: 'ACTIVE',
-    representativeString: '',
+    contractText: '',
+    contractRepresentative: '',
   };
   isNewRecord = true;
   loading = false;
