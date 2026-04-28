@@ -195,6 +195,14 @@ public class ProductServiceImpl implements ProductService {
         log.info("Saved product version {} {} {} {}", pv.getId(), pv.getVersionNo(), pv.getTid(), pv.getProductId());
 
         log.info("Getting lob data by code {}", productVersionModel.getLob());
+
+        Set<String> newVarCodes = new HashSet<>();
+        for (PvVar var : productVersionModel.getVars()) {
+            newVarCodes.add(var.getVarCode());
+        }
+
+        productVersionModel.setVars(new ArrayList<>());
+        
         LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
         if (lob != null) {
             if (productVersionModel.getVars() == null) {
@@ -218,9 +226,8 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setIsTarifFactor(false);
                 pvVar.setName(var.getName());
 
-                if (pvVar.getVarCode().startsWith("co_")) {
-                    pvVar.setIsTarifFactor(true);
-                    pvVar.setIsSystem(true);
+                if ( !newVarCodes.contains(var.getVarCode()) ) {
+                    pvVar.setIsDeleted(true);
                 }
 
                 productVersionModel.getVars().add(pvVar);
@@ -228,6 +235,8 @@ public class ProductServiceImpl implements ProductService {
         } else {
             log.warn("No variables copied from lob!!");
         }
+
+
 
         productVersionModel.setPhType( lob.getMpPhType() );
         productVersionModel.setIoType( lob.getMpInsObjectType() );

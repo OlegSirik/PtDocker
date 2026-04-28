@@ -48,6 +48,7 @@ export class ProductsComponent implements OnInit {
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
   private insCompanyService = inject(InsCompanyService);
+  private productService = inject(ProductService);
 
 
   products: ProductList[] = [];
@@ -112,6 +113,47 @@ export class ProductsComponent implements OnInit {
         this.router.navigate(['/', this.authService.tenant, 'product', createdProduct.id, 'version', versionNo]);
       }
     });
+  }
+
+  loadProductFromFile(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json,text/plain';
+    input.onchange = (event: Event) => {
+      const file = (event.target as HTMLInputElement)?.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(String(reader.result ?? '{}')) as Product;
+          this.productService.createProduct(payload).subscribe({
+            next: (created) => {
+              if (created?.id == null) {
+                this.snack.open('Ответ API не содержит id продукта', 'OK', { duration: 3000 });
+                return;
+              }
+              const versionNo = created.versionNo ?? 0;
+              this.snack.open('Продукт загружен из файла', 'OK', { duration: 2000 });
+              this.router.navigate(['/', this.authService.tenant, 'product', created.id, 'version', versionNo]);
+            },
+            error: (error) => {
+              const message = this.productService.handleHttpError(error);
+              this.snack.open(message || 'Ошибка загрузки из файла', 'OK', { duration: 4000 });
+            },
+          });
+        } catch {
+          this.snack.open('Файл содержит некорректный JSON', 'OK', { duration: 4000 });
+        }
+      };
+      reader.onerror = () => {
+        this.snack.open('Не удалось прочитать файл', 'OK', { duration: 4000 });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   editProduct(product: ProductList, event?: Event): void {
