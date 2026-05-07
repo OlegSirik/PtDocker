@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Member of "{{ role }}"</h2>
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>User login</mat-label>
+      <input matInput formControlName="userLogin" />
+      <mat-error *ngIf="form.get('userLogin')?.hasError('required')">
+        Логин обязателен
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSave()" [disabled]="form.invalid">
+    Save
+  </button>
+</mat-dialog-actions>
+

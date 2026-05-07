@@ -19,7 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
   ],
   template: `
     <h2 mat-dialog-title>{{ data.title || 'Введите текст' }}</h2>
-    <mat-dialog-content>
+    <mat-dialog-content style="padding-top: 20px;">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ data.label || 'Значение' }}</mat-label>
         <input matInput [(ngModel)]="textValue" required>

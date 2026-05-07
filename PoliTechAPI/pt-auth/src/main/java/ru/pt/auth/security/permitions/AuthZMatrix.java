@@ -105,7 +105,14 @@ public final class AuthZMatrix {
 
         ROLE_PERMISSIONS.put(AuthZ.Role.ACCOUNT, Set.of(
             formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.SELL),
-            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.QUOTE)
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.QUOTE),
+
+            formatPermission(AuthZ.ResourceType.PRODUCT, AuthZ.Action.VIEW),
+            formatPermission(AuthZ.ResourceType.INS_COMPANY, AuthZ.Action.VIEW),
+
+            formatPermission(AuthZ.ResourceType.PRODUCT, AuthZ.Action.SELL),
+            formatPermission(AuthZ.ResourceType.PRODUCT, AuthZ.Action.QUOTE)
+
         ));
 
         // AGENT — только VIEW продукта и POLICY

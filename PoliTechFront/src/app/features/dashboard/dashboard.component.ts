@@ -15,6 +15,7 @@ import {
   DashboardChartPoint,
   DashboardBarPoint
 } from '../../shared/services/api/dashboard.service';
+import { ThemeService } from '../../shared/theme/theme.service';
 import {
   Chart,
   LineController,
@@ -48,6 +49,7 @@ import {
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private dashboardService = inject(DashboardService);
+  private themeService = inject(ThemeService);
 
   @ViewChild('chartCanvas') chartCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('overviewProductsChartCanvas') overviewProductsChartCanvas?: ElementRef<HTMLCanvasElement>;
@@ -462,5 +464,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.clientsChartInstance.destroy();
       this.clientsChartInstance = null;
     }
+  }
+
+  get isDarkMode(): boolean {
+    return this.themeService.isDarkMode;
   }
 }

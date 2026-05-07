@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY) 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Cover {
 
@@ -31,6 +32,8 @@ public class Cover {
     @JsonProperty("premium")
     private BigDecimal premium;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("deductible")
     private Deductible deductible;
 
     @JsonProperty("LimitMin")
@@ -109,28 +112,6 @@ public class Cover {
 
     public void setDeductible(Deductible deductible) {
         this.deductible = deductible;
-    }
-
-    public void setDeductibleId(Long deductibleId) {
-        if (this.deductible == null) {
-            this.deductible = new Deductible();
-        }
-        this.deductible.setId(deductibleId);
-    }
-
-    public void setDeductibleText(String deductibleText) {
-        if (this.deductible == null) {
-            this.deductible = new Deductible();
-        }
-        this.deductible.setText(deductibleText);
-    }   
-
-    public void setDeductible(Long deductibleId, String deductibleText) {
-        if (this.deductible == null) {
-            this.deductible = new Deductible();
-        }
-        this.deductible.setId(deductibleId);
-        this.deductible.setText(deductibleText);
     }
 
     public BigDecimal getLimitMin() {

@@ -126,6 +126,23 @@ export interface AccountToken {
   token: string;
 }
 
+export interface AccountMemberRequest {
+  accountId: number;
+  role: string;
+  userLogin: string;
+  fullName: string;
+  position: string;
+  password: string;
+}
+
+export interface AccountMember {
+  id?: number;
+  role?: string;
+  userLogin: string;
+  fullName?: string;
+  position?: string;
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -143,7 +160,7 @@ export class AccountService {
   }
 
   getAccounts(id: number): Observable<Account[]> {
-    return this.http.get<Account[]>(this.getBaseUrl() + `/admin/accounts/${id}/accounts`);
+    return this.http.get<Account[]>(this.getBaseUrl() + `/admin/accounts/${id}/children?nodeType=ACCOUNT`);
   }
 
   createAccount(account: Account): Observable<Account> {
@@ -161,11 +178,11 @@ export class AccountService {
   // groups
 
   getGroups(parentId: number): Observable<AccountGroup[]> {
-    return this.http.get<AccountGroup[]>(this.getBaseUrl() + `/admin/accounts/${parentId}/groups`);
+    return this.http.get<AccountGroup[]>(this.getBaseUrl() + `/admin/accounts/${parentId}/children?nodeType=GROUP`);
   }
 
-  createGroup(group: AccountGroup): Observable<AccountGroup> {
-    return this.http.post<AccountGroup>(this.getBaseUrl() + `/admin/accounts/${group.parentId}/groups`, group);
+  createGroup(group: Account): Observable<Account> {
+    return this.http.post<Account>(this.getBaseUrl() + `/admin/accounts/${group.parentId}/children`, group);
   }
 /*
   updateGroup(group: Account): Observable<Account> {
@@ -179,7 +196,7 @@ export class AccountService {
   // groups
 
   getSubs(parentId: number): Observable<SubAccount[]> {
-    return this.http.get<SubAccount[]>(this.getBaseUrl() + `/admin/accounts/${parentId}/subaccounts`);
+    return this.http.get<SubAccount[]>(this.getBaseUrl() + `/admin/accounts/${parentId}/children?nodeType=SUB`);
   }
 
   createSub(sub: SubAccount): Observable<SubAccount> {
@@ -229,7 +246,7 @@ export class AccountService {
   
   // ACCOUNT TOKENS
   getTokens(accountId: number): Observable<AccountToken[]> {
-    return this.http.get<AccountToken[]>(this.getBaseUrl() + `/admin/accounts/${accountId}/tokens`);
+    return this.http.get<AccountToken[]>(this.getBaseUrl() + `/admin/accounts/${accountId}/children?nodeType=TOKEN`);
   }
 
   addToken(accountId: number, token: string): Observable<AccountToken> {
@@ -238,6 +255,21 @@ export class AccountService {
   
   deleteToken(accountId: number, token: string): Observable<void> {
     return this.http.delete<void>(this.getBaseUrl() + `/admin/accounts/${accountId}/tokens/${token}`);
+  }
+
+  // ACCOUNT MEMBERS (admins)
+  addMember(accountId: number, role: string, userLogin: string, fullName: string, position: string, password: string): Observable<any> {
+    const body: AccountMemberRequest = { accountId, role, userLogin, fullName, position, password };
+    return this.http.post<any>(this.getBaseUrl() + `/admin/accounts/${accountId}/members`, body);
+  }
+
+  getMembers(accountId: number, role?: string): Observable<AccountMember[]> {
+    const query = role ? `?role=${encodeURIComponent(role)}` : '';
+    return this.http
+      .get<AccountMember[]>(this.getBaseUrl() + `/admin/accounts/${accountId}/members${query}`)
+      .pipe(
+        catchError((_error: HttpErrorResponse) => of([]))
+      );
   }
   
   //

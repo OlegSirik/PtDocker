@@ -61,6 +61,24 @@
   margin: 0 auto;
 }
 
+.formly-forms-layout {
+  display: flex;
+  align-items: flex-start;
+//  gap: 24px;
+}
+
+.formly-forms-main {
+  flex: 0 0 80%;
+  max-width: 80%;
+  min-width: 0;
+}
+
+.formly-forms-right {
+  flex: 0 0 20%;
+  max-width: 20%;
+  min-width: 0;
+}
+
 .form-card {
   margin-bottom: 24px;
 
@@ -89,6 +107,7 @@
  * Обёртка .grid-row с display: contents — дочерние mat-form-field участвуют в сетке.
  */
 .formly-forms-container .grid-layout {
+  padding: 24px;
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   column-gap: 16px;
@@ -164,31 +183,26 @@
 }
 
 .policy-contract {
+  
   display: flex;
   flex-direction: column;
-  gap: 12px;
   min-width: 0;
+  grid-column: 1 / -1;
+  margin: 24px;
 
-  > h3 {
-    margin: 0 0 4px 0;
-  }
 }
 
 .policy-pair-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  align-items: flex-start;
+  align-items: start;
+  margin: 24px;
 
+  > mat-form-field,
   > .form-field {
-    flex: 1 1 200px;
-    min-width: 0;
-  }
-
-  > .form-field.policy-contract-date-field {
-    flex: 0 1 200px;
-    max-width: 200px;
     width: 100%;
+    min-width: 0;
   }
 }
 

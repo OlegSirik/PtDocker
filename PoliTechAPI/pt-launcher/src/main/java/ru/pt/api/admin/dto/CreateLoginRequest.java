@@ -9,6 +9,9 @@ public class CreateLoginRequest {
     private String userLogin;
     private String fullName;
     private String position;
+    private String password;
+    private Long accountId;
+    private String role;
 
     // Getters and Setters
     public String getTenantCode() {
@@ -41,6 +44,30 @@ public class CreateLoginRequest {
 
     public void setPosition(String position) {
         this.position = position;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
 

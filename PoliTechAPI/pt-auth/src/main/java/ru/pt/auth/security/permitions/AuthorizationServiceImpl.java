@@ -42,9 +42,18 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
         Long actingAccountId = user.getActingAccountId();
 
+        Long parentId = user.getActingAccountId();
+        Long childId = resourceAccountId;;
+
+        if (resourceType == AuthZ.ResourceType.PRODUCT || resourceType == AuthZ.ResourceType.INS_COMPANY) {
+            // продукт приинадлежит клиенту, поэтому проверяем вверх
+            parentId = resourceAccountId;
+            childId = user.getAccountId();
+        }
+
         // Account hierarchy check (SQL)
         if (resourceAccountId != null) {
-            if (!accountDataService.isParent(actingAccountId, resourceAccountId)) {
+            if (!accountDataService.isParent(parentId, childId)) {
                 if (log.isTraceEnabled()) {
                     log.trace("Access denied by hierarchy: actingAccountId={} !> resourceAccountId={}",
                             actingAccountId, resourceAccountId);

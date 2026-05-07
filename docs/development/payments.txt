@@ -1,0 +1,98 @@
+# Оплата премии
+
+## Взносы
+
+После создания договора, по данным ( даты, периодичность оплаты, премия, валюта) создается график взносов дял оплаты премии по договору страхования.
+
+Таблица
+pmt_INSTALLMENTs (
+    id                Long PK sequence pmt_seq,
+    policy_id         Long NOT NULL reference to poicy_index,
+    installment_nr    Long NOT NULL,
+
+    period_from       DATE NOT NULL,
+    period_to         DATE NOT NULL,
+
+    due_date          DATE,          -- когда должен быть оплачен
+    amount            DECIMAL(18,2) NOT NULL,
+    currency          VARCHAR(3),
+
+    status            VARCHAR(20),   -- UNPAID / PARTIAL / PAID / OVERDUE
+
+    created_at        TIMESTAMP,
+    updated_at        TIMESTAMP
+)
+
+ptm_installment_templates
+    id long pk
+    installment_type long 
+    installmaent_template json
+
+    installmaent_template - { installment_nr: 1, percent: 50, period 6 }
+
+
+create entity
+
+## Оплата
+
+Попытки оплаты взносов фиксируются в таюлице pmt_payments
+
+pmt_PAYMENT (
+    id                Long PK sequence pmt_seq,
+
+    amount            DECIMAL(18,2) NOT NULL,
+    currency          VARCHAR(3),
+
+    payment_method    VARCHAR(20),  
+        -- CASH / CARD / SBP / BANK_TRANSFER
+
+    status            VARCHAR(20),
+        -- INITIATED / SUCCESS / FAILED / CANCELLED
+
+    paid_at           TIMESTAMP,
+    received_at       TIMESTAMP,
+
+    external_id       VARCHAR(100),  -- провайдер / чек / транзакция
+
+    operator_id       UUID,          -- если CASH (кассир)
+
+    comment           TEXT,
+
+    created_at        TIMESTAMP
+)
+
+
+
+pmt_ALLOCATIONS
+    installment_id long not null
+    payment_id long not null
+    amount long not null
+    balance long
+
+сервис payment_service
+
+    void    create_installment(policy_id, start_date, amount, currence, installment_type ) 
+    создает график оплаты для договора.
+    нужно по installment_type выбрать из installmaent_template
+    для каждой строки вставляем записи в pmt_INSTALLMENTs где сумма = amount * percent, date_from, date_to - start_date + period 
+
+    void create_payment(installment_id,     payment_method  )
+    вставить в pmt_PAYMENT данные по installment и метод оплаты 
+    статус = INITIATED
+
+    void payment_status(payment_id, status)
+    если статус по payment_id не равен INITIATED венуть ошибку
+    if status = SUCCESS вставить запись в pmt_ALLOCATIONS
+    если    FAILED / CANCELLED просто поменять статус payments 
+
+контроллер
+POST /installments/{id}/payments
+вызвать void create_payment
+
+POST /payments/{id}
+вызвать payment_status
+
+
+
+
+

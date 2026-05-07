@@ -43,6 +43,8 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
 
     @Override
     public ProductRole getProductRole(Long accountId, Long productId) {
+        String a1 = accountId.toString();
+        String a2 = productId.toString();
         List<Map<String, Object>> productRoles = productRoleRepository.findProductRoleForAccountId(accountId, productId);
         if (log.isTraceEnabled()) {
             log.trace("getProductRole(accountId={}, productId={}) -> {} raw roles", accountId, productId, productRoles.size());
@@ -87,6 +89,7 @@ public class AccountDataService implements AccountProductRoles, AccountHierarchy
 
     @Override
     public boolean isParent(Long parent, Long child) {
+        log.info("isParent(parent={}, child={})", parent, child);
         boolean result = accountRepository.iCanSeeResource(parent, child);
         if (log.isTraceEnabled()) {
             log.trace("isParent(parent={}, child={}) -> {}", parent, child, result);

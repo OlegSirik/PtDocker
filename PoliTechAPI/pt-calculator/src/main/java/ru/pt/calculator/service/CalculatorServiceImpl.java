@@ -721,20 +721,23 @@ public class CalculatorServiceImpl implements CalculatorService {
             logger.warn("Calculator not found or has no formulas, skipping");
             return;
         }
+
         
-        logger.debug("Calculator loaded: {} variables, {} formulas, {} coefficients", 
-                model.getVars().size(), model.getFormulas().size(), model.getCoefficients().size());
+//        logger.debug("Calculator loaded: {} variables, {} formulas, {} coefficients", model.getVars().size(), model.getFormulas().size(), model.getCoefficients().size());
 
         // Добавить переменные калькулятора в контекст.
         model.getVars().forEach(v -> {
             PvVarDefinition varDef = PvVarDefinition.fromPvVar(v);
             ctx.putDefinition(varDef);
 
+
             if (v.getVarType().equals("CONST")) {
                 ctx.put(v.getVarCode(), new BigDecimal(v.getVarValue()));
             };
         });
-/*         
+
+
+        /*         
         System.out.println("=== Variable Definitions ===");
         ctx.getDefinitions().forEach(def -> {
             System.out.println("varCode: " + def.getCode() + ", varDataType: " + def.getType());
@@ -793,6 +796,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             logger.trace("Stored result: {}={}", line.getExpressionResult(), result);
         }
     }
+
     logger.info("Calculator execution completed");
 }
 

@@ -1,6 +1,8 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.AllArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.CreateLoginRequest;
@@ -9,7 +11,7 @@ import ru.pt.api.security.SecuredController;
 import ru.pt.auth.model.LoginDto;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.LoginManagementService;
-
+import ru.pt.auth.service.admin.AdminManagementService;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -22,19 +24,15 @@ import java.util.Map;
  * tenantCode: pt, vsk, msg
  */
 @RestController
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin/logins")
-public class LoginManagementController extends SecuredController {
+public class LoginManagementController {
 
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
 
     private final LoginManagementService loginManagementService;
-
-    public LoginManagementController(SecurityContextHelper securityContextHelper,
-                                    LoginManagementService loginManagementService) {
-        super(securityContextHelper);
-        this.loginManagementService = loginManagementService;
-    }
+    private final AdminManagementService adminManagementService;
 
     /**
      * ublic record LoginDto(
@@ -55,13 +53,30 @@ public class LoginManagementController extends SecuredController {
             @PathVariable String tenantCode,
             @RequestBody CreateLoginRequest request) {
     
-            return ResponseEntity.ok(loginManagementService.createLogin(
+            LoginDto login = loginManagementService.createLogin(
                     tenantCode,
                     request.getUserLogin(),
                     request.getFullName(),
                     request.getPosition()
-            ));
-    }
+            );
+
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            loginManagementService.setPassword(
+                tenantCode,
+                request.getUserLogin(),
+                request.getPassword()
+            );
+            }
+
+            if (request.getAccountId() != null && request.getRole() != null) {
+                adminManagementService.setAccountMember(
+                        request.getAccountId(), 
+                        request.getRole(), 
+                        login.userLogin());
+            }
+
+            return ResponseEntity.ok(login);
+}
 
     /**
      * Обновление данных пользователя

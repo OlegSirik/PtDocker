@@ -58,6 +58,9 @@ import ru.pt.product.repository.AttributeDefRepository;
 
 import ru.pt.api.dto.refs.RecordStatus;
 import ru.pt.product.repository.InsuranceCompanyRepository;
+import ru.pt.auth.service.AccountDataService;
+import ru.pt.api.dto.auth.ProductRole;
+import ru.pt.api.service.auth.AccountService;
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +81,8 @@ public class ProductServiceImpl implements ProductService {
     private final InsuranceCompanyRepository insuranceCompanyRepository;
     private final AttributeDefRepository attributeDefRepository;
     private final SchemaService schemaService;
+    private final AccountDataService accountDataService;
+    private final AccountService accountService;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -98,15 +103,15 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> listSummaries(Long tenantId, Long insComp) {
-
+//getProductRolesByAccountIdRaw
         authService.check(
             getCurrentUser(), 
             ResourceType.PRODUCT, 
             null,   // resourceId - list all
-            null,   // resourceAccountId - list all
+            tenantId,   // resourceAccountId - list all
             Action.LIST);
 
-        return productRepository.listActiveSummaries(tenantId, insComp).stream()
+        List<Product> products = productRepository.listActiveSummaries(tenantId, insComp).stream()
                 .map(r -> {
                     Product product = new Product();
                     product.setId((Long) r[0]);
@@ -119,6 +124,15 @@ public class ProductServiceImpl implements ProductService {
                     return product;
                 })
                 .collect(Collectors.toList());
+        
+        List<ProductRole> productRoles = accountDataService.getProductRolesByAccountIdRaw( getCurrentUser().getAccountId() );
+        Set<Long> allowedProductIds = productRoles.stream()
+                .map(ProductRole::roleProductId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        products.removeIf(product -> !allowedProductIds.contains(product.getId()));
+
+        return products;
     }
 
     @Override
@@ -202,7 +216,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productVersionModel.setVars(new ArrayList<>());
-        
+
         LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
         if (lob != null) {
             if (productVersionModel.getVars() == null) {
@@ -238,8 +252,8 @@ public class ProductServiceImpl implements ProductService {
 
 
 
-        productVersionModel.setPhType( lob.getMpPhType() );
-        productVersionModel.setIoType( lob.getMpInsObjectType() );
+//        productVersionModel.setPhType( lob.getMpPhType() );
+//        productVersionModel.setIoType( lob.getMpInsObjectType() );
 
         // если numberGeneratorDescription не задан, то создать его
         if (productVersionModel.getNumberGeneratorDescription() == null) {
@@ -276,6 +290,23 @@ public class ProductServiceImpl implements ProductService {
             pkg.setCalculatorId(calc.getId());
         });
 */
+        
+        ProductRole productRole = new ProductRole(
+                null,           // id
+                tenantId,       // tid
+                null,           // clientId
+                tenantId,       // accountId
+                saved.getId(),  // roleProductId
+                null,           // roleProductName
+                tenantId,       // roleAccountId
+                true,           // canRead
+                true,           // canQuote
+                true,           // canPolicy
+                true,           // canAddendum
+                true,           // canCancel
+                true            // canProlongate
+        );
+        accountService.grantProduct( tenantId, productRole);
         return productVersionModel;
     }
 
@@ -341,7 +372,11 @@ public class ProductServiceImpl implements ProductService {
             String.valueOf(productId),
             tenantId,
             Action.CREATE);
-
+/*
+Создание новой версии продукта на основе текущей весрии с прода и версии линии бизнеса.
+Словарь данных копируется из линии бизнеса
+Атрибуты которых нет в продукте помечаются как удаленные
+*/
         ProductEntity product = productRepository.findById(tenantId, productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
@@ -362,11 +397,35 @@ public class ProductServiceImpl implements ProductService {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
 
+        Set<String> productVarCodes = new HashSet<>();
+
+        for (PvVar var : productVersionModel.getVars()) {
+            productVarCodes.add(var.getVarCode());
+        }
+
+        LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
+
+        List<PvVar> newPvVars = new ArrayList<>();
+
+        lob.getMpVars().forEach(var -> {
+            if (!productVarCodes.contains(var.getVarCode())) {
+                PvVar pvVar = new PvVar(var);
+                if (!productVarCodes.contains(pvVar.getVarCode())) {
+                    pvVar.setIsDeleted(true);
+                }
+                newPvVars.add(pvVar);
+            }
+        });
+
+        productVersionModel.setVars(newPvVars);
+        
+
         productVersionModel.setVersionNo(newVersion);
         productVersionModel.setVersionStatus("DEV");
         productVersionModel.setInsCompanyId(product.getInsCompanyId());
 
         ProductVersionEntity pv = new ProductVersionEntity();
+        pv.setId(productVersionRepository.nextId());
         pv.setProductId(productId);
         pv.setVersionNo(newVersion);
         pv.setTid(tenantId);
@@ -903,18 +962,28 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductVersionModel getProductByCode(Long tenantId, String code, boolean forDev) {
 //        checkProductAccess(Action.VIEW, code);
-        authService.check(
+
+            /* 
+    AuthenticatedUser user,
+    Long productId,
+    AuthZ.Action action
+authService.check(
             getCurrentUser(), 
             ResourceType.PRODUCT, 
             code,  // productVersionModel.getId().toString(),   // resourceId - list all
             tenantId,   // resourceAccountId - list all
             Action.VIEW);
-
+*/
         log.info("Finging product by code {}, forDev - {}", code, forDev);
 
         var entity = productRepository.findByCode(tenantId, code)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
+        authService.checkProductAction(
+            getCurrentUser(),                    
+            entity.getId(),
+            Action.VIEW);
+        
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
 
         if (versionNo == null) {

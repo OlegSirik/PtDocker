@@ -154,9 +154,10 @@ public class PreProcessServiceImpl implements PreProcessService {
 
                     PvDeductible pvDeductible = getPvDeductible(pvCover, policyCover);
                     if (pvDeductible != null) {
-                        policyCover.setDeductibleId(pvDeductible.getId());
+                        policyCover.setDeductible(new Deductible(pvDeductible.getId(), pvDeductible.getText()));
                    } else {
-                        policyCover.setDeductibleId(null);
+                        //policyCover.setDeductible(new Deductible(null, null));
+                        
                     }
 
                     policyCover.setCover(new CoverInfo(pvCover.getCode(), "", ""));

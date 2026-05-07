@@ -50,7 +50,7 @@ public class AccountServiceImpl implements AccountService {
     
 
     @Override
-    public Account getAccountById(Long id) {
+    public Account getAccountById(Long tid, Long id) {
 
         authService.check(
             getCurrentUser(), 
@@ -59,46 +59,11 @@ public class AccountServiceImpl implements AccountService {
             id,  // resourceAccountid
             AuthZ.Action.VIEW);
 
-        return accountRepository.findById(id)
+        return accountRepository.findByTenantIdAndId(tid, id)
                 .map(accountMapper::toDto)
                 .orElseThrow(() -> new NotFoundException("Account not found"));
     }
 
-    @Override
-    @Transactional
-    public Account createGroup(String name, Long parentId) {
-        return createAccount(AccountNodeType.GROUP, name, parentId);
-    }
-
-    @Override
-    public List<Account> getGroups(Long parentId) {
-        authService.check(
-            getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.VIEW);
-
-        return accountDataService.getGroups(parentId);
-    } 
-
-    @Override
-    @Transactional
-    public Account createAccount(String name, Long parentId) {
-        return createAccount(AccountNodeType.ACCOUNT, name, parentId);
-    }
-
-    @Override
-    public List<Account> getAccounts(Long parentId) {
-        authService.check(
-            getCurrentUser(), 
-            AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.LIST);
-
-        return accountDataService.getAccounts(parentId);
-    }
 
     @Override
     public List<Account> getChildren(Long parentId, String nodeType) {
@@ -133,21 +98,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public Account createSubaccount(String name, Long parentId) {
-        return createAccount(AccountNodeType.SUB, name, parentId);
-    }
-
-    @Override
-    public List<Account> getSubaccounts(Long parentId) {
+    public void deleteAccount(Long tid, Long id) {
         authService.check(
             getCurrentUser(), 
             AuthZ.ResourceType.ACCOUNT, 
-            parentId.toString(),
-            parentId,
-            AuthZ.Action.VIEW);
+            id.toString(),
+            id,
+            AuthZ.Action.MANAGE);
 
-        return accountDataService.getSubaccounts(parentId);
-    } 
+        accountRepository.deleteById(id);
+    }
 
     /********************************** */
     @Override
@@ -398,7 +358,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /********************* */
-    public Account createAccount(AccountNodeType accountNodeType, String name, Long parentId) {
+    private Account createAccount(AccountNodeType accountNodeType, String name, Long parentId) {
         /* Проверить что есть доступ к account под который создается еще один */
         authService.check(
             getCurrentUser(), 

@@ -15,7 +15,9 @@ public interface AccountService {
      * @param id идентификатор аккаунта
      * @return учетная запись
      */
-    Account getAccountById(Long id);
+    Account getAccountById(Long tid, Long id);
+
+    void deleteAccount(Long tid, Long id);
 
     /**
      * Создать группу внутри клиента
@@ -23,9 +25,9 @@ public interface AccountService {
      * @param parentId идентификатор родителя
      * @return созданная запись
      */
-    Account createGroup(String name, Long parentId);
+//    Account createGroup(String name, Long parentId);
 
-    List<Account> getGroups(Long parentId);
+//    List<Account> getGroups(Long parentId);
 
     /**
      * Создать рабочий аккаунт
@@ -33,9 +35,9 @@ public interface AccountService {
      * @param parentId идентификатор группы
      * @return созданная запись
      */
-    Account createAccount(String name, Long parentId);
+//    Account createAccount(String name, Long parentId);
 
-    List<Account> getAccounts(Long parentId);
+//    List<Account> getAccounts(Long parentId);
 
     /**
      * Get child accounts, optionally filtered by node type.
@@ -60,9 +62,9 @@ public interface AccountService {
      * @param parentId идентификатор родительского аккаунта
      * @return созданная запись
      */
-    Account createSubaccount(String name, Long parentId);
+//    Account createSubaccount(String name, Long parentId);
 
-    List<Account> getSubaccounts(Long parentId);
+//    List<Account> getSubaccounts(Long parentId);
 
     /**
      * Получить все аккаунты для текущего пользователя

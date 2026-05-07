@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AccountService, Account, SubAccount, AccountGroup, Product, LoginAccount, AccountToken } from '../../../shared/services/account.service';
+import { AccountService, Account, SubAccount, AccountGroup, Product, LoginAccount, AccountToken, AccountMember } from '../../../shared/services/account.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { MatChipListbox, MatChipOption } from "@angular/material/chips";
 import { MatTabsModule } from '@angular/material/tabs';
@@ -16,6 +16,9 @@ import { AddGroupDialogComponent } from '../components/add-group-dialog/add-grou
 import { AddAccountDialogComponent } from '../components/add-account-dialog/add-account-dialog.component';
 import { ProductDialogComponent } from '../components/product-dialog/product-dialog.component';
 import { TextDialogComponent } from '../components/text-dialog/text-dialog.component';
+import { LoginDialogComponent } from '../components/login-dialog/login-dialog.component';
+import { MemberDialogComponent } from '../components/member-dialog/member-dialog.component';
+import { MemberLoginDialogComponent } from '../components/member-login-dialog/member-login-dialog.component';
 
 @Component({
   selector: 'app-account-detail-page',
@@ -53,7 +56,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
   products: Product[] = [];
   logins: LoginAccount[] = [];
   tokens: AccountToken[] = [];
-  admins: LoginAccount[] = [];
+  admins: AccountMember[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -108,11 +111,12 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
       subs: this.accountService.getSubs(this.accountId),
       products: this.accountService.getProducts(this.accountId),
       logins: this.accountService.getLogins(this.accountId),
-      tokens: this.accountService.getTokens(this.accountId)
+      tokens: this.accountService.getTokens(this.accountId),
+      admins: this.accountService.getMembers(this.accountId, 'GROUP_ADMIN')
     }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: ({ path, groups, accounts, subs, products, logins, tokens }) => {
+      next: ({ path, groups, accounts, subs, products, logins, tokens, admins }) => {
         this.path = path;
         this.groups = groups;
         this.accounts = accounts;
@@ -120,6 +124,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
         this.products = products;
         this.logins = logins;
         this.tokens = tokens;
+        this.admins = admins;
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -156,7 +161,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
           //path: ''
         };
 
-        this.accountService.createAccount(newAccount).subscribe({
+        this.accountService.createGroup(newAccount).subscribe({
           next: () => {
             this.loadChildAccounts();
           },
@@ -353,25 +358,37 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   // Logins
   addLogin() {
-    if (!this.account) return;
-    const dialogRef = this.dialog.open(TextDialogComponent, {
-      width: '400px',
-      data: { title: 'Add Login', label: 'Login' }
+    const dialogRef = this.dialog.open(MemberLoginDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {
+        accountId: this.accountId,
+        role: '',
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && this.account) {
-        const login: LoginAccount = { userLogin: result.trim() };
-        this.accountService.addLogin(this.accountId, login).subscribe({
-          next: (created: LoginAccount) => {
-            this.logins = [...this.logins, created];
-            this.snackBar.open('Login added', 'OK', { duration: 2000 });
-          },
-          error: (error: unknown) => {
-            console.error('Error adding login:', error);
-            this.snackBar.open('Error adding login', 'OK', { duration: 3000 });
-          }
-        });
+      if (result?.success) {
+        this.loadChildAccounts();
+        this.snackBar.open('Пользователь создан', 'OK', { duration: 2000 });
+      }
+    });
+  }
+
+  addMemberLogin() {
+    const dialogRef = this.dialog.open(MemberDialogComponent, {
+      width: '520px',
+      maxWidth: '90vw',
+      data: {
+        accountId: this.accountId,
+        role: '',
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.loadChildAccounts();
+        this.snackBar.open('Пользователь добавлен', 'OK', { duration: 2000 });
       }
     });
   }
@@ -444,7 +461,7 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
   addAdmin() {
     const dialogRef = this.dialog.open(TextDialogComponent, {
       width: '400px',
-      data: { title: 'Add Admin', label: 'Admin (email/login)' }
+      data: { title: 'Дать права администратора', label: 'Admin (email/login)' }
     });
 
     dialogRef.afterClosed().subscribe(result => {

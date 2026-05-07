@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>Пользователь</h2>
+<mat-dialog-content>
+  <form [formGroup]="memberForm">
+    <div class="pt-box info-card">
+      <div class="pt-box-body">
+        <div class="member-role-line">Member of "{{ data.role }}"</div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>ФИО</mat-label>
+          <input matInput formControlName="fullName" placeholder="Введите ФИО" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Должность</mat-label>
+          <input matInput formControlName="position" placeholder="Введите должность" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="pt-box credentials-card">
+      <div class="pt-box-body">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Логин</mat-label>
+          <input matInput formControlName="userLogin" required placeholder="Введите userLogin" />
+          <mat-error *ngIf="memberForm.get('userLogin')?.hasError('required')">
+            Логин обязателен для заполнения
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Пароль</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="Введите пароль" />
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSave()" [disabled]="memberForm.invalid">
+    Save
+  </button>
+</mat-dialog-actions>
+

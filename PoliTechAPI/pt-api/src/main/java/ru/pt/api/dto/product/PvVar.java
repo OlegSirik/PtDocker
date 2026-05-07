@@ -83,6 +83,22 @@ public class PvVar {
         this.varNr = varNr;
     }
 
+    public PvVar(LobVar lobVar) {
+        this.varCode = lobVar.getVarCode();
+        this.varName = lobVar.getVarName();
+        this.varPath = lobVar.getVarPath();
+        this.varType = lobVar.getVarType();
+        this.varValue = lobVar.getVarValue();
+        this.varDataType = lobVar.getVarDataType();
+        this.varCdm = lobVar.getVarCdm();
+        this.varNr = lobVar.getVarNr();
+        this.id = lobVar.getId();
+        this.parent_id = lobVar.getParent_id();
+        this.varList = lobVar.getVarList() != null ? lobVar.getVarList() : "";
+        this.isSystem = true;
+        this.isDeleted = false;
+        this.name = lobVar.getName();
+    }
     // Getters and Setters
     public String getVarCode() {
         return varCode;

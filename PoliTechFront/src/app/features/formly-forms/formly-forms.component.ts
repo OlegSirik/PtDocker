@@ -210,6 +210,13 @@ export class FormlyFormsComponent implements OnInit {
   ];
 
   /** Премия как текст: жирный размер задаётся в .premium-value; формат «999 999.00». */
+  formatPolicyNumber(value: string): string {
+    if (value === null || value === undefined || value === '') {
+      return '______________';
+    }
+    return value;
+  }
+  
   formatPremium(value: unknown): string {
     if (value === null || value === undefined || value === '') {
       return '—';
@@ -226,6 +233,42 @@ export class FormlyFormsComponent implements OnInit {
     const [intRaw, frac = '00'] = abs.toFixed(2).split('.');
     const intSpaced = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     return (negative ? '-' : '') + intSpaced + '.' + frac;
+  }
+
+  formatIssueDate(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+      return '______________';
+    }
+    const date = value instanceof Date ? value : new Date(String(value));
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    const dd = pad(date.getDate());
+    const mm = pad(date.getMonth() + 1);
+    const yyyy = date.getFullYear();
+    const hh = pad(date.getHours());
+    const mi = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+
+    const tz = Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+      .formatToParts(date)
+      .find((part) => part.type === 'timeZoneName')?.value ?? '';
+
+    return `${dd}.${mm}.${yyyy} ${hh}:${mi}:${ss}${tz ? ` ${tz}` : ''}`;
+  }
+
+  formatShortDate(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+      return '______________';
+    }
+    const date = value instanceof Date ? value : new Date(String(value));
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
   }
 
   constructor(
@@ -404,6 +447,16 @@ export class FormlyFormsComponent implements OnInit {
     this.policy.endDate = this.formatLocalDateToIsoDate(value);
   }
 
+  onWaitingPeriodChange(value: string): void {
+    this.policy.waitingPeriod = value ?? '';
+    this.recalculatePolicyDatesFromPeriods();
+  }
+
+  onPolicyTermChange(value: string): void {
+    this.policy.policyTerm = value ?? '';
+    this.recalculatePolicyDatesFromPeriods();
+  }
+
   onPolicyHolderDocDateIssueChange(value: Date | null): void {
     const id = this.ensureIdentifier();
     if (!value) {
@@ -437,6 +490,58 @@ export class FormlyFormsComponent implements OnInit {
     }
     const dt = new Date(s);
     return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  private recalculatePolicyDatesFromPeriods(): void {
+    const issueDate = this.parseIsoDateStringToLocalDate(this.policy?.issueDate);
+    if (!issueDate) {
+      return;
+    }
+
+    const startDate = this.addPeriod(issueDate, this.policy.waitingPeriod);
+    this.policy.startDate = this.formatLocalDateToIsoDate(startDate);
+    this.policyStartDateValue = startDate;
+
+    const endDate = this.addPeriod(startDate, this.policy.policyTerm);
+    this.policy.endDate = this.formatLocalDateToIsoDate(endDate);
+    this.policyEndDateValue = endDate;
+  }
+
+  private addPeriod(baseDate: Date, periodRaw: string | undefined): Date {
+    const period = (periodRaw ?? '').trim();
+    if (!period) {
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    }
+
+    const iso = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?$/i.exec(period);
+    if (iso) {
+      const years = Number(iso[1] || 0);
+      const months = Number(iso[2] || 0);
+      const days = Number(iso[3] || 0);
+      return new Date(baseDate.getFullYear() + years, baseDate.getMonth() + months, baseDate.getDate() + days);
+    }
+
+    const m = /^(\d+)\s*([a-zA-Zа-яА-Я]*)$/.exec(period);
+    if (!m) {
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    }
+
+    const amount = Number(m[1]);
+    const unit = (m[2] || 'd').toLowerCase();
+    if (!Number.isFinite(amount)) {
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    }
+
+    if (unit === 'm' || unit === 'mon' || unit === 'month' || unit === 'months' || unit === 'м' || unit === 'мес') {
+      return new Date(baseDate.getFullYear(), baseDate.getMonth() + amount, baseDate.getDate());
+    }
+    if (unit === 'y' || unit === 'yr' || unit === 'year' || unit === 'years' || unit === 'г' || unit === 'лет') {
+      return new Date(baseDate.getFullYear() + amount, baseDate.getMonth(), baseDate.getDate());
+    }
+    if (unit === 'w' || unit === 'week' || unit === 'weeks' || unit === 'н' || unit === 'нед') {
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + amount * 7);
+    }
+    return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + amount);
   }
 
   private formatLocalDateToIsoDate(d: Date): string {

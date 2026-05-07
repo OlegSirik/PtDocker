@@ -61,7 +61,7 @@
             </div>
 
             <div *ngIf="loadingChart" class="loading">Загрузка...</div>
-            <div class="chart-wrapper" *ngIf="!loadingChart && chartPoints.length">
+            <div class="chart-wrapper" [class.chart-wrapper-dark]="isDarkMode" *ngIf="!loadingChart && chartPoints.length">
               <canvas #chartCanvas></canvas>
             </div>
             <div *ngIf="!loadingChart && !chartPoints.length" class="empty-state">
@@ -77,7 +77,7 @@
                 <h3>Продажи по продуктам (Top 5)</h3>
               </div>
               <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
-              <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
+              <div class="chart-wrapper" [class.chart-wrapper-dark]="isDarkMode" *ngIf="!loadingProductsChart && productsChartPoints.length">
                 <canvas #overviewProductsChartCanvas></canvas>
               </div>
               <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
@@ -92,7 +92,7 @@
                 <h3>Продажи по клиентам (Top 5)</h3>
               </div>
               <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
-              <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
+              <div class="chart-wrapper" [class.chart-wrapper-dark]="isDarkMode" *ngIf="!loadingClientsChart && clientsChartPoints.length">
                 <canvas #overviewClientsChartCanvas></canvas>
               </div>
               <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">
@@ -112,7 +112,7 @@
               <h3>Sales by products</h3>
             </div>
             <div *ngIf="loadingProductsChart" class="loading">Загрузка...</div>
-            <div class="chart-wrapper" *ngIf="!loadingProductsChart && productsChartPoints.length">
+            <div class="chart-wrapper" [class.chart-wrapper-dark]="isDarkMode" *ngIf="!loadingProductsChart && productsChartPoints.length">
               <canvas #productsChartCanvas></canvas>
             </div>
             <div *ngIf="!loadingProductsChart && !productsChartPoints.length" class="empty-state">
@@ -131,7 +131,7 @@
               <h3>Sales by clients</h3>
             </div>
             <div *ngIf="loadingClientsChart" class="loading">Загрузка...</div>
-            <div class="chart-wrapper" *ngIf="!loadingClientsChart && clientsChartPoints.length">
+            <div class="chart-wrapper" [class.chart-wrapper-dark]="isDarkMode" *ngIf="!loadingClientsChart && clientsChartPoints.length">
               <canvas #clientsChartCanvas></canvas>
             </div>
             <div *ngIf="!loadingClientsChart && !clientsChartPoints.length" class="empty-state">

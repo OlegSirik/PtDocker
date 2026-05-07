@@ -1,17 +1,18 @@
 package ru.pt.api.admin;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.model.AdminResponse;
+import ru.pt.auth.model.LoginDto;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.admin.AdminManagementService;
 import ru.pt.api.dto.exception.BadRequestException;
-
+import ru.pt.auth.service.LoginManagementService;
 import java.util.List;
 
 
@@ -24,15 +25,16 @@ import java.util.List;
  * /account/{id}/roles
  */
 @RestController
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin")
 public class AdminManagementController {
 
     private final AdminManagementService adminManagementService;
+    private final LoginManagementService loginManagementService;
 
-    public AdminManagementController(SecurityContextHelper securityContextHelper,
-                                    AdminManagementService adminManagementService) {
-        this.adminManagementService = adminManagementService;
+    private boolean notNull(String value) {
+        return value != null && !value.isBlank();
     }
 
     @GetMapping("/accounts/{accountId}/members")
@@ -50,6 +52,24 @@ public class AdminManagementController {
             @PathVariable Long accountId,
             @RequestBody AddMemberRequest request) {        
         
+        // Проверить что такой логин уже есть
+        LoginDto login = loginManagementService.getLoginByUserLogin(tenantCode, request.userLogin());
+
+        // Если уже есть, но передали данные для создания логина то вернуть ошибку
+        if ( notNull(request.position()) || notNull(request.fullName()) || notNull(request.password())  )  {
+            if ( login != null ) {
+                throw new BadRequestException("User with login '" + request.userLogin() + "' already exists");
+            }
+            else {
+            // Создать юзера и установить ему пароль
+                loginManagementService.createLogin(tenantCode, request.userLogin(), request.fullName(), request.position());
+                if ( request.password() != null && !request.password().isBlank() ) {
+                    loginManagementService.setPassword(tenantCode, request.userLogin(), request.password());
+                }
+                login = loginManagementService.getLoginByUserLogin(tenantCode, request.userLogin());
+            }
+        }
+                
         AdminResponse member = adminManagementService.setAccountMember(accountId, request.role(), request.userLogin()); 
         return ResponseEntity.ok(member);
     }
@@ -97,6 +117,6 @@ public class AdminManagementController {
 
 //-------------------------
     //public record RoleAssignmentRequest(String role, String userLogin, String authClientId) {}
-    public record AddMemberRequest(String role, String userLogin) {}
-    public record AccountUser(Long id, String role, String userLogin, String fullName, String position) {}
+    public record AddMemberRequest(String role, String userLogin, String fullName, String position, String password) {}
+    //public record AccountUser(Long id, String role, String userLogin, String fullName, String position) {}
 }

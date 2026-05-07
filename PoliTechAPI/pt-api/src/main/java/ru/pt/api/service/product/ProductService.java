@@ -22,7 +22,9 @@ import java.util.List;
 public interface ProductService {
 
     /**
-     * Краткий список продуктов тенанта (сводки для UI и выбора).
+     * Краткий список продуктов тенанта (сводки для UI и выбора). Возвращает только те продукты, доатсуп к которым есть у текущего пользователя
+     * Так же проверяется dataScope. Тоесть DEV версия продукта видна только ролям с dataScope = DEV, а прод всем остальным
+     * Но если DEV версии сейчас нет, то для пользователя с dataScope = DEV будет возвращен прод версия продукта/
      *
      * @param tenantId идентификатор тенанта ({@code tid})
      * @param insComp  идентификатор страховой компании ({@code pt_insurance_company.id}); {@code null} — все продукты
@@ -31,7 +33,8 @@ public interface ProductService {
     List<Product> listSummaries(Long tenantId, Long insComp);
 
     /**
-     * Создать продукт с начальной dev-версией.
+     * Создать продукт с начальной dev-версией. Так же создается продуктовая роль со всеми разрешениями на account = tenantId
+     * Это позволяет видеть этот продукт админам, привязанным к тенанту 
      *
      * @param tenantId            идентификатор тенанта ({@code tid})
      * @param productVersionModel описание продукта и первой версии

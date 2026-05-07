@@ -20,20 +20,62 @@
 
     <!-- Tabs for Tables -->
     <mat-tab-group mat-align-tabs="start">
+
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
-      <mat-tab label="Группы пользователей">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="table-header">
-              <h3>Группы</h3>
-              <div class="header-actions">
-                <button mat-flat-button color="primary" class="add-button" (click)="addGroup()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
+        <mat-tab label="Точки продаж / Страховые портфели">
+          <div class="pt-box" style="margin-top: 20px;">
+            <div class="pt-box-title-row">
+                <h3 class="pt-box-title">Точки продаж / Страховые портфели</h3>
+                <div class="pt-box-title-buttons">
+                  <button mat-flat-button  (click)="addAccount()">Добавить</button>
+                </div>
               </div>
+              <div class="pt-box-table-box">
+              <table mat-table [dataSource]="accounts" class="pt-table" *ngIf="!loading">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef>Название</th>
+                  <td mat-cell *matCellDef="let account">{{ account.name }}</td>
+                </ng-container>
+  
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+                  <td mat-cell *matCellDef="let account" class="col-actions">
+                    <div class="action-buttons">
+                      <button mat-button color="primary" class="action-button" (click)="editAccount(account); $event.stopPropagation()">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-button color="warn" class="action-button" (click)="deleteAccount(account); $event.stopPropagation()">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+  
+                <tr mat-header-row *matHeaderRowDef="accountsColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: accountsColumns" 
+                    (click)="editAccount(row)" 
+                    class="clickable-row"></tr>
+              </table>
+              <div *ngIf="accounts.length === 0" class="empty-message">Аккаунты не найдены</div>
             </div>
-            <table mat-table [dataSource]="groups" class="business-table" *ngIf="!loading">
+          </div>
+        </mat-tab>
+        </ng-container>
+
+    <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
+      <mat-tab label="Группы пользователей">
+
+      <div class="pt-box" style="margin-top: 20px;">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Группы</h3>
+          <div class="pt-box-title-buttons">
+            <button mat-flat-button  (click)="addGroup()">Добавить группу</button>
+          </div>
+        </div>
+
+        <div class="pt-box-table-box">
+        <h4 class="pt-box-subtitle">Это может быть филиал, подразделение, отдел, группа или любой другой подраздел аккаунта</h4>
+            <table mat-table [dataSource]="groups" class="pt-table" *ngIf="!loading">
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>Название</th>
                 <td mat-cell *matCellDef="let group">{{ group.name }}</td>
@@ -64,65 +106,14 @@
       </mat-tab>
       </ng-container>
 
-      <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
-      <mat-tab label="Аккаунты">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="table-header">
-              <h3>Аккаунты</h3>
-              <div class="header-actions">
-                <button mat-flat-button color="primary" class="add-button" (click)="addAccount()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
-              </div>
-            </div>
-            <table mat-table [dataSource]="accounts" class="business-table" *ngIf="!loading">
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Название</th>
-                <td mat-cell *matCellDef="let account">{{ account.name }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
-                <td mat-cell *matCellDef="let account" class="col-actions">
-                  <div class="action-buttons">
-                    <button mat-button color="primary" class="action-button" (click)="editAccount(account); $event.stopPropagation()">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-button color="warn" class="action-button" (click)="deleteAccount(account); $event.stopPropagation()">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="accountsColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: accountsColumns" 
-                  (click)="editAccount(row)" 
-                  class="clickable-row"></tr>
-            </table>
-            <div *ngIf="accounts.length === 0" class="empty-message">Аккаунты не найдены</div>
+      <mat-tab label="Продукты">
+        <div class="pt-box" style="margin-top: 20px;">
+          <div class="pt-box-title-row">
+            <h3 class="pt-box-title">Продукты</h3>
           </div>
-        </div>
-      </mat-tab>
-      </ng-container>
-
-      <mat-tab label="Products">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <!--
-            <div class="button-section">
-              <button mat-flat-button color="primary" class="add-button" (click)="addProduct()">
-                <mat-icon>add</mat-icon>
-                Добавить продукт
-              </button>
-            </div>
-          -->
-            <div class="table-header">
-              <h3>Список доступных продуктов</h3>
-            </div>
-            <table mat-table [dataSource]="products" class="business-table" *ngIf="!loading">
+          <div class="pt-box-table-box">
+            <h4 class="pt-box-subtitle">Список продуктов и разрешений на них, для текущей группы</h4>
+            <table mat-table [dataSource]="products" class="pt-table" *ngIf="!loading">
               <ng-container matColumnDef="roleProductId">
                 <th mat-header-cell *matHeaderCellDef>ID</th>
                 <td mat-cell *matCellDef="let product">{{ product.roleProductId }}</td>
@@ -173,26 +164,29 @@
       </mat-tab>
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB'">
-      <mat-tab label="Logins">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="button-section">
-              <button mat-flat-button color="primary" class="add-button" (click)="addLogin()">
-                <mat-icon>add</mat-icon>
-                Add Login
-              </button>
+      <mat-tab label="Пользователи">
+        <div class="pt-box" style="margin-top: 20px;">
+   
+            <div class="pt-box-title-row">
+              <h3 class="pt-box-title">Пользователи</h3>
+            
+              <div class="pt-box-title-buttons">
+                <button mat-flat-button (click)="addLogin()">Создать пользователя</button>
+                <button mat-stroked-button (click)="addMemberLogin()">Добавить пользователя</button>
             </div>
-            <div class="table-header">
-              <h3>Logins</h3>
-            </div>
-            <table mat-table [dataSource]="logins" class="business-table" *ngIf="!loading">
+            
+          </div>
+          <div class="pt-box-table-box">
+            <h4 class="pt-box-subtitle">Список пользователей, которые могут иметь доступ к аккаунту</h4>
+
+            <table mat-table [dataSource]="logins" class="pt-table logins-table" *ngIf="!loading">
               <ng-container matColumnDef="login">
                 <th mat-header-cell *matHeaderCellDef>Login</th>
                 <td mat-cell *matCellDef="let login">{{ login.userLogin }}</td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
                 <td mat-cell *matCellDef="let login" class="col-actions">
                   <div class="action-buttons">
                     <button mat-icon-button class="action-button" (click)="deleteLogin(login); $event.stopPropagation()" color="warn">
@@ -213,25 +207,24 @@
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT' || account.nodeType === 'SUB'">
       <mat-tab label="Tokens">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="button-section">
-              <button mat-flat-button color="primary" class="add-button" (click)="addToken()">
-                <mat-icon>add</mat-icon>
-                Add Token
-              </button>
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+      
+              <h3 class="pt-box-title">Токены</h3>
+              <div class="pt-box-title-buttons">
+                <button mat-flat-button (click)="addToken()">Добавить токен</button>
+              
             </div>
-            <div class="table-header">
-              <h3>Tokens</h3>
-            </div>
-            <table mat-table [dataSource]="tokens" class="business-table" *ngIf="!loading">
+          </div>
+          <div class="pt-box-table-box">
+            <table mat-table [dataSource]="tokens" class="pt-table" *ngIf="!loading">
               <ng-container matColumnDef="token">
                 <th mat-header-cell *matHeaderCellDef>Token</th>
                 <td mat-cell *matCellDef="let token">{{ token.token }}</td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
                 <td mat-cell *matCellDef="let token" class="col-actions">
                   <div class="action-buttons">
                     <button mat-icon-button class="action-button" (click)="deleteToken(token); $event.stopPropagation()" color="warn">
@@ -251,26 +244,24 @@
       </ng-container>
 
       <ng-container *ngIf="account.nodeType === 'CLIENT' || account.nodeType === 'GROUP'">
-      <mat-tab label="Admins">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="button-section">
-              <button mat-flat-button color="primary" class="add-button" (click)="addAdmin()">
-                <mat-icon>add</mat-icon>
-                Add Admin
-              </button>
+      <mat-tab label="Администраторы группы">
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+              <h3 class="pt-box-title">Администраторы группы</h3>
+              <div class="pt-box-title-buttons">
+                <button mat-flat-button (click)="addAdmin()">Добавить администратора</button>
+              </div>
             </div>
-            <div class="table-header">
-              <h3>Admins</h3>
-            </div>
-            <table mat-table [dataSource]="admins" class="business-table" *ngIf="!loading">
+
+          <div class="pt-box-table-box">
+          <table mat-table [dataSource]="admins" class="pt-table" *ngIf="!loading">
               <ng-container matColumnDef="admin">
-                <th mat-header-cell *matHeaderCellDef>Admin</th>
+                <th mat-header-cell *matHeaderCellDef>Login администратора</th>
                 <td mat-cell *matCellDef="let admin; let i = index">{{ admin.userLogin }}</td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+                <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
                 <td mat-cell *matCellDef="let admin; let i = index" class="col-actions">
                   <div class="action-buttons">
                     <button mat-icon-button class="action-button" (click)="deleteAdmin(i); $event.stopPropagation()" color="warn">
@@ -291,18 +282,15 @@
 
       <ng-container *ngIf="account.nodeType === 'ACCOUNT'">
       <mat-tab label="Субаккаунты">
-        <div class="pt-box datatable-card">
-          <div class="pt-box-body">
-            <div class="table-header">
-              <h3>Субаккаунты</h3>
-              <div class="header-actions">
-                <button mat-flat-button color="primary" class="add-button" (click)="addSub()">
-                  <mat-icon>add</mat-icon>
-                  Добавить
-                </button>
+        <div class="pt-box">
+          <div class="pt-box-title-row">
+              <h3 class="pt-box-title">Субаккаунты</h3>
+              <div class="pt-box-title-buttons">
+                <button mat-flat-button (click)="addSub()">Добавить субаккаунт</button>
               </div>
-            </div>
-            <table mat-table [dataSource]="subs" class="business-table" *ngIf="!loading">
+          </div>
+          <div class="pt-box-table-box">
+          <table mat-table [dataSource]="subs" class="pt-table" *ngIf="!loading">
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>Название</th>
                 <td mat-cell *matCellDef="let sub">{{ sub.name }}</td>

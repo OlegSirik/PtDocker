@@ -19,8 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
   ],
   template: `
     <h2 mat-dialog-title>Добавить группу</h2>
-    <mat-dialog-content>
-      <mat-form-field appearance="outline" class="full-width">
+    <mat-dialog-content style="padding-top: 20px;">
+      <mat-form-field appearance="outline" class="full-width" style="margin-bottom: 16px;">
         <mat-label>Название группы</mat-label>
         <input matInput [(ngModel)]="groupName" required>
       </mat-form-field>

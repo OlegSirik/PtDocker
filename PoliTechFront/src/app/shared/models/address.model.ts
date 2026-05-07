@@ -1,7 +1,7 @@
 
 
 export class Address {
-  isPrimary: boolean = false;
+  isPrimary: boolean = true;
   typeCode: string = '';
   countryCode?: string = '';
   region?: string = '';

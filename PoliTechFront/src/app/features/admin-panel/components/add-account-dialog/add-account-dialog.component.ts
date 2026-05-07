@@ -19,7 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
   ],
   template: `
     <h2 mat-dialog-title>Добавить аккаунт</h2>
-    <mat-dialog-content>
+    <mat-dialog-content style="padding-top: 20px;">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Название аккаунта</mat-label>
         <input matInput [(ngModel)]="accountName" required>

@@ -123,7 +123,7 @@ public class ValidatorImpl {
         String rightValue = "";
         String ruleType = rule.getRuleType();
         if (rule.isKeyRightCustomValue()) {
-            rightValue = rightKey;
+            rightValue = rule.getValueRight();
         }
 
         try {
@@ -160,7 +160,8 @@ public class ValidatorImpl {
             }
     
             Object leftVal = ctx.get(leftKey);
-            if (leftVal == null || rightVal == null) {
+            
+            if (leftVal == null ) {
                 LOGGER.trace(
                     "Validation failed: null value for keys {} or {}",
                     leftKey,
@@ -172,11 +173,13 @@ public class ValidatorImpl {
             switch (leftDef.getType()) {
                 case NUMBER -> {
                     BigDecimal leftNum = (BigDecimal) leftVal;
-                    BigDecimal rightNum = (BigDecimal) rightVal;
+                    BigDecimal rightNum = null;
+                    if (rightVal != null) { rightNum = (BigDecimal) rightVal; }
                     return checkBigD(ruleType, leftNum, rightNum);
                 }
                 case STRING -> {
-                    String rightStr = rightVal.toString();
+                    String rightStr = null;
+                    if (rightVal != null) { rightStr = rightVal.toString(); }
                     String leftStr = leftVal.toString();
                     return checkString(ruleType, leftStr, rightStr);
                 }

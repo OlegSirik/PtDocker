@@ -138,4 +138,5 @@ logging:
     ru.pt.domain.model.ComputedVars: TRACE
     ru.pt.product.service.addon.PolicyAddOnServiceImpl: TRACE
     ru.pt.domain.model.VariableContext: TRACE
+    ru.pt.domain.model.VariableContextImpl: DEBUG
     org.apache.pdfbox.pdmodel.font: WARN  # Suppress PDFBox font warnings

@@ -38,7 +38,8 @@ try {
         }
 try {
         String deductibleNrVarCode = PvVar.varDeductibleNr(cover).getVarCode(); //"co_" + cover + "_deductibleNr";
-        return Long.parseLong( ctx.getString(deductibleNrVarCode));
+        String deductibleNr = ctx.getString(deductibleNrVarCode);
+        return Long.parseLong( deductibleNr);
     } catch ( Exception e) {
         return null;
     }

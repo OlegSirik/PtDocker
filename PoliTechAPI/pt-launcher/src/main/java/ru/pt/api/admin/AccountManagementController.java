@@ -16,9 +16,10 @@ import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.auth.AccountLoginService;
 import ru.pt.api.service.auth.AccountService;
 import ru.pt.api.service.auth.AccountTokenService;
+import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.admin.AdminManagementService;
-
+import lombok.AllArgsConstructor;
 import java.util.List;
 
 //import ru.pt.api.admin.deleted.AdminManagementController;
@@ -39,26 +40,16 @@ import java.util.List;
  * Post /v1/{tenantCode}/admin/accounts/{accuntId}/groups
  */
 @RestController
+@AllArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/api/v1/{tenantCode}/admin/accounts")
-public class AccountManagementController extends SecuredController {
+public class AccountManagementController {
 
     private final AdminManagementService adminManagementService;
     private final AccountService accountService;
     private final AccountTokenService accountTokenService;
     private final AccountLoginService accountLoginService;
-
-    public AccountManagementController(SecurityContextHelper securityContextHelper,
-                                      AccountService accountService,
-                                      AccountTokenService accountTokenService,
-                                      AccountLoginService accountLoginService,
-                                      AdminManagementService adminManagementService) {
-        super(securityContextHelper);
-        this.accountService = accountService;
-        this.accountTokenService = accountTokenService;
-        this.accountLoginService = accountLoginService;
-        this.adminManagementService = adminManagementService;
-    }
+    private final SecurityContextHelper securityContextHelper;
 
     /**
      * public record Account(
@@ -70,6 +61,7 @@ public class AccountManagementController extends SecuredController {
         String name
         ) {}
      */
+//    AccountNodeType.ACCOUNT, AccountNodeType.GROUP, AccountNodeType.SUB, AccountNodeType.TOKEN  
 
     /**
      * Get /v1/{tenantCode}/admin/accounts/{accountId}/children?nodeType=
@@ -96,61 +88,31 @@ public class AccountManagementController extends SecuredController {
         return new ResponseEntity<>(account, HttpStatus.CREATED);
     }
 
-    /**
-     * AccountLogin - 
-       private Long id;
-       private Long tid;
-        private Long clientId;
-        private Long accountId;
-        private String userLogin;
-        private Boolean isDefault;
-        private String userRole;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-    */
-
-    /*
-    Список доступных ролей = nodeType 
-    */
-    /*
-    * get /accounts/{id}/membbers?nodeType=SYS_ADMIN
-    * post /accounts/{id}/members { nodeType=ADMIN, login="login"}
-    */
-    
-    /*
-    Список доступных ролей = nodeType 
-    *
-    @GetMapping("/{accountId}/members")
-    public ResponseEntity<List<AccountUser>> getAccountMembers(
-            @PathVariable String tenantCode,
-            @PathVariable Long accountId,
-            @RequestParam(required = false) String nodeType) {
-        List<AccountUser> members = accountService.getMembers(accountId, nodeType);
-        return ResponseEntity.ok(children);
-    }
-    */
-    /***************/
-
     /** Get /v1/{tenantCode}/admin/accounts/{accuntId}
     */
     @GetMapping("/{accountId}")
     public ResponseEntity<Account> getAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        Account account = accountService.getAccountById(accountId);
+        var currentUser = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+        Long tenantId = currentUser.getTenantId();
+        Account account = accountService.getAccountById(tenantId, accountId);
         return ResponseEntity.ok(account);
     }
 
-    /* 
-     * Get /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
+    /** Get /v1/{tenantCode}/admin/accounts/{accuntId}
     */
-    @GetMapping("/{accountId}/accounts")
-    public ResponseEntity<List<Account>> getAccountAccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        List<Account> accounts = accountService.getAccounts(accountId);
-        return ResponseEntity.ok(accounts);
+    @DeleteMapping("/{accountId}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable String tenantCode, @PathVariable Long accountId) {
+        var currentUser = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+        Long tenantId = currentUser.getTenantId();
+        accountService.deleteAccount(tenantId, accountId);
+        return ResponseEntity.noContent().build();
     }
-
     /*
      * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/accounts
      */
+    /* 
     @PostMapping("/{accountId}/accounts")
     public ResponseEntity<Account> createAccountAccount(
             @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
@@ -158,61 +120,7 @@ public class AccountManagementController extends SecuredController {
         Account account = accountService.createAccount(request.getName(), accountId);
         return new ResponseEntity<>(account, HttpStatus.CREATED);
     }
-
-    /*
-     * Get /api/v1/{tenantCode}/admin/accounts/{accountId}/groups
-    */
-    @GetMapping("/{accountId}/groups")
-    public ResponseEntity<List<Account>> getAccountGroups(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        List<Account> groups = accountService.getGroups(accountId);
-        return ResponseEntity.ok(groups);
-    }
-
-    @PostMapping("/{accountId}/groups")
-    public ResponseEntity<Account> createGroups(
-        @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
-
-        Account account = accountService.createGroup(request.getName(), accountId);
-        return new ResponseEntity<>(account, HttpStatus.CREATED);
-    }
-
-    /**
-     * Get GROUP_ADMIN users for a group
-     * GET /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins
-     */
-    // ToDo delete this method
-    @GetMapping("/{accountId}/group_admins")
-    public ResponseEntity<List<AdminResponse>> getGroupAdmins(
-            @PathVariable String tenantCode, @PathVariable Long accountId) {
-        List<AdminResponse> admins = adminManagementService.getAccountMembers( accountId, UserRole.GROUP_ADMIN.toString() );
-        return ResponseEntity.ok(admins);
-    }
-
-    /**
-     * Add GROUP_ADMIN user to an existing group
-     * POST /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins
-     */
-    @PostMapping("/{accountId}/group_admins")
-    public ResponseEntity<AdminResponse> addGroupAdmin(
-            @PathVariable String tenantCode, @PathVariable Long accountId,
-            @RequestBody AddGroupAdminRequest request) {
-        AdminResponse admin = adminManagementService.setAccountMember(accountId, UserRole.GROUP_ADMIN.toString(), request.getUserLogin());
-        return new ResponseEntity<>(admin, HttpStatus.CREATED);
-    }
-
-    /**
-     * Create new group with its first GROUP_ADMIN user
-     * POST /api/v1/{tenantCode}/admin/accounts/group-admins (alternative - uses createGroupAdmin)
-     */
-    @PostMapping("/group_admins")
-    public ResponseEntity<AdminResponse> createGroupAdmin(
-            @PathVariable String tenantCode, @RequestBody CreateGroupAdminRequest request) {
-//        AdminResponse admin = adminManagementService.createGroupAdmin(
-//                request.getUserLogin(), request.getGroupName(), request.getFullName());
-//        return new ResponseEntity<>(admin, HttpStatus.CREATED);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
+*/
     /**
      * Delete GROUP_ADMIN user
      * DELETE /api/v1/{tenantCode}/admin/accounts/{accountId}/group-admins/{accountLoginId}
@@ -225,23 +133,17 @@ public class AccountManagementController extends SecuredController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/subaccounts
-     * Get subaccounts under the specified account
-    */
-    @GetMapping("/{accountId}/subaccounts")
-    public ResponseEntity<List<Account>> getAccountSubaccounts(@PathVariable String tenantCode, @PathVariable Long accountId) {
-        List<Account> subaccounts = accountService.getSubaccounts(accountId);
-        return ResponseEntity.ok(subaccounts);
-    }
-
+/* 
     @PostMapping("/{accountId}/subaccounts")
     public ResponseEntity<Account> createSubaccount(
-        @PathVariable String tenantCode, @PathVariable Long accountId, @RequestBody CreateAccountRequest request) {
+        @PathVariable String tenantCode, 
+        @PathVariable Long accountId, 
+        @RequestBody CreateAccountRequest request) {
 
         Account account = accountService.createSubaccount(request.getName(), accountId);
         return new ResponseEntity<>(account, HttpStatus.CREATED);
     }
-
+*/
     /** Get /api/v1/{tenantCode}/admin/accounts/{accountId}/tokens
      * Get subaccounts under the specified account
     */

@@ -17,6 +17,7 @@ import ru.pt.auth.repository.LoginRepository;
 import ru.pt.auth.service.admin.AdminPermissionHelper;
 import ru.pt.auth.model.LoginDto;
 import ru.pt.api.dto.refs.RecordStatus;
+import lombok.AllArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * Сервис для работы с логинами пользователей согласно документации acc_logins.md
  */
 @Service
+@AllArgsConstructor
 @Transactional
 public class LoginManagementService {
 
@@ -36,19 +38,6 @@ public class LoginManagementService {
     private final PasswordEncoder passwordEncoder;
     private final AdminPermissionHelper adminPermissionHelper;
     private final IdentityProviderRegistry identityProviderRegistry;
-
-    public LoginManagementService(LoginRepository loginRepository,
-                                  TenantService tenantService,
-                                  AccountLoginRepository accountLoginRepository,
-                                  AdminPermissionHelper adminPermissionHelper,
-                                  IdentityProviderRegistry identityProviderRegistry) {
-        this.loginRepository = loginRepository;
-        this.tenantService = tenantService;
-        this.accountLoginRepository = accountLoginRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
-        this.adminPermissionHelper = adminPermissionHelper;
-        this.identityProviderRegistry = identityProviderRegistry;
-    }
 
     /**
      * Создание пользователя (логина)
@@ -202,6 +191,16 @@ public class LoginManagementService {
         }
 
         return logins.stream().map(this::fromEntity).collect(Collectors.toList());
+    }
+
+    public LoginDto getLoginByUserLogin(String tenantCode, String userLogin) {
+        
+        LoginEntity login = loginRepository.findByTenantCodeAndUserLogin(tenantCode,userLogin)
+                .orElse(null);
+        if (login == null) {
+            return null;
+        }
+        return fromEntity(login);
     }
 
     /**

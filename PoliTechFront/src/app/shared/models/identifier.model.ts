@@ -1,7 +1,7 @@
 import { Person } from './person.model';
 
 export class Identifier {
-  isPrimary: boolean = false;
+  isPrimary: boolean = true;
   typeCode: string = '';
   serial?: string = '';
   number: string = '';

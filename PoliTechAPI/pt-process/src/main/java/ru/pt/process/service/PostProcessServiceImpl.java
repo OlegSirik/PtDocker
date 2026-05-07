@@ -3,6 +3,7 @@ package ru.pt.process.service;
 import org.springframework.stereotype.Component;
 
 import ru.pt.api.dto.process.Cover;
+import ru.pt.api.dto.process.Deductible;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.service.process.PostProcessService;
@@ -26,11 +27,16 @@ public class PostProcessServiceImpl implements PostProcessService {
                     String coverCode = cover.getCover().getCode();
                     cover.setSumInsured(policyView.getCoverSumInsured(ctx, coverCode));
                     cover.setPremium(policyView.getCoverPremium(ctx, coverCode));
-                    cover.setDeductibleId(policyView.getCoverDeductibleNr(ctx, coverCode));
+
+                    Long dedId = policyView.getCoverDeductibleNr(ctx, coverCode);
+                    if (dedId != null) {
+                        cover.setDeductible(new Deductible(dedId, null));
+                    }
                     cover.setLimitMin(policyView.getCoverLimitMin(ctx, coverCode));
                     cover.setLimitMax(policyView.getCoverLimitMax(ctx, coverCode));
                 }
             }
         }
+
     }
 }

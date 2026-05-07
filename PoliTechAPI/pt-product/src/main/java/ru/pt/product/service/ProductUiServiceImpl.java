@@ -36,12 +36,26 @@ public class ProductUiServiceImpl implements ProductUiService {
     @Override
     public ProductFormData uiProductData(Long tenantId, Long productId) {
        
-        boolean iAmTester = true;
+        String dataScope = securityContextHelper.getAuthenticatedUser()
+                .orElseThrow(() -> new BadRequestException("Unable to get current user from context"))
+                .getDataScope();
+        boolean iAmTester = dataScope.equals("DEV");
+
         Long tid = securityContextHelper.getAuthenticatedUser()
                 .orElseThrow(() -> new BadRequestException("Unable to get current user from context"))
                 .getTenantId();
-        ProductVersionModel productVersionModel =
-                iAmTester ? productService.getProduct(tid, productId, true) : productService.getProduct(tid, productId, false);
+
+        ProductVersionModel productVersionModel = null;
+        if (iAmTester) {
+            productVersionModel = productService.getProduct(tid, productId, true);   
+            if (productVersionModel == null) {
+                // Если нет версии в статусе дев то берем версию продукта с прода
+                productVersionModel = productService.getProduct(tid, productId, false);
+            }
+
+        } else {
+            productVersionModel = productService.getProduct(tid, productId, false);
+        }        
 
         Long versionNo = productVersionModel.getVersionNo();
         if (versionNo == null) {

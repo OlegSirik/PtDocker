@@ -1,4 +1,6 @@
 <div class="formly-forms-container">
+  <div class="formly-forms-layout">
+    <div class="formly-forms-main">
   <div class="page-header">
     <div class="page-header-lead">
       <h2 class="page-subtitle">{{ policy.productCode }}</h2>
@@ -13,18 +15,17 @@
 
   <!-- Policy Card -->
   <mat-card class="form-card">
-<!---
-    <mat-card-header>
-      <mat-card-title>Policy</mat-card-title>
-    </mat-card-header>
-  -->
-    <mat-card-content class="grid-layout">
-      <div class="grid-row">
-        <div class="span-6 policy-contract">
-          <h3>Договор страхования {{ policy.policyNumber }}</h3>
-          <div class="policy-pair-row">
+
+    <div class="policy-contract">
+      <h3>Договор страхования №{{ formatPolicyNumber(policy.policyNumber) }} от {{ formatIssueDate(policy.issueDate) }}</h3>
+      <h3>Премия: {{ formatPremium(policy.premium) }}</h3>
+      <span class="premium-label">Статус договора: {{ policy.statusCode }}</span>
+      <h4>Срок страхования: {{ formatShortDate(policy.startDate) }} - {{ formatShortDate(policy.endDate) }}</h4>
+    </div>  
+    
+    <div class="policy-pair-row">
             @if (getShowStartDate()) {
-              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
+              <mat-form-field appearance="outline" >
                 <mat-label>Дата начала договора</mat-label>
                 <input
                   matInput
@@ -40,19 +41,22 @@
                 ></mat-datepicker>
               </mat-form-field>
             } @else {
-              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
+              <mat-form-field appearance="outline" >
                 <mat-label>Период охлаждения</mat-label>
-                <mat-select [(ngModel)]="policy.waitingPeriod" name="waitingPeriod">
+                <mat-select
+                  [(ngModel)]="policy.waitingPeriod"
+                  (ngModelChange)="onWaitingPeriodChange($event)"
+                  name="waitingPeriod"
+                >
                   @for (opt of listEntries('waitingPeriod'); track opt.value) {
                     <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
             }
-          </div>
-          <div class="policy-pair-row">
+
             @if (getShowEndDate()) {
-              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
+              <mat-form-field appearance="outline" >
                 <mat-label>Дата окончания договора</mat-label>
                 <input
                   matInput
@@ -68,9 +72,13 @@
                 ></mat-datepicker>
               </mat-form-field>
             } @else {
-              <mat-form-field appearance="outline" class="form-field policy-contract-date-field">
+              <mat-form-field appearance="outline" >
                 <mat-label>Период страхования</mat-label>
-                <mat-select [(ngModel)]="policy.policyTerm" name="policyTerm">
+                <mat-select
+                  [(ngModel)]="policy.policyTerm"
+                  (ngModelChange)="onPolicyTermChange($event)"
+                  name="policyTerm"
+                >
                   @for (opt of listEntries('policyTerm'); track opt.value) {
                     <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                   }
@@ -78,25 +86,7 @@
               </mat-form-field>
             }
           </div>
-        </div>
-
-        <div class="span-4 policy-premium">
-          <h3>Премия и статус договора</h3>
-          <div class="premium-block">
-            <span class="premium-label">Premium</span>
-            <span class="premium-value">{{ formatPremium(policy.premium) }}</span>
-          </div>
-
-          <div class="span-2">
-            <span class="premium-label">Период страхования: {{ policy.startDate }} - {{ policy.endDate }}</span>
-            </div>
-          <div class="span-2">
-            <span class="premium-label">Статус договора: {{ policy.statusCode }}</span>
-            </div>
     
-        </div>
-      </div>
-    </mat-card-content>
   </mat-card>
 
   <!-- PolicyHolder Card -->
@@ -106,6 +96,7 @@
     </mat-card-header>
 
     <mat-card-content class="grid-layout">
+      
       <h3>Перс. данные</h3>
         @if (getFieldVisible('ph_lastName')) {
           <mat-form-field class="form-field span-3" appearance="outline">
@@ -822,5 +813,8 @@
     <button mat-stroked-button color="accent" (click)="onFastCalc()">Fast Calc</button>
     <button mat-stroked-button color="primary" (click)="onSave()">Save</button>
   </div>
-
+    </div>
+<!--    <div class="formly-forms-right"></div>
+-->
+</div>
 </div>

@@ -77,7 +77,7 @@ public interface ProductRoleRepository extends JpaRepository<ProductRoleEntity, 
                 "FROM acc_product_roles t1 " +
                 "LEFT JOIN pt_products t2 ON t2.id = t1.role_product_id " +
                 "WHERE t1.role_product_id = :productId " +
-                "AND (SELECT id_path FROM acc_accounts WHERE id = :accountId) LIKE (t1.id_path || '%') " +
+                "AND t1.id_path LIKE ( SELECT id_path FROM acc_accounts WHERE id = :accountId) || '%' " +
                 "ORDER BY LENGTH(t1.id_path) DESC " +
                 "LIMIT 1",
         nativeQuery = true

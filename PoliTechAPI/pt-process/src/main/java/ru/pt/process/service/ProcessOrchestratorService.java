@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import ch.qos.logback.classic.Level;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
@@ -86,6 +88,13 @@ import ru.pt.api.service.product.InsCompanyService;
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
+
+    @PostConstruct
+    void setDebugLogLevel() {
+        if (logger instanceof ch.qos.logback.classic.Logger logbackLogger) {
+            logbackLogger.setLevel(Level.DEBUG);
+        }
+    }
 
     private final ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
     private final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -201,7 +210,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         System.out.println("===========================");
 */
         
-        addMandatoryVars(policyDTO, varCtx.getDefinitions());
+        addMandatoryVars(policyDTO, varCtx);
 
         CalculatorModel calculatorModel = calculatorService.getCalculator(
             tenantId,
@@ -218,6 +227,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 product.getVersionNo(), 
                 policyDTO.getInsuredObjects().get(0).getPackageCode(), 
                 varCtx );
+
 
                 postProcessService.setCovers(policyDTO, varCtx);
 
@@ -249,36 +259,41 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
             }
         }
-        if (!checkSumInsured(policyDTO)) {
-            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
-        }
+        
+//        if (!checkSumInsured(policyDTO)) {
+//            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
+//        }
 
     }
 
-    private void addMandatoryVars(PolicyDTO policyDTO, List<PvVarDefinition> varDefinitions) {
+    private void addMandatoryVars(PolicyDTO policyDTO, CalculatorContext varCtx) {
         //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
         //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
+
+        List<PvVarDefinition> varDefinitions =varCtx.getDefinitions();
+
         for (InsuredObject insuredObject : policyDTO.getInsuredObjects()) {
             for (Cover cover : insuredObject.getCovers()) {
                 String coverCode = cover.getCover().getCode();
-/* 
-                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_sumInsured", "", PvVarDefinition.Type.NUMBER, "VAR"));
-                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_premium", "", PvVarDefinition.Type.NUMBER, "VAR"));
-                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_deductibleNr", "", PvVarDefinition.Type.NUMBER, "VAR"));
-                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMin", "", PvVarDefinition.Type.NUMBER, "VAR"));
-                varDefinitions.add(new PvVarDefinition("co_" + coverCode + "_limitMax", "", PvVarDefinition.Type.NUMBER, "VAR"));
-*/
-                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode)));
-                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode)));
-                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode)));
-                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varLimitMin(coverCode)));
-                varDefinitions.add(PvVarDefinition.fromPvVar(PvVar.varLimitMax(coverCode)));
+
+                PvVarDefinition sumInsuredDef = PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode));
+                PvVarDefinition premiumDef = PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode));
+                PvVarDefinition deductibleNrDef = PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode));
+
+                varCtx.putDefinition(sumInsuredDef);
+                varCtx.putDefinition(premiumDef);
+                varCtx.putDefinition(deductibleNrDef);
+// ##### TODO
+                varCtx.put(sumInsuredDef.getCode(), null);
+                varCtx.put(premiumDef.getCode(), null);
+                varCtx.put(deductibleNrDef.getCode(), null);
             }
         }
     }
 
     @Override
     public String calculate(String policy) {
+        String result = null;
         logger.info("Starting calculate process");
 
         AuthenticatedUser user = getCurrentUser();
@@ -336,8 +351,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
         } catch (NotFoundException e) {
             // Re-throw NotFoundException as-is
-            throw e;
-        } catch (Exception e) {
             logger.warn("Invalid product code: {}", productCode);
             ErrorModel errorModel = ErrorConstants.createErrorModel(
                 422,
@@ -347,6 +360,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 "productCode"
             );
             throw new UnprocessableEntityException(errorModel);
+        } catch (Exception e) {
+            logger.error("Error fetching product for productCode={}: {}", productCode, e.getMessage(), e);
+            throw e;
         }
 
         authorizationService.check(user, AuthZ.ResourceType.PRODUCT, product.getId().toString(), null, AuthZ.Action.QUOTE);
@@ -392,7 +408,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             product.getVars().stream()
                 .map(this::toDefinition)
                 .toList();
-
 
         // 7. Runtime-контекст
         CalculatorContext varCtx = new VariableContextImpl(policyJSON, varDefinitions);
@@ -444,6 +459,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 */        
         calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
 
+
         // 11. Перенос результатов в DTO
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
         String ph_digest = textDocumentView.get(varCtx, "ph_digest");
@@ -469,6 +485,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         if (policyDTO.getPremium() == null || policyDTO.getPremium().compareTo(BigDecimal.ZERO) <= 0) {
             throw new UnprocessableEntityException(new ErrorModel(0, "Запрос не соответствует условиям тарифа.", "Calculator", "premium=0", "premium")); 
         }
+
+        if ( policyDTO.getProcessList().getDataScope().equals(ProcessList.PROD)) {
+            policyDTO.setProcessList(null);
+        }    
+        
+        //return result;
         return policyToJson(policyDTO);
 
     }

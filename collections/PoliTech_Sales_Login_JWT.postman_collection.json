@@ -1,0 +1,448 @@
+{
+  "info": {
+    "_postman_id": "8a58a324-17fd-4ca9-bb9d-c1ce286df4ff",
+    "name": "PoliTech Sales + JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Login/get JWT and SalesController endpoints."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (password) -> save accessToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.accessToken) {",
+                  "    pm.collectionVariables.set('jwt', json.accessToken);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"{{userLogin}}\",\n  \"password\": \"{{password}}\",\n  \"clientId\": \"{{clientId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Token (no password) -> save accessToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.accessToken) {",
+                  "    pm.collectionVariables.set('jwt', json.accessToken);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userLogin\": \"{{userLogin}}\",\n  \"clientId\": \"{{clientId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/auth/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "auth",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SalesController",
+      "item": [
+        {
+          "name": "GET /sales (getPolicies)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /sales/{policyNumber}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/{{policyNumber}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "{{policyNumber}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /sales/quotes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"draftId\": \"example-draft-id\",\n  \"productCode\": \"{{productCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "quotes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /sales/quotes?qstr=",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/quotes?qstr={{qstr}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "quotes"
+              ],
+              "query": [
+                {
+                  "key": "qstr",
+                  "value": "{{qstr}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /sales/policies (saveValidator)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"draftId\": \"example-draft-id\",\n  \"productCode\": \"{{productCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/policies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "policies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /sales/policies/{policyNumber}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policyNumber\": \"{{policyNumber}}\",\n  \"productCode\": \"{{productCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/policies/{{policyNumber}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "policies",
+                "{{policyNumber}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /sales/{policyNumber}/paid",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentDate\": \"{{paymentDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/{{policyNumber}}/paid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "{{policyNumber}}",
+                "paid"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /sales/policies/{policy-nr}/printpf/{pf-type}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/{{tenantCode}}/sales/policies/{{policyNumber}}/printpf/{{printFormType}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "{{tenantCode}}",
+                "sales",
+                "policies",
+                "{{policyNumber}}",
+                "printpf",
+                "{{printFormType}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "tenantCode",
+      "value": "pt"
+    },
+    {
+      "key": "userLogin",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    },
+    {
+      "key": "clientId",
+      "value": "1"
+    },
+    {
+      "key": "jwt",
+      "value": ""
+    },
+    {
+      "key": "policyNumber",
+      "value": "POL-000001"
+    },
+    {
+      "key": "productCode",
+      "value": "ACC"
+    },
+    {
+      "key": "paymentDate",
+      "value": "2026-04-29T00:00:00Z"
+    },
+    {
+      "key": "qstr",
+      "value": ""
+    },
+    {
+      "key": "printFormType",
+      "value": "policy"
+    }
+  ]
+}

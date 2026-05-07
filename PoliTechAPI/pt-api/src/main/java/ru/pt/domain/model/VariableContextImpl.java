@@ -18,6 +18,8 @@ public final class VariableContextImpl implements CalculatorContext
 {
 
     private static final Logger logger = LoggerFactory.getLogger(VariableContextImpl.class);
+    /** ConcurrentHashMap не поддерживает null-значения; используем sentinel. */
+    private static final Object NULL_VALUE = new Object();
 
     private final Object jsonDocument; // parsed once
     private final Map<String, PvVarDefinition> definitions;
@@ -37,11 +39,16 @@ public final class VariableContextImpl implements CalculatorContext
     }
 
     public Map<String, Object> getValues() {
-        return values;
+        Map<String, Object> decoded = new HashMap<>();
+        values.forEach((k, v) -> decoded.put(k, decodeNullValue(v)));
+        return decoded;
     }
     // ---------- Typed API ----------
     @Override
     public BigDecimal getDecimal(String code) {
+        if (code.equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
+            logger.debug("####################################################getDecimal: code='{}'", code);
+        }
         Object v = get(code);
         if (v == null) {
             logger.trace("getDecimal: code='{}' is null, returning null", code);
@@ -57,7 +64,7 @@ public final class VariableContextImpl implements CalculatorContext
 
         if (value == null) {
             logger.trace("safeToBigDecimal: value is null, returning 0");
-            return BigDecimal.ZERO;
+            return null; //BigDecimal.ZERO;
         }
         
         if (value instanceof BigDecimal) {
@@ -88,15 +95,19 @@ public final class VariableContextImpl implements CalculatorContext
                 return result;
             } catch (NumberFormatException e) {
                 logger.trace("safeToBigDecimal: cannot parse String '{}' to BigDecimal, returning 0", value);
-                return BigDecimal.ZERO;
+                return null; //BigDecimal.ZERO;
             }
         }
         
-        return BigDecimal.ZERO;
+        return null; //BigDecimal.ZERO;
     }
 
     @Override
     public String getString(String code) {
+        if (code.equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
+            logger.debug("############################################getDecimal: code='{}'", code);
+        }
+
         Object v = get(code);
         String result = v != null ? v.toString() : null;
         logger.trace("getString: code='{}', result='{}'", code, result);
@@ -113,6 +124,10 @@ public final class VariableContextImpl implements CalculatorContext
             logger.warn("putDefinition: null definition ignored");
             return;
         }
+        if (def.getCode().equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
+            logger.debug("####################################################putDefinition: code='{}'", def.getCode());
+        }
+
         logger.trace("putDefinition: code='{}', type='{}', sourceType='{}'", 
                 def.getCode(), def.getType(), def.getSourceType());
         definitions.put(def.getCode(), def);
@@ -134,23 +149,27 @@ public final class VariableContextImpl implements CalculatorContext
             .forEach(def -> {
                 Object value = evaluate(def.getCode());
                 String code = def.getCode();
-                if (value != null) {
-                    values.put(code, value);
-                }
+                putValueInternal(code, value);
             });
     }
     // ---------- Lazy evaluation ----------
 
     @Override
     public Object get(Object key) {
+        
+        // Ключ только строковый
         if (!(key instanceof String code)) return null;
         logger.trace("get: code='{}'", code);
         try {
-            Object value = values.get(code);
-            if (value == null) { 
-                value = evaluate(code);
-                values.put(code, value);
+            // Поиск значения в кеше (в т.ч. cached null через sentinel)
+            Object cached = values.get(code);
+            if (cached == null && !values.containsKey(code)) {
+                Object evaluated = evaluate(code);
+                putValueInternal(code, evaluated);
+                logger.trace("get: code='{}', evaluated='{}'", code, evaluated);
+                return evaluated;
             }
+            Object value = decodeNullValue(cached);
             logger.trace("get: code='{}', resolvedValue='{}'", code, value);
             return value;
         } catch (Exception e) {
@@ -167,19 +186,23 @@ public final class VariableContextImpl implements CalculatorContext
             throw new IllegalArgumentException("Unknown variable: " + code);
         }
 
+        // Это хардкодные функции. 
         if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
             Object magic = ComputedVars.getMagicValue(this, code);
             logger.trace("evaluate: code='{}' (MAGIC) -> '{}'", code, magic);
             return magic;
         }
 
+        // Если не задан JsonPath значит это расчетная переменная, из запроса ее не получим.
         if (def.getJsonPath() == null) {
             logger.trace("evaluate: code='{}' has null jsonPath, returning null (calc-only variable)", code);
             return null; // calc-only variable
         }
 
+        // Получаем значение из jsonDocument по заданному JsonPath
         Object raw = JsonPath.read(jsonDocument, def.getJsonPath());
         logger.trace("evaluate: code='{}', jsonPath='{}', raw='{}'", code, def.getJsonPath(), raw);
+        // Конвертируем значение в нужный тип и группируем если нужно
         Object ret =  convert(raw, def.getType(), def.getGroupFunctionName());
         logger.trace("evaluate: code='{}', converted='{}'", code, ret);
         return ret;
@@ -267,13 +290,30 @@ public final class VariableContextImpl implements CalculatorContext
 
     //@Override
     public Object put(String key, Object value) {
+        if (key == null || key.isBlank()) {
+            logger.warn("put: key is null/blank, value='{}'", value);
+            throw new IllegalArgumentException("Variable key is null or blank");
+        }
         PvVarDefinition def = definitions.get(key);
         if (def == null) {
             logger.warn("put: Unknown variable '{}'", key);
             throw new IllegalArgumentException("Unknown variable: " + key);
         }
         logger.trace("put: key='{}', value='{}'", key, value);
-        return values.put(key, value);
+        return putValueInternal(key, value);
+    }
+
+    private Object putValueInternal(String key, Object value) {
+        Object previous = values.put(key, encodeNullValue(value));
+        return decodeNullValue(previous);
+    }
+
+    private Object encodeNullValue(Object value) {
+        return value == null ? NULL_VALUE : value;
+    }
+
+    private Object decodeNullValue(Object value) {
+        return value == NULL_VALUE ? null : value;
     }
 
 }

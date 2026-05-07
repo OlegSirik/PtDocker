@@ -7,15 +7,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.exception.UnprocessableEntityException;
 import ru.pt.api.dto.product.ProductVersionModel;
-import ru.pt.api.security.AuthenticatedUser;
-import ru.pt.api.service.auth.AuthorizationService;
-import ru.pt.api.service.auth.AuthZ.Action;
-import ru.pt.api.service.auth.AuthZ.ResourceType;
 import ru.pt.api.service.product.ProductServiceCRUD;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.entity.ProductVersionEntity;
 import ru.pt.product.repository.ProductRepository;
@@ -52,21 +47,22 @@ public class ProductCRUDServiceImpl implements ProductServiceCRUD {
 
     @Override
     public ProductVersionModel getProduct(Long tenantId, Long id, boolean forDev) {
-        
-
         var entity = productRepository.findById(tenantId, id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         var versionNo = forDev ? entity.getDevVersionNo() : entity.getProdVersionNo();
+        if (versionNo == null) {
+            throw new UnprocessableEntityException("No suitable " + (forDev ? "dev" : "prod") + " version for product");
+        }
         var pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, entity.getId(), versionNo)
-                .orElseThrow();
+                .orElseThrow(() -> new UnprocessableEntityException("Product version not found"));
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
             //model.setInsCompanyId(entity.getInsCompanyId());
             model.setVersionNo(versionNo);
             return model;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new UnprocessableEntityException("Error reading product version model from JSON", e);
         }
     }
 }
