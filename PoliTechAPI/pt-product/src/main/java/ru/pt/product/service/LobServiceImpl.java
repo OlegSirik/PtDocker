@@ -147,6 +147,23 @@ public class LobServiceImpl implements LobService {
             throw new UnprocessableEntityException("Schema LOB not found", "SCHEMA", "NOT_FOUND", "schemaLob");
         }
 
+        Map<String, LobVar> schemaVarMap = new HashMap<>();
+        for (LobVar schemaVar : schemaLob) {
+            schemaVarMap.put(schemaVar.getVarCode(), schemaVar);
+        }
+        for (LobVar payloadVar : payload.getMpVars()) {
+            LobVar schemaVar = schemaVarMap.get(payloadVar.getVarCode());   
+            if (schemaVar != null) {
+                payloadVar.setId(schemaVar.getId());
+                payloadVar.setParent_id(schemaVar.getParent_id());
+                payloadVar.setIsSystem(schemaVar.getIsSystem());
+                payloadVar.setName(schemaVar.getName());
+            } else {
+                payloadVar.setIsDeleted(true);
+            }
+        }
+
+
         Set<String> payloadVarCodes = new HashSet<>();
         for (LobVar payloadVar : payload.getMpVars()) {
             if (!payloadVar.getIsDeleted()) {

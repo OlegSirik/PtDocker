@@ -203,3 +203,126 @@ Premium = BaseRate * K
 * кид
 * приложение с перечнем перевозчиков
 * приложение с маршрутами перевозки
+
+## Описание контракта 
+
+### InsuredObject для cargo
+
+
+~~~
+insuredObject
+  ├── cargo
+  ├── transports[]
+  │      └── carrier
+  ├── addresses[]
+  ├── documents[]
+  ├── shipment
+  └── covers[]
+~~~
+
+~~~ json
+
+{
+  "insuredObjects": [
+    {
+      "cargo": {
+        "cargoType": "electronics",
+
+        "cargoCondition": "NEW",
+        "packaging": "PALLET",
+
+        "quantity": 100,
+        "weight": 2500,
+
+        "declaredValue": {
+          "amount": 5000000,
+          "currencyCode": "RUB"
+        }
+      },
+
+      "transports": [
+        {
+          "transportType": "TRUCK",
+
+          "vehicleNumber": "А123BC77",
+
+          "containerNumber": "CONT123",
+
+          "requirements": {
+            "temperatureControlled": true,
+
+            "sealed": true,
+            "fragile": false
+          },
+
+          "carrier": {
+            "organizationName": "ООО Перевозчик"
+          }
+        }
+      ],
+
+      "addresses": [
+        {
+          "typeCode": "DEPARTURE",
+          "addressStr": "Москва"
+        },
+        {
+          "typeCode": "TRANSIT",
+          "addressStr": "Варшава"
+        },
+        {
+          "typeCode": "ARRIVAL",
+          "addressStr": "Берлин"
+        }
+      ],
+
+      "documents": [
+        {
+          "documentType": "CMR",
+          "number": "CMR-12345",
+          "issueDate": "2026-05-01"
+        },
+        {
+          "documentType": "INVOICE",
+          "number": "INV-555"
+        }
+      ],
+
+      "covers": [
+        {
+          "code": "CARGO_ALL_RISKS",
+
+          "sumInsured": {
+            "amount": 5000000,
+            "currencyCode": "RUB"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+~~~
+
+#### Address.type
+
+~~~
+DEPARTURE
+TRANSIT
+ARRIVAL
+STORAGE
+CUSTOMS
+~~~
+
+#### Transport.type
+
+~~~
+TRUCK
+SEA
+AIR
+RAIL
+MULTIMODAL
+~~~
+
+#### Document.type
+

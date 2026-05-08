@@ -1,0 +1,1739 @@
+{
+  "id": 100,
+  "productId": 100,
+  "productCode": "NS_CLASSIC",
+  "versionNo": 1,
+  "packageNo": 0,
+  "vars": [
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_productCode",
+      "varName": "Код продукта",
+      "varPath": "productCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.productCode",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_startDate",
+      "varName": "дата начала действия договора",
+      "varPath": "startDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.startDate",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_endDate",
+      "varName": "дата окончания договора",
+      "varPath": "endDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.endDate",
+      "varNr": "12"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_policyNumber",
+      "varName": "номер договора",
+      "varPath": "policyNumber",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.policyNumber",
+      "varNr": "13"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_premium",
+      "varName": "премия по договору",
+      "varPath": "premium",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.premium",
+      "varNr": "14"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_issueDate",
+      "varName": "дата выпуска договора",
+      "varPath": "issueDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.issueDate",
+      "varNr": "15"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermMonths",
+      "varName": "Срок полиса в месяцах",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.magic.termMonths",
+      "varNr": "1201"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermDays",
+      "varName": "Срок полиса в днях",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.magic.termDays",
+      "varNr": "1202"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_firstName",
+      "varName": "Страхователь.имя",
+      "varPath": "policyHolder.person.firstName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.firstName",
+      "varNr": "1"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_lastName",
+      "varName": "Страхователь.фамилия",
+      "varPath": "policyHolder.person.lastName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.lastName",
+      "varNr": "2"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_middleName",
+      "varName": "Страхователь.отчество",
+      "varPath": "policyHolder.person.middleName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.middleName",
+      "varNr": "3"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_birthDate",
+      "varName": "Страхователь.дата рождения",
+      "varPath": "policyHolder.person.birthDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.birthDate",
+      "varNr": "4"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_fullName",
+      "varName": "Страхователь.полное ФИО",
+      "varPath": "policyHolder.person.fullName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.fullName",
+      "varNr": "5"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_fullNameEn",
+      "varName": "Страхователь.полное ФИО англ",
+      "varPath": "policyHolder.person.fullNameEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.fullNameEn",
+      "varNr": "6"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_birthPlace",
+      "varName": "Страхователь.место рождения",
+      "varPath": "policyHolder.person.birthPlace",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.birthPlace",
+      "varNr": "7"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_citizenship",
+      "varName": "Страхователь.гражданство",
+      "varPath": "policyHolder.person.citizenship",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "policyHolder.person.citizenship",
+      "varNr": "8"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_gender",
+      "varName": "Страхователь.пол",
+      "varPath": "policyHolder.person.gender",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.gender",
+      "varNr": "9"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_familyState",
+      "varName": "Страхователь.семейное положение",
+      "varPath": "policyHolder.person.familyState",
+      "varType": "IN",
+      "varValue": "SINGLE",
+      "varCdm": "policyHolder.person.familyState",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_isPublicOfficial",
+      "varName": "Страхователь.признак ПДЛ",
+      "varPath": "policyHolder.person.isPublicOfficial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.isPublicOfficial",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_isResident",
+      "varName": "Страхователь.резидент РФ",
+      "varPath": "policyHolder.person.isResident",
+      "varType": "IN",
+      "varValue": "true",
+      "varCdm": "policyHolder.person.isResident",
+      "varNr": "12"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_ext_id",
+      "varName": "Страхователь.внешний ID",
+      "varPath": "policyHolder.person.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.ext_id",
+      "varNr": "14"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_phone",
+      "varName": "Страхователь.телефон",
+      "varPath": "policyHolder.phone.phoneNumber",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.contacts.phone",
+      "varNr": "81"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_email",
+      "varName": "Страхователь.email",
+      "varPath": "policyHolder.email",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.contacts..email",
+      "varNr": "91"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_country",
+      "varName": "Страхователь.код страны регистрации",
+      "varPath": "policyHolder.organization.country",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.country",
+      "varNr": "141"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_inn",
+      "varName": "Страхователь.ИНН юр.лица",
+      "varPath": "policyHolder.organization.inn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.inn",
+      "varNr": "142"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_orgFullName",
+      "varName": "Страхователь.полное наименование юр.лица",
+      "varPath": "policyHolder.organization.fullName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.orgFullName",
+      "varNr": "143"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_orgFullNameEn",
+      "varName": "Страхователь.полное наименование  юр.лица англ",
+      "varPath": "policyHolder.organization.fullNameEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.orgFullNameEn",
+      "varNr": "144"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_shortName",
+      "varName": "Страхователь.краткое наименование юр.лица",
+      "varPath": "policyHolder.organization.shortName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.shortName",
+      "varNr": "145"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_legalForm",
+      "varName": "Страхователь.организационно-правовая форма",
+      "varPath": "policyHolder.organization.legalForm",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.legalForm",
+      "varNr": "146"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_kpp",
+      "varName": "Страхователь.КПП",
+      "varPath": "policyHolder.organization.kpp",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.kpp",
+      "varNr": "147"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_ogrn",
+      "varName": "Страхователь.ОГРН",
+      "varPath": "policyHolder.organization.ogrn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.ogrn",
+      "varNr": "148"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_okpo",
+      "varName": "Страхователь.ОКПО",
+      "varPath": "policyHolder.organization.okpo",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.okpo",
+      "varNr": "149"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_bic",
+      "varName": "Страхователь.БИК",
+      "varPath": "policyHolder.organization.bic",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.bic",
+      "varNr": "150"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_isResident",
+      "varName": "Страхователь.резидент РФ юр.лица",
+      "varPath": "policyHolder.organization.isResident",
+      "varType": "IN",
+      "varValue": "true",
+      "varCdm": "policyHolder.organization.isResident",
+      "varNr": "151"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_group",
+      "varName": "Страхователь.Gруппа страхователя ЮЛ",
+      "varPath": "policyHolder.organization.group",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.group",
+      "varNr": "152"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_ext_id",
+      "varName": "Страхователь.внешний ID",
+      "varPath": "policyHolder.organization.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.ext_id",
+      "varNr": "154"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_org_nciCode",
+      "varName": "Страхователь.НСИ код",
+      "varPath": "policyHolder.organization.nciCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.organization.nciCode",
+      "varNr": "155"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_typeCode",
+      "varName": "Документ.код типа документа",
+      "varPath": "policyHolder.passport.typeCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.typeCode",
+      "varNr": "101"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_serial",
+      "varName": "Документ.серия документа",
+      "varPath": "policyHolder.passport.serial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.serial",
+      "varNr": "102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_number",
+      "varName": "Документ.номер документа",
+      "varPath": "policyHolder.passport.number",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.number",
+      "varNr": "103"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_dateIssue",
+      "varName": "Документ.дата выдачи",
+      "varPath": "policyHolder.passport.dateIssue",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.dateIssue",
+      "varNr": "104"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_validUntil",
+      "varName": "Документ.действительно до",
+      "varPath": "policyHolder.passport.validUntil",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.validUntil",
+      "varNr": "105"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_whom",
+      "varName": "Документ.кем выдан",
+      "varPath": "policyHolder.passport.whom",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.whom",
+      "varNr": "106"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_divisionCode",
+      "varName": "Документ.код подразделения",
+      "varPath": "policyHolder.passport.divisionCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.divisionCode",
+      "varNr": "107"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_vsk_id",
+      "varName": "Документ.ID ВСК",
+      "varPath": "policyHolder.passport.vsk_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.vsk_id",
+      "varNr": "108"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_ext_id",
+      "varName": "Документ.внешний ID",
+      "varPath": "policyHolder.passport.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.ext_id",
+      "varNr": "109"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_countryCode",
+      "varName": "Документ.страна выдачи документа",
+      "varPath": "policyHolder.passport.countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "policyHolder.identifiers.countryCode",
+      "varNr": "110"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_typeCode",
+      "varName": "Адрес.тип адреса",
+      "varPath": "policyHolder.address.typeCode",
+      "varType": "IN",
+      "varValue": "REGISTRATION",
+      "varCdm": "policyHolder.addresses.typeCode",
+      "varNr": "121"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_countryCode",
+      "varName": "Адрес.код страны",
+      "varPath": "policyHolder.address.countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "policyHolder.addresses.countryCode",
+      "varNr": "122"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_region",
+      "varName": "Адрес.регион",
+      "varPath": "policyHolder.address.region",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.region",
+      "varNr": "123"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_city",
+      "varName": "Адрес.город",
+      "varPath": "policyHolder.address.city",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.city",
+      "varNr": "124"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_street",
+      "varName": "Адрес.улица",
+      "varPath": "policyHolder.address.street",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.street",
+      "varNr": "125"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_house",
+      "varName": "Адрес.дом",
+      "varPath": "policyHolder.address.house",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.house",
+      "varNr": "126"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_building",
+      "varName": "Адрес.строение",
+      "varPath": "policyHolder.address.building",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.building",
+      "varNr": "127"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_flat",
+      "varName": "Адрес.квартира",
+      "varPath": "policyHolder.address.flat",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.flat",
+      "varNr": "128"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_room",
+      "varName": "Адрес.комната",
+      "varPath": "policyHolder.address.room",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.room",
+      "varNr": "129"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_zipCode",
+      "varName": "Адрес.индекс",
+      "varPath": "policyHolder.address.zipCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.zipCode",
+      "varNr": "130"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_kladrId",
+      "varName": "Адрес.код КЛАДР",
+      "varPath": "policyHolder.address.kladrId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.kladrId",
+      "varNr": "131"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_fiasId",
+      "varName": "Адрес.код ФИАС",
+      "varPath": "policyHolder.address.fiasId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.fiasId",
+      "varNr": "132"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_addressStr",
+      "varName": "Адрес.адресная строка",
+      "varPath": "policyHolder.address.addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.addressStr",
+      "varNr": "133"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_addressStrEn",
+      "varName": "Адрес.адресная строка англ",
+      "varPath": "policyHolder.address.addressStrEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.addressStrEn",
+      "varNr": "134"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_ext_id",
+      "varName": "Адрес.внешний ID",
+      "varPath": "policyHolder.address.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.ext_id",
+      "varNr": "136"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_isMale",
+      "varName": "Страхователь.пол.М",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.isMale",
+      "varNr": "1113"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_isFemale",
+      "varName": "Страхователь.пол.Ж",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.isFemale",
+      "varNr": "1114"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "ph_age_issue",
+      "varName": "Страхователь.возраст на дату выпуска договора",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.age_issue",
+      "varNr": "1115"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "ph_age_end",
+      "varName": "Страхователь.возраст на дату окончания договора",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.age_end",
+      "varNr": "1115"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_sumInsured",
+      "varName": "Страховая сумма объекта страхования",
+      "varPath": "insuredObjects[0].sumInsured",
+      "varType": "IN",
+      "varValue": "100000",
+      "varCdm": "insuredObject.sumInsured",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_packageCode",
+      "varName": "Код пакета",
+      "varPath": "insuredObjects[0].packageCode",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.packageCode",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_firstName",
+      "varName": "Застрахованный.имя",
+      "varPath": "insuredObjects[0].person.firstName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.firstName",
+      "varNr": "1"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_familyState",
+      "varName": "Застрахованный.семейное положение",
+      "varPath": "insuredObjects[0].person.familyState",
+      "varType": "IN",
+      "varValue": "SINGLE",
+      "varCdm": "insuredObject.person.familyState",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_isPublicOfficial",
+      "varName": "Застрахованный.признак ПДЛ",
+      "varPath": "insuredObjects[0].person.isPublicOfficial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.isPublicOfficial",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_age_issue",
+      "varName": "Возраст застрахованного на дату выпуска полиса",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "insuredObject.person.age_issue",
+      "varNr": "1101"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_age_end",
+      "varName": "Возраст застрахованного на дату окончания полиса",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "insuredObject.person.age_end",
+      "varNr": "1102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_ext_id",
+      "varName": "Застрахованный.внешний ID",
+      "varPath": "insuredObjects[0].person.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.ext_id",
+      "varNr": "14"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_lastName",
+      "varName": "Застрахованный.фамилия",
+      "varPath": "insuredObjects[0].person.lastName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.lastName",
+      "varNr": "2"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_middleName",
+      "varName": "Застрахованный.отчество",
+      "varPath": "insuredObjects[0].person.middleName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.middleName",
+      "varNr": "3"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_birthDate",
+      "varName": "Застрахованный.дата рождения",
+      "varPath": "insuredObjects[0].person.birthDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.birthDate",
+      "varNr": "4"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_fullName",
+      "varName": "Застрахованный.полное ФИО",
+      "varPath": "insuredObjects[0].person.fullName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.fullName",
+      "varNr": "5"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_fullNameEn",
+      "varName": "Застрахованный.полное ФИО англ",
+      "varPath": "insuredObjects[0].person.fullNameEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.fullNameEn",
+      "varNr": "6"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_birthPlace",
+      "varName": "Застрахованный.место рождения",
+      "varPath": "insuredObjects[0].person.birthPlace",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.birthPlace",
+      "varNr": "7"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_citizenship",
+      "varName": "Застрахованный.гражданство",
+      "varPath": "insuredObjects[0].person.citizenship",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.person.citizenship",
+      "varNr": "8"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_gender",
+      "varName": "Застрахованный.пол",
+      "varPath": "insuredObjects[0].person.gender",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.gender",
+      "varNr": "9"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_phone",
+      "varName": "Застрахованный.телефон",
+      "varPath": "insuredObjects[0].contacts[isPrimary].phone",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.contacts.phone",
+      "varNr": "81"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_email",
+      "varName": "Застрахованный.email",
+      "varPath": "insuredObjects[0].contacts[isPrimary].email",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.contacts..email",
+      "varNr": "91"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_typeCode",
+      "varName": "Документ.код типа документа",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].typeCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.typeCode",
+      "varNr": "101"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_serial",
+      "varName": "Документ.серия документа",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].serial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.serial",
+      "varNr": "102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_number",
+      "varName": "Документ.номер документа",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].number",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.number",
+      "varNr": "103"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_dateIssue",
+      "varName": "Документ.дата выдачи",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].dateIssue",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.dateIssue",
+      "varNr": "104"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_validUntil",
+      "varName": "Документ.действительно до",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].validUntil",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.validUntil",
+      "varNr": "105"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_whom",
+      "varName": "Документ.кем выдан",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].whom",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.whom",
+      "varNr": "106"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_divisionCode",
+      "varName": "Документ.код подразделения",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].divisionCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.divisionCode",
+      "varNr": "107"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_ext_id",
+      "varName": "Документ.внешний ID",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.ext_id",
+      "varNr": "109"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_countryCode",
+      "varName": "Документ.страна выдачи документа",
+      "varPath": "insuredObjects[0].identifiers[isPrimary].countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.identifiers.countryCode",
+      "varNr": "110"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_typeCode",
+      "varName": "Адрес.тип адреса",
+      "varPath": "insuredObjects[0].addresses[isPrimary].typeCode",
+      "varType": "IN",
+      "varValue": "REGISTRATION",
+      "varCdm": "insuredObject.addresses.typeCode",
+      "varNr": "121"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_countryCode",
+      "varName": "Адрес.код страны",
+      "varPath": "insuredObjects[0].addresses[isPrimary].countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.addresses.countryCode",
+      "varNr": "122"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_region",
+      "varName": "Адрес.регион",
+      "varPath": "insuredObjects[0].addresses[isPrimary].region",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.region",
+      "varNr": "123"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_city",
+      "varName": "Адрес.город",
+      "varPath": "insuredObjects[0].addresses[isPrimary].city",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.city",
+      "varNr": "124"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_street",
+      "varName": "Адрес.улица",
+      "varPath": "insuredObjects[0].addresses[isPrimary].street",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.street",
+      "varNr": "125"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_house",
+      "varName": "Адрес.дом",
+      "varPath": "insuredObjects[0].addresses[isPrimary].house",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.house",
+      "varNr": "126"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_building",
+      "varName": "Адрес.строение",
+      "varPath": "insuredObjects[0].addresses[isPrimary].building",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.building",
+      "varNr": "127"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_flat",
+      "varName": "Адрес.квартира",
+      "varPath": "insuredObjects[0].addresses[isPrimary].flat",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.flat",
+      "varNr": "128"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_room",
+      "varName": "Адрес.комната",
+      "varPath": "insuredObjects[0].addresses[isPrimary].room",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.room",
+      "varNr": "129"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_zipCode",
+      "varName": "Адрес.индекс",
+      "varPath": "insuredObjects[0].addresses[isPrimary].zipCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.zipCode",
+      "varNr": "130"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_kladrId",
+      "varName": "Адрес.код КЛАДР",
+      "varPath": "insuredObjects[0].addresses[isPrimary].kladrId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.kladrId",
+      "varNr": "131"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_fiasId",
+      "varName": "Адрес.код ФИАС",
+      "varPath": "insuredObjects[0].addresses[isPrimary].fiasId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.fiasId",
+      "varNr": "132"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_addressStr",
+      "varName": "Адрес.адресная строка",
+      "varPath": "insuredObjects[0].addresses[isPrimary].addressesStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.addressStr",
+      "varNr": "133"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_addressStrEn",
+      "varName": "Адрес.адресная строка англ",
+      "varPath": "insuredObjects[0].addresses[isPrimary].addressesStrEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.addressStrEn",
+      "varNr": "134"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_ext_id",
+      "varName": "Адрес.внешний ID",
+      "varPath": "insuredObjects[0].addresses[isPrimary].ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.ext_id",
+      "varNr": "136"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport1",
+      "varName": "Доп.риск спорт #1",
+      "varPath": "insuredObjects[0].riskFactors.sport1",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport1",
+      "varNr": "2034"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport2",
+      "varName": "Доп.риск спорт #2",
+      "varPath": "insuredObjects[0].riskFactors.sport2",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport2",
+      "varNr": "2035"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport3",
+      "varName": "Доп.риск спорт #3",
+      "varPath": "insuredObjects[0].riskFactors.sport3",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport3",
+      "varNr": "2036"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport4",
+      "varName": "Доп.риск спорт #4",
+      "varPath": "insuredObjects[0].riskFactors.sport4",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport4",
+      "varNr": "2037"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport5",
+      "varName": "Доп.риск спорт #5",
+      "varPath": "insuredObjects[0].riskFactors.sport5",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport5",
+      "varNr": "2038"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_profSport",
+      "varName": "Профессиональный спорт",
+      "varPath": "insuredObjects[0].riskFactors.profSport",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.profSport",
+      "varNr": "2040"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_base_death",
+      "varName": "Базовая годовая тарифная нетто ставка - Смерть НС",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "0.000844",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_base_disability",
+      "varName": "Базовая годовая тарифная нетто ставка - Инвалидность НС",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "0.000446",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_base_tempdis",
+      "varName": "Базовая годовая тарифная нетто ставка - Временная нетрудоспособность в результате НС",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "0.002815",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksrok",
+      "varName": "Ксрок",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Kprof",
+      "varName": "К проф спорт",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksport1",
+      "varName": "Группа спорта 1",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksport2",
+      "varName": "Группа спорта 2",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksport3",
+      "varName": "Группа спорта 3",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksport4",
+      "varName": "Группа спорта 4",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "Ksport5",
+      "varName": "Группа спорта 5",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "varSport1",
+      "varName": "Группа спорта",
+      "varPath": "",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "varSport2",
+      "varName": "varSport2",
+      "varPath": "",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "K_sport",
+      "varName": "Коэффициент за спорт",
+      "varPath": "",
+      "varType": "COEFFICIENT",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "K_final",
+      "varName": "Общий тарифный коэффициент",
+      "varPath": "",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_premium",
+      "varName": "Премия по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_limitMax",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_premium",
+      "varName": "Премия по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_limitMax",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_premium",
+      "varName": "Премия по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_limitMax",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_commRate",
+      "varName": "Процент кВ по договору",
+      "varPath": "commission.appliedCommissionRate",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "policy.commission.appliedCommissionRate",
+      "varNr": "1050"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "gross_up_factor",
+      "varName": "Gross-up_factor 1/(1-kV)",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.magic.grossUpFactor",
+      "varNr": "1050"
+    }
+  ],
+  "formulas": [
+    {
+      "varCode": "pkg0_formula",
+      "varName": "Calculator for package:0",
+      "lines": [
+        {
+          "nr": 101,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "varSport1",
+          "expressionLeft": "Ksport1",
+          "expressionOperator": "min",
+          "expressionRight": "Ksport2",
+          "postProcessor": ""
+        },
+        {
+          "nr": 120,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "varSport1",
+          "expressionLeft": "varSport1",
+          "expressionOperator": "min",
+          "expressionRight": "Ksport3",
+          "postProcessor": ""
+        },
+        {
+          "nr": 130,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "varSport1",
+          "expressionLeft": "varSport1",
+          "expressionOperator": "min",
+          "expressionRight": "Ksport4",
+          "postProcessor": ""
+        },
+        {
+          "nr": 140,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "varSport1",
+          "expressionLeft": "varSport1",
+          "expressionOperator": "min",
+          "expressionRight": "Ksport5",
+          "postProcessor": ""
+        },
+        {
+          "nr": 1000,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "K_final",
+          "expressionLeft": "Kprof",
+          "expressionOperator": "*",
+          "expressionRight": "K_sport",
+          "postProcessor": ""
+        },
+        {
+          "nr": 1010,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "K_final",
+          "expressionLeft": "K_final",
+          "expressionOperator": "*",
+          "expressionRight": "Ksrok",
+          "postProcessor": ""
+        },
+        {
+          "nr": 1020,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "K_final",
+          "expressionLeft": "K_final",
+          "expressionOperator": "*",
+          "expressionRight": "gross_up_factor",
+          "postProcessor": "round2_up"
+        },
+        {
+          "nr": 10001,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_DEATH_premium",
+          "expressionLeft": "co_ACCIDENT_DEATH_sumInsured",
+          "expressionOperator": "*",
+          "expressionRight": "K_final",
+          "postProcessor": ""
+        },
+        {
+          "nr": 10011,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_TEMP_DISABILITY_premium",
+          "expressionLeft": "co_ACCIDENT_TEMP_DISABILITY_sumInsured",
+          "expressionOperator": "*",
+          "expressionRight": "K_final",
+          "postProcessor": ""
+        },
+        {
+          "nr": 10021,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_DISABILITY_premium",
+          "expressionLeft": "co_ACCIDENT_DISABILITY_sumInsured",
+          "expressionOperator": "*",
+          "expressionRight": "K_final",
+          "postProcessor": ""
+        },
+        {
+          "nr": 10101,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_DEATH_premium",
+          "expressionLeft": "co_ACCIDENT_DEATH_premium",
+          "expressionOperator": "*",
+          "expressionRight": "const_base_death",
+          "postProcessor": "round2_up"
+        },
+        {
+          "nr": 10101,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_TEMP_DISABILITY_premium",
+          "expressionLeft": "co_ACCIDENT_TEMP_DISABILITY_premium",
+          "expressionOperator": "*",
+          "expressionRight": "const_base_disability",
+          "postProcessor": "round2_up"
+        },
+        {
+          "nr": 10101,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_ACCIDENT_DISABILITY_premium",
+          "expressionLeft": "co_ACCIDENT_DISABILITY_premium",
+          "expressionOperator": "*",
+          "expressionRight": "const_base_tempdis",
+          "postProcessor": "round2_up"
+        }
+      ]
+    }
+  ],
+  "coefficients": [
+    {
+      "varCode": "Ksrok",
+      "varName": "Ксрок",
+      "altVarCode": null,
+      "altVarValue": 1,
+      "columns": [
+        {
+          "varCode": "pl_TermDays",
+          "varDataType": "NUMBER",
+          "nr": 1,
+          "conditionOperator": ">=",
+          "sortOrder": "ASC"
+        },
+        {
+          "varCode": "pl_TermMonths",
+          "varDataType": "NUMBER",
+          "nr": 2,
+          "conditionOperator": ">=",
+          "sortOrder": "ASC"
+        }
+      ]
+    },
+    {
+      "varCode": "Kprof",
+      "varName": "К проф спорт",
+      "altVarCode": null,
+      "altVarValue": 1,
+      "columns": [
+        {
+          "varCode": "Кпроф",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "Ksport1",
+      "varName": "Ksport1",
+      "altVarCode": null,
+      "altVarValue": 10,
+      "columns": [
+        {
+          "varCode": "rf_sport1",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "Ksport2",
+      "varName": "Ksport2",
+      "altVarCode": null,
+      "altVarValue": 10,
+      "columns": [
+        {
+          "varCode": "rf_sport2",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "Ksport3",
+      "varName": "Ksport3",
+      "altVarCode": null,
+      "altVarValue": 10,
+      "columns": [
+        {
+          "varCode": "rf_sport3",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "Ksport4",
+      "varName": "Ksport4",
+      "altVarCode": null,
+      "altVarValue": 10,
+      "columns": [
+        {
+          "varCode": "rf_sport4",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "Ksport5",
+      "varName": "Ksport5",
+      "altVarCode": null,
+      "altVarValue": 10,
+      "columns": [
+        {
+          "varCode": "rf_sport5",
+          "varDataType": "STRING",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    },
+    {
+      "varCode": "K_sport",
+      "varName": "Коэффициент за спорт",
+      "altVarCode": null,
+      "altVarValue": 1,
+      "columns": [
+        {
+          "varCode": "varSport1",
+          "varDataType": "NUMBER",
+          "nr": 1,
+          "conditionOperator": "=",
+          "sortOrder": "NONE"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1409 @@
+{
+  "lob": "ACC",
+  "code": "NS_CLASSIC",
+  "name": "Классический НС",
+  "insCompanyId": 100,
+  "versionNo": 1,
+  "versionStatus": "DEV",
+  "phType": "person",
+  "ioType": "person",
+  "waitingPeriod": {
+    "validatorType": "RANGE",
+    "validatorValue": "P1D-P2Y"
+  },
+  "policyTerm": {
+    "validatorType": "RANGE",
+    "validatorValue": "P1D-P2Y"
+  },
+  "vars": [
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_commRate",
+      "varName": "Процент кВ по договору",
+      "varPath": "commission.appliedCommissionRate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.commission.appliedCommissionRate",
+      "varNr": "1050"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "gross-up_factor",
+      "varName": "ross-up_factor 1/(1-kV)",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.grossUpFactor",
+      "varNr": "1050"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_productCode",
+      "varName": "Код продукта",
+      "varPath": "productCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.productCode",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_startDate",
+      "varName": "дата начала действия договора",
+      "varPath": "startDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.startDate",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_endDate",
+      "varName": "дата окончания договора",
+      "varPath": "endDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.endDate",
+      "varNr": "12"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_policyNumber",
+      "varName": "номер договора",
+      "varPath": "policyNumber",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.policyNumber",
+      "varNr": "13"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_premium",
+      "varName": "премия по договору",
+      "varPath": "premium",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.premium",
+      "varNr": "14"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "pl_issueDate",
+      "varName": "дата выпуска договора",
+      "varPath": "issueDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policy.policy.issueDate",
+      "varNr": "15"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermMonths",
+      "varName": "Срок полиса в месяцах",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.magic.termMonths",
+      "varNr": "1201"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "pl_TermDays",
+      "varName": "Срок полиса в днях",
+      "varPath": "",
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policy.magic.termDays",
+      "varNr": "1202"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_firstName",
+      "varName": "Страхователь.имя",
+      "varPath": "policyHolder.person.firstName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.firstName",
+      "varNr": "1"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "ph_age_issue",
+      "varName": "Страхователь.возраст на дату выпуска договора",
+      "varPath": null,
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.age_issue",
+      "varNr": "1115"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "ph_age_end",
+      "varName": "Страхователь.возраст на дату окончания договора",
+      "varPath": null,
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "policyHolder.person.age_end",
+      "varNr": "1115"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_lastName",
+      "varName": "Страхователь.фамилия",
+      "varPath": "policyHolder.person.lastName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.lastName",
+      "varNr": "2"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_middleName",
+      "varName": "Страхователь.отчество",
+      "varPath": "policyHolder.person.middleName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.middleName",
+      "varNr": "3"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_birthDate",
+      "varName": "Страхователь.дата рождения",
+      "varPath": "policyHolder.person.birthDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.birthDate",
+      "varNr": "4"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_fullName",
+      "varName": "Страхователь.полное ФИО",
+      "varPath": "policyHolder.person.fullName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.fullName",
+      "varNr": "5"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_citizenship",
+      "varName": "Страхователь.гражданство",
+      "varPath": "policyHolder.person.citizenship",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "policyHolder.person.citizenship",
+      "varNr": "8"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_gender",
+      "varName": "Страхователь.пол",
+      "varPath": "policyHolder.person.gender",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.person.gender",
+      "varNr": "9"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_phone",
+      "varName": "Страхователь.телефон",
+      "varPath": "policyHolder.contacts.phone",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.contacts.phone",
+      "varNr": "81"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_email",
+      "varName": "Страхователь.email",
+      "varPath": "policyHolder.contacts.email",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.contacts.email",
+      "varNr": "91"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_typeCode",
+      "varName": "ph.Документ.код типа документа",
+      "varPath": "policyHolder.identifiers[?(@.isPrimary)].typeCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.typeCode",
+      "varNr": "101"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_serial",
+      "varName": "ph.Документ.серия документа",
+      "varPath": "policyHolder.identifiers[?(@.isPrimary)].serial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.serial",
+      "varNr": "102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_number",
+      "varName": "ph.Документ.номер документа",
+      "varPath": "policyHolder.identifiers[?(@.isPrimary)].number",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.number",
+      "varNr": "103"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_dateIssue",
+      "varName": "ph.Документ.дата выдачи",
+      "varPath": "policyHolder.identifiers[?(@.isPrimary)].dateIssue",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.dateIssue",
+      "varNr": "104"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_doc_whom",
+      "varName": "ph.Документ.кем выдан",
+      "varPath": "policyHolder.identifiers[?(@.isPrimary)].whom",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.identifiers.whom",
+      "varNr": "106"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_typeCode",
+      "varName": "ph.Адрес.тип адреса",
+      "varPath": "policyHolder.addresses[?(@.isPrimary)].typeCode",
+      "varType": "IN",
+      "varValue": "REGISTRATION",
+      "varCdm": "policyHolder.addresses.typeCode",
+      "varNr": "121"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_addr_addressStr",
+      "varName": "ph.Адрес.адресная строка",
+      "varPath": "policyHolder.addresses[?(@.isPrimary)].addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "policyHolder.addresses.addressStr",
+      "varNr": "133"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_sumInsured",
+      "varName": "Страховая сумма объекта страхования",
+      "varPath": "insuredObjects[0].sumInsured",
+      "varType": "IN",
+      "varValue": "100000",
+      "varCdm": "insuredObject.sumInsured",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_packageCode",
+      "varName": "Код пакета",
+      "varPath": "insuredObjects[0].packageCode",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.packageCode",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_firstName",
+      "varName": "Застрахованный.имя",
+      "varPath": "insuredObjects[0].person.firstName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.firstName",
+      "varNr": "1"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_familyState",
+      "varName": "Застрахованный.семейное положение",
+      "varPath": "insuredObjects[0].person.familyState",
+      "varType": "IN",
+      "varValue": "SINGLE",
+      "varCdm": "insuredObject.person.familyState",
+      "varNr": "10"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_isPublicOfficial",
+      "varName": "Застрахованный.признак ПДЛ",
+      "varPath": "insuredObjects[0].person.isPublicOfficial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.isPublicOfficial",
+      "varNr": "11"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_age_issue",
+      "varName": "Возраст застрахованного на дату выпуска полиса",
+      "varPath": null,
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "insuredObject.person.age_issue",
+      "varNr": "1101"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "io_age_end",
+      "varName": "Возраст застрахованного на дату окончания полиса",
+      "varPath": null,
+      "varType": "MAGIC",
+      "varValue": "",
+      "varCdm": "insuredObject.person.age_end",
+      "varNr": "1102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_ext_id",
+      "varName": "Застрахованный.внешний ID",
+      "varPath": "insuredObjects[0].person.ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.ext_id",
+      "varNr": "14"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_lastName",
+      "varName": "Застрахованный.фамилия",
+      "varPath": "insuredObjects[0].person.lastName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.lastName",
+      "varNr": "2"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_middleName",
+      "varName": "Застрахованный.отчество",
+      "varPath": "insuredObjects[0].person.middleName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.middleName",
+      "varNr": "3"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_birthDate",
+      "varName": "Застрахованный.дата рождения",
+      "varPath": "insuredObjects[0].person.birthDate",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.birthDate",
+      "varNr": "4"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_fullName",
+      "varName": "Застрахованный.полное ФИО",
+      "varPath": "insuredObjects[0].person.fullName",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.fullName",
+      "varNr": "5"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_fullNameEn",
+      "varName": "Застрахованный.полное ФИО англ",
+      "varPath": "insuredObjects[0].person.fullNameEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.fullNameEn",
+      "varNr": "6"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_birthPlace",
+      "varName": "Застрахованный.место рождения",
+      "varPath": "insuredObjects[0].person.birthPlace",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.birthPlace",
+      "varNr": "7"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_citizenship",
+      "varName": "Застрахованный.гражданство",
+      "varPath": "insuredObjects[0].person.citizenship",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.person.citizenship",
+      "varNr": "8"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_gender",
+      "varName": "Застрахованный.пол",
+      "varPath": "insuredObjects[0].person.gender",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.person.gender",
+      "varNr": "9"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_phone",
+      "varName": "Застрахованный.телефон",
+      "varPath": "insuredObjects[0].contacts.phone",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.contacts.phone",
+      "varNr": "81"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_email",
+      "varName": "Застрахованный.email",
+      "varPath": "insuredObjects[0].contacts.email",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.contacts.email",
+      "varNr": "91"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_typeCode",
+      "varName": "io.Документ.код типа документа",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].typeCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.typeCode",
+      "varNr": "101"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_serial",
+      "varName": "io.Документ.серия документа",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].serial",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.serial",
+      "varNr": "102"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_number",
+      "varName": "io.Документ.номер документа",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].number",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.number",
+      "varNr": "103"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_dateIssue",
+      "varName": "io.Документ.дата выдачи",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].dateIssue",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.dateIssue",
+      "varNr": "104"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_validUntil",
+      "varName": "io.Документ.действительно до",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].validUntil",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.validUntil",
+      "varNr": "105"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_whom",
+      "varName": "io.Документ.кем выдан",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].whom",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.whom",
+      "varNr": "106"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_divisionCode",
+      "varName": "io.Документ.код подразделения",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].divisionCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.divisionCode",
+      "varNr": "107"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_ext_id",
+      "varName": "io.Документ.внешний ID",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.identifiers.ext_id",
+      "varNr": "109"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_doc_countryCode",
+      "varName": "io.Документ.страна выдачи документа",
+      "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.identifiers.countryCode",
+      "varNr": "110"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_typeCode",
+      "varName": "io.Адрес.тип адреса",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].typeCode",
+      "varType": "IN",
+      "varValue": "REGISTRATION",
+      "varCdm": "insuredObject.addresses.typeCode",
+      "varNr": "121"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_countryCode",
+      "varName": "io.Адрес.код страны",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].countryCode",
+      "varType": "IN",
+      "varValue": "RU",
+      "varCdm": "insuredObject.addresses.countryCode",
+      "varNr": "122"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_region",
+      "varName": "io.Адрес.регион",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].region",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.region",
+      "varNr": "123"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_city",
+      "varName": "io.Адрес.город",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].city",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.city",
+      "varNr": "124"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_street",
+      "varName": "io.Адрес.улица",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].street",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.street",
+      "varNr": "125"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_house",
+      "varName": "io.Адрес.дом",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].house",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.house",
+      "varNr": "126"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_building",
+      "varName": "io.Адрес.строение",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].building",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.building",
+      "varNr": "127"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_flat",
+      "varName": "io.Адрес.квартира",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].flat",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.flat",
+      "varNr": "128"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_room",
+      "varName": "io.Адрес.комната",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].room",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.room",
+      "varNr": "129"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_zipCode",
+      "varName": "io.Адрес.индекс",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].zipCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.zipCode",
+      "varNr": "130"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_kladrId",
+      "varName": "io.Адрес.код КЛАДР",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].kladrId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.kladrId",
+      "varNr": "131"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_fiasId",
+      "varName": "io.Адрес.код ФИАС",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].fiasId",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.fiasId",
+      "varNr": "132"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_addressStr",
+      "varName": "io.Адрес.адресная строка",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.addressStr",
+      "varNr": "133"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_addressStrEn",
+      "varName": "io.Адрес.адресная строка англ",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].addressStrEn",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.addressStrEn",
+      "varNr": "134"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_addr_ext_id",
+      "varName": "io.Адрес.внешний ID",
+      "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].ext_id",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObject.addresses.ext_id",
+      "varNr": "136"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport1",
+      "varName": "Доп.риск спорт #1",
+      "varPath": "insuredObjects[0].riskFactors.sport1",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport1",
+      "varNr": "2034"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport2",
+      "varName": "Доп.риск спорт #2",
+      "varPath": "insuredObjects[0].riskFactors.sport2",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport2",
+      "varNr": "2035"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport3",
+      "varName": "Доп.риск спорт #3",
+      "varPath": "insuredObjects[0].riskFactors.sport3",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport3",
+      "varNr": "2036"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport4",
+      "varName": "Доп.риск спорт #4",
+      "varPath": "insuredObjects[0].riskFactors.sport4",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport4",
+      "varNr": "2037"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_sport5",
+      "varName": "Доп.риск спорт #5",
+      "varPath": "insuredObjects[0].riskFactors.sport5",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.sport5",
+      "varNr": "2038"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "rf_profSport",
+      "varName": "Профессиональный спорт",
+      "varPath": "insuredObjects[0].riskFactors.profSport",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObject.riskFactors.profSport",
+      "varNr": "2040"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_insurer",
+      "varName": "Страхователь",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "САО ВСК",
+      "varCdm": "strings.txt_insurer",
+      "varNr": "1116"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_insured",
+      "varName": "Страховщик",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{#if ph_fullName}}{{ph_fullName}}{{/if}}{{#if !ph_fullName}}{{ph_lastName}} {{ph_firstName}} {{ph_middleName}} {{/if}}\n\n",
+      "varCdm": "strings.txt_insured",
+      "varNr": "1117"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_header",
+      "varName": "Шапка номер от дата",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "№ {{pl_policyNumber}} от {{pl_issueDate|dd MMMM yyyy}}г.",
+      "varCdm": "strings.txt_header",
+      "varNr": "1119"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_policy_number",
+      "varName": "Номер договора",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "№ {{pl_policyNumber}} от {{pl_issueDate|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_policy_number",
+      "varNr": "1101"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_citizenship",
+      "varName": "Страхователь гражданство",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Гражданство: {{ph_citizenship|country2}}",
+      "varCdm": "strings.txt_ph_citizenship",
+      "varNr": "1122"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_dob",
+      "varName": "Страхователь дата рождения",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Дата рождения: {{ph_birthDate|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_ph_dob",
+      "varNr": "1104"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_address",
+      "varName": "Страхователь адрес регистрации",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Адрес регистрации: {{ph_addr_addressStr}}",
+      "varCdm": "strings.txt_ph_address",
+      "varNr": "1105"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_phone",
+      "varName": "Страхователь телефон",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Телефон: {{ph_phone}}",
+      "varCdm": "strings.txt_ph_phone",
+      "varNr": "1106"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_email",
+      "varName": "Страхователь адрес электронной почты",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Адрес электронной почты: {{ph_email}}",
+      "varCdm": "strings.txt_ph_email",
+      "varNr": "1107"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_id",
+      "varName": "Страхователь документ, удостоверяющий личность наименование",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Наименование: {{ph_doc_typeCode|fns-dul}}",
+      "varCdm": "strings.txt_ph_id",
+      "varNr": "1108"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_id_serial",
+      "varName": "Страхователь документ серия",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Серия: {{ph_doc_serial}}",
+      "varCdm": "strings.txt_ph_id_serial",
+      "varNr": "1109"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_id_number",
+      "varName": "Страхователь документ номер",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Номер: {{ph_doc_number}}",
+      "varCdm": "strings.txt_ph_id_number",
+      "varNr": "1110"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_id_date",
+      "varName": "Страхователь документ дата выдачи",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Дата выдачи: {{ph_doc_dateIssue|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_ph_id_date",
+      "varNr": "1111"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_ph_id_whom",
+      "varName": "Страхователь документ кем выдан",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{ph_doc_whom}}",
+      "varCdm": "strings.txt_ph_id_whom",
+      "varNr": "1112"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_citizenship",
+      "varName": "Застрахованное лицо гражданство",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Гражданство: {{io_citizenship|country2}}",
+      "varCdm": "strings.txt_io_citizenship",
+      "varNr": "1113"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_dob",
+      "varName": "Застрахованное лицо дата рождения",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Дата рождения: {{io_birthDate|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_io_dob",
+      "varNr": "1114"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_address",
+      "varName": "Застрахованное лицо адрес регистрации",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Адрес регистрации: {{io_addr_addressStr}}",
+      "varCdm": "strings.txt_io_address",
+      "varNr": "1115"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_id",
+      "varName": "Застрахованное лицо документ наименование",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Наименование: {{io_doc_typeCode|fns-dul}}",
+      "varCdm": "strings.txt_io_id",
+      "varNr": "1116"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_id_serial",
+      "varName": "Застрахованное лицо документ серия",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Серия: {{io_doc_serial}}",
+      "varCdm": "strings.txt_io_id_serial",
+      "varNr": "1117"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_id_number",
+      "varName": "Застрахованное лицо документ номер",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Номер: {{io_doc_number}}",
+      "varCdm": "strings.txt_io_id_number",
+      "varNr": "1118"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_id_date",
+      "varName": "Застрахованное лицо документ дата выдачи",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Дата выдачи: {{io_doc_dateIssue|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_io_id_date",
+      "varNr": "1119"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_io_id_whom",
+      "varName": "Застрахованное лицо документ кем выдан",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{io_doc_whom}}",
+      "varCdm": "strings.txt_io_id_whom",
+      "varNr": "1120"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_sumInsured",
+      "varName": "Страховая сумма",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{io_sumInsured|money}}",
+      "varCdm": "strings.txt_sumInsured",
+      "varNr": "1121"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_premium",
+      "varName": "Страховая премия",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{pl_premium|money}} рублей.",
+      "varCdm": "strings.txt_premium",
+      "varNr": "1123"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_paymentDate",
+      "varName": "Страховая премия уплачена",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{payment_date|dd MMMM yyyy}}",
+      "varCdm": "strings.txt_paymentDate",
+      "varNr": "1124"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_period_text",
+      "varName": "Период ответственности Страховщика",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "с {{pl_startDate|date}} по {{pl_endDate|date}}",
+      "varCdm": "strings.txt_period_text",
+      "varNr": "1125"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_issueDate",
+      "varName": "Дата заключения договора",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{pl_issueDate|dd.MM.yyyy}}",
+      "varCdm": "strings.txt_issueDate",
+      "varNr": "1128"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_start_period",
+      "varName": "Срок действия договора с",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "с 00 часов {{pl_startDate|dd MMMM yyyy}}г. но не ранее времени фактической оплаты страховой премии в полном объеме.",
+      "varCdm": "strings.txt_start_period",
+      "varNr": "1145"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_end_period",
+      "varName": "Срок действия договора по",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "до 24 часов {{pl_endDate|dd MMMM yyyy}}г.",
+      "varCdm": "strings.txt_end_period",
+      "varNr": "1146"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_period",
+      "varName": "Период ответственности Страховщика:",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "Круглосуточно{{#if rf_sport1}}, включая тренировки и соревнования по следующим видам спорта: {{txt_sports}}{{/if}}",
+      "varCdm": "strings.txt_period",
+      "varNr": "1147"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "txt_sports",
+      "varName": "Все виды спорта",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{#if rf_sport1}}{{rf_sport1}}{{/if}}{{#if rf_sport2}},{{rf_sport2}}{{/if}}{{#if rf_sport3}},{{rf_sport3}}{{/if}}{{#if rf_sport4}},{{rf_sport4}}{{/if}}{{#if rf_sport5}},{{rf_sport5}}{{/if}}",
+      "varCdm": "strings.txt_sports",
+      "varNr": "1148"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_digest",
+      "varName": "Объект страхования",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{io_lastName}} {{io_firstName}} {{io_middleName}}",
+      "varCdm": "strings.io_digest",
+      "varNr": "1147"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "ph_digest",
+      "varName": "Страхователь ( для ЛК)",
+      "varPath": "",
+      "varType": "TEXT",
+      "varValue": "{{ph_lastName}} {{ph_firstName}} {{ph_middleName}}",
+      "varCdm": "strings.ph_digest",
+      "varNr": "1148"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_premium",
+      "varName": "Премия по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DEATH_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_DEATH",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DEATH\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DEATH_limitMax",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_premium",
+      "varName": "Премия по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_TEMP_DISABILITY_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_TEMP_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_TEMP_DISABILITY\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_TEMP_DISABILITY_limitMax",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_sumInsured",
+      "varName": "Страховая сумма по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_sumInsured",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_premium",
+      "varName": "Премия по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_premium",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_deductibleNr",
+      "varName": "Id франшизы по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_deductibleNr",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_limitMin",
+      "varName": "Лимит ответственности (min) по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].limitMin",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_limitMin",
+      "varNr": "1001"
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_ACCIDENT_DISABILITY_limitMax",
+      "varName": "Лимит ответственности (max) по  ACCIDENT_DISABILITY",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"ACCIDENT_DISABILITY\")].limitMax",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_ACCIDENT_DISABILITY_limitMax",
+      "varNr": "1001"
+    }
+  ],
+  "quoteValidator": [
+    {
+      "keyRightCustomValue": true,
+      "lineNr": 1,
+      "keyRight": "альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "keyLeft": "rf_sport1",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Доп.риск спорт #1\" должно быть в списке альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "isKeyRightCustomValue": true
+    },
+    {
+      "keyRightCustomValue": true,
+      "keyRight": "true, false",
+      "keyLeft": "rf_profSport",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Профессиональный спорт\" должно быть в списке true, false",
+      "isKeyRightCustomValue": true
+    },
+    {
+      "keyRightCustomValue": true,
+      "keyRight": "альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "keyLeft": "rf_sport2",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Доп.риск спорт #2\" должно быть в списке альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "isKeyRightCustomValue": true
+    },
+    {
+      "keyRightCustomValue": true,
+      "keyRight": "альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "keyLeft": "rf_sport3",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Доп.риск спорт #3\" должно быть в списке альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "isKeyRightCustomValue": true
+    },
+    {
+      "keyRightCustomValue": true,
+      "keyRight": "альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "keyLeft": "rf_sport4",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Доп.риск спорт #4\" должно быть в списке альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "isKeyRightCustomValue": true
+    },
+    {
+      "keyRightCustomValue": true,
+      "keyRight": "альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "keyLeft": "rf_sport5",
+      "dataType": "NUMBER",
+      "ruleType": "IN_LIST",
+      "errorText": "Значение \"Доп.риск спорт #5\" должно быть в списке альпинизм, бейсджампинг, горнолыжный спорт, дельтапланеризм, зимнее плавание, каньонинг, ледолазание, парапланеризм, пара-ски (парашютно-горнолыжное двоеборье), прыжки на лыжах с трамплина, скайсёрфинг, спидскиинг, скалолазание, слоупстайл, спелеология, фрирайд (борд/лыжи на целине), фристайл, хели-ски (вертолетно-горнолыжный-сноубордический маршрут), маунтинбайк, воздушно-спортивный эквилибр, вмх, дельтапланеризм, дертджампинг, банджи-джампинг, паркур, полиатлон, флайджет,  автомотоспорт, американский футбол, бокс, борьба (в т.ч. восточные единоборства и т.д.), виндсерфинг, горные лыжи, горный туризм, дайвинг, лыжные виды спорта, парашютный спорт, парусный спорт, рафтинг (сплав по горным порожистым рекам на рафте), серфинг, сноубординг, управление одно-двухместными спортивными самолетами, буерный спорт, вейкбординг, армспорт, атлетика воздушная, кобудо, кросс-кантри, кэмпо, водно-моторный спорт, мечевой бой, многоборье, парусный спорт, пауэрлифтинг, рогейн, скайраннинг, спелеотуризм, трикинг, фридайвинг, яхтинг, акробатика, баскетбол, велосипедный спорт, гандбол, гимнастика, гребля на байдарках и каноэ, конькобежный спорт, легкая атлетика, пожарно-прикладной спорт, регби, санный спорт, тимбилдинг, современное пятиборье, триатлон, спортивная гимнастика, спортивные танцы, стрельба, тяжелая атлетика, фехтование, фигурное катание, футбол, хоккей, художественная гимнастика, военно-полевые сборы, каякинг, керлинг, конькобежный спорт, аэротруба, балет, кроссфит, лазертаг, водное поло, дуатлон, воркаут, бег, бодибилдинг, пол дэнс, прыжки на батуте, прыжки с трамплина, регбол, свимран, спортивно-прикладное собаководство, стритбол, танцы акробатические, танцы современные, трейлраннинг, фитнес, флаг-футбол, хореография, чир спорт, чирлидинг, шестовая акробатика, воздушная гимнастика, академическая гребля, бадминтон, бейсбол, биатлон, верховая езда, конный спорт, волейбол, зорбинг, лыжные гонки, минифутбол, охота и рыболовство, плавание, подводное плавание и ныряние, прыжки в воду, ракетбол, реал теннис, скейтборд, софтбол, спортивное ориентирование, спортивный туризм, стрельба из арбалета, стрельба из лука, стрельба пулевая, стрельба стендовая, пейнтбол, теннис, зумба, йога, боулинг, автомодельный спорт, карточные игры, киберспорт, гольф, веселые старты, крокет, аэробика, гто, дартс, городошный спорт, бильярд, авиамодельный спорт, нарды, перетягивание каната, петанк, радиоспорт, сквош, спортивная ходьба, стрелковый спорт, судомодельный порт, треккинг, флаинг-диск,шашки, экскурсионные поездки,шахматы",
+      "isKeyRightCustomValue": true
+    }
+  ],
+  "saveValidator": [
+    {
+      "keyRightCustomValue": false,
+      "keyLeft": "ph_firstName",
+      "dataType": "NUMBER",
+      "ruleType": "NOT_NULL",
+      "errorText": "Поле \"Страхователь.имя\" должно быть заполнено",
+      "isKeyRightCustomValue": false
+    },
+    {
+      "keyRightCustomValue": false,
+      "keyLeft": "ph_lastName",
+      "dataType": "NUMBER",
+      "ruleType": "NOT_NULL",
+      "errorText": "Поле \"Страхователь.фамилия\" должно быть заполнено",
+      "isKeyRightCustomValue": false
+    },
+    {
+      "keyRightCustomValue": false,
+      "keyLeft": "ph_phone",
+      "dataType": "NUMBER",
+      "ruleType": "NOT_NULL",
+      "errorText": "Поле \"Страхователь.телефон\" должно быть заполнено",
+      "isKeyRightCustomValue": false
+    },
+    {
+      "keyRightCustomValue": false,
+      "keyLeft": "ph_email",
+      "dataType": "NUMBER",
+      "ruleType": "NOT_NULL",
+      "errorText": "Поле \"Страхователь.email\" должно быть заполнено",
+      "isKeyRightCustomValue": false
+    }
+  ],
+  "packages": [
+    {
+      "code": 0,
+      "name": "0",
+      "covers": [
+        {
+          "code": "ACCIDENT_DEATH",
+          "deductibles": [],
+          "waitingPeriod": "",
+          "isMandatory": true,
+          "coverageTerm": "",
+          "isDeductibleMandatory": false,
+          "limits": []
+        },
+        {
+          "code": "ACCIDENT_TEMP_DISABILITY",
+          "deductibles": [],
+          "waitingPeriod": "",
+          "isMandatory": false,
+          "coverageTerm": "",
+          "isDeductibleMandatory": false,
+          "limits": []
+        },
+        {
+          "code": "ACCIDENT_DISABILITY",
+          "deductibles": [],
+          "waitingPeriod": "",
+          "isMandatory": false,
+          "coverageTerm": "",
+          "isDeductibleMandatory": false,
+          "limits": []
+        }
+      ],
+      "files": [
+        {
+          "fileCode": "policy",
+          "fileName": "Спорт СРМ_Форма 2.pdf",
+          "fileId": 100
+        },
+        {
+          "fileCode": "kid",
+          "fileName": "КИД_Правила 168_3 риска См,Инв,ВНТ.pdf",
+          "fileId": 101
+        }
+      ]
+    }
+  ],
+  "numberGenerator": {
+    "id": null,
+    "productCode": null,
+    "mask": "{YY}ФФ0YZ{XXXXXX}",
+    "resetPolicy": "YEARLY",
+    "maxValue": 999999,
+    "xorMask": "999999"
+  },
+  "rules": {
+    "insuredEqualsPolicyHolder": false
+  }
+}

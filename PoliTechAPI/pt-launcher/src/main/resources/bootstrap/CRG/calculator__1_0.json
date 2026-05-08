@@ -1,0 +1,130 @@
+{
+  "id": 1221,
+  "productId": 1218,
+  "productCode": "",
+  "versionNo": 1,
+  "packageNo": "0",
+  "vars": [
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_sumInsured",
+      "varName": "Страховая сумма по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_premium",
+      "varName": "Премия по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_deductibleNr",
+      "varName": "Id франшизы по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_tariff",
+      "varName": "Тариф",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "0.000057",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_cargo_declaredValue_amount",
+      "varName": "Сумма",
+      "varPath": "insuredObjects[0].cargo.declaredValue.amount",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.cargo.declaredValue.amount",
+      "varNr": "1",
+      "id": 3639,
+      "parent_id": 3638,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": true,
+      "isOptional": true,
+      "name": "Сумма"
+    }
+  ],
+  "formulas": [
+    {
+      "varCode": "pkg0_formula",
+      "varName": "Calculator for package:0",
+      "lines": [
+        {
+          "nr": 1,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_RATING_COVER_sumInsured",
+          "expressionLeft": "io_cargo_declaredValue_amount",
+          "expressionOperator": "",
+          "expressionRight": "",
+          "postProcessor": ""
+        },
+        {
+          "nr": 2,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_RATING_COVER_premium",
+          "expressionLeft": "io_cargo_declaredValue_amount",
+          "expressionOperator": "*",
+          "expressionRight": "const_tariff",
+          "postProcessor": "round2_up"
+        }
+      ]
+    }
+  ],
+  "coefficients": []
+}

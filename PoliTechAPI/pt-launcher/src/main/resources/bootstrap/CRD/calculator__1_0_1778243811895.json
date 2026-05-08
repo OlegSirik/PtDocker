@@ -1,0 +1,139 @@
+{
+  "id": 1277,
+  "productId": 1244,
+  "productCode": "",
+  "versionNo": 1,
+  "packageNo": "0",
+  "vars": [
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_sumInsured",
+      "varName": "Страховая сумма по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_RATING_COVER_sumInsured",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_premium",
+      "varName": "Премия по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_RATING_COVER_premium",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_RATING_COVER_deductibleNr",
+      "varName": "Id франшизы по  RATING_COVER",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"RATING_COVER\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "coverage.co_RATING_COVER_deductibleNr",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_SI",
+      "varName": "Страховая сумма",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "100000",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_premium",
+      "varName": "Премия по договору",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "2001",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    }
+  ],
+  "formulas": [
+    {
+      "varCode": "pkg0_formula",
+      "varName": "Calculator for package:0",
+      "lines": [
+        {
+          "nr": 1,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_RATING_COVER_sumInsured",
+          "expressionLeft": "const_SI",
+          "expressionOperator": "",
+          "expressionRight": "",
+          "postProcessor": ""
+        },
+        {
+          "nr": 2,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_RATING_COVER_premium",
+          "expressionLeft": "const_premium",
+          "expressionOperator": "",
+          "expressionRight": "",
+          "postProcessor": ""
+        }
+      ]
+    }
+  ],
+  "coefficients": [
+    {
+      "varCode": "ФФ",
+      "varName": "ФФ",
+      "altVarCode": null,
+      "altVarValue": null,
+      "errorTextIfNotFound": "аыфваыфвафывафывафывафыва",
+      "columns": []
+    }
+  ]
+}

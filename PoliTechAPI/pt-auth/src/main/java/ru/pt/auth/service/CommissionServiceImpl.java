@@ -189,8 +189,12 @@ public class CommissionServiceImpl implements CommissionService {
             log.trace("calculateCommission: no commission config found, returning zero commission");
             dto.setCommissionAmount(new BigDecimal(0));
             dto.setAgdNumber("NotFound");
+            return dto;
         } else if (configs.size() != 1) {
-            throw new UnprocessableEntityException("Не найден агентский договор для продукта");
+//            throw new UnprocessableEntityException("Не найден агентский договор для продукта");
+            dto.setCommissionAmount(new BigDecimal(0));
+            dto.setAgdNumber("NotFound");
+            return dto;
         } else {
             config = configs.get(0);
             dto.setAgdNumber( config.getAgdNumber() );

@@ -15,6 +15,7 @@ import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.api.dto.exception.BadRequestException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -312,7 +313,7 @@ public class CoefficientServiceImpl implements CoefficientService {
         entity.setCol8(getConditionValue(condition, 8));
         entity.setCol9(getConditionValue(condition, 9));
         entity.setCol10(getConditionValue(condition, 10));
-        entity.setResultValue(row.getResultValue());
+        entity.setResultValue(row.getResultValue() == null ? null : row.getResultValue());
     }
 
     private CoefficientDataRow mapToRow(CoefficientDataEntity entity) {
@@ -331,7 +332,7 @@ public class CoefficientServiceImpl implements CoefficientService {
         cond.add(entity.getCol9());
         cond.add(entity.getCol10());
         row.setConditionValue(cond);
-        row.setResultValue(entity.getResultValue());
+        row.setResultValue(entity.getResultValue() == null ? null : entity.getResultValue());
         return row;
     }
 

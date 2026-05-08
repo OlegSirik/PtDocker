@@ -1,6 +1,7 @@
 package ru.pt.calculator.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "coefficient_data")
@@ -43,8 +44,8 @@ public class CoefficientDataEntity {
     @Column(name = "col10")
     private String col10;
 
-    @Column(name = "result_value")
-    private Double resultValue;
+    @Column(name = "result_value", precision = 19, scale = 8)
+    private BigDecimal resultValue;
 
     public Long getTId() {
         return tId;
@@ -166,11 +167,11 @@ public class CoefficientDataEntity {
         this.col10 = col10;
     }
 
-    public Double getResultValue() {
+    public BigDecimal getResultValue() {
         return resultValue;
     }
 
-    public void setResultValue(Double resultValue) {
+    public void setResultValue(BigDecimal resultValue) {
         this.resultValue = resultValue;
     }
 }

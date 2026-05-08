@@ -1,12 +1,13 @@
 package ru.pt.api.dto.calculator;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CoefficientDataRow {
     private Long id;
     private List<String> conditionValue = new ArrayList<>();
-    private Double resultValue;
+    private BigDecimal resultValue;
 
     public Long getId() {
         return id;
@@ -24,11 +25,11 @@ public class CoefficientDataRow {
         this.conditionValue = conditionValue;
     }
 
-    public Double getResultValue() {
+    public BigDecimal getResultValue() {
         return resultValue;
     }
 
-    public void setResultValue(Double resultValue) {
+    public void setResultValue(BigDecimal resultValue) {
         this.resultValue = resultValue;
     }
 }

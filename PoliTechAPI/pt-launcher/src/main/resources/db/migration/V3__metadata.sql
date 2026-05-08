@@ -553,3 +553,67 @@ INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', '
 INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'MONTHLY', '12 платежей в год');
 INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'BI_MONTHLY', '6 платежей в год (раз в 2 месяца)');
 INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('installmentType', 'ANNUAL', '1 платеж в год');
+
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('cargoCategory', 'ОЦГ', 'особо ценный груз');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('cargoCategory', 'ПГ', 'прочий груз');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('cargoСondition', 'NEW, ', 'новый');
+INSERT INTO pt_refdata (ref_code, md_code, md_name) VALUES ('cargoСondition', 'USED', 'б/у');
+
+
+
+-- CargoTransport metadata
+INSERT INTO mt_attribute_def VALUES (1610, 1218, 1, 'INSURANCE_CONTRACT', 'io_cd_transport', 'Транспорт', 'insuredObjects[0].cargoDelivery.transports[*]', 1, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.cargoDelivery.transports', NULL, 'transport', 'Транспорт', false);
+INSERT INTO mt_attribute_def VALUES (1611, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_transport_nameRu', 'Наименование транспорта (RU)', 'insuredObjects[0].cargoDelivery.transports[*].nameRu', 2, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.nameRu', NULL, 'nameRu', 'Наименование транспорта (RU)', false);
+INSERT INTO mt_attribute_def VALUES (1612, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_transport_nameEn', 'Наименование транспорта (EN)', 'insuredObjects[0].cargoDelivery.transports[*].nameEn', 3, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.nameEn', NULL, 'nameEn', 'Наименование транспорта (EN)', false);
+INSERT INTO mt_attribute_def VALUES (1613, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_transport_registrationNumber', 'Регистрационный номер', 'insuredObjects[0].cargoDelivery.transports[*].registrationNumber', 4, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.registrationNumber', NULL, 'registrationNumber', 'Регистрационный номер', false);
+INSERT INTO mt_attribute_def VALUES (1614, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_transport_organization', 'Организация перевозчика', 'insuredObjects[0].cargoDelivery.transports[*].organization', 5, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.cargoDelivery.transports.organization', NULL, 'organization', 'Организация перевозчика', false);
+INSERT INTO mt_attribute_def VALUES (1615, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_transport_ship', 'Судно', 'insuredObjects[0].cargoDelivery.transports[*].ship', 6, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.cargoDelivery.transports.ship', NULL, 'ship', 'Судно', false);
+INSERT INTO mt_attribute_def VALUES (1604, 1610, 1, 'INSURANCE_CONTRACT', 'io_cd_conditionCarriage', 'Условия перевозки', 'insuredObjects[0].cargoDelivery.transports[*].conditionCarriage', 4, 'IN', 'OBJECT', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.conditionCarriage', NULL, 'conditionCarriage', 'Условия перевозки', false);
+
+INSERT INTO mt_attribute_def VALUES (1605, 1604, 1, 'INSURANCE_CONTRACT', 'io_cd_requirementTransport', 'Доп. требование к ТС', 'insuredObjects[0].cargoDelivery.transports[*].requirementTransport', 5, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.requirementTransport', NULL, 'requirementTransport', 'Доп. требование к ТС', false);
+INSERT INTO mt_attribute_def VALUES (1606, 1604, 1, 'INSURANCE_CONTRACT', 'io_cd_temperatureControlled', 'Контролируемая температура', 'insuredObjects[0].cargoDelivery.transports[*].requirements.temperatureControlled', 6, 'IN', 'SINGLE', 'BOOLEAN', NULL, 'insuredObjects.cargoDelivery.transports.requirements.temperatureControlled', NULL, 'temperatureControlled', 'Контролируемая температура', false);
+INSERT INTO mt_attribute_def VALUES (1607, 1604, 1, 'INSURANCE_CONTRACT', 'io_cd_fragile', 'Хрупкий', 'insuredObjects[0].cargoDelivery.transports[*].requirements.fragile', 10, 'IN', 'SINGLE', 'BOOLEAN', NULL, 'insuredObjects.cargoDelivery.transports.requirements.fragile', NULL, 'fragile', 'Хрупкий', false);
+
+-- Ship metadata
+INSERT INTO mt_attribute_def VALUES (1616, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_nameRu', 'Наименование судна (RU)', 'insuredObjects[0].cargoDelivery.transports[*].ship.nameRu', 1, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.nameRu', NULL, 'nameRu', 'Наименование судна (RU)', false);
+INSERT INTO mt_attribute_def VALUES (1617, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_nameEn', 'Наименование судна (EN)', 'insuredObjects[0].cargoDelivery.transports[*].ship.nameEn', 2, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.nameEn', NULL, 'nameEn', 'Наименование судна (EN)', false);
+INSERT INTO mt_attribute_def VALUES (1618, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_class', 'Класс судна', 'insuredObjects[0].cargoDelivery.transports[*].ship.class', 3, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.class', NULL, 'class', 'Класс судна', false);
+INSERT INTO mt_attribute_def VALUES (1619, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_imo', 'Номер IMO', 'insuredObjects[0].cargoDelivery.transports[*].ship.imo', 4, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.imo', NULL, 'imo', 'Номер IMO', false);
+INSERT INTO mt_attribute_def VALUES (1620, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_flag', 'Флаг судна', 'insuredObjects[0].cargoDelivery.transports[*].ship.flag', 5, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.flag', NULL, 'flag', 'Флаг судна', false);
+INSERT INTO mt_attribute_def VALUES (1621, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_constructionDate', 'Дата постройки', 'insuredObjects[0].cargoDelivery.transports[*].ship.constructionDate', 6, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.constructionDate', NULL, 'constructionDate', 'Дата постройки', false);
+INSERT INTO mt_attribute_def VALUES (1622, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_ownerCountryCode', 'Страна судовладельца', 'insuredObjects[0].cargoDelivery.transports[*].ship.ownerCountryCode', 7, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.ownerCountryCode', 'country2', 'ownerCountryCode', 'Страна судовладельца', false);
+INSERT INTO mt_attribute_def VALUES (1623, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_managerCountryCode', 'Страна менеджера', 'insuredObjects[0].cargoDelivery.transports[*].ship.managerCountryCode', 8, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.managerCountryCode', 'country2', 'managerCountryCode', 'Страна менеджера', false);
+INSERT INTO mt_attribute_def VALUES (1624, 1615, 1, 'INSURANCE_CONTRACT', 'io_cd_ship_operatorCountryCode', 'Страна оператора', 'insuredObjects[0].cargoDelivery.transports[*].ship.operatorCountryCode', 9, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargoDelivery.transports.ship.operatorCountryCode', 'country2', 'operatorCountryCode', 'Страна оператора', false);
+
+
+-- Cargo metadata (parent_id = 1218)
+INSERT INTO mt_attribute_def VALUES (1625, 1218, 1, 'INSURANCE_CONTRACT', 'io_cargo', 'Груз', 'insuredObjects[0].cargo', 31, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.cargo', NULL, 'cargo', 'Груз', false);
+INSERT INTO mt_attribute_def VALUES (1626, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_cargoType', 'Наименование груза', 'insuredObjects[0].cargo.cargoType', 1, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.cargoType', NULL, 'cargoType', 'Наименование груза', false);
+INSERT INTO mt_attribute_def VALUES (1627, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_cargoTypeEn', 'Наименование груза (EN)', 'insuredObjects[0].cargo.cargoTypeEn', 2, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.cargoTypeEn', NULL, 'cargoTypeEn', 'Наименование груза (EN)', false);
+INSERT INTO mt_attribute_def VALUES (1628, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_cargoCategory', 'Категория груза', 'insuredObjects[0].cargo.cargoCategory', 3, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.cargoCategory', 'cargoCategory', 'cargoCategory', 'Категория груза', false);
+INSERT INTO mt_attribute_def VALUES (1629, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_cargoCondition', 'Состояние груза', 'insuredObjects[0].cargo.cargoCondition', 4, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.cargoCondition', 'cargoСondition', 'cargoCondition', 'Состояние груза', false);
+INSERT INTO mt_attribute_def VALUES (1630, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_weight', 'Масса груза', 'insuredObjects[0].cargo.weight', 5, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.weight', NULL, 'weight', 'Масса груза', false);
+INSERT INTO mt_attribute_def VALUES (1631, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_quantity', 'Количество мест', 'insuredObjects[0].cargo.quantity', 6, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.quantity', NULL, 'quantity', 'Количество мест', false);
+INSERT INTO mt_attribute_def VALUES (1632, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_packaging', 'Упаковка', 'insuredObjects[0].cargo.packaging', 7, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.packaging', NULL, 'packaging', 'Упаковка', false);
+INSERT INTO mt_attribute_def VALUES (1633, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_packagingEn', 'Упаковка (EN)', 'insuredObjects[0].cargo.packagingEn', 8, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.packagingEn', NULL, 'packagingEn', 'Упаковка (EN)', false);
+INSERT INTO mt_attribute_def VALUES (1634, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_containerNumbers', 'Номера контейнеров', 'insuredObjects[0].cargo.containerNumbers', 9, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.containerNumbers', NULL, 'containerNumbers', 'Номера контейнеров', false);
+INSERT INTO mt_attribute_def VALUES (1635, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_containerAmount', 'Количество контейнеров', 'insuredObjects[0].cargo.containerAmount', 10, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.containerAmount', NULL, 'containerAmount', 'Количество контейнеров', false);
+INSERT INTO mt_attribute_def VALUES (1636, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_containerType', 'Тип контейнера', 'insuredObjects[0].cargo.containerType', 11, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.containerType', NULL, 'containerType', 'Тип контейнера', false);
+INSERT INTO mt_attribute_def VALUES (1637, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_containerTypeEn', 'Тип контейнера (EN)', 'insuredObjects[0].cargo.containerTypeEn', 12, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.containerTypeEn', NULL, 'containerTypeEn', 'Тип контейнера (EN)', false);
+
+
+INSERT INTO mt_attribute_def VALUES (1638, 1625, 1, 'INSURANCE_CONTRACT', 'io_cargo_declaredValue', 'Заявленная стоимость', 'insuredObjects[0].cargo.declaredValue', 13, 'OBJECT', 'SINGLE', 'OBJECT', NULL, 'insuredObjects.cargo.declaredValue', NULL, 'declaredValue', 'Заявленная стоимость', false);
+INSERT INTO mt_attribute_def VALUES (1639, 1638, 1, 'INSURANCE_CONTRACT', 'io_cargo_declaredValue_amount', 'Сумма', 'insuredObjects[0].cargo.declaredValue.amount', 1, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.declaredValue.amount', NULL, 'amount', 'Сумма', false);
+INSERT INTO mt_attribute_def VALUES (1640, 1638, 1, 'INSURANCE_CONTRACT', 'io_cargo_declaredValue_currencyCode', 'Код валюты', 'insuredObjects[0].cargo.declaredValue.currencyCode', 2, 'IN', 'SINGLE', 'STRING', NULL, 'insuredObjects.cargo.declaredValue.currencyCode', NULL, 'currencyCode', 'Код валюты', false);
+   
+
+/***********************************
+* copy to DEMO tenant
+*/
+
+insert into mt_attribute_def (id, parent_id, tenant_id, document_id, var_code, var_name, var_path, var_ord, var_type, var_cardinality, var_data_type, var_value, var_cdm, var_list, code, name, is_system)
+select id + 2000, parent_id + 2000, 10, document_id, var_code, var_name, var_path, var_ord, var_type, var_cardinality, var_data_type, var_value, var_cdm, var_list, code, name, is_system
+from mt_attribute_def
+where tenant_id = 1;
+
+

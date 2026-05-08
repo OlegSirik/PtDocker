@@ -1,0 +1,101 @@
+{
+  "id": 1034,
+  "productId": 1031,
+  "productCode": "",
+  "versionNo": 1,
+  "packageNo": "0",
+  "vars": [
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_CARD_PROTECTION_sumInsured",
+      "varName": "Страховая сумма по  CARD_PROTECTION",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"CARD_PROTECTION\")].sumInsured",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_CARD_PROTECTION_premium",
+      "varName": "Премия по  CARD_PROTECTION",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"CARD_PROTECTION\")].premium",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "co_CARD_PROTECTION_deductibleNr",
+      "varName": "Id франшизы по  CARD_PROTECTION",
+      "varPath": "insuredObjects[0].covers[?(@.cover.code == \"CARD_PROTECTION\")].deductibleNr",
+      "varType": "VAR",
+      "varValue": "",
+      "varCdm": "CALCULATOR",
+      "varNr": "1001",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    },
+    {
+      "varDataType": "NUMBER",
+      "varCode": "const_premium",
+      "varName": "Фикс.премия",
+      "varPath": "",
+      "varType": "CONST",
+      "varValue": "2000",
+      "varCdm": "CALCULATOR",
+      "varNr": "10000",
+      "id": null,
+      "parent_id": null,
+      "varList": null,
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": null
+    }
+  ],
+  "formulas": [
+    {
+      "varCode": "pkg0_formula",
+      "varName": "Calculator for package:0",
+      "lines": [
+        {
+          "nr": 1,
+          "conditionLeft": "",
+          "conditionOperator": "",
+          "conditionRight": "",
+          "expressionResult": "co_CARD_PROTECTION_premium",
+          "expressionLeft": "const_premium",
+          "expressionOperator": "",
+          "expressionRight": "",
+          "postProcessor": ""
+        }
+      ]
+    }
+  ],
+  "coefficients": []
+}

@@ -345,6 +345,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         CalculatorEntity entity = calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo)
                 .orElseThrow(() -> new IllegalArgumentException("Calculator not found for productId=" + productId + ", versionNo=" + versionNo + ", packageNo=" + packageNo));
 
+        newJson.setId(entity.getId());
         newJson.setProductId(productId);
         newJson.setProductCode(productCode);
         newJson.setVersionNo(versionNo);

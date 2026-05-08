@@ -139,4 +139,7 @@ logging:
     ru.pt.product.service.addon.PolicyAddOnServiceImpl: TRACE
     ru.pt.domain.model.VariableContext: TRACE
     ru.pt.domain.model.VariableContextImpl: DEBUG
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    org.hibernate.orm.jdbc.bind: OFF
     org.apache.pdfbox.pdmodel.font: WARN  # Suppress PDFBox font warnings

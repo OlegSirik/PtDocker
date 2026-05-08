@@ -302,7 +302,7 @@ CREATE TABLE coefficient_data (
     coefficient_code  VARCHAR(128) NOT NULL,
     col0 VARCHAR(255), col1 VARCHAR(255), col2 VARCHAR(255), col3 VARCHAR(255), col4 VARCHAR(255),
     col5 VARCHAR(255), col6 VARCHAR(255), col7 VARCHAR(255), col8 VARCHAR(255), col9 VARCHAR(255), col10 VARCHAR(255),
-    result_value DOUBLE PRECISION
+    result_value numeric(19,8)
 );
 
 CREATE INDEX coefficient_data_calc_code_idx ON coefficient_data (calculator_id, coefficient_code);
