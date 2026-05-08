@@ -1,0 +1,16 @@
+{
+    "endDate": "2026-06-08T19:36:50Z",
+    "issueDate": "2026-05-08T19:36:50Z",
+    "startDate": "2026-05-08T19:36:50Z",
+    "productCode": "CARGO_GENERAL",
+    "insuredObjects": [
+      {
+        "cargo": {
+          "declaredValue": {
+            "amount": "2000000"
+          }
+        },
+        "packageCode": "0"
+      }
+    ]
+  }

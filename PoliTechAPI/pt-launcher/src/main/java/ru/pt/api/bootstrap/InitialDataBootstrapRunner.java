@@ -18,6 +18,7 @@ import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.api.service.product.ProductTestService;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.auth.security.UserDetailsImpl;
 
@@ -31,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Locale;
 
 @Component
 public class InitialDataBootstrapRunner implements ApplicationRunner {
@@ -51,7 +51,7 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
             "classpath:bootstrap/ACC/product_НС.json",
             "classpath:bootstrap/ACC/NS_CLASSIC/product_NS_CLASSIC.json",
             "classpath:bootstrap/GAD/product_COMPLEX_PROTECTION.json",
-            "classpath:bootstrap/CRG/product_CRG.json"
+            "classpath:bootstrap/CRG/product_CARGO_GENERAL.json"
     );
 
     private final ObjectMapper objectMapper;
@@ -60,19 +60,22 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
     private final ProductService productService;
     private final CalculatorService calculatorService;
     private final CoefficientService coefficientService;
+    private final ProductTestService productTestService;
 
     public InitialDataBootstrapRunner(ObjectMapper objectMapper,
                                       ResourceLoader resourceLoader,
                                       LobService lobService,
                                       ProductService productService,
                                       CalculatorService calculatorService,
-                                      CoefficientService coefficientService) {
+                                      CoefficientService coefficientService,
+                                      ProductTestService productTestService) {
         this.objectMapper = objectMapper;
         this.resourceLoader = resourceLoader;
         this.lobService = lobService;
         this.productService = productService;
         this.calculatorService = calculatorService;
         this.coefficientService = coefficientService;
+        this.productTestService = productTestService;
     }
 
     Map<String, Long> calculatorIdMap = new HashMap<>();
@@ -110,7 +113,30 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
             // example explicit calls
             // loadCoefficients(calculatorIdMap.get("classpath:bootstrap/ACC/calculator_HC+sport.json"), "K_Age", calculatorIdMap);
             calculatorId = loadCalculators("classpath:bootstrap/CRG/calculator__1_0.json");
+
+            saveTestExamples(TENANT_ID, "CARGO_GENERAL", 1L, "classpath:bootstrap/CRG/test-quote.json", "classpath:bootstrap/CRG/test-policy.json");
         });
+    }
+
+    private void saveTestExamples(Long tenantId, String productCode, Long versionNo, String quoteJsonFile, String policyJsonFile) {
+        Long productId = productService.getProductByCode(TENANT_ID, productCode, true).getId();
+
+        if (productId == null) {
+            log.warn("Product not found: {}", productCode);
+            return;
+        }
+
+        String quoteJson = readTextResource(quoteJsonFile);
+        String policyJson = readTextResource(policyJsonFile);
+        productTestService.saveTestQuote(tenantId, productId, versionNo, quoteJson);
+        productTestService.saveTestPolicy(tenantId, productId, versionNo, policyJson);
+        log.info(
+                "Saved product test quote/policy: productId={} versionNo={} quoteFile={} policyFile={}",
+                productId,
+                versionNo,
+                quoteJsonFile,
+                policyJsonFile
+        );
     }
 
     private void loadLobs(List<String> resources) {
@@ -298,6 +324,20 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
             }
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load bootstrap resource: " + location, e);
+        }
+    }
+
+    private String readTextResource(String location) {
+        try {
+            Resource resource = resourceLoader.getResource(location);
+            if (!resource.exists()) {
+                throw new IllegalStateException("Bootstrap text resource not found: " + location);
+            }
+            try (InputStream is = resource.getInputStream()) {
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load bootstrap text resource: " + location, e);
         }
     }
 

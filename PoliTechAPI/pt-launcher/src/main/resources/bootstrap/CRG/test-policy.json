@@ -1,0 +1,52 @@
+{
+    "endDate": "2026-07-08T19:58:01Z",
+    "issueDate": "2026-05-08T19:58:01Z",
+    "startDate": "2026-05-08T19:58:01Z",
+    "productCode": "CARGO_GENERAL",
+    "policyHolder": {
+      "organization": {
+        "inn": "1234567",
+        "fullName": "ООО Страхователь"
+      }
+    },
+    "insuredObjects": [
+      {
+        "cargo": {
+          "weight": "800т",
+          "cargoType": "ТНП",
+          "declaredValue": {
+            "amount": "2000000",
+            "currencyCode": "RUB"
+          },
+          "cargoCondition": "NEW"
+        },
+        "addresses": [
+          {
+            "typeCode": "REGISTRATION",
+            "addressStr": "sdgsdfg"
+          },
+          {
+            "typeCode": "REGISTRATION",
+            "addressStr": "dsgsdfgsdfg"
+          }
+        ],
+        "transport": {
+          "nameRu": "авто",
+          "conditionCarriage": {
+            "fragile": "true",
+            "requirementTransport": "тент",
+            "temperatureControlled": "false"
+          },
+          "registrationNumber": "В123ВВ"
+        },
+        "identifiers": [
+          {
+            "number": "2323",
+            "typeCode": "DELIVERY_DOC"
+          }
+        ],
+        "packageCode": "0"
+      }
+    ]
+  }
+  
