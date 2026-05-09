@@ -1,6 +1,6 @@
 {
-  "id": 1221,
-  "productId": 1218,
+  "id": 1228,
+  "productId": 1225,
   "productCode": "CARGO_GENERAL",
   "versionNo": 1,
   "packageNo": "0",
@@ -76,24 +76,6 @@
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "io_cargo_declaredValue_amount",
-      "varName": "Сумма",
-      "varPath": "insuredObjects[0].cargo.declaredValue.amount",
-      "varType": "IN",
-      "varValue": "",
-      "varCdm": "insuredObjects.cargo.declaredValue.amount",
-      "varNr": "1",
-      "id": 3639,
-      "parent_id": 3638,
-      "varList": "",
-      "isSystem": false,
-      "isDeleted": false,
-      "isTarifFactor": true,
-      "isOptional": true,
-      "name": "Сумма"
     }
   ],
   "formulas": [
@@ -107,7 +89,7 @@
           "conditionOperator": "",
           "conditionRight": "",
           "expressionResult": "co_RATING_COVER_sumInsured",
-          "expressionLeft": "io_cargo_declaredValue_amount",
+          "expressionLeft": "io_sumInsured",
           "expressionOperator": "",
           "expressionRight": "",
           "postProcessor": ""
@@ -118,7 +100,7 @@
           "conditionOperator": "",
           "conditionRight": "",
           "expressionResult": "co_RATING_COVER_premium",
-          "expressionLeft": "io_cargo_declaredValue_amount",
+          "expressionLeft": "io_sumInsured",
           "expressionOperator": "*",
           "expressionRight": "const_tariff",
           "postProcessor": "round2_up"

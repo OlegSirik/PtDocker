@@ -1,18 +1,17 @@
 {
-  "id": 1218,
+  "id": 1014,
   "lob": "CRG",
   "code": "CARGO_GENERAL",
-  "name": "Грузоперевозки",
-  "insCompanyId": 1222,
+  "name": "CARGO_GENERAL",
   "versionNo": 1,
   "versionStatus": "DEV",
   "waitingPeriod": {
     "validatorType": "RANGE",
-    "validatorValue": "P0D-P7D"
+    "validatorValue": "P0D-P14D"
   },
   "policyTerm": {
     "validatorType": "RANGE",
-    "validatorValue": "P1D-P365D"
+    "validatorValue": "P1D-P1Y"
   },
   "vars": [
     {
@@ -46,7 +45,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -64,7 +63,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -82,7 +81,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -100,7 +99,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -118,7 +117,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -136,7 +135,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -154,7 +153,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -172,7 +171,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -190,7 +189,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -208,7 +207,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -226,7 +225,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -244,7 +243,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -262,7 +261,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -280,7 +279,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -298,7 +297,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -316,7 +315,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -334,7 +333,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -352,7 +351,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -370,7 +369,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -388,7 +387,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -406,7 +405,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -424,7 +423,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -442,7 +441,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -460,7 +459,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -478,7 +477,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -496,7 +495,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -514,7 +513,7 @@
       "parent_id": null,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": null
@@ -748,7 +747,7 @@
       "parent_id": 3216,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Gross_up_factor 1/(1-kv)"
@@ -766,7 +765,7 @@
       "parent_id": 3216,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Срок полиса в месяцах"
@@ -784,7 +783,7 @@
       "parent_id": 3216,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Срок полиса в днях"
@@ -844,22 +843,22 @@
       "name": "Объект страхования"
     },
     {
-      "varDataType": "OBJECT",
-      "varCode": "io_cd_transport",
-      "varName": "Транспорт",
-      "varPath": "insuredObjects[0].cargoDelivery.transports[*]",
-      "varType": "OBJECT",
-      "varValue": "",
-      "varCdm": "insuredObjects.cargoDelivery.transports",
+      "varDataType": "STRING",
+      "varCode": "io_packageCode",
+      "varName": "Код пакета",
+      "varPath": "insuredObjects[0].packageCode",
+      "varType": "IN",
+      "varValue": "0",
+      "varCdm": "insuredObjects.packageCode",
       "varNr": "1",
-      "id": 3610,
+      "id": 3236,
       "parent_id": 3218,
       "varList": "",
       "isSystem": false,
       "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
-      "name": "Транспорт"
+      "name": "Код пакета"
     },
     {
       "varDataType": "NUMBER",
@@ -869,12 +868,12 @@
       "varType": "IN",
       "varValue": "100000",
       "varCdm": "insuredObjects.sumInsured",
-      "varNr": "19",
+      "varNr": "10",
       "id": 3240,
       "parent_id": 3218,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Страховая сумма объекта страхования"
@@ -935,8 +934,8 @@
     },
     {
       "varDataType": "OBJECT",
-      "varCode": "io_identifiers",
-      "varName": "Документ",
+      "varCode": "io_identifier",
+      "varName": "Документ основной",
       "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)]",
       "varType": "OBJECT",
       "varValue": "",
@@ -953,8 +952,8 @@
     },
     {
       "varDataType": "OBJECT",
-      "varCode": "io_addresses",
-      "varName": "Адрес",
+      "varCode": "io_address",
+      "varName": "Адрес основной",
       "varPath": "insuredObjects[0].addresses[?(@.isPrimary)]",
       "varType": "OBJECT",
       "varValue": "",
@@ -964,28 +963,10 @@
       "parent_id": 3218,
       "varList": "",
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Адрес"
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "io_packageCode",
-      "varName": "Код пакета",
-      "varPath": "insuredObjects[0].packageCode",
-      "varType": "IN",
-      "varValue": "0",
-      "varCdm": "insuredObjects.packageCode",
-      "varNr": "24",
-      "id": 3236,
-      "parent_id": 3218,
-      "varList": "",
-      "isSystem": false,
-      "isDeleted": false,
-      "isTarifFactor": false,
-      "isOptional": true,
-      "name": "Код пакета"
     },
     {
       "varDataType": "OBJECT",
@@ -1067,7 +1048,7 @@
       "varType": "OBJECT",
       "varValue": "",
       "varCdm": "insuredObjects.cargo",
-      "varNr": "31",
+      "varNr": "131",
       "id": 3625,
       "parent_id": 3218,
       "varList": "",
@@ -1076,6 +1057,24 @@
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Груз"
+    },
+    {
+      "varDataType": "OBJECT",
+      "varCode": "io_shipment",
+      "varName": "Перевозка",
+      "varPath": "insuredObjects[0].shipment",
+      "varType": "OBJECT",
+      "varValue": "",
+      "varCdm": "insuredObjects.shipment",
+      "varNr": "132",
+      "id": 3638,
+      "parent_id": 3218,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Перевозка"
     },
     {
       "varDataType": "STRING",
@@ -1317,14 +1316,14 @@
       "varName": "Io.адрес.тип адреса",
       "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].typeCode",
       "varType": "IN",
-      "varValue": "",
+      "varValue": "REGISTRATION",
       "varCdm": "insuredObjects.addresses.typeCode",
       "varNr": "73",
       "id": 3266,
       "parent_id": 3231,
       "varList": "addressType",
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Тип адреса"
@@ -1540,7 +1539,7 @@
       "parent_id": 3231,
       "varList": "",
       "isSystem": false,
-      "isDeleted": false,
+      "isDeleted": true,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Адресная строка"
@@ -2937,7 +2936,7 @@
       "varName": "Ph.адрес.тип адреса",
       "varPath": "policyHolder.addresses[?(@.isPrimary)].typeCode",
       "varType": "IN",
-      "varValue": "",
+      "varValue": "REGISTRATION",
       "varCdm": "policyHolder.addresses.typeCode",
       "varNr": "74",
       "id": 3390,
@@ -2962,7 +2961,7 @@
       "parent_id": 3246,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Код страны"
@@ -2980,7 +2979,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Регион"
@@ -2998,7 +2997,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Город"
@@ -3016,7 +3015,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Улица"
@@ -3034,7 +3033,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Дом"
@@ -3052,7 +3051,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Строение"
@@ -3070,7 +3069,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Квартира"
@@ -3088,7 +3087,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Комната"
@@ -3106,7 +3105,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Индекс"
@@ -3124,7 +3123,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Код кладр"
@@ -3142,7 +3141,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Код фиас"
@@ -3178,7 +3177,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Адресная строка англ"
@@ -3196,7 +3195,7 @@
       "parent_id": 3246,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Внешний id"
@@ -3268,7 +3267,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Серия документа"
@@ -3304,7 +3303,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Дата выдачи"
@@ -3322,7 +3321,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Действительно до"
@@ -3340,7 +3339,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Кем выдан"
@@ -3358,7 +3357,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Код подразделения"
@@ -3376,7 +3375,7 @@
       "parent_id": 3248,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Внешний id"
@@ -3394,7 +3393,7 @@
       "parent_id": 3248,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Страна выдачи документа"
@@ -3412,7 +3411,7 @@
       "parent_id": 3249,
       "varList": "country2",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Код страны регистрации"
@@ -3466,7 +3465,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Полное наименование  юр.лица англ"
@@ -3484,7 +3483,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Краткое наименование юр.лица"
@@ -3502,7 +3501,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Организационно-правовая форма"
@@ -3520,7 +3519,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Кпп"
@@ -3538,7 +3537,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Огрн"
@@ -3556,7 +3555,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Окпо"
@@ -3574,7 +3573,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Бик"
@@ -3592,7 +3591,7 @@
       "parent_id": 3249,
       "varList": "yesNo",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Резидент рф юр.лица"
@@ -3610,7 +3609,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Gруппа страхователя юл"
@@ -3628,7 +3627,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Внешний id (юрик)"
@@ -3646,7 +3645,7 @@
       "parent_id": 3249,
       "varList": "",
       "isSystem": false,
-      "isDeleted": true,
+      "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
       "name": "Нси код"
@@ -4463,49 +4462,31 @@
     },
     {
       "varDataType": "OBJECT",
-      "varCode": "io_cargo_declaredValue",
-      "varName": "Заявленная стоимость",
-      "varPath": "insuredObjects[0].cargo.declaredValue",
+      "varCode": "io_cd_transport",
+      "varName": "Транспорт",
+      "varPath": "insuredObjects[0].cargoDelivery.transports[*]",
       "varType": "OBJECT",
       "varValue": "",
-      "varCdm": "insuredObjects.cargo.declaredValue",
-      "varNr": "13",
-      "id": 3638,
-      "parent_id": 3625,
+      "varCdm": "insuredObjects.cargoDelivery.transports",
+      "varNr": "141",
+      "id": 3610,
+      "parent_id": 3638,
       "varList": "",
       "isSystem": false,
       "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
-      "name": "Заявленная стоимость"
+      "name": "Транспорт"
     },
     {
-      "varDataType": "STRING",
-      "varCode": "io_cargo_declaredValue_amount",
-      "varName": "Сумма",
-      "varPath": "insuredObjects[0].cargo.declaredValue.amount",
-      "varType": "IN",
+      "varDataType": "OBJECT",
+      "varCode": "io_address_departure",
+      "varName": "Адрес отправления",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')]",
+      "varType": "OBJECT",
       "varValue": "",
-      "varCdm": "insuredObjects.cargo.declaredValue.amount",
-      "varNr": "1",
-      "id": 3639,
-      "parent_id": 3638,
-      "varList": "",
-      "isSystem": false,
-      "isDeleted": false,
-      "isTarifFactor": true,
-      "isOptional": true,
-      "name": "Сумма"
-    },
-    {
-      "varDataType": "STRING",
-      "varCode": "io_cargo_declaredValue_currencyCode",
-      "varName": "Код валюты",
-      "varPath": "insuredObjects[0].cargo.declaredValue.currencyCode",
-      "varType": "IN",
-      "varValue": "",
-      "varCdm": "insuredObjects.cargo.declaredValue.currencyCode",
-      "varNr": "2",
+      "varCdm": "insuredObjects.addresses",
+      "varNr": "142",
       "id": 3640,
       "parent_id": 3638,
       "varList": "",
@@ -4513,7 +4494,151 @@
       "isDeleted": false,
       "isTarifFactor": false,
       "isOptional": true,
-      "name": "Код валюты"
+      "name": "Адрес отправления"
+    },
+    {
+      "varDataType": "OBJECT",
+      "varCode": "io_address_transit",
+      "varName": "Адрес транзита",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')]",
+      "varType": "OBJECT",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses",
+      "varNr": "143",
+      "id": 3643,
+      "parent_id": 3638,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Адрес транзита"
+    },
+    {
+      "varDataType": "OBJECT",
+      "varCode": "io_address_arrival",
+      "varName": "Адрес прибытия",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')]",
+      "varType": "OBJECT",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses",
+      "varNr": "144",
+      "id": 3646,
+      "parent_id": 3638,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Адрес прибытия"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_departure_countryCode",
+      "varName": "Страна",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')].countryCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.countryCode",
+      "varNr": "1",
+      "id": 3641,
+      "parent_id": 3640,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Страна"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_departure_addressStr",
+      "varName": "Адрес",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')].addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.addressStr",
+      "varNr": "2",
+      "id": 3642,
+      "parent_id": 3640,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Адрес"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_transit_countryCode",
+      "varName": "Страна",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')].countryCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.countryCode",
+      "varNr": "1",
+      "id": 3644,
+      "parent_id": 3643,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Страна"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_transit_addressStr",
+      "varName": "Адрес",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')].addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.addressStr",
+      "varNr": "2",
+      "id": 3645,
+      "parent_id": 3643,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Адрес"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_arrival_countryCode",
+      "varName": "Страна",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')].countryCode",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.countryCode",
+      "varNr": "1",
+      "id": 3647,
+      "parent_id": 3646,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Страна"
+    },
+    {
+      "varDataType": "STRING",
+      "varCode": "io_address_arrival_addressStr",
+      "varName": "Адрес",
+      "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')].addressStr",
+      "varType": "IN",
+      "varValue": "",
+      "varCdm": "insuredObjects.addresses.addressStr",
+      "varNr": "2",
+      "id": 3648,
+      "parent_id": 3646,
+      "varList": "",
+      "isSystem": false,
+      "isDeleted": false,
+      "isTarifFactor": false,
+      "isOptional": true,
+      "name": "Адрес"
     }
   ],
   "quoteValidator": [],
@@ -4533,12 +4658,17 @@
           "limits": []
         }
       ],
-      "files": []
+      "files": [
+        {
+          "fileCode": "policy",
+          "fileName": "policy"
+        }
+      ]
     }
   ],
   "numberGenerator": {
-    "id": 1220,
-    "mask": "{YY}QWERTY{XXXXXXXX}",
+    "id": 1016,
+    "mask": "QWERTY-{XXXXXXXX}",
     "resetPolicy": "YEARLY",
     "maxValue": 99999999,
     "xorMask": ""
