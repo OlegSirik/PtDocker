@@ -9,8 +9,62 @@ servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/insur/PoliTechPublic/1.0.0
 
+tags:
+  - politech
+  - wip (work in progress)
+
 paths:
+  /auth/login:
+    post:
+      tags:
+        - politech
+      summary:
+        Метод для аутентификации и получения токена.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          $ref: '#/components/schemas/LoginResponse'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+
+  /sales/quotes:
+    post:
+      tags:
+        - politech
  
+      summary: Предварительный расчет премии без создания проекта договора. Только расчет.
+      description: |
+        Выполняет расчет стоимости страхового полиса по переданным параметрам 
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        description: Содержит данные для расчета.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicyV3'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyV3'
+        '202':
+          $ref: '#/components/responses/Http-202'
+        '400':
+          $ref: '#/components/responses/Http-400'
+        '401':
+          $ref: '#/components/responses/Http-401'
+        '503':
+          $ref: '#/components/responses/Http-503'
+
   /sales/v3/policies:
     post:
       tags:
@@ -49,7 +103,7 @@ paths:
   /sales/v3/policies/{policy_nr}/addendums:
     post:
       tags:
-        - politech
+        - wip
       summary: Создать дополнительное соглашение
       description: |
         Создает дополнительное соглашение к договору страхования
@@ -67,21 +121,13 @@ paths:
             schema:
               $ref: '#/components/schemas/PolicyV3'
       responses:
-        '201':
-          $ref: '#/components/responses/PolicyV3'
-        '202':
-          $ref: '#/components/responses/Http-202'
-        '400':
-          $ref: '#/components/responses/Http-400'
-        '401':
-          $ref: '#/components/responses/Http-401'
-        '503':
-          $ref: '#/components/responses/Http-503'
+        '501':
+          $ref: '#/components/responses/Http-501'
  
   /sales/v3/policies/{policy_nr}/prolongations:
     post:
       tags:
-        - politech
+        - wip
       summary: Создать пролонгацию договора
       description: |
         Создает новый договор как копию-продолжение к договору страхования
@@ -97,21 +143,13 @@ paths:
             schema:
               $ref: '#/components/schemas/PolicyV3'
       responses:
-        '201':
-          $ref: '#/components/responses/PolicyV3'
-        '202':
-          $ref: '#/components/responses/Http-202'
-        '400':
-          $ref: '#/components/responses/Http-400'
-        '401':
-          $ref: '#/components/responses/Http-401'
-        '503':
-          $ref: '#/components/responses/Http-503'
+        '501':
+          $ref: '#/components/responses/Http-501'
  
   /sales/v3/policies/{policy_nr}/cancellations:
     post:
       tags:
-        - politech
+        - wip
       description: |
         Создает заявление на расторжение договора.
       parameters:
@@ -125,16 +163,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PolicyV3'
       responses:
-        '201':
-          $ref: '#/components/responses/PolicyV3'
-        '202':
-          $ref: '#/components/responses/Http-202'
-        '400':
-          $ref: '#/components/responses/Http-400'
-        '401':
-          $ref: '#/components/responses/Http-401'
-        '503':
-          $ref: '#/components/responses/Http-503'
+        '501':
+          $ref: '#/components/responses/Http-501'
 
   /sales/v3/policies/{policy_nr}:
     get:
@@ -161,7 +191,7 @@ paths:
  
     put:
       tags:
-        - politech
+        - policy
       description: |
         Изменить данные по версии договора. Менять данные можно только по договору в статусе WIP. 
         Иначе нужно создавать допник.
@@ -245,29 +275,7 @@ paths:
           $ref: '#/components/responses/Http-400'
         '401':
           $ref: '#/components/responses/Http-401'
- 
-  /sales/v3/policies/{policy_nr}/files/{file_id}:
-    delete:
-      tags:
-        - politech
-      description: удалить файл из списка
- 
-      parameters:
-        - $ref: '#/components/parameters/policyNr'
-        - $ref: '#/components/parameters/fileId'
-        - $ref: '#/components/parameters/accountId'
-        - $ref: '#/components/parameters/userId'
-
-      responses:
-        '200':
-          $ref: '#/components/responses/Http-200'
-        '400':
-          $ref: '#/components/responses/Http-400'
-        '401':
-          $ref: '#/components/responses/Http-401'
-        '503':
-          $ref: '#/components/responses/Http-503'
- 
+  
   /sales/v3/policies/{policy_nr}/installments/{installment_nr}:
     get:
       tags:
@@ -319,9 +327,62 @@ paths:
  
 
 components:
- 
   schemas:
- 
+    LoginRequest:
+      description: Аутентификация пользователя
+      type: object
+      required:
+        - userLogin
+        - password
+        - clientId
+      properties:
+        userLogin:
+          type: string
+          description: Логин пользователя
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          description: Пароль
+          example: "qwerty123"
+        clientId:
+          type: string
+          description: Код клиента (приложения / партнера)
+          example: "web_app"
+
+    LoginResponse:
+      description: Результат успешной аутентификации
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: Токен для доступа к API
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Токен для обновления access token
+          example: "def50200a1b2c3..."
+        tokenType:
+          type: string
+          description: Тип токена
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Время жизни access token (в секундах)
+          example: 86400
+        refreshExpiresIn:
+          type: integer
+          description: Время жизни refresh token (в секундах)
+          example: 2592000
+        message:
+          type: string
+          description: Дополнительное сообщение (например, предупреждение)
+          example: "Password will expire in 5 days"        
+
     CreatePolicyV3:
       description: договор страхования 
       type: object
@@ -335,6 +396,7 @@ components:
         productCode:
           type: string
           description: код страхового продукта (accident_1, acident_2 )
+
         waitingPeriod:
           type: string
           description: период между датой выпуска и датой начала действия договора
@@ -350,9 +412,6 @@ components:
         issueDate:
           description: дата продажи полиса. заполняется партнером
           type: string
-        issueTimezome:
-          type: string
-          description: часой пояс, где был выпущен договор  
 
         installmentType:
           type: string
@@ -397,6 +456,7 @@ components:
  
   
 
+
     PolicyV3:
       description: договор страхования 
       type: object
@@ -407,12 +467,12 @@ components:
         policyNumber:
           type: string
           description: номер договора
-        previousPolicyNumber:
-          type: string
-          description: номер пред договора
         productCode:
           type: string
           description: код страхового продукта (accident_1, acident_2 )
+        productVersion:
+          type: string
+          description: номер версии страхового продукта
         status:
           type: string
           description: статус договора
@@ -432,7 +492,6 @@ components:
         issueDate:
           description: дата продажи полиса. заполняется партнером
           type: string
-
         createDate:
           description: дата создания полиса в системе страховщика.
           type: string
@@ -442,6 +501,7 @@ components:
         cancellationDate:
           description: дата расторжения договора по любой причине
           type: string
+
         premium:
           type: number
           description: размер премии по договору в рублях
@@ -450,16 +510,13 @@ components:
           type: string
           description: тип рассрочки. периодичность.
         insurer:
-          $ref: '#/components/schemas/PolicyParty'
+          $ref: '#/components/schemas/Insurer'
         policyHolder:
           $ref: '#/components/schemas/PolicyParty'
         insuredObjects:
           type: array
           items:
-            anyOf:
-              - $ref: '#/components/schemas/Person'
-              - $ref: '#/components/schemas/Identifier'
-              - $ref: '#/components/schemas/Address'     
+            $ref: '#/components/schemas/InsuredObject'
         options:
           type: array
           items:
@@ -486,10 +543,6 @@ components:
                 type: boolean
                 description: при запросе на котироку, признак что опция выбрана
                 
-                
-
- 
-  
     Installment:
       description: очередной взнос по договору страхования
       type: object
@@ -509,7 +562,6 @@ components:
         currencyCode:
           type: string
           description: код валюты
-          default: 'RUB'
         amount:
           type: number
           description: сумма взноса
@@ -554,7 +606,25 @@ components:
                 type: string
               amount:
                 type: number
- 
+
+    Insurer:
+      description: Страховая компания
+      type: object
+      properties:
+        code:
+          type: string
+          description: код страховой компании, уникальный код справочника
+          example: ALFA
+        name:
+          type: string
+          description: наименование СК
+        contractName:
+          type: string
+          description: Текст для договора, раздел страховщик
+        contractResponsible:
+          type: string
+          description: представитель СК для подписи в договоре.
+
     Address:
       description: Адрес
       type: object
@@ -668,6 +738,10 @@ components:
       type: object
       description: объект - физ лицо
       properties:
+        isPrimary:
+          type: boolean
+          default: false
+          description: признак основной записи в массиве
         firstName:
           type: string
           description: имя
@@ -843,6 +917,10 @@ components:
           $ref: '#/components/schemas/Property'
         pet:
           $ref: '#/components/schemas/Pet'
+        cargo:
+          $ref: '#/components/schemas/Cargo'
+        cargoDelivery:
+          $ref: '#/components/schemas/CargoDelivery'
         travelSegments:
           type: array
           items: 
@@ -859,6 +937,105 @@ components:
             sport3:
               type: string
               description: "наименование вида спорта"
+            sport4:
+              type: string
+              description: "наименование вида спорта"
+            sport5:
+              type: string
+              description: "наименование вида спорта"
+            profSport:
+              type: string
+              description: "занятия проф.спортом"
+
+
+    Cargo:
+      type: object
+      properties:
+        cargoType: 
+          type: string
+          description: "Описание перевозимого груза"
+        cargoTypeEn:
+          type: string
+          description: "Описание перевозимого груза (англ.)"
+        cargoCategory:
+          type: string
+          description: категория груза. Например - ОЦГ - особо ценный, 
+        cargoСondition:
+          type: string
+          description: состояние груза. Новый - NEW, б.у. - USED
+        weight:
+          type: string
+          description: "масса перевозимого груза - 20 т."      
+        quantity:
+          type: string
+          description: "количество - 13 мест"      
+        packaging:
+          type: string
+          description: "описание упаковки - бумажные коробки"      
+        packagingEn:
+          type: string
+          description: "описание упаковки (англ.) - papar boxes"      
+        containerNumbers: 
+          type: string
+        containerAmount:
+          type: string
+        containerType:
+          type: string
+        containerTypeEn:
+          type: string
+
+    CargoDelivery:
+      type: object
+      properties:
+        transports:
+          type: array
+          items: 
+            type: object
+            properties:
+              nameRu:
+                type: string
+              nameEn:
+                type: string
+              registrationNumber:
+                type: string
+                description: регистрационный номер
+              requirements:
+                type: object
+                description: спец условия перевозки
+                properties:
+                  requirementTransport:
+                    type: string
+                    description: требования к транспорту.
+                  temperatureControlled:
+                    type: string
+                    description: нужен контроль температуры true/false
+                  fragile:
+                    type: string
+                    description: хрупкий груз true/false
+              ship:
+                type: object
+                properties:
+                  nameRu:
+                    type: string
+                  nameEn:
+                    type: string
+                  class:
+                    type: string
+                    description: класс лодки, например - моторная яхта
+                  imo:
+                    type: string
+                  flag:
+                    type: string
+                    description: страна регистрации. кол alpha-2
+                  constructionDate:
+                    type: string
+                    description: год постройки
+                  ownerCountryCode:
+                    type: string
+                  managerContryCode:
+                    type: string
+                  operatorCountryCode:
+                    type: string
 
     TravelSegment:
       type: object
@@ -869,13 +1046,12 @@ components:
           type: string
         departureDate:
           type: string
-        departureTime:
+        arrivalDate:
           type: string
         departureCity:
           type: string
         arrivalCity:
           type: string
-
 
     Device:
           type: object
@@ -914,41 +1090,6 @@ components:
               description: стоимость устройства в рублях
               type: number
  
-
-    ConsentPersonalData:
-      type: object
-      description: Информация о согласии клиента на обработку персональных данных
-      properties:
-        listOfPDforProcessing:
-          type: array
-          description: список перс данных, которые можно собирать. например ФИО, дата рождения и т.д.
-          items:
-            type: string
-        purposeOfPDprocessing:
-          type: array
-          description: цуль сбора ПД. сбор, анализ, передача 3м лицам т т.д.
-          items:
-            type: string
-        pdProcessingMethods:
-          description: методы обработки перс данных
-          type: array
-          items:
-            type: string
-        consentFlag:
-          description: согласие получено
-          type: boolean
-          default: false
-        dateIssue:
-          type: string
-          description: дата выдачи
-        validUntil:
-          type: string
-          description: действительно до
-        consentResponsibilityFlag:
-          description: Флаг предупреждения клиента об ответственности
-          type: boolean
-          default: false
- 
     ContactInfo:
       type: object
       description: контактная информация, phone & email - основные средства коммуникации. Другие способы удут бобавляться по мере поступления
@@ -964,40 +1105,6 @@ components:
         telegram:
           type: string
           description: для примера, телега
- 
-    PlaceOfWork:
-      type: object
-      description: место работы
-      properties:
-        organization:
-          type: string
-          description: место работы
-        occupationType:
-          type: string
-          description: Фиксированное значение = по найму | собственное дело | нет
-        occupation:
-          type: string
-          description: должность, профессия
-        address:
-          type: string
-          description: юр. адрес работодателя
-        phone:
-          type: string
-          description: телефон
- 
-    PlaceOfStudy:
-      type: object
-      description: place of study
-      properties:
-        university:
-          type: string
-          description: university
-        faculty:
-          type: string
-          description: faculty
-        course:
-          type: string
-          description: course
  
     PolicyParty:
       type: object
@@ -1016,23 +1123,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Address'
-        placeOfWork:
-          $ref: '#/components/schemas/PlaceOfWork'
         organization:
           $ref: '#/components/schemas/Organization'
-        representative:
-          $ref: '#/components/schemas/RepresentativePerson'
- 
-    RepresentativePerson:
-      type: object
-      description: представитель юр лица
-      properties:
-        person:
-          $ref: '#/components/schemas/Person'
-        position:
-          description: Должность
-          type: string
-          example: Директор по продажам
  
  
     Property:
@@ -1119,112 +1211,6 @@ components:
           items:
             $ref: '#/components/schemas/PolicyFile'
  
-    Infolist:
-      description: доп информация о продавце
-      type: object
-      properties:
-        partnerCode:
-          type: string
-          description: Код партнера
-        partnerClientId:
-          type: string
-          description: Код партнера, полученный из токена
-        policyKind:
-          type: string
-          description: Тип полиса ((1) - онлайн, (2) - офлайн)
-        channelId:
-          type: string
-        channelTypeId:
-          type: string
-          description: "# Канал продаж"
-          example: 410
-        contractDivisionId:
-          type: string
-          description: ID подразделения ВСК, ответственного за договор
-          example: "00.97.01.12.01"
-        contractResponsibleId:
-          type: string
-          description: ID пользователя ВСК, ответственного за договор
-          example: 0000122562
-        agentKV:
-          type: string
-          description: "# Комиссионное вознаграждение агента"
-          example: 55
-        agentKvRetention:
-          type: string
-          description: "RETENTION # Булевый тип. Удержание в КВ Агента. Агентов по договору "
-          example: false
-        agentContractNumber:
-          type: string
-          description: "AGENT_CONTRACT_NUMBER: Номер агентского договора"
-          example: 16539460001
-        agentLogin:
-          type: string
-          description: логин агента
-        typeOfAgents:
-          type: string
-          description: тип агента - ФЛ, ЮЛ, ИП
-        partnerNumber:
-          type: string
-          description: Номер партнера
-        agentName:
-          type: string
-        partnerDivision:
-          type: string
-        generalContractNumber:
-          type: string
-        agentId:
-          type: string
-          description: ИД агента из профилятора
-        agentUuid:
-          type: string
-        apiVersion:
-          type: string
-        applicationId:
-          type: string
-        agreementId:
-          type: string
-        nsiCode:
-          type: string
-        fullNsiCode:
-          type: string
-        custodianId:
-          type: string
-        wsmCode:
-          type: string
-        filial:
-          type: object
-          properties:
-            code:
-              type: string
-            name:
-              type: string
-        department:
-          type: object
-          properties:
-            code:
-              type: string
-            name:
-              type: string
-        salespoint:
-          type: object
-          properties:
-            code:
-              type: string
-            name:
-              type: string
-        holding:
-          type: object
-          properties:
-            code:
-              type: string
-            name:
-              type: string
-        legal_entity:
-          type: string
-        partnerType:
-          type: string
-
     Error:
       type: object
       properties:
@@ -1535,7 +1521,15 @@ components:
           example:
             errorCode: ERR-00005
             errorDescription: Данные не найдены.
- 
+
+    'Http-501':
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HttpBadResponse'
+
+
     'Http-503':
       description: Service Unavailable
       content:

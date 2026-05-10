@@ -123,6 +123,8 @@ security:
 
 logging:
   level:
+    # Suppress auto-configuration condition report (unconditional/negative matches dump)
+    org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLogger: OFF
     ru.pt.process.service.FileProcessServiceImpl: TRACE
     ru.pt.process.service.PreProcessServiceImpl: TRACE
     ru.pt.process.service.ProcessOrchestratorService: TRACE

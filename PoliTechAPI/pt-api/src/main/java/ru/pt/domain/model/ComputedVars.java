@@ -157,7 +157,7 @@ public class ComputedVars {
             }
         } catch (Exception e) {
             logger.error("Error computing magic value for key '{}': {}", key, e.getMessage(), e);
-            logger.trace("Exception details for key '{}'", key, e);
+            //logger.trace("Exception details for key '{}'", key, e);
             return null;
         }
     }
