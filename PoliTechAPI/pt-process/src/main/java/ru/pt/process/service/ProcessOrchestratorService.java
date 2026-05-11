@@ -28,9 +28,12 @@ import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnauthorizedException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
+import ru.pt.api.dto.payment.CreateInstallmentsRequest;
+import ru.pt.api.dto.payment.InstallmentDto;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
+import ru.pt.api.dto.process.Installment;
 import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.service.addon.PolicyAddOnService;
@@ -64,6 +67,7 @@ import ru.pt.files.service.email.EmailGateService;
 import ru.pt.payments.service.PaymentClientSwitch;
 import ru.pt.process.utils.MdcWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -82,7 +86,7 @@ import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.dto.process.ProcessList;
 import ru.pt.api.service.product.InsCompanyService;
-
+import ru.pt.api.service.payment.PaymentService;
 @Service
 @RequiredArgsConstructor
 public class ProcessOrchestratorService implements ProcessOrchestrator {
@@ -115,7 +119,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final AuthorizationService authorizationService;
     private final CommissionService commissionService;
     private final InsCompanyService insCompanyService;
-
+    private final PaymentService paymentService;
     private final PolicyAddOnService policyAddOnService;
     /**
      * Get current authenticated user from security context.
@@ -622,15 +626,43 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         policyDTO.getProcessList().setIoDigest(io_digest);
         policyDTO.getProcessList().setInsCompanyCode(insCompany.getCode());
 
-        // 12. Сохранить договор в хранилище
+        // 12 Создать график платежей (id полиса нужен до save для FK в pt_payment_installment)
+
+        CreateInstallmentsRequest installmentsRequest = new CreateInstallmentsRequest();
+        
+        installmentsRequest.setAmount(policyDTO.getPremium());
+        installmentsRequest.setCurrency("RUB");
+        if (policyDTO.getStartDate() != null) {
+            installmentsRequest.setStartDate(policyDTO.getStartDate().toLocalDate());
+        }
+        String installmentType = policyDTO.getInstallmentType();
+        if (installmentType == null || installmentType.isBlank()) {
+            installmentType = "SINGLE";
+        }
+        installmentsRequest.setInstallmentType(installmentType.trim());
+
+        List<InstallmentDto> installmentsDto = paymentService.createInstallments(user.getTenantId(), installmentsRequest);
+        List<Installment> installments = new ArrayList<>();
+        for (InstallmentDto installmentDto : installmentsDto) {
+            installments.add(new Installment(
+                    installmentDto.getInstallmentNr(),
+                    installmentDto.getDueDate(),
+                    installmentDto.getAmount()));
+        }
+        policyDTO.setInstallments(installments);
+
+
+        // 15. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
         storageService.save(policyDTO, getCurrentUser());
 
-        // 13. Ответ, удалить помойку
+        // 16. Ответ, удалить помойку
         policyDTO.setProcessList(null);
         String newPolicyJson = policyToJson(policyDTO);
 
         // TODO async send KID + draft print form
+        // 17. Сохранить график платежей
+        paymentService.save(user.getTenantId(), policyDTO.getId(), installmentsDto);
 
         logger.info("Save process completed. policyNumber={}, premium={}", nextNumber, policyDTO.getPremium());
         return newPolicyJson;

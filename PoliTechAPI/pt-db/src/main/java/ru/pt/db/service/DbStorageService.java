@@ -49,7 +49,7 @@ public class DbStorageService implements StorageService {
     public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
 
         Long id = policyRepository.getNextPolicySeqValue();
-        policy.setId(id.toString());
+        policy.setId(id);
 
         if (policy.getPublicId() == null || policy.getPublicId().isEmpty()) {
             policy.setPublicId(UUID.randomUUID().toString());

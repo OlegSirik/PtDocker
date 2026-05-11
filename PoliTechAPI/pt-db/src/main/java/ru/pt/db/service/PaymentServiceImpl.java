@@ -6,59 +6,120 @@ import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.payment.*;
 import ru.pt.api.service.payment.PaymentService;
+import ru.pt.db.entity.InstallmentTemplateEntity;
+import ru.pt.db.entity.InstallmentTemplateLine;
 import ru.pt.db.entity.PaymentAllocationEntity;
 import ru.pt.db.entity.PaymentEntity;
 import ru.pt.db.entity.PaymentInstallmentEntity;
+import ru.pt.db.repository.InstallmentTemplateRepository;
 import ru.pt.db.repository.PaymentAllocationRepository;
 import ru.pt.db.repository.PaymentInstallmentRepository;
 import ru.pt.db.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentInstallmentRepository installmentRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentAllocationRepository allocationRepository;
+    private final InstallmentTemplateRepository installmentTemplateRepository;
 
-    public PaymentServiceImpl(PaymentInstallmentRepository installmentRepository,
-                              PaymentRepository paymentRepository,
-                              PaymentAllocationRepository allocationRepository) {
-        this.installmentRepository = installmentRepository;
-        this.paymentRepository = paymentRepository;
-        this.allocationRepository = allocationRepository;
+    @Override
+    public List<InstallmentDto> save(Long tenantId, Long policyId, List<InstallmentDto> installments) {
+        if (installments == null || installments.isEmpty()) {
+            return List.of();
+        }
+        List<InstallmentDto> result = new ArrayList<>();
+        for (InstallmentDto dto : installments) {
+            if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
+                throw new BadRequestException("Invalid installment row: positive amount is required");
+            }
+            if (dto.getDueDate() == null) {
+                throw new BadRequestException("Invalid installment row: dueDate is required");
+            }
+            PaymentInstallmentEntity entity = new PaymentInstallmentEntity();
+            entity.setTid(tenantId);
+            entity.setPolicyId(policyId);
+            entity.setInstallmentNr(dto.getInstallmentNr());
+            entity.setDueDate(dto.getDueDate());
+            entity.setAmount(dto.getAmount());
+            entity.setCurrency(normalizeCurrency(dto.getCurrency()));
+            entity.setStatus(dto.getStatus() != null ? dto.getStatus().name() : InstallmentStatus.UNPAID.name());
+            result.add(toDto(installmentRepository.save(entity)));
+        }
+        return result;
     }
 
     @Override
     public List<InstallmentDto> createInstallments(Long tenantId, CreateInstallmentsRequest request) {
-        if (request == null || request.getPolicyId() == null || request.getAmount() == null || request.getAmount().signum() <= 0) {
-            throw new BadRequestException("Invalid installment creation request");
+        if (request == null) {
+            throw new BadRequestException("Installment creation request is required");
         }
-        int count = switch (normalize(request.getInstallmentType())) {
-            case "MONTHLY" -> 12;
-            case "QUARTERLY" -> 4;
-            default -> 1;
-        };
+        if (request.getAmount() == null) {
+            throw new BadRequestException("amount is required");
+        }
+        if (request.getAmount().signum() <= 0) {
+            throw new BadRequestException("amount must be greater than zero");
+        }
+        String installmentType = normalize(request.getInstallmentType());
+        if (installmentType.isEmpty()) {
+            throw new BadRequestException("installmentType is required");
+        }
+        InstallmentTemplateEntity templateEntity = installmentTemplateRepository
+                .findByTidAndInstallmentTypeIgnoreCase(tenantId, installmentType)
+                .or(() -> installmentTemplateRepository.findByTidAndInstallmentTypeIgnoreCase(0L, installmentType))
+                .orElseThrow(() -> new BadRequestException("Unknown installment type: " + installmentType));
+        List<InstallmentTemplateLine> rawLines = templateEntity.getInstallmentTemplate();
+        if (rawLines == null || rawLines.isEmpty()) {
+            throw new BadRequestException("Installment template is empty for type: " + installmentType);
+        }
+        List<InstallmentTemplateLine> lines = rawLines.stream()
+                .sorted(Comparator.comparing(
+                        InstallmentTemplateLine::getInstallmentNr,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
         LocalDate startDate = request.getStartDate() != null ? request.getStartDate() : LocalDate.now();
-        BigDecimal part = request.getAmount().divide(BigDecimal.valueOf(count), 2, java.math.RoundingMode.HALF_UP);
+        BigDecimal total = request.getAmount();
+        String currency = normalizeCurrency(request.getCurrency());
+        RoundingMode rounding = RoundingMode.HALF_UP;
+        List<BigDecimal> amounts = new ArrayList<>();
+        for (InstallmentTemplateLine line : lines) {
+            BigDecimal pct = line.getPercent() != null ? line.getPercent() : BigDecimal.ZERO;
+            amounts.add(total.multiply(pct).divide(BigDecimal.valueOf(100), 2, rounding));
+        }
+        BigDecimal sumParts = amounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal remainder = total.subtract(sumParts);
+        if (!amounts.isEmpty() && remainder.signum() != 0) {
+            int last = amounts.size() - 1;
+            amounts.set(last, amounts.get(last).add(remainder));
+        }
+        int cumulativeMonths = 0;
         List<InstallmentDto> result = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            PaymentInstallmentEntity entity = new PaymentInstallmentEntity();
-            entity.setTid(tenantId);
-            entity.setPolicyId(request.getPolicyId());
-            entity.setInstallmentNr(i + 1);
-            entity.setDueDate(startDate.plusMonths(i));
-            entity.setAmount(part);
-            entity.setCurrency(normalizeCurrency(request.getCurrency()));
-            entity.setStatus(InstallmentStatus.UNPAID.name());
-            result.add(toDto(installmentRepository.save(entity)));
+        for (int i = 0; i < lines.size(); i++) {
+            InstallmentTemplateLine line = lines.get(i);
+            LocalDate dueDate = startDate.plusMonths(cumulativeMonths);
+            int periodMonths = line.getPeriodMonths() != null ? line.getPeriodMonths() : 0;
+            cumulativeMonths += periodMonths;
+            InstallmentDto dto = new InstallmentDto();
+            dto.setPolicyId(request.getPolicyId());
+            dto.setInstallmentNr(line.getInstallmentNr() != null ? line.getInstallmentNr().longValue() : (long) (i + 1));
+            dto.setDueDate(dueDate);
+            dto.setAmount(amounts.get(i));
+            dto.setCurrency(currency);
+            dto.setStatus(InstallmentStatus.UNPAID);
+            result.add(dto);
         }
         return result;
     }

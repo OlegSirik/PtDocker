@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.addon.PolicyAddOnDto;
+import ru.pt.api.dto.process.Installment;
 
 import java.time.ZonedDateTime;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class PolicyDTO {
     private Long productVersion;
 
     @JsonProperty("id")
-    private String id;
+    private Long id;
 
     @JsonProperty("statusCode")
     private String statusCode;
@@ -77,10 +78,11 @@ public class PolicyDTO {
 //    @JsonProperty("insCompanyId")
 //    private Long insCompanyId;
 
+
     private ProcessList processList;
 
     private CommissionDto commission;
-
+    private List<Installment> installments;
     private List<PolicyAddOnDto> options;
     // Constructors
     private Insurer insurer;
@@ -251,11 +253,11 @@ public class PolicyDTO {
         this.productVersion = productVersion;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -315,6 +317,14 @@ public class PolicyDTO {
 
     public void setPolicyHolder(PolicyHolder policyHolder) {
         this.policyHolder = policyHolder;
+    }
+
+    public List<Installment> getInstallments() {
+        return this.installments;
+    }
+
+    public void setInstallments(List<Installment> installments) {
+        this.installments = installments;
     }
 
 }
