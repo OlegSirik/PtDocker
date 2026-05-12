@@ -12,10 +12,6 @@ servers:
   - description: SwaggerHub API Auto Mocking
     url: http://185.130.212.179:8080/api/v1/demo
 
-tags:
-  - politech
-  - wip (work in progress)
-
 paths:
   /auth/login:
     post:

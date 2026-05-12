@@ -56,6 +56,7 @@ export default defineConfig({
             { text: 'Страхование от несчастных случаев', link: '/user-docs/product-acc' },
             { text: 'Страхование пассажиров', link: '/user-docs/product-pax' },
             { text: 'Страхование бытовой электроники', link: '/user-docs/product-gad' }
+            { text: 'Страхование грузоперевозок', link: '/user-docs/product-crg' },
           ]
       },
       {
