@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -25,6 +26,7 @@ import ru.pt.product.entity.ContractModelEntity;
 import ru.pt.product.repository.AttributeDefRepository;
 import ru.pt.product.repository.ContractModelRepository;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -100,20 +102,27 @@ public class SchemaServiceImpl implements SchemaService {
     }
 
     /**
-     * Лист — пустая строка; иначе объект с ключами-потомками ({@code parent_id} = id узла).
-     * Контейнер массива ({@code ARRAY} / {@code MULT}) — один шаблон элемента: {@code [{ ... }]}.
+     * Лист без детей — строка-заглушка {@code ""} (или число/логика по {@code var_data_type});
+     * при {@code var_cardinality = MULT} — массив из одного шаблонного элемента {@code [""]} / {@code [0]}.
+     * Узел с детьми — объект с ключами-потомками; при MULT — один шаблон элемента: {@code [{ ... }]}.
      */
     private JsonNode buildAttributeJsonSubtree(
             AttributeDefEntity e,
             Map<Long, List<AttributeDefEntity>> childrenByParent) {
         List<AttributeDefEntity> raw = childrenByParent.getOrDefault(e.getId(), List.of());
         if (raw.isEmpty()) {
-            return objectMapper.getNodeFactory().textNode("");
+            JsonNode leaf = leafTemplateNode(e);
+            if (isMultCardinality(e)) {
+                ArrayNode arr = objectMapper.createArrayNode();
+                arr.add(leaf);
+                return arr;
+            }
+            return leaf;
         }
         List<AttributeDefEntity> kids = new ArrayList<>(raw);
         kids.sort(SCHEMA_TREE_ORDER);
         ObjectNode childObject = buildChildObjectNode(kids, childrenByParent);
-        if (isSchemaArrayContainer(e)) {
+        if (isMultCardinality(e)) {
             ArrayNode arr = objectMapper.createArrayNode();
             if (!childObject.isEmpty()) {
                 arr.add(childObject);
@@ -136,13 +145,6 @@ public class SchemaServiceImpl implements SchemaService {
         return obj;
     }
 
-    private static String normalizedVarType(String varType) {
-        if (varType == null || varType.isBlank()) {
-            return "";
-        }
-        return varType.trim().toUpperCase(Locale.ROOT);
-    }
-
     private static String normalizedVarCardinality(String cardinality) {
         if (cardinality == null || cardinality.isBlank()) {
             return "";
@@ -151,14 +153,28 @@ public class SchemaServiceImpl implements SchemaService {
     }
 
     /**
-     * Контейнер «массив в JSON»: {@code var_type = ARRAY} или {@code var_cardinality = MULT}.
-     * Сериализуется как {@code [{ ... }]} — массив из одного объекта-шаблона по детям.
+     * Повторяемость по {@code var_cardinality}: {@code MULT} / {@code MULTIPLE} — узел в JSON — массив
+     * (шаблон: один элемент в массиве).
      */
-    private static boolean isSchemaArrayContainer(AttributeDefEntity e) {
-        if ("ARRAY".equals(normalizedVarType(e.getVarType()))) {
-            return true;
+    private static boolean isMultCardinality(AttributeDefEntity e) {
+        String c = normalizedVarCardinality(e.getVarCardinality());
+        return "MULT".equals(c) || "MULTIPLE".equals(c);
+    }
+
+    /** Заглушка для листа метаданных (без дочерних узлов в дереве атрибутов). */
+    private JsonNode leafTemplateNode(AttributeDefEntity e) {
+        JsonNodeFactory f = objectMapper.getNodeFactory();
+        if (e.getVarValue() != null && !e.getVarValue().isBlank()) {
+            return f.textNode(e.getVarValue());
         }
-        return "MULT".equals(normalizedVarCardinality(e.getVarCardinality()));
+        String dt = e.getVarDataType() != null ? e.getVarDataType().trim().toUpperCase(Locale.ROOT) : "";
+        if ("NUMBER".equals(dt)) {
+            return f.numberNode(BigDecimal.ZERO);
+        }
+        if ("BOOLEAN".equals(dt)) {
+            return f.booleanNode(false);
+        }
+        return f.textNode("");
     }
 
     private static boolean varCodeInValues(AttributeDefEntity e, Map<String, String> varValues) {
@@ -173,9 +189,8 @@ public class SchemaServiceImpl implements SchemaService {
     /**
      * Лист — строка из {@code varValues} по {@code var_code} или {@code var_value} схемы;
      * иначе объект/массив из отфильтрованных потомков. Узел не попадает в JSON, если он не
-     * {@link #keepByFilter} и не имеет непустых потомков; пустые контейнеры OBJECT/ARRAY
-     * (в т.ч. при {@code var_cardinality = MULT}) отбрасываются, кроме случая когда сам узел
-     * {@link #keepByFilter} — тогда остаётся {@code {}} или {@code [{}]}.
+     * {@link #keepByFilter} и не имеет непустых потомков; пустые контейнеры при {@code MULT}
+     * отбрасываются, кроме случая когда сам узел {@link #keepByFilter} — тогда остаётся {@code {}} или {@code [{}]}.
      */
     private Optional<JsonNode> buildFilteredAttributeSubtree(
             AttributeDefEntity e,
@@ -196,7 +211,13 @@ public class SchemaServiceImpl implements SchemaService {
             } else {
                 text = e.getVarValue() != null ? e.getVarValue() : "";
             }
-            return Optional.of(objectMapper.getNodeFactory().textNode(text));
+            JsonNode leaf = objectMapper.getNodeFactory().textNode(text);
+            if (isMultCardinality(e)) {
+                ArrayNode arr = objectMapper.createArrayNode();
+                arr.add(leaf);
+                return Optional.of(arr);
+            }
+            return Optional.of(leaf);
         }
 
         List<AttributeDefEntity> kids = new ArrayList<>(raw);
@@ -214,14 +235,14 @@ public class SchemaServiceImpl implements SchemaService {
             if (!keepByFilter(e, varValues)) {
                 return Optional.empty();
             }
-            if (isSchemaArrayContainer(e)) {
+            if (isMultCardinality(e)) {
                 ArrayNode arr = objectMapper.createArrayNode();
                 arr.add(objectMapper.createObjectNode());
                 return Optional.of(arr);
             }
             return Optional.of(objectMapper.createObjectNode());
         }
-        if (isSchemaArrayContainer(e)) {
+        if (isMultCardinality(e)) {
             ArrayNode arr = objectMapper.createArrayNode();
             arr.add(childObject);
             return Optional.of(arr);

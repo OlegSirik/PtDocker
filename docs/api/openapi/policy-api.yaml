@@ -6,6 +6,9 @@ info:
   description: Описание всех REST сервисов Policy.Tech
  
 servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/insur/PoliTechPublic/1.0.0
   - description: SwaggerHub API Auto Mocking
     url: http://185.130.212.179:8080/api/v1/demo
 
@@ -65,7 +68,7 @@ paths:
         '503':
           $ref: '#/components/responses/Http-503'
 
-  /sales/policies:
+  /sales/v3/policies:
     post:
       tags:
         - politech
@@ -169,7 +172,7 @@ paths:
   /sales/v3/policies/{policy_nr}:
     get:
       tags:
-        - politech
+        - poliTech
       description: |
         Получить данные по договору страхования.
       parameters:
@@ -191,7 +194,7 @@ paths:
  
     put:
       tags:
-        - politech
+        - policy
       description: |
         Изменить данные по версии договора. Менять данные можно только по договору в статусе WIP. 
         Иначе нужно создавать допник.
@@ -218,7 +221,7 @@ paths:
         '503':
           $ref: '#/components/responses/Http-503'
  
-  /sales/policies/{policy_nr}/files:
+  /sales/v3/policies/{policy_nr}/files:
     get:
       tags:
         - politech
@@ -252,7 +255,7 @@ paths:
  
     post:
       tags:
-        - politech
+        - mortgage
       description: добавить файл к договору.
  
       parameters:
@@ -276,7 +279,7 @@ paths:
         '401':
           $ref: '#/components/responses/Http-401'
   
-  /sales/policies/{policy_nr}/installments/{installment_nr}:
+  /sales/v3/policies/{policy_nr}/installments/{installment_nr}:
     get:
       tags:
         - politech
