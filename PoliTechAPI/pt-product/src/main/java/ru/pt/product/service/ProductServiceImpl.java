@@ -240,7 +240,7 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setIsTarifFactor(false);
                 pvVar.setName(var.getName());
 
-                if ( !newVarCodes.contains(var.getVarCode()) ) {
+                if ( newVarCodes.size() > 0 && !newVarCodes.contains(var.getVarCode()) ) {
                     pvVar.setIsDeleted(true);
                 }
 

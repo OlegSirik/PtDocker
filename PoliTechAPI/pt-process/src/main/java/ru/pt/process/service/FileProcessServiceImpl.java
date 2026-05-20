@@ -115,9 +115,9 @@ public class FileProcessServiceImpl implements FileProcessService {
                 LobModel lobModel = lobService.getByCode(policyTid, lobCode);
                 if (lobModel != null && lobModel.getMpVars() != null) {
                     for (LobVar lobVar : lobModel.getMpVars()) {
-                        if (lobVar.getIsDeleted()) {
-                            continue;
-                        }
+                    //    if (lobVar.getIsDeleted()) {
+                    //        continue;
+                    //    }
                         if ("TEXT".equals(lobVar.getVarType().toString())) {
                             pvVarList.add(lobVarToPvVarForPrint(lobVar));
                         }
