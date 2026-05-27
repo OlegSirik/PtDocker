@@ -1,0 +1,80 @@
+Правила задаются на уровне тенанта, продуктовой группы, продукта и интеграции ( партнера )
+
+Интерпретация результата выполнения правила лежит на вызывателе.
+Место вызова - справочник
+public enum RuleType {
+    PRE_QUOTE_VALIDATION,
+    QUOTE_CALCULATION,
+    POST_QUOTE_VALIDATION,
+    PRE_SAVE_VALIDATION,
+    POST_SAVE_VALIDATION,
+    UNDERWRITING,
+    WORKFLOW,
+    CROSS_SELL,
+    FRAUD_CHECK,
+    ISSUANCE,
+    RENEWAL
+}
+
+Базовая модель правила
+
+pt_Rules
+{
+    tid,
+  "id": 100,
+  "code": "PAX_AGE_LIMIT",
+  "name" : "Возраст застрахованного Ю 75 лет",
+  "scopeType": ["PRODUCT","LOB","TENANT", "CLIENT"] 
+  "scopeCode": "AIR_PAX_COMBO", - код продукта или продуктовой группы или клиента
+  "ruleType": "PRE_QUOTE_VALIDATION",
+  "priority": 100,
+  "record_status": "ACTIVE"
+
+  "expressionLanguage": "CEL",
+  "expression": "io_age <= 75",
+  "message": "Возраст не должен превышать 75 лет"
+}
+unique index tid, code when status = ACTIVE
+
+
+Rule
+ ├── ValidationRule
+ ├── PricingRule
+ ├── UnderwritingRule
+ ├── RecommendationRule
+ ├── WorkflowRule
+ └── DocumentRule
+
+ rule_service
+    service based on CEL common expression language
+    load all rules and compile them in cache
+
+    create all CRUD methods for pt_rules
+
+    method process_validation(ruleType, scopeCode - product_code, ctx context) return [String]
+        ruleType must be in PRE_QUOTE_VALIDATION, POST_QUOTE_VALIDATION, PRE_SAVE_VALIDATION, POST_SAVE_VALIDATION
+        
+        select rules from pt_product_versions where ruleType = ruleType order by priority
+        execute expression
+        if result != FALSE then add message to [String]
+
+        select rules from pt_rules where ruleType = ruleType and scopeType = LOB and scopeCode = lob_code order by priority
+        execute expression
+        if result != FALSE then add message to [String]
+
+        select rules from pt_rules where ruleType = ruleType and scopeType = TENANT order by priority
+        execute expression
+        if result != FALSE then add message to [String]
+
+        select rules from pt_rules where ruleType = ruleType and scopeType = CLIENT order by priority
+        execute expression
+        if result != FALSE then add message to [String]
+
+        return [String]
+
+    other validation will be added in next release
+    
+rule_controler
+all crud with path rules/{id}
+
+rules/cmd/reload
