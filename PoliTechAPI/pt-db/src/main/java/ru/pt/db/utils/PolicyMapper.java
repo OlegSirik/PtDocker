@@ -9,6 +9,7 @@ import ru.pt.api.dto.db.PolicyIndex;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.db.entity.PolicyEntity;
 import ru.pt.db.entity.PolicyIndexEntity;
+import ru.pt.domain.process.document.ProcessList;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,7 +19,6 @@ import static java.time.ZonedDateTime.ofInstant;
 import static java.util.Optional.ofNullable;
 
 import ru.pt.api.dto.process.PolicyDTO;
-import ru.pt.api.dto.process.ProcessList;
 import ru.pt.api.security.AuthenticatedUser;
 
 @Component
@@ -120,14 +120,14 @@ public class PolicyMapper {
         index.setDataScope(policy.getProcessList().getDataScope());
         index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
 //        index.setPaymentOrderId(policy.getPaymentOrderId());
-        index.setInsCompany(processList.getInsCompanyCode());
+        index.setInsCompany(policy.getInsurer() != null ? policy.getInsurer().getCode() : null);
         
         index.setPhDigest(phDigest);
         index.setIoDigest(ioDigest);
         index.setUserLogin(userData.getUsername());
         index.setPremium(policy.getPremium());
-        index.setAgentKvPercent(policy.getCommission().getAppliedCommissionRate());
-        index.setAgentKvAmount(policy.getCommission().getCommissionAmount());
+        index.setAgentKvPercent(policy.getCommission() != null ? policy.getCommission().getAppliedCommissionRate() : null);
+        index.setAgentKvAmount(policy.getCommission() != null ? policy.getCommission().getCommissionAmount() : null);
         return index;
     }
 

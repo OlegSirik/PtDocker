@@ -1,9 +1,9 @@
 package ru.pt.api.service.process;
 
 import ru.pt.api.dto.errors.ValidationError;
-import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.process.document.ValidatorType;
 import ru.pt.api.dto.product.ProductVersionModel;
 
 import java.util.List;

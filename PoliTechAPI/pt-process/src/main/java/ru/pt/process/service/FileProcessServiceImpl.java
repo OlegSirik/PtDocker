@@ -14,7 +14,8 @@ import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.PvFile;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.FileProcessService;
-import ru.pt.api.service.process.PreProcessService;
+import ru.pt.process.service.PreProcessService;
+import ru.pt.process.service.PostProcessService;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
 import ru.pt.domain.model.PolicyCoreView;
@@ -28,7 +29,7 @@ import ru.pt.api.service.product.ProductService;
 
 import java.util.ArrayList;
 import java.util.List;
-import ru.pt.api.service.projection.PolicyCoreViewInterface;
+import ru.pt.domain.model.PolicyCoreView;
 
 @Component
 public class FileProcessServiceImpl implements FileProcessService {
@@ -41,7 +42,7 @@ public class FileProcessServiceImpl implements FileProcessService {
     private final ProductVersionRepository productVersionRepository;
     private final FileService fileService;
     private final PreProcessService preProcessService;
-    
+    private final PostProcessService postProcessService;
 
     private final ProductService productService;
     private final LobService lobService;
@@ -53,6 +54,7 @@ public class FileProcessServiceImpl implements FileProcessService {
             ProductVersionRepository productVersionRepository,
             FileService fileService,
             PreProcessService preProcessService,
+            PostProcessService postProcessService,
             ProductService productService,
             LobService lobService
     ) {
@@ -62,6 +64,7 @@ public class FileProcessServiceImpl implements FileProcessService {
         this.productVersionRepository = productVersionRepository;
         this.fileService = fileService;
         this.preProcessService = preProcessService;
+        this.postProcessService = postProcessService;
         this.productService = productService;
         this.lobService = lobService;
     }
@@ -140,7 +143,7 @@ public class FileProcessServiceImpl implements FileProcessService {
                 (code, value) -> logger.debug("Processing variable: code={}, value={}", code, value)
         );
         
-        PolicyCoreViewInterface policyView = new PolicyCoreView();
+        PolicyCoreView policyView = new PolicyCoreView();
 
         String packageNo = policyView.getPackageNo(varCtx);
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);

@@ -1,0 +1,78 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ isNew ? 'Новое правило' : 'Редактирование правила' }}</h1>
+  </div>
+
+  <div class="pt-box form-box">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Код</mat-label>
+      <input matInput [(ngModel)]="rule.code" [readonly]="!isNew" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Название</mat-label>
+      <input matInput [(ngModel)]="rule.name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Тип правила</mat-label>
+      <mat-select [(ngModel)]="rule.ruleType">
+        @for (t of ruleTypes; track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Область (scope)</mat-label>
+      <mat-select [(ngModel)]="rule.scopeType">
+        @for (s of scopeTypes; track s) {
+          <mat-option [value]="s">{{ s }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Scope code</mat-label>
+      <input matInput [(ngModel)]="rule.scopeCode" placeholder="код продукта / LOB / tenant / client_id" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Приоритет</mat-label>
+      <input matInput type="number" [(ngModel)]="rule.priority" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>LLM текст</mat-label>
+      <textarea matInput rows="2" [(ngModel)]="rule.llmText" placeholder="Опишите правило на естественном языке"></textarea>
+    </mat-form-field>
+
+    <div class="llm-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="askingLlm || !(rule.llmText || '').trim()"
+        (click)="askLlm()">
+        Ask
+      </button>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>CEL-выражение (true = OK)</mat-label>
+      <textarea matInput id="rule_expression" rows="3" [(ngModel)]="rule.expression"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Сообщение при нарушении</mat-label>
+      <input matInput [(ngModel)]="rule.message" />
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="back()">Назад</button>
+      @if (!isNew) {
+        <button mat-stroked-button color="warn" type="button" (click)="delete()">Удалить</button>
+      }
+      <button mat-flat-button color="primary" type="button" [disabled]="saving" (click)="save()">Сохранить</button>
+    </div>
+  </div>
+</div>

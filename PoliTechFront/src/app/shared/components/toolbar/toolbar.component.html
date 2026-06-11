@@ -21,6 +21,7 @@
       @if (user && hasRole(TOOLBAR_ROLE.SYS_ADMIN) || hasRole(TOOLBAR_ROLE.TNT_ADMIN) ) {
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'rules']" class="nav-button">Правила</button>
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
       }
 

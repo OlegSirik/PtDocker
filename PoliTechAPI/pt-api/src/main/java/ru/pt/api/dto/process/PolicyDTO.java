@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.addon.PolicyAddOnDto;
 import ru.pt.api.dto.process.Installment;
+import ru.pt.domain.process.document.ProcessList;
 
 import java.time.ZonedDateTime;
 import java.util.HashMap;

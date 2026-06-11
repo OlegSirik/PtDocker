@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":pt-numbers"))
     implementation(project(":pt-product"))
     implementation(project(":pt-payments"))
+    implementation(project(":pt-rules"))
     implementation(project(":pt-files"))
     implementation("org.springframework:spring-beans")
     implementation("org.springframework:spring-context")

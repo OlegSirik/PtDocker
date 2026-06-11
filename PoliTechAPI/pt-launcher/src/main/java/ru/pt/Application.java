@@ -10,7 +10,9 @@ import ru.pt.db.configuration.DbModuleConfiguration;
 import ru.pt.files.configuration.FilesModuleConfiguration;
 import ru.pt.numbers.configuration.NumbersModuleConfiguration;
 import ru.pt.payments.configuration.PaymentModuleConfiguration;
+import ru.pt.rules.configuration.RulesModuleConfiguration;
 import ru.pt.process.configuration.ProcessModuleConfiguration;
+import ru.pt.product.configuration.ProductModuleConfiguration;
 
 // @EnableJms
 @SpringBootApplication()
@@ -21,7 +23,9 @@ import ru.pt.process.configuration.ProcessModuleConfiguration;
         CalculatorModuleConfiguration.class,
         AuthModuleConfiguration.class,
         FilesModuleConfiguration.class,
-        PaymentModuleConfiguration.class})
+        PaymentModuleConfiguration.class,
+        RulesModuleConfiguration.class,
+        ProductModuleConfiguration.class})
 public class Application {
 
     public static void main(String[] args) {

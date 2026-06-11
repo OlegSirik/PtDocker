@@ -1,11 +1,10 @@
 package ru.pt.domain.model;
 
 import ru.pt.api.dto.product.PvVar;
-import ru.pt.api.service.projection.PolicyCoreViewInterface;
 
 import java.math.BigDecimal;
 
-public final class PolicyCoreView implements PolicyCoreViewInterface {
+public final class PolicyCoreView {
 
 
     public BigDecimal getCoverSumInsured(VariableContext ctx, String cover) {

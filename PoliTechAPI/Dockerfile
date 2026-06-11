@@ -40,6 +40,7 @@ EXPOSE 8080 5005
 
 # Optimized JVM settings for containers
 ENV JAVA_OPTS="-Xmx1024m -Xms512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+ENV DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 ENV TZ Europe/Moscow
 
@@ -47,4 +48,4 @@ ENV TZ Europe/Moscow
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS ${DEBUG:+$DEBUG_OPTS} -jar app.jar"]

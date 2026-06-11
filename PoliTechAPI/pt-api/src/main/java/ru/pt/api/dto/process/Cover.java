@@ -36,11 +36,11 @@ public class Cover {
     @JsonProperty("deductible")
     private Deductible deductible;
 
-    @JsonProperty("LimitMin")
-    private BigDecimal LimitMin;
+    @JsonProperty("limitMin")
+    private BigDecimal limitMin;
 
-    @JsonProperty("LimitMax")
-    private BigDecimal LimitMax;
+    @JsonProperty("limitMax")
+    private BigDecimal limitMax;
 
     // Constructors
     public Cover() {}
@@ -115,19 +115,19 @@ public class Cover {
     }
 
     public BigDecimal getLimitMin() {
-        return LimitMin;
+        return limitMin;
     }
 
     public void setLimitMin(BigDecimal limitMin) {
-        LimitMin = limitMin;
+        this.limitMin = limitMin;
     }
 
     public BigDecimal getLimitMax() {
-        return LimitMax;
+        return limitMax;
     }
 
     public void setLimitMax(BigDecimal limitMax) {
-        LimitMax = limitMax;
+        this.limitMax = limitMax;
     }
 
     

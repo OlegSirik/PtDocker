@@ -35,7 +35,9 @@ import ru.pt.api.dto.payment.PaymentType;
 import ru.pt.api.dto.process.Cover;
 import ru.pt.api.dto.process.Installment;
 import ru.pt.api.dto.process.InsuredObject;
-import ru.pt.api.dto.process.ValidatorType;
+import ru.pt.api.dto.rules.RuleType;
+import ru.pt.api.dto.rules.RuleValidationContext;
+import ru.pt.api.service.rules.RuleValidationService;
 import ru.pt.api.service.addon.PolicyAddOnService;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -45,8 +47,8 @@ import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.commission.CommissionService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.numbers.NumberGeneratorService;
-import ru.pt.api.service.process.PostProcessService;
-import ru.pt.api.service.process.PreProcessService;
+import ru.pt.process.service.PostProcessService;
+import ru.pt.process.service.PreProcessService;
 import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.api.service.process.ValidatorService;
 import ru.pt.api.service.product.LobService;
@@ -57,18 +59,23 @@ import ru.pt.api.utils.JsonProjection;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
+import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.service.ClientService;
 import ru.pt.domain.model.CalculatorContext;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
-import ru.pt.domain.model.VariableContextImpl;
+import ru.pt.domain.model.VariableContextImpl2;
+import ru.pt.domain.process.document.ProcessList;
+import ru.pt.domain.process.document.ValidatorType;
 import ru.pt.files.service.email.EmailGateService;
 import ru.pt.payments.service.PaymentClientSwitch;
 import ru.pt.process.utils.MdcWrapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,7 +91,6 @@ import java.math.BigDecimal;
 import ru.pt.api.dto.addon.PolicyAddOnDto;
 import ru.pt.api.dto.commission.CommissionAction;
 import ru.pt.api.dto.process.PolicyDTO;
-import ru.pt.api.dto.process.ProcessList;
 import ru.pt.api.service.product.InsCompanyService;
 import ru.pt.api.service.payment.PaymentService;
 @Service
@@ -121,6 +127,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final InsCompanyService insCompanyService;
     private final PaymentService paymentService;
     private final PolicyAddOnService policyAddOnService;
+    private final RuleValidationService ruleValidationService;
+    private final RequestContext requestContext;
     /**
      * Get current authenticated user from security context.
      * @return AuthenticatedUser representing the current user
@@ -233,7 +241,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 varCtx );
 
 
-                postProcessService.setCovers(policyDTO, varCtx);
+                postProcessService.setCovers(policyDTO.getInsuredObjects().get(0), varCtx);
 
         } else {
             logger.warn("No calculator found for product {} version {} package {}", 
@@ -397,7 +405,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         if ( commissionDTO != null && commissionDTO.getRequestedCommissionRate() != null ) {
             commissionService.checkRequestedCommissionRate(
                 commissionDTO.getRequestedCommissionRate(), 
-                user.getAccountId(), 
+                user.getAccountId(),  
                 product.getId(), 
                 CommissionAction.SALE);   // ToDo make enum
         // Если норм то меняет % на запрашиваемый
@@ -414,14 +422,16 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .toList();
 
         // 7. Runtime-контекст
-        CalculatorContext varCtx = new VariableContextImpl(policyJSON, varDefinitions);
+        CalculatorContext varCtx = new VariableContextImpl2(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);
 
         // 9. Валидация (lazy!)
         logger.debug("Validating policy for QUOTE");
-        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
+        List<ValidationError> errors = new ArrayList<>();
+        errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
+        errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
 
         if (!errors.isEmpty()) {
             logger.warn("Validation failed for QUOTE. errors={}", errors.size());
@@ -463,6 +473,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 */        
         calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
 
+        List<ValidationError> postQuoteErrors = runCelValidation(RuleType.POST_QUOTE_VALIDATION, user, product, varCtx);
+        if (!postQuoteErrors.isEmpty()) {
+            throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors);
+        }
 
         // 11. Перенос результатов в DTO
         //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
@@ -574,15 +588,19 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .toList();
 
         // 7. Runtime-контекст
-        CalculatorContext varCtx = new VariableContextImpl(policyJSON, varDefinitions);
+        CalculatorContext varCtx = new VariableContextImpl2(policyJSON, varDefinitions);
 
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);
 
         // 9. Валидация 
         logger.debug("Validating policy for QUOTE and SAVE");
-        List<ValidationError> errors = validatorService.validate(ValidatorType.QUOTE, product, varCtx);
+        List<ValidationError> errors = new ArrayList<>();
+        errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
         errors.addAll(validatorService.validate(ValidatorType.SAVE, product, varCtx));
+
+        errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
+        errors.addAll(runCelValidation(RuleType.PRE_SAVE_VALIDATION, user, product, varCtx));
 
         if (!errors.isEmpty()) {
             logger.warn("Validation failed for SAVE. errors={}", errors.size());
@@ -651,6 +669,11 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         }
         policyDTO.setInstallments(installments);
 
+
+        List<ValidationError> postSaveErrors = runCelValidation(RuleType.POST_SAVE_VALIDATION, user, product, varCtx);
+        if (!postSaveErrors.isEmpty()) {
+            throwValidationErrors("POST_SAVE_VALIDATION", postSaveErrors);
+        }
 
         // 15. Сохранить договор в хранилище
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
@@ -936,5 +959,75 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     private PvVarDefinition toDefinition(PvVar var) {
         return PvVarDefinition.fromPvVar(var); 
+    }
+
+    /**
+     * {@link VariableContext#getValues()} contains only cached vars; CEL needs lazy-resolved product variables.
+     */
+    private Map<String, Object> buildCelVariables(VariableContext varCtx) {
+        Map<String, Object> variables = new HashMap<>(varCtx.getValues());
+        for (PvVarDefinition def : varCtx.getDefinitions()) {
+            String code = def.getCode();
+            if (!variables.containsKey(code)) {
+                variables.put(code, varCtx.get(code));
+            }
+        }
+        return variables;
+    }
+
+    private List<ValidationError> runCelValidation(
+            RuleType ruleType,
+            AuthenticatedUser user,
+            ProductVersionModel product,
+            VariableContext varCtx) {
+        logger.debug(
+                "Running CEL validation. ruleType={}, productCode={}, lob={}, clientId={}",
+                ruleType,
+                product.getCode(),
+                product.getLob(),
+                requestContext.getClient());
+        RuleValidationContext ctx = new RuleValidationContext(
+                user.getTenantId(),
+                user.getTenantCode(),
+                product.getCode(),
+                product.getLob(),
+                requestContext.getClient(),
+                buildCelVariables(varCtx));
+
+        logger.info(
+                "Calling ruleValidationService.processValidation, impl={}",
+                ruleValidationService.getClass().getName());
+        List<String> messages = ruleValidationService.processValidation(ruleType, ctx);
+        logger.info("ruleValidationService.processValidation returned {} message(s)", messages.size());
+
+        List<ValidationError> errors = new ArrayList<>();
+        for (String msg : messages) {
+            errors.add(new ValidationError("CEL_RULE", msg, null));
+        }
+        if (!errors.isEmpty()) {
+            logger.warn(
+                    "CEL validation produced errors. ruleType={}, productCode={}, count={}",
+                    ruleType,
+                    product.getCode(),
+                    errors.size());
+        } else {
+            logger.debug("CEL validation passed. ruleType={}, productCode={}", ruleType, product.getCode());
+        }
+        return errors;
+    }
+
+    private void throwValidationErrors(String stage, List<ValidationError> errors) {
+        logger.warn("CEL validation failed at {}. errors={}", stage, errors.size());
+        List<ErrorModel.ErrorDetail> errorDetails = errors.stream()
+                .map(err -> new ErrorModel.ErrorDetail(
+                        ErrorConstants.DOMAIN_VALIDATION,
+                        ErrorConstants.REASON_VALIDATION_FAILED,
+                        err.getReason(),
+                        err.getPath()))
+                .collect(Collectors.toList());
+        String errorMessage = stage + " failed: " + errors.stream()
+                .map(ValidationError::getReason)
+                .collect(Collectors.joining(", "));
+        throw new BadRequestException(new ErrorModel(400, errorMessage, errorDetails));
     }
 }

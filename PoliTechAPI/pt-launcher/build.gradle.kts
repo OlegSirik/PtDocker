@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":pt-files"))
     implementation(project(":pt-product"))
     implementation(project(":pt-payments"))
+    implementation(project(":pt-rules"))
 
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")

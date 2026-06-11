@@ -4,11 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.errors.ValidationError;
-import ru.pt.api.dto.process.ValidatorType;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.service.process.ValidatorService;
 import ru.pt.domain.model.VariableContext;
+import ru.pt.domain.process.document.ValidatorType;
 import ru.pt.process.utils.ValidatorImpl;
 
 import java.util.ArrayList;

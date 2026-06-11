@@ -33,6 +33,20 @@ spring:
 
 # Dev/test: tenant create/delete smoke test (set app.test-scenario1.enabled=true). Never in production.
 app:
+  llm:
+    enabled: true
+    default-provider: routerai
+    default-model: deepseek/deepseek-v4-flash
+    timeout-ms: 120000
+    providers:
+      routerai:
+        base-url: https://routerai.ru/api/v1
+        api-key: sk-qqlwdQV57fiZbpnUxi9RO49lXyItEsh9
+        default-model: deepseek/deepseek-v4-flash
+      deepseek:
+        base-url: https://api.deepseek.com
+        api-key: ${DEEPSEEK_API_KEY:}
+        default-model: deepseek-chat
   test-scenario1:
     enabled: false
     # sys-tenant-code: sys
@@ -129,6 +143,7 @@ logging:
     ru.pt.process.service.PreProcessServiceImpl: TRACE
     ru.pt.process.service.ProcessOrchestratorService: TRACE
     ru.pt.process.service.ValidatorServiceImpl: TRACE
+    ru.pt.rules.service: TRACE
     ru.pt.files.service.FileServiceImpl: DEBUG
     ru.pt.auth.security.filter: TRACE
     org.springframework.security: TRACE

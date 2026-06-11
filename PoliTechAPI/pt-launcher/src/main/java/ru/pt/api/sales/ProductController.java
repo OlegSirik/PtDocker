@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.pt.api.dto.llm.LlmAssistRequest;
+import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.product.Product;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvCover;
@@ -12,6 +14,7 @@ import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.ValidatorRule;
 import ru.pt.api.security.SecuredController;
+import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.UserDetailsImpl;
@@ -32,10 +35,15 @@ import java.util.List;
 public class ProductController extends SecuredController {
 
     private final ProductService productService;
+    private final LlmAssistantService llmAssistantService;
 
-    public ProductController(ProductService productService, SecurityContextHelper securityContextHelper) {
+    public ProductController(
+            ProductService productService,
+            LlmAssistantService llmAssistantService,
+            SecurityContextHelper securityContextHelper) {
         super(securityContextHelper);
         this.productService = productService;
+        this.llmAssistantService = llmAssistantService;
     }
 
     /**
@@ -299,6 +307,18 @@ public class ProductController extends SecuredController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {
         return ResponseEntity.ok(productService.getPvVars(user.getTenantId()));
+    }
+
+    @PostMapping("/{productId}/versions/{versionNo}/llm/assist")
+    public ResponseEntity<LlmAssistResponse> llmAssist(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable Long productId,
+            @PathVariable Long versionNo,
+            @RequestBody LlmAssistRequest request) {
+        request.setProductId(productId);
+        request.setVersionNo(versionNo);
+        return ResponseEntity.ok(llmAssistantService.assist(request, user));
     }
 }
 

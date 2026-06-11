@@ -1,0 +1,87 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">Правила (CEL)</h1>
+  </div>
+
+  <div class="pt-box">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Список правил</h3>
+      <div class="pt-box-title-buttons">
+        <button mat-stroked-button type="button" (click)="reloadCache()">Обновить кэш</button>
+        <button mat-flat-button type="button" (click)="addRule()">Новое правило</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Тип правила</mat-label>
+        <mat-select [(ngModel)]="filter.ruleType" (selectionChange)="loadRules()">
+          <mat-option [value]="undefined">Все</mat-option>
+          @for (t of ruleTypes; track t) {
+            <mat-option [value]="t">{{ t }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Область</mat-label>
+        <mat-select [(ngModel)]="filter.scopeType" (selectionChange)="loadRules()">
+          <mat-option [value]="undefined">Все</mat-option>
+          @for (s of scopeTypes; track s) {
+            <mat-option [value]="s">{{ s }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="loadRules()">Применить</button>
+    </div>
+
+    <div class="pt-box-table-box">
+      <div *ngIf="loading" class="loading">Загрузка...</div>
+      <table mat-table [dataSource]="rules" class="business-table" *ngIf="!loading">
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Код</th>
+          <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Название</th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="llmText">
+          <th mat-header-cell *matHeaderCellDef>LLM текст</th>
+          <td mat-cell *matCellDef="let row" class="llm-text-cell" [title]="row.llmText || ''">
+            {{ row.llmText || '—' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="scopeType">
+          <th mat-header-cell *matHeaderCellDef>Scope</th>
+          <td mat-cell *matCellDef="let row">{{ row.scopeType }}</td>
+        </ng-container>
+        <ng-container matColumnDef="scopeCode">
+          <th mat-header-cell *matHeaderCellDef>Scope code</th>
+          <td mat-cell *matCellDef="let row">{{ row.scopeCode }}</td>
+        </ng-container>
+        <ng-container matColumnDef="ruleType">
+          <th mat-header-cell *matHeaderCellDef>Тип</th>
+          <td mat-cell *matCellDef="let row">{{ row.ruleType }}</td>
+        </ng-container>
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef>Приоритет</th>
+          <td mat-cell *matCellDef="let row">{{ row.priority }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Статус</th>
+          <td mat-cell *matCellDef="let row">{{ row.recordStatus }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button type="button" (click)="editRule(row, $event)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="editRule(row)" class="clickable-row"></tr>
+      </table>
+    </div>
+  </div>
+</div>
