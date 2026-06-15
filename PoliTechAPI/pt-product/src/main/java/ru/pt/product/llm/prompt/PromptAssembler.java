@@ -29,23 +29,32 @@ public class PromptAssembler {
             String userMessage,
             ProductVersionModel product) {
         String system = loadPrompt(taskType);
-        String varsText = varsContextFormatter.format(product.getVars());
+        String varsText = taskType == LlmTaskType.RULE
+                ? varsContextFormatter.formatForRules(product.getVars())
+                : varsContextFormatter.format(product.getVars());
+        String celRulesHint = taskType == LlmTaskType.RULE
+                ? """
+
+                Правила CEL для condition:
+                - переменные с типом NUMBER — только через num("varCode")
+                - переменные с типом STRING — только через str("varCode")
+                - не используй голые идентификаторы varCode в condition
+                """
+                : "";
         String user = """
                 Запрос пользователя:
                 %s
 
                 Продукт: %s (%s), версия %s
-
-                Словарь переменных передаётся в формате:
-                varCode: Описание переменной
-
-                Доступные переменные (product.vars):
+                %s
+                Словарь переменных (varCode: описание [тип, в CEL: ...]):
                 %s
                 """.formatted(
                 userMessage,
                 nullToEmpty(product.getCode()),
                 nullToEmpty(product.getLob()),
                 product.getVersionNo() != null ? product.getVersionNo() : "",
+                celRulesHint,
                 varsText);
         return List.of(
                 new LlmMessage("system", system),

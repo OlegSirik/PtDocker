@@ -160,7 +160,9 @@ public class RuleValidationServiceImpl implements RuleValidationService {
             return "Макрос has() не включён — пересоберите backend; для varCode используйте сравнение с null/\"\"";
         }
         if (msg.contains("less_int64") || msg.contains("No matching overload")) {
-            return "Ошибка сравнения: переменная должна быть числом (MAGIC-поля вроде io_age_issue — строка, движок приводит к числу)";
+            return "Ошибка сравнения: для числовых полей используйте num(\"varCode\") > 0 "
+                    + "(например num(\"pl_premium\") > 0). MAGIC-поля вроде io_age_issue — строка, "
+                    + "прямое сравнение io_age_issue < 40 тоже допустимо если значение — число в строке.";
         }
         return "Ошибка выполнения правила: " + msg;
     }

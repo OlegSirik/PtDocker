@@ -97,6 +97,17 @@ class CelRuleEngineTest {
     }
 
     @Test
+    void evaluate_plPremiumString_passes() throws Exception {
+        assertTrue(engine.evaluate("pl_premium > 0", Map.of("pl_premium", new java.math.BigDecimal("100"))));
+        assertTrue(engine.evaluate("pl_premium > 0", Map.of("pl_premium", "100")));
+    }
+
+    @Test
+    void evaluate_plPremiumZero_fails() throws Exception {
+        assertFalse(engine.evaluate("pl_premium > 0", Map.of("pl_premium", java.math.BigDecimal.ZERO)));
+    }
+
+    @Test
     void evaluate_genderInList_passes() throws Exception {
         assertTrue(engine.evaluate(
                 "ph_age_issue < 40 && ph_gender in [\"M\"]",

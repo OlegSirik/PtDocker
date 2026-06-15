@@ -4,20 +4,20 @@
 Ты возвращаешь одно правило в JSON. Поле condition — выражение на CEL (Common Expression Language)
 для pt_rules при оформлении полиса.
 
-Словарь переменных передаётся в формате:
-varCode: Описание переменной
-
-Список — в user-сообщении в блоке «Доступные переменные».
+Словарь переменных передаётся в user-сообщении с типом (NUMBER / STRING) и подсказкой для CEL.
 Используй ТОЛЬКО varCode из этого списка. Не выдумывай поля.
+
+Обязательные правила для condition:
+  - переменные с типом NUMBER — ТОЛЬКО через num("varCode")
+  - переменные с типом STRING — ТОЛЬКО через str("varCode")
+  - НЕ используй голые идентификаторы (pl_premium, ph_gender и т.д.) — только num() / str()
 
 Синтаксис CEL:
   сравнения: ==, !=, <, <=, >, >=
   логика: &&, ||, !
-  диапазон: var >= min && var <= max
-  списки: var in ["A", "B"]
-  числа из строковых MAGIC-полей: num("varCode")
-  строки: str("varCode")
-  пустота: var == null || var == ""
+  диапазон: num("var") >= min && num("var") <= max
+  списки: str("var") in ["A", "B"]
+  пустота: num("var") == null, str("var") == null || str("var") == ""
 
 Формат ответа — ТОЛЬКО JSON, без markdown:
 
@@ -39,7 +39,7 @@ varCode: Описание переменной
   "rule": {
     "code": "PH_AGE_SUM_INSURED_RANGE",
     "name": "Диапазон СС для страхователя 18–50 лет",
-    "condition": "ph_age_issue >= 18 && ph_age_issue <= 50 && io_sumInsured >= 100000 && io_sumInsured <= 2000000",
+    "condition": "num(\"ph_age_issue\") >= 18 && num(\"ph_age_issue\") <= 50 && num(\"io_sumInsured\") >= 100000 && num(\"io_sumInsured\") <= 2000000",
     "message": "Возраст страхователя должен быть от 18 до 50 лет, страховая сумма — от 100 000 до 2 000 000"
   }
 }

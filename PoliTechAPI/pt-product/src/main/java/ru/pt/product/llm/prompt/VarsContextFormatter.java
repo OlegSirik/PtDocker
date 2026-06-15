@@ -15,6 +15,16 @@ public class VarsContextFormatter {
 
     private static final Set<String> EXCLUDED_VAR_TYPES = Set.of("OBJECT", "TEXT");
 
+    public String formatForRules(List<PvVar> vars) {
+        if (vars == null || vars.isEmpty()) {
+            return "";
+        }
+        return vars.stream()
+                .filter(this::isIncluded)
+                .map(this::toRuleLine)
+                .collect(Collectors.joining("\n"));
+    }
+
     public String format(List<PvVar> vars) {
         if (vars == null || vars.isEmpty()) {
             return "";
@@ -66,6 +76,22 @@ public class VarsContextFormatter {
 
     private String toLine(PvVar var) {
         return var.getVarCode() + ": " + firstNonBlank(var.getVarName(), var.getName());
+    }
+
+    private String toRuleLine(PvVar var) {
+        String code = var.getVarCode();
+        String desc = firstNonBlank(var.getVarName(), var.getName());
+        String dataType = var.getVarDataType() != null
+                ? var.getVarDataType().name()
+                : "STRING";
+        String celAccessor = isNumericDataType(dataType)
+                ? "num(\"" + code + "\")"
+                : "str(\"" + code + "\")";
+        return code + ": " + desc + " [" + dataType + ", в CEL: " + celAccessor + "]";
+    }
+
+    private static boolean isNumericDataType(String dataType) {
+        return "NUMBER".equalsIgnoreCase(dataType);
     }
 
     private boolean isIncluded(PvVar var) {

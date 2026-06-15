@@ -963,16 +963,55 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     /**
      * {@link VariableContext#getValues()} contains only cached vars; CEL needs lazy-resolved product variables.
+     * Numeric values are coerced via {@link VariableContext#getDecimal(String)} so rules like {@code pl_premium > 0}
+     * work even when metadata marks the var as STRING (MAGIC / JSON string).
      */
     private Map<String, Object> buildCelVariables(VariableContext varCtx) {
-        Map<String, Object> variables = new HashMap<>(varCtx.getValues());
+        Map<String, Object> variables = new HashMap<>();
         for (PvVarDefinition def : varCtx.getDefinitions()) {
             String code = def.getCode();
-            if (!variables.containsKey(code)) {
-                variables.put(code, varCtx.get(code));
-            }
+            variables.put(code, toCelActivationValue(varCtx, def));
         }
+        varCtx.getValues().forEach((k, v) -> variables.putIfAbsent(k, decodeCelValue(v)));
         return variables;
+    }
+
+    private Object toCelActivationValue(VariableContext varCtx, PvVarDefinition def) {
+        String code = def.getCode();
+        BigDecimal numeric = varCtx.getDecimal(code);
+        if (numeric != null) {
+            return numeric;
+        }
+        Object raw = varCtx.get(code);
+        if (isEmptyCelValue(raw) && isNumericPolicyVar(code, def)) {
+            return BigDecimal.ZERO;
+        }
+        return raw;
+    }
+
+    private static Object decodeCelValue(Object value) {
+        if (value instanceof BigDecimal bd) {
+            return bd;
+        }
+        return value;
+    }
+
+    private static boolean isEmptyCelValue(Object raw) {
+        if (raw == null) {
+            return true;
+        }
+        if (raw instanceof String s) {
+            return s.trim().isEmpty();
+        }
+        return false;
+    }
+
+    private static boolean isNumericPolicyVar(String code, PvVarDefinition def) {
+        if (def.getType() == PvVarDefinition.Type.NUMBER) {
+            return true;
+        }
+        String lower = code.toLowerCase();
+        return lower.contains("premium") || lower.contains("suminsured") || lower.endsWith("_amount");
     }
 
     private List<ValidationError> runCelValidation(
