@@ -12,6 +12,7 @@ export interface Calculator {
   productCode: string;
   versionNo: string;
   packageNo: string;
+  llmText?: string;
   vars: CalculatorVar[];
   formulas: CalculatorFormula[];
   coefficients: CalculatorCoefficient[];

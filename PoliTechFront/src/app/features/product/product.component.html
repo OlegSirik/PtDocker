@@ -410,6 +410,11 @@
     <div class="pt-box" style="margin-top: 20px;">
       <div class="pt-box-title-row">
         <h3 class="pt-box-title">Пакеты покрытий</h3>
+        <div class="pt-box-title-buttons">
+          <button mat-stroked-button class="add-button" [disabled]="crudLockedPendingSave" (click)="addPackage()">
+            Добавить пакет
+          </button>
+        </div>
       </div>
       <div class="pt-box-table-box">
         <!-- Packages Card -->

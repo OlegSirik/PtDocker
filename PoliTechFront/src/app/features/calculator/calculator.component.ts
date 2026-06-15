@@ -117,7 +117,6 @@ export class CalculatorComponent implements OnInit {
   // Text processor
   textProcessorContent: string = '';
 
-  llmText = '';
   askingLlm = false;
 
   // Lines table: toggle Текст (varName) / Код (varCode)
@@ -1288,7 +1287,7 @@ this.coefficientDataRows = rows;
   }
 
   askLlm(): void {
-    const text = (this.llmText || '').trim();
+    const text = (this.calculator.llmText || '').trim();
     if (!text) {
       return;
     }
@@ -1304,7 +1303,7 @@ this.coefficientDataRows = rows;
 
     this.askingLlm = true;
     this.llmService
-      .assistCalculator(+productId, +versionNo, packageNo, text, this.calculator)
+      .assistCalculator(+productId, +versionNo, packageNo, this.calculator)
       .subscribe({
         next: (response) => this.applyLlmResponse(response),
         error: (err) => {

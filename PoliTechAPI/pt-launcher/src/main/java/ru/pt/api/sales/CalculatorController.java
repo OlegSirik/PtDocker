@@ -61,11 +61,15 @@ public class CalculatorController  {
             @PathVariable Long versionNo,
             @PathVariable String packageNo,
             @RequestBody LlmCalculatorAssistRequest request) {
-        if (request.getCalculator() != null) {
-            request.getCalculator().setProductId(productId);
-            request.getCalculator().setVersionNo(versionNo);
-            request.getCalculator().setPackageNo(packageNo);
+        if (request.getCurrentCalculator() != null) {
+            request.getCurrentCalculator().setProductId(productId);
+            request.getCurrentCalculator().setVersionNo(versionNo);
+            request.getCurrentCalculator().setPackageNo(packageNo);
         }
+        request.setTaskType(ru.pt.api.dto.llm.LlmTaskType.CALCULATOR);
+        request.setProductId(productId);
+        request.setVersionNo(versionNo);
+        request.setPackageNo(packageNo);
         return ResponseEntity.ok(llmAssistantService.assistCalculator(request, user));
     }
 

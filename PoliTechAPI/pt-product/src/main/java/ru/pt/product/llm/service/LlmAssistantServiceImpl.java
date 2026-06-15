@@ -7,7 +7,6 @@ import ru.pt.api.dto.llm.LlmAssistRequest;
 import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.llm.LlmCalculatorAssistRequest;
 import ru.pt.api.dto.llm.LlmCalculatorAssistResponse;
-import ru.pt.api.dto.llm.LlmCalculatorDraft;
 import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.llm.LlmUsage;
 import ru.pt.api.dto.product.ProductVersionModel;
@@ -80,23 +79,19 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
     @Override
     public LlmCalculatorAssistResponse assistCalculator(LlmCalculatorAssistRequest request, AuthenticatedUser user) {
         validateCalculatorRequest(request);
-        CalculatorModel calculator = request.getCalculator();
+        CalculatorModel calculator = request.getCurrentCalculator();
+        String userMessage = resolveCalculatorUserMessage(request);
 
         ProductVersionModel product = productService.getVersion(
                 user.getTenantId(),
                 calculator.getProductId(),
                 calculator.getVersionNo());
 
+        List<LlmMessage> messages = promptAssembler.assembleCalculator(userMessage, calculator);
+
         List<PvVar> calculatorVars = calculator.getVars() != null ? calculator.getVars() : List.of();
-
-        List<LlmMessage> messages = promptAssembler.assembleCalculator(
-                request.getUserMessage(),
-                product,
-                calculator.getPackageNo(),
-                calculatorVars);
-
-        Set<String> knownVarCodes = varsContextFormatter.mergedVarCodes(product.getVars(), calculatorVars);
-        LlmAssistRequest logRequest = toAssistRequest(request);
+        Set<String> knownVarCodes = varsContextFormatter.varCodes(calculatorVars);
+        LlmAssistRequest logRequest = toAssistRequest(request, userMessage);
 
         LlmAssistResponse llmResponse = completeAndProcess(
                 logRequest,
@@ -109,19 +104,13 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         response.setSuccess(llmResponse.isSuccess());
 
         if (llmResponse.isSuccess()) {
-            if (!(llmResponse.getResult() instanceof LlmCalculatorDraft draft)) {
+            if (!(llmResponse.getResult() instanceof CalculatorModel fromLlm)) {
                 response.setSuccess(false);
                 response.setMessage("В ответе нет данных калькулятора");
                 return response;
             }
-            if ((draft.getFormulas() == null || draft.getFormulas().isEmpty())
-                    && (draft.getCoefficients() == null || draft.getCoefficients().isEmpty())) {
-                response.setSuccess(false);
-                response.setMessage("В ответе нет формул и коэффициентов");
-                return response;
-            }
 
-            calculatorApplicator.apply(calculator, draft);
+            calculatorApplicator.apply(calculator, fromLlm);
             response.setCalculator(calculator);
         } else if (llmResponse.getErrors() != null && !llmResponse.getErrors().isEmpty()) {
             response.setMessage(String.join("; ", llmResponse.getErrors()));
@@ -176,17 +165,39 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         return response;
     }
 
-    private LlmAssistRequest toAssistRequest(LlmCalculatorAssistRequest request) {
-        CalculatorModel calculator = request.getCalculator();
+    private LlmAssistRequest toAssistRequest(LlmCalculatorAssistRequest request, String userMessage) {
+        CalculatorModel calculator = request.getCurrentCalculator();
         LlmAssistRequest assistRequest = new LlmAssistRequest();
-        assistRequest.setTaskType(LlmTaskType.CALCULATOR);
-        assistRequest.setUserMessage(request.getUserMessage());
-        assistRequest.setProductId(calculator.getProductId());
-        assistRequest.setVersionNo(calculator.getVersionNo());
-        assistRequest.setPackageNo(calculator.getPackageNo());
+        assistRequest.setTaskType(request.getTaskType() != null ? request.getTaskType() : LlmTaskType.CALCULATOR);
+        assistRequest.setUserMessage(userMessage);
+        assistRequest.setProductId(firstNonNull(request.getProductId(), calculator.getProductId()));
+        assistRequest.setVersionNo(firstNonNull(request.getVersionNo(), calculator.getVersionNo()));
+        assistRequest.setPackageNo(firstNonBlank(request.getPackageNo(), calculator.getPackageNo()));
         assistRequest.setProviderCode(request.getProviderCode());
         assistRequest.setModel(request.getModel());
         return assistRequest;
+    }
+
+    private String resolveCalculatorUserMessage(LlmCalculatorAssistRequest request) {
+        if (request.getUserMessage() != null && !request.getUserMessage().isBlank()) {
+            return request.getUserMessage().trim();
+        }
+        CalculatorModel calculator = request.getCurrentCalculator();
+        if (calculator != null && calculator.getLlmText() != null && !calculator.getLlmText().isBlank()) {
+            return calculator.getLlmText().trim();
+        }
+        throw new BadRequestException("userMessage is required");
+    }
+
+    private static Long firstNonNull(Long primary, Long fallback) {
+        return primary != null ? primary : fallback;
+    }
+
+    private static String firstNonBlank(String primary, String fallback) {
+        if (primary != null && !primary.isBlank()) {
+            return primary;
+        }
+        return fallback;
     }
 
     private String resolveProviderCode(LlmAssistRequest request) {
@@ -218,21 +229,26 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         if (request == null) {
             throw new BadRequestException("Request body is required");
         }
-        if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
+        if (request.getCurrentCalculator() == null) {
+            throw new BadRequestException("currentCalculator is required");
+        }
+        CalculatorModel calculator = request.getCurrentCalculator();
+        if (firstNonNull(request.getProductId(), calculator.getProductId()) == null) {
+            throw new BadRequestException("productId is required");
+        }
+        if (firstNonNull(request.getVersionNo(), calculator.getVersionNo()) == null) {
+            throw new BadRequestException("versionNo is required");
+        }
+        if (firstNonBlank(request.getPackageNo(), calculator.getPackageNo()) == null
+                || firstNonBlank(request.getPackageNo(), calculator.getPackageNo()).isBlank()) {
+            throw new BadRequestException("packageNo is required");
+        }
+        String userMessage = request.getUserMessage();
+        String llmText = calculator.getLlmText();
+        boolean hasMessage = userMessage != null && !userMessage.isBlank();
+        boolean hasLlmText = llmText != null && !llmText.isBlank();
+        if (!hasMessage && !hasLlmText) {
             throw new BadRequestException("userMessage is required");
-        }
-        if (request.getCalculator() == null) {
-            throw new BadRequestException("calculator is required");
-        }
-        CalculatorModel calculator = request.getCalculator();
-        if (calculator.getProductId() == null) {
-            throw new BadRequestException("calculator.productId is required");
-        }
-        if (calculator.getVersionNo() == null) {
-            throw new BadRequestException("calculator.versionNo is required");
-        }
-        if (calculator.getPackageNo() == null || calculator.getPackageNo().isBlank()) {
-            throw new BadRequestException("calculator.packageNo is required");
         }
     }
 }

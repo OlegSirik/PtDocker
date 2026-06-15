@@ -30,8 +30,12 @@ export interface LlmAssistResponse {
 }
 
 export interface LlmCalculatorAssistRequest {
+  taskType: 'CALCULATOR';
   userMessage: string;
-  calculator: Calculator;
+  productId: number;
+  versionNo: number;
+  packageNo: string;
+  currentCalculator: Calculator;
   providerCode?: string;
   model?: string;
 }
@@ -68,14 +72,17 @@ export class LlmService {
     productId: number,
     versionNo: number,
     packageNo: string,
-    userMessage: string,
     calculator: Calculator
   ): Observable<LlmCalculatorAssistResponse> {
     const url =
       `${this.auth.baseApiUrl}/admin/calculators/products/${productId}/versions/${versionNo}/packages/${packageNo}/llm/assist`;
     const body: LlmCalculatorAssistRequest = {
-      userMessage,
-      calculator,
+      taskType: 'CALCULATOR',
+      userMessage: (calculator.llmText || '').trim(),
+      productId,
+      versionNo,
+      packageNo,
+      currentCalculator: calculator,
     };
     return this.http.post<LlmCalculatorAssistResponse>(url, body);
   }

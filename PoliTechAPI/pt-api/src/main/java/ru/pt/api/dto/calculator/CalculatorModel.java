@@ -11,6 +11,7 @@ public class CalculatorModel {
     private String productCode;
     private Long versionNo;
     private String packageNo;
+    private String llmText;
     private List<PvVar> vars = new ArrayList<>();
     private List<FormulaDef> formulas = new ArrayList<>();
     private List<CoefficientDef> coefficients = new ArrayList<>();
@@ -53,6 +54,14 @@ public class CalculatorModel {
 
     public void setPackageNo(String packageNo) {
         this.packageNo = packageNo;
+    }
+
+    public String getLlmText() {
+        return llmText;
+    }
+
+    public void setLlmText(String llmText) {
+        this.llmText = llmText;
     }
 
     public List<PvVar> getVars() {

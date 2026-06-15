@@ -211,16 +211,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private void calculatePremium(Long tenantId, PolicyDTO policyDTO, ProductVersionModel product, CalculatorContext varCtx) {
         logger.debug("Calculating premium. productCode={}, packageCode={}", 
             product.getCode(), policyDTO.getInsuredObjects().get(0).getPackageCode());
-
-
-        // Print all variable definitions
-/*
-        System.out.println("=== Variable Definitions ===");
-        varCtx.getDefinitions().forEach(def -> {
-            System.out.println("varCode: " + def.getCode() + ", varDataType: " + def.getType());
-        });
-        System.out.println("===========================");
-*/
         
         addMandatoryVars(policyDTO, varCtx);
 
@@ -261,6 +251,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             policyDTO.setPremium(totalPremium);
             logger.debug("Premium calculated. totalPremium={}", totalPremium);
         }
+        varCtx.put("pl_premium", policyDTO.getPremium());
 
         BigDecimal sumInsured = varCtx.getDecimal("io_sumInsured");
         if (sumInsured != null ) {
@@ -271,11 +262,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
             }
         }
-        
-//        if (!checkSumInsured(policyDTO)) {
-//            throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
-//        }
-
+        varCtx.put("io_sumInsured", policyDTO.getInsuredObjects().get(0).getSumInsured());
     }
 
     private void addMandatoryVars(PolicyDTO policyDTO, CalculatorContext varCtx) {
@@ -430,8 +417,8 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 9. Валидация (lazy!)
         logger.debug("Validating policy for QUOTE");
         List<ValidationError> errors = new ArrayList<>();
-        errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
         errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
+        errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
 
         if (!errors.isEmpty()) {
             logger.warn("Validation failed for QUOTE. errors={}", errors.size());
