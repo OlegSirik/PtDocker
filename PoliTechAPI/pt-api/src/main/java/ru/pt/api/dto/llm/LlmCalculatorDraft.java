@@ -1,16 +1,38 @@
 package ru.pt.api.dto.llm;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import ru.pt.api.dto.calculator.CoefficientDef;
+import ru.pt.api.dto.calculator.FormulaDef;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LlmCalculatorDraft {
 
-    private JsonNode calculator;
+    private String packageNo;
+    private List<FormulaDef> formulas = new ArrayList<>();
+    private List<CoefficientDef> coefficients = new ArrayList<>();
 
-    public JsonNode getCalculator() {
-        return calculator;
+    public String getPackageNo() {
+        return packageNo;
     }
 
-    public void setCalculator(JsonNode calculator) {
-        this.calculator = calculator;
+    public void setPackageNo(String packageNo) {
+        this.packageNo = packageNo;
+    }
+
+    public List<FormulaDef> getFormulas() {
+        return formulas;
+    }
+
+    public void setFormulas(List<FormulaDef> formulas) {
+        this.formulas = formulas != null ? formulas : new ArrayList<>();
+    }
+
+    public List<CoefficientDef> getCoefficients() {
+        return coefficients;
+    }
+
+    public void setCoefficients(List<CoefficientDef> coefficients) {
+        this.coefficients = coefficients != null ? coefficients : new ArrayList<>();
     }
 }

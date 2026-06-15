@@ -6,6 +6,7 @@ public class LlmAssistRequest {
     private String userMessage;
     private Long productId;
     private Long versionNo;
+    private String packageNo;
     private String providerCode;
     private String model;
 
@@ -39,6 +40,14 @@ public class LlmAssistRequest {
 
     public void setVersionNo(Long versionNo) {
         this.versionNo = versionNo;
+    }
+
+    public String getPackageNo() {
+        return packageNo;
+    }
+
+    public void setPackageNo(String packageNo) {
+        this.packageNo = packageNo;
     }
 
     public String getProviderCode() {

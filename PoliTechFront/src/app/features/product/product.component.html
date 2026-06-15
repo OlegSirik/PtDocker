@@ -20,7 +20,7 @@
   </div>
 
 
-  <mat-tab-group>
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex">
     <!-- Main Product Data Tab -->
     <mat-tab label="Основные данные">
 
@@ -298,6 +298,25 @@
 
     </mat-tab>
 
+  <mat-tab label="Продуктовые правила">
+    <div class="pt-box" style="margin-top: 20px;">
+      <div class="pt-box-title-row">
+        <h3 class="pt-box-title">Продуктовые правила</h3>
+      </div>
+
+      @for (group of productCelRuleGroups; track group.ruleType) {
+        <app-product-rule-group
+          [title]="group.title"
+          [ruleType]="group.ruleType"
+          [rules]="group.rules"
+          (edit)="editCelRule($event)"
+          (delete)="deleteCelRule($event)"
+          (add)="addCelRule($event)"
+        />
+      }
+    </div>
+  </mat-tab>
+
   <mat-tab label="Схема договора">
       <div class="pt-box" style="margin-top: 20px;">
         <div class="pt-box-title-row">
@@ -321,24 +340,33 @@
             >
               <ng-template #nameCell let-item>
                 <span class="schema-tree-name-cell">
-                  @if (item.isTarifFactor) {
-                    <mat-icon
-                      class="pv-tree-tarif-icon"
-                      matTooltip="Тарифный фактор"
-                    >calculate</mat-icon>
-                  }
                   <span class="schema-tree-name-text">{{ item.varName }}</span>
                 </span>
               </ng-template>
               <ng-template #actionsCell let-item>
-                
+                <span class="tree-table-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="pv-tree-tarif-btn"
+                    [disabled]="productTreeMutationsLocked || crudLockedPendingSave"
+                    matTooltip="Тарифный фактор"
+                    [attr.aria-label]="'Тарифный фактор: ' + item.varName"
+                    (click)="toggleProductTreeTarifFactor(item); $event.stopPropagation()"
+                  >
+                    <mat-icon
+                      class="pv-tree-tarif-icon"
+                      [class.is-active]="item.isTarifFactor"
+                    >calculate</mat-icon>
+                  </button>
+
                   <button
                     mat-icon-button
                     type="button"
                     class="pv-tree-optional-btn"
                     [disabled]="productTreeMutationsLocked || crudLockedPendingSave"
-                    matTooltip="Переключить обязательность"
-                    [attr.aria-label]="'Опционально: ' + item.varName"
+                    matTooltip="Обязательность для ввода"
+                    [attr.aria-label]="'Обязательность: ' + item.varName"
                     (click)="toggleProductTreeOptional(item); $event.stopPropagation()"
                   >
                     <mat-icon
@@ -364,14 +392,14 @@
                       mat-icon-button
                       type="button"
                       [disabled]="productTreeMutationsLocked || crudLockedPendingSave || isObjectVarTypeRow(item)"
-                      matTooltip="Редактировать переменную"
+                      matTooltip="Редактировать"
                       [attr.aria-label]="'Изменить: ' + item.varName"
                       (click)="openProductPvVarEditDialog(item); $event.stopPropagation()"
                     >
                       <mat-icon>edit</mat-icon>
                     </button>
                   }
-                
+                </span>
               </ng-template>
             </app-tree-table>
         </div>

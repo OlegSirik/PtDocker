@@ -1,11 +1,17 @@
 package ru.pt.product.llm.service;
 
 import org.springframework.stereotype.Service;
+import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.llm.LlmAssistRequest;
 import ru.pt.api.dto.llm.LlmAssistResponse;
+import ru.pt.api.dto.llm.LlmCalculatorAssistRequest;
+import ru.pt.api.dto.llm.LlmCalculatorAssistResponse;
+import ru.pt.api.dto.llm.LlmCalculatorDraft;
+import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.llm.LlmUsage;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.ProductService;
@@ -33,6 +39,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
     private final LlmResponseProcessorRegistry processorRegistry;
     private final LlmExchangeLogService exchangeLogService;
     private final LlmProperties llmProperties;
+    private final LlmCalculatorApplicator calculatorApplicator;
 
     public LlmAssistantServiceImpl(
             ProductService productService,
@@ -41,7 +48,8 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             LlmGateway llmGateway,
             LlmResponseProcessorRegistry processorRegistry,
             LlmExchangeLogService exchangeLogService,
-            LlmProperties llmProperties) {
+            LlmProperties llmProperties,
+            LlmCalculatorApplicator calculatorApplicator) {
         this.productService = productService;
         this.promptAssembler = promptAssembler;
         this.varsContextFormatter = varsContextFormatter;
@@ -49,6 +57,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         this.processorRegistry = processorRegistry;
         this.exchangeLogService = exchangeLogService;
         this.llmProperties = llmProperties;
+        this.calculatorApplicator = calculatorApplicator;
     }
 
     @Override
@@ -64,6 +73,71 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
                 request.getUserMessage(),
                 product);
 
+        Set<String> knownVarCodes = varsContextFormatter.varCodes(product.getVars());
+        return completeAndProcess(request, product, messages, knownVarCodes, user);
+    }
+
+    @Override
+    public LlmCalculatorAssistResponse assistCalculator(LlmCalculatorAssistRequest request, AuthenticatedUser user) {
+        validateCalculatorRequest(request);
+        CalculatorModel calculator = request.getCalculator();
+
+        ProductVersionModel product = productService.getVersion(
+                user.getTenantId(),
+                calculator.getProductId(),
+                calculator.getVersionNo());
+
+        List<PvVar> calculatorVars = calculator.getVars() != null ? calculator.getVars() : List.of();
+
+        List<LlmMessage> messages = promptAssembler.assembleCalculator(
+                request.getUserMessage(),
+                product,
+                calculator.getPackageNo(),
+                calculatorVars);
+
+        Set<String> knownVarCodes = varsContextFormatter.mergedVarCodes(product.getVars(), calculatorVars);
+        LlmAssistRequest logRequest = toAssistRequest(request);
+
+        LlmAssistResponse llmResponse = completeAndProcess(
+                logRequest,
+                product,
+                messages,
+                knownVarCodes,
+                user);
+
+        LlmCalculatorAssistResponse response = new LlmCalculatorAssistResponse();
+        response.setSuccess(llmResponse.isSuccess());
+
+        if (llmResponse.isSuccess()) {
+            if (!(llmResponse.getResult() instanceof LlmCalculatorDraft draft)) {
+                response.setSuccess(false);
+                response.setMessage("В ответе нет данных калькулятора");
+                return response;
+            }
+            if ((draft.getFormulas() == null || draft.getFormulas().isEmpty())
+                    && (draft.getCoefficients() == null || draft.getCoefficients().isEmpty())) {
+                response.setSuccess(false);
+                response.setMessage("В ответе нет формул и коэффициентов");
+                return response;
+            }
+
+            calculatorApplicator.apply(calculator, draft);
+            response.setCalculator(calculator);
+        } else if (llmResponse.getErrors() != null && !llmResponse.getErrors().isEmpty()) {
+            response.setMessage(String.join("; ", llmResponse.getErrors()));
+        } else {
+            response.setMessage("LLM вернул ошибку");
+        }
+
+        return response;
+    }
+
+    private LlmAssistResponse completeAndProcess(
+            LlmAssistRequest request,
+            ProductVersionModel product,
+            List<LlmMessage> messages,
+            Set<String> knownVarCodes,
+            AuthenticatedUser user) {
         String providerCode = resolveProviderCode(request);
         LlmCompletionResult completion;
         try {
@@ -76,7 +150,6 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             throw ex;
         }
 
-        Set<String> knownVarCodes = varsContextFormatter.varCodes(product.getVars());
         LlmResponseProcessor processor = processorRegistry.get(request.getTaskType());
         LlmProcessedResult processed = processor.process(
                 completion.content(),
@@ -103,6 +176,19 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         return response;
     }
 
+    private LlmAssistRequest toAssistRequest(LlmCalculatorAssistRequest request) {
+        CalculatorModel calculator = request.getCalculator();
+        LlmAssistRequest assistRequest = new LlmAssistRequest();
+        assistRequest.setTaskType(LlmTaskType.CALCULATOR);
+        assistRequest.setUserMessage(request.getUserMessage());
+        assistRequest.setProductId(calculator.getProductId());
+        assistRequest.setVersionNo(calculator.getVersionNo());
+        assistRequest.setPackageNo(calculator.getPackageNo());
+        assistRequest.setProviderCode(request.getProviderCode());
+        assistRequest.setModel(request.getModel());
+        return assistRequest;
+    }
+
     private String resolveProviderCode(LlmAssistRequest request) {
         if (request.getProviderCode() != null && !request.getProviderCode().isBlank()) {
             return request.getProviderCode();
@@ -125,6 +211,28 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         }
         if (request.getVersionNo() == null) {
             throw new BadRequestException("versionNo is required");
+        }
+    }
+
+    private void validateCalculatorRequest(LlmCalculatorAssistRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body is required");
+        }
+        if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
+            throw new BadRequestException("userMessage is required");
+        }
+        if (request.getCalculator() == null) {
+            throw new BadRequestException("calculator is required");
+        }
+        CalculatorModel calculator = request.getCalculator();
+        if (calculator.getProductId() == null) {
+            throw new BadRequestException("calculator.productId is required");
+        }
+        if (calculator.getVersionNo() == null) {
+            throw new BadRequestException("calculator.versionNo is required");
+        }
+        if (calculator.getPackageNo() == null || calculator.getPackageNo().isBlank()) {
+            throw new BadRequestException("calculator.packageNo is required");
         }
     }
 }

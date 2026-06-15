@@ -7,6 +7,16 @@
     padding: 20px 0;
   }
 
+  .llm-text-field {
+    width: 100%;
+  }
+
+  .llm-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
   .datatable-card {
     margin-bottom: 24px;
     border-radius: 8px;

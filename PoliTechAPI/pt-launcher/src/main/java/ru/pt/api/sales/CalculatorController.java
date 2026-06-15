@@ -10,8 +10,11 @@ import ru.pt.api.dto.calculator.CalculatorTemplate;
 import ru.pt.api.dto.calculator.CoefficientDataRow;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.CalculatorTemplateLine;
+import ru.pt.api.dto.llm.LlmCalculatorAssistRequest;
+import ru.pt.api.dto.llm.LlmCalculatorAssistResponse;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
+import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.auth.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,7 @@ public class CalculatorController  {
 
     private final CalculatorService calculateService;
     private final CoefficientService coefficientService;
+    private final LlmAssistantService llmAssistantService;
 
     @GetMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}")
     public ResponseEntity<CalculatorModel> getCalculator(
@@ -47,6 +51,22 @@ public class CalculatorController  {
         //requireAdmin(user);
         CalculatorModel json = calculateService.getCalculator(user.getTenantId(), productId, versionNo, packageNo);
         return json != null ? ResponseEntity.ok(json) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/products/{productId}/versions/{versionNo}/packages/{packageNo}/llm/assist")
+    public ResponseEntity<LlmCalculatorAssistResponse> llmAssistCalculator(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable Long productId,
+            @PathVariable Long versionNo,
+            @PathVariable String packageNo,
+            @RequestBody LlmCalculatorAssistRequest request) {
+        if (request.getCalculator() != null) {
+            request.getCalculator().setProductId(productId);
+            request.getCalculator().setVersionNo(versionNo);
+            request.getCalculator().setPackageNo(packageNo);
+        }
+        return ResponseEntity.ok(llmAssistantService.assistCalculator(request, user));
     }
 
     // coefficients endpoints

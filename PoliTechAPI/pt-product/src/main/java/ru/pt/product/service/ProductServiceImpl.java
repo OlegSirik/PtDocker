@@ -61,6 +61,7 @@ import ru.pt.product.repository.InsuranceCompanyRepository;
 import ru.pt.auth.service.AccountDataService;
 import ru.pt.api.dto.auth.ProductRole;
 import ru.pt.api.service.auth.AccountService;
+import ru.pt.api.service.rules.RuleManagementService;
 
 @Service
 @RequiredArgsConstructor
@@ -83,6 +84,7 @@ public class ProductServiceImpl implements ProductService {
     private final SchemaService schemaService;
     private final AccountDataService accountDataService;
     private final AccountService accountService;
+    private final RuleManagementService ruleManagementService;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -360,7 +362,9 @@ public class ProductServiceImpl implements ProductService {
             tenantId,
             Action.VIEW);
 
-        return productServiceCRUD.getVersion(tenantId, productId, versionNo);
+        ProductVersionModel model = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+        attachCelRules(model, tenantId);
+        return model;
     }
 
     @Override
@@ -644,6 +648,7 @@ public class ProductServiceImpl implements ProductService {
       //      v.setVarType(var.getVarType());
       //      v.setVarDataType(var.getVarDataType());
             v.setVarValue(var.getVarValue());
+            v.setVarList(var.getVarList());
       //      v.setVarCdm(var.getVarCdm());
       //      v.setVarNr(var.getVarNr());
       //      v.setIsSystem(var.getIsSystem());
@@ -654,6 +659,7 @@ public class ProductServiceImpl implements ProductService {
         });
         addValidatorInList(pv, var);
         addValidatorNotNullSave(pv, var);
+        addValidatorNotNullQuote(pv, var);
         return saveVersion(tenantId, productId, versionNo, pv);
     }
     @Transactional
@@ -744,7 +750,6 @@ public class ProductServiceImpl implements ProductService {
     }
     private void addValidatorNotNullSave(ProductVersionModel pv, PvVar var) {
         
-        List<ValidatorRule> validatorRules = pv.getQuoteValidator();
         List<ValidatorRule> saveValidatorRules = pv.getSaveValidator();
 
             saveValidatorRules.removeIf(v -> v.getKeyLeft().equals(var.getVarCode()) && v.getRuleType().equals("NOT_NULL") && !v.isUpdatable());
@@ -768,7 +773,29 @@ public class ProductServiceImpl implements ProductService {
                 saveValidatorRules.add(vr);
             }
     }
+    private void addValidatorNotNullQuote(ProductVersionModel pv, PvVar var) {
+        
+        List<ValidatorRule> validatorRules = pv.getQuoteValidator();
+        validatorRules.removeIf(v -> v.getKeyLeft().equals(var.getVarCode()) && v.getRuleType().equals("NOT_NULL") && !v.isUpdatable());
+        if (var.getIsTarifFactor()) {
+            int nr = pv.getQuoteValidator().stream()
+                .map(ValidatorRule::getLineNr)
+                .filter(lineNr -> lineNr != null)
+                .max(Integer::compareTo)
+                .orElse(0) + 1;
 
+                ValidatorRule vr = new ValidatorRule();
+                vr.setLineNr(nr);
+                vr.setKeyLeft(var.getVarCode());
+                vr.setRuleType("NOT_NULL");
+                vr.setValueRight(var.getVarValue());
+                vr.setKeyRightCustomValue(true);
+                vr.setUpdatable(false);
+                vr.setValidatorType("QUOTE");
+                vr.setErrorText("Поле " + var.getName() + " должно быть заполнено");
+                validatorRules.add(vr);
+            }
+    }
     /******************** */
     @Override
     public void softDeleteProduct(Long tenantId, Long id) {
@@ -955,7 +982,21 @@ public class ProductServiceImpl implements ProductService {
             tenantId,
             Action.VIEW);
 
-        return productServiceCRUD.getProduct(tenantId, id, forDev);
+        ProductVersionModel model = productServiceCRUD.getProduct(tenantId, id, forDev);
+        attachCelRules(model, tenantId);
+        return model;
+    }
+
+    private void attachCelRules(ProductVersionModel model, Long tenantId) {
+        if (model == null) {
+            return;
+        }
+        String tenantCode = getCurrentUser().getTenantCode();
+        model.setCelRules(ruleManagementService.listForProduct(
+                tenantId,
+                tenantCode,
+                model.getCode(),
+                model.getLob()));
     }
 
     //get product by code and recordStatus = ACTIVE

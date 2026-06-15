@@ -60,6 +60,38 @@ public class RuleManagementServiceImpl implements RuleManagementService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RuleDto> listForProduct(Long tid, String tenantCode, String productCode, String lobCode) {
+        List<RuleEntity> entities = ruleRepository.findByTidAndRecordStatusOrderByPriorityAsc(tid, "ACTIVE");
+        List<RuleDto> result = new ArrayList<>();
+        for (RuleEntity entity : entities) {
+            if (matchesProductContext(entity, tenantCode, productCode, lobCode)) {
+                result.add(RuleMapper.toDto(entity));
+            }
+        }
+        return result;
+    }
+
+    private boolean matchesProductContext(
+            RuleEntity entity,
+            String tenantCode,
+            String productCode,
+            String lobCode) {
+        String scopeType = entity.getScopeType();
+        String scopeCode = entity.getScopeCode();
+        if (RuleScopeType.PRODUCT.name().equals(scopeType)) {
+            return productCode != null && productCode.equals(scopeCode);
+        }
+        if (RuleScopeType.LOB.name().equals(scopeType)) {
+            return lobCode != null && !lobCode.isBlank() && lobCode.equals(scopeCode);
+        }
+        if (RuleScopeType.TENANT.name().equals(scopeType)) {
+            return tenantCode != null && !tenantCode.isBlank() && tenantCode.equals(scopeCode);
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public RuleDto getById(Long tid, Long id) {
         RuleEntity entity = ruleRepository.findByTidAndId(tid, id)
                 .orElseThrow(() -> new NotFoundException("Rule not found: " + id));

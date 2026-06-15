@@ -5,6 +5,7 @@ public class LlmRuleDraft {
     private String code;
     private String name;
     private String condition;
+    private String message;
 
     public String getCode() {
         return code;
@@ -28,5 +29,13 @@ public class LlmRuleDraft {
 
     public void setCondition(String condition) {
         this.condition = condition;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

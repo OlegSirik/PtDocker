@@ -76,7 +76,7 @@ public class ProductUiServiceImpl implements ProductUiService {
                 if (var.getVarCode() == null || var.getVarCode().isBlank()) {
                     continue;
                 }
-                Map<String, String> refData = refDataService.getRefData(var.getVarList());
+                Map<String, String> refData = refDataService.getRefData(tid, var.getVarList());
                 String vv = var.getVarValue();
                 if (vv != null && !vv.isBlank()) {
                     List<String> filter =

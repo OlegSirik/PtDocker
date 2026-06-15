@@ -61,18 +61,19 @@ td.col-code {
 
 th.col-actions,
 td.col-actions {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   max-width: none;
   box-sizing: border-box;
 }
 
 .tree-actions-cell {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 2px;
+  white-space: nowrap;
 }
 
 .tree-action-toggle {

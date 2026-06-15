@@ -104,6 +104,9 @@ public class LlmExchangeLogService {
         root.put("userMessage", request.getUserMessage());
         root.put("productId", request.getProductId());
         root.put("versionNo", request.getVersionNo());
+        if (request.getPackageNo() != null) {
+            root.put("packageNo", request.getPackageNo());
+        }
         root.put("productCode", product.getCode());
         root.put("lob", product.getLob());
         ArrayNode msgArray = root.putArray("messages");

@@ -4,6 +4,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, delay, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ProductList } from './products.service';
+import type { Rule } from './api/rules.service';
 
 export interface Product {
   id?: number;
@@ -37,6 +38,8 @@ export interface Product {
   rules: {
     insuredEqualsPolicyHolder: boolean | false;
   };
+  /** CEL rules from pt_rules (product / LOB / tenant scope); populated on load only */
+  celRules?: Rule[];
 }
 
 export interface PolicyVar {

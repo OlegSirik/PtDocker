@@ -16,6 +16,7 @@ import { CommissionEditPageComponent } from './features/admin-panel/commission-e
 import {AccountDetailPageComponent} from './features/admin-panel/account-detail-page/account-detail-page.component';
 import {RulesPageComponent} from './features/admin-panel/rules-page/rules-page.component';
 import {RuleEditComponent} from './features/admin-panel/rule-edit/rule-edit.component';
+import { RefDictsPageComponent } from './features/admin-panel/refdicts-page/refdicts-page.component';
 import { SpListComponent } from './features/add-ons/sp-list/sp-list.component';
 import { InsCompanyEditComponent } from './features/ins-company/ins-company-edit.component';
 import { SpProviderComponent } from './features/add-ons/sp-provider/sp-provider.component';
@@ -55,6 +56,8 @@ export const routes: Routes = [
   { path: 'admin/rules', component: RulesPageComponent, canActivate: [authGuard] },
   { path: 'admin/rules/edit', component: RuleEditComponent, canActivate: [authGuard] },
   { path: 'admin/rules/:id', component: RuleEditComponent, canActivate: [authGuard] },
+  { path: 'admin/refdicts/edit', component: RefDictsPageComponent, canActivate: [authGuard] },
+  { path: 'admin/refdicts/select', component: RefDictsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients', component: ClientsPageComponent, canActivate: [authGuard] },
   { path: 'admin/clients/edit', component: ClientEditComponent, canActivate: [authGuard] },
   { path: 'admin/clients/:client-id', component: ClientEditComponent, canActivate: [authGuard] },

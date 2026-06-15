@@ -29,6 +29,7 @@ import ru.pt.api.dto.file.FileStorageType;
 import ru.pt.api.dto.refs.TenantAuthType;
 import ru.pt.auth.utils.TenantMapper;
 import ru.pt.api.service.auth.TenantConfig;
+import ru.pt.api.service.db.RefDictAdminService;
 import ru.pt.api.service.schema.SchemaService;
 
 @Service
@@ -45,6 +46,7 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
     private final SecurityContextHelper securityContextHelper;
     private final TenantMapper tenantMapper;
     private final SchemaService schemaService;
+    private final RefDictAdminService refDictAdminService;
 
     public Optional<TenantEntity> findByCode(String code) {
         return tenantRepository.findByCode(code.toLowerCase());
@@ -158,6 +160,7 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
         logger.info("Default client '{}' created for tenant '{}'", savedClient.getName(), savedTenant.getName());
 
         schemaService.newTenantCreated(savedTenant.getId());
+        refDictAdminService.newTenantCreated(savedTenant.getId());
 
         return tenantMapper.toDto(savedTenant);
     }

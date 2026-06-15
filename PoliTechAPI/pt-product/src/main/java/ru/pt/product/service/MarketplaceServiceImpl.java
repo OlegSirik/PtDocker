@@ -141,14 +141,14 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                     if ( key.indexOf("Date") > 0 ) { type = "date"; }
                     FormField formField = new FormField( code, key, type, var.getVarName(), var.getVarName() );
 
-                    Map<String, String> refData = referenceDataService.getRefData(code);
+                    Map<String, String> refData = referenceDataService.getRefData(tenantId, code);
                         // For String type: check saveValidator then quoteValidator for IN_LIST rule with keyLeft = var.getVarCode()
                     ValidatorRule inListRule = findInListRule(pv, var.getVarCode());
                     if (inListRule != null) {
                         List<String> filterValues = parseFilterValues( inListRule.getValueRight() );
                             
                         if (!(filterValues == null || filterValues.isEmpty())) {
-                            refData = referenceDataService.getRefData(code, filterValues);
+                            refData = referenceDataService.getRefData(tenantId, code, filterValues);
                         }
                     }
 

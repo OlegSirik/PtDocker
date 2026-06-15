@@ -3,8 +3,10 @@ package ru.pt.product.llm.prompt;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.product.PvVar;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,35 @@ public class VarsContextFormatter {
                 .filter(this::isIncluded)
                 .map(PvVar::getVarCode)
                 .collect(Collectors.toSet());
+    }
+
+    public String formatMerged(List<PvVar> productVars, List<PvVar> calculatorVars) {
+        return mergeVars(productVars, calculatorVars).values().stream()
+                .map(this::toLine)
+                .collect(Collectors.joining("\n"));
+    }
+
+    public Set<String> mergedVarCodes(List<PvVar> productVars, List<PvVar> calculatorVars) {
+        return mergeVars(productVars, calculatorVars).keySet();
+    }
+
+    private Map<String, PvVar> mergeVars(List<PvVar> productVars, List<PvVar> calculatorVars) {
+        Map<String, PvVar> merged = new LinkedHashMap<>();
+        if (productVars != null) {
+            for (PvVar var : productVars) {
+                if (isIncluded(var)) {
+                    merged.put(var.getVarCode(), var);
+                }
+            }
+        }
+        if (calculatorVars != null) {
+            for (PvVar var : calculatorVars) {
+                if (isIncluded(var)) {
+                    merged.put(var.getVarCode(), var);
+                }
+            }
+        }
+        return merged;
     }
 
     private String toLine(PvVar var) {

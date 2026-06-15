@@ -44,9 +44,39 @@ import { AuthService } from '../../shared/services/auth.service';
 import { TestRequestService } from '../../shared/services/api/test-request.service';
 import { VarsService } from '../../shared/services/vars.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
+import { RulesService, RuleType, type Rule } from '../../shared/services/api/rules.service';
+import { ProductRuleGroupComponent } from './product-rule-group/product-rule-group.component';
 import { TreeTableComponent, isObjectVarTypeRow } from '../../shared/components/tree-table';
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 import { MatDivider } from "@angular/material/divider";
+
+const PRODUCT_CEL_RULE_GROUP_TYPES: RuleType[] = [
+  'PRE_QUOTE_VALIDATION',
+  'POST_QUOTE_VALIDATION',
+  'PRE_SAVE_VALIDATION',
+  'POST_SAVE_VALIDATION',
+  'UNDERWRITING',
+];
+
+const CEL_RULE_TYPE_TITLES: Record<RuleType, string> = {
+  PRE_QUOTE_VALIDATION: 'PRE QUOTE',
+  POST_QUOTE_VALIDATION: 'POST QUOTE',
+  PRE_SAVE_VALIDATION: 'PRE SAVE',
+  POST_SAVE_VALIDATION: 'POST SAVE',
+  QUOTE_CALCULATION: 'QUOTE CALCULATION',
+  UNDERWRITING: 'UNDERWRITING',
+  WORKFLOW: 'WORKFLOW',
+  CROSS_SELL: 'CROSS SELL',
+  FRAUD_CHECK: 'FRAUD CHECK',
+  ISSUANCE: 'ISSUANCE',
+  RENEWAL: 'RENEWAL',
+};
+
+export interface ProductCelRuleGroup {
+  ruleType: RuleType;
+  title: string;
+  rules: Rule[];
+}
 
 @Component({
     selector: 'app-product',
@@ -68,7 +98,8 @@ import { MatDivider } from "@angular/material/divider";
     MatSlideToggleModule,
     MatTooltipModule,
     TreeTableComponent,
-    MatDivider
+    MatDivider,
+    ProductRuleGroupComponent,
 ],
     templateUrl: './product.component.html',
     styleUrls: ['./product.component.scss']
@@ -181,7 +212,24 @@ export class ProductComponent implements OnInit {
   /** Дерево атрибутов продукта (данные из {@link Product.vars}). */
   productTreeTableData: TreeTableSourceRow[] = [];
   productTreeDisplayedColumns: string[] = ['name', 'code', 'actions'];
+  productCelRuleGroups: ProductCelRuleGroup[] = PRODUCT_CEL_RULE_GROUP_TYPES.map((type) => ({
+    ruleType: type,
+    title: CEL_RULE_TYPE_TITLES[type],
+    rules: [],
+  }));
   showDeletedProductTree = false;
+
+  /** Ключи вкладок продукта (query param `tab`). */
+  readonly productTabKeys = [
+    'main',
+    'validators',
+    'celRules',
+    'schema',
+    'packages',
+    'print',
+    'test',
+  ] as const;
+  selectedTabIndex = 0;
 
   /** Дерево переменных: правки только в DEV-версии продукта. */
   get productTreeMutationsLocked(): boolean {
@@ -197,6 +245,7 @@ export class ProductComponent implements OnInit {
 
   // Auth service
   private authService = inject(AuthService);
+  private rulesService = inject(RulesService);
 
   constructor(
     private route: ActivatedRoute,
@@ -215,6 +264,8 @@ export class ProductComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     const versionNo = this.route.snapshot.paramMap.get('versionNo');
+
+    this.route.queryParamMap.subscribe((params) => this.applyTabFromQuery(params.get('tab')));
 
     this.insCompanyService.list().subscribe({
       next: (list) => {
@@ -238,6 +289,16 @@ export class ProductComponent implements OnInit {
       })
     ).subscribe();
 
+  }
+
+  private applyTabFromQuery(tab: string | null): void {
+    if (!tab) {
+      return;
+    }
+    const idx = this.productTabKeys.indexOf(tab as (typeof this.productTabKeys)[number]);
+    if (idx >= 0) {
+      this.selectedTabIndex = idx;
+    }
   }
 
   loadLob(lob: string): Observable<BusinessLineEdit> {
@@ -1424,6 +1485,83 @@ export class ProductComponent implements OnInit {
     }
     
     this.updatePolicyTable();
+    this.updateCelRuleGroups();
+  }
+
+  updateCelRuleGroups(): void {
+    const all = this.product.celRules ?? [];
+    const byType = new Map<RuleType, Rule[]>();
+    for (const rule of all) {
+      const list = byType.get(rule.ruleType) ?? [];
+      list.push(rule);
+      byType.set(rule.ruleType, list);
+    }
+    this.productCelRuleGroups = PRODUCT_CEL_RULE_GROUP_TYPES.map((type) => ({
+      ruleType: type,
+      title: CEL_RULE_TYPE_TITLES[type],
+      rules: byType.get(type) ?? [],
+    }));
+  }
+
+  private buildCelRuleNavigationQueryParams(
+    extra: Record<string, string> = {},
+  ): Record<string, string> {
+    const queryParams: Record<string, string> = {
+      scopeType: 'PRODUCT',
+      scopeCode: this.product.code,
+      tab: 'celRules',
+      ...extra,
+    };
+    if (this.product.id != null) {
+      queryParams['productId'] = String(this.product.id);
+    }
+    if (this.product.versionNo != null) {
+      queryParams['versionNo'] = String(this.product.versionNo);
+    }
+    return queryParams;
+  }
+
+  addCelRule(ruleType: RuleType): void {
+    if (!this.product.code?.trim()) {
+      this.snackBar.open('Сначала укажите код продукта', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'rules', 'edit'], {
+      queryParams: this.buildCelRuleNavigationQueryParams({ ruleType }),
+    });
+  }
+
+  editCelRule(rule: Rule): void {
+    if (!rule.id) {
+      return;
+    }
+    const queryParams = this.buildCelRuleNavigationQueryParams({
+      scopeType: rule.scopeType,
+      scopeCode: rule.scopeCode,
+      ruleType: rule.ruleType,
+    });
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'rules', String(rule.id)], {
+      queryParams,
+    });
+  }
+
+  deleteCelRule(rule: Rule): void {
+    if (!rule.id) {
+      return;
+    }
+    if (!confirm(`Деактивировать правило «${rule.name}» (${rule.code})?`)) {
+      return;
+    }
+    this.rulesService.delete(rule.id).subscribe({
+      next: () => {
+        this.product.celRules = (this.product.celRules ?? []).filter((r) => r.id !== rule.id);
+        this.updateCelRuleGroups();
+        this.snackBar.open('Правило деактивировано', 'Закрыть', { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open('Ошибка деактивации правила', 'Закрыть', { duration: 3000 });
+      },
+    });
   }
 
  
@@ -1537,7 +1675,7 @@ export class ProductComponent implements OnInit {
           error: (error: any) => {
             console.error('Error updating variable:', error);
             this.snackBar.open('Ошибка обновления переменной', 'Закрыть', { duration: 3000 });
-          }
+          },
         });
       });
   }
@@ -1562,6 +1700,18 @@ export class ProductComponent implements OnInit {
   }
 
   toggleProductTreeOptional(row: TreeTableSourceRow): void {
+    this.toggleProductTreeVarFlag(row, 'isOptional', 'обязательности');
+  }
+
+  toggleProductTreeTarifFactor(row: TreeTableSourceRow): void {
+    this.toggleProductTreeVarFlag(row, 'isTarifFactor', 'тарифного фактора');
+  }
+
+  private toggleProductTreeVarFlag(
+    row: TreeTableSourceRow,
+    field: 'isOptional' | 'isTarifFactor',
+    fieldLabel: string
+  ): void {
     if (this.productTreeMutationsLocked) {
       return;
     }
@@ -1575,8 +1725,8 @@ export class ProductComponent implements OnInit {
     }
     const productId = this.product.id;
     const versionNo = this.product.versionNo;
-    const nextValue = !(v.isOptional ?? false);
-    const payload: PolicyVar = { ...v, isOptional: nextValue };
+    const nextValue = !(v[field] ?? false);
+    const payload: PolicyVar = { ...v, [field]: nextValue };
     this.productService.updateVar(productId, versionNo, v.varCode, payload).subscribe({
       next: (updatedProduct) => {
         this.product = updatedProduct;
@@ -1584,8 +1734,8 @@ export class ProductComponent implements OnInit {
         this.hasChanges = false;
       },
       error: (error: any) => {
-        console.error('Error updating optional flag:', error);
-        this.snackBar.open('Ошибка обновления обязательности', 'Закрыть', { duration: 3000 });
+        console.error(`Error updating ${field}:`, error);
+        this.snackBar.open(`Ошибка обновления ${fieldLabel}`, 'Закрыть', { duration: 3000 });
       }
     });
   }

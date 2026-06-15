@@ -4,6 +4,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvVar;
 import ru.pt.product.llm.provider.LlmMessage;
 
 import java.io.IOException;
@@ -45,6 +46,36 @@ public class PromptAssembler {
                 nullToEmpty(product.getCode()),
                 nullToEmpty(product.getLob()),
                 product.getVersionNo() != null ? product.getVersionNo() : "",
+                varsText);
+        return List.of(
+                new LlmMessage("system", system),
+                new LlmMessage("user", user));
+    }
+
+    public List<LlmMessage> assembleCalculator(
+            String userMessage,
+            ProductVersionModel product,
+            String packageNo,
+            List<PvVar> calculatorVars) {
+        String system = loadPrompt(LlmTaskType.CALCULATOR);
+        String varsText = varsContextFormatter.formatMerged(product.getVars(), calculatorVars);
+        String user = """
+                Запрос пользователя:
+                %s
+
+                Продукт: %s (%s), версия %s, пакет %s
+
+                Словарь переменных передаётся в формате:
+                varCode: Описание переменной
+
+                Доступные переменные (vars):
+                %s
+                """.formatted(
+                userMessage,
+                nullToEmpty(product.getCode()),
+                nullToEmpty(product.getLob()),
+                product.getVersionNo() != null ? product.getVersionNo() : "",
+                nullToEmpty(packageNo),
                 varsText);
         return List.of(
                 new LlmMessage("system", system),

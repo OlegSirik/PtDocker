@@ -58,25 +58,74 @@ export class RuleEditComponent implements OnInit {
   isNew = true;
   saving = false;
   askingLlm = false;
+  scopeLocked = false;
+  ruleTypeLocked = false;
+
+  /** Set when opened from product page (scopeType=PRODUCT). */
+  private contextProductId?: string;
+  private contextVersionNo?: string;
+  private contextReturnUrl?: string;
+  private contextTab?: string;
+  private contextRuleType?: RuleType;
 
   readonly ruleTypes: RuleType[] = [
     'PRE_QUOTE_VALIDATION',
     'POST_QUOTE_VALIDATION',
     'PRE_SAVE_VALIDATION',
     'POST_SAVE_VALIDATION',
+    'QUOTE_CALCULATION',
     'UNDERWRITING',
-    'RENEWAL'
+    'WORKFLOW',
+    'CROSS_SELL',
+    'FRAUD_CHECK',
+    'ISSUANCE',
+    'RENEWAL',
   ];
   readonly scopeTypes: RuleScopeType[] = ['PRODUCT', 'LOB', 'TENANT', 'CLIENT'];
 
   ngOnInit(): void {
+    this.applyNavigationContext();
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'edit') {
       this.isNew = false;
       this.rulesService.getById(id).subscribe({
-        next: (rule) => (this.rule = { ...rule }),
+        next: (rule) => {
+          this.rule = { ...rule };
+          if (this.scopeLocked) {
+            this.rule.scopeType = this.route.snapshot.queryParamMap.get('scopeType') as RuleScopeType;
+            this.rule.scopeCode = this.route.snapshot.queryParamMap.get('scopeCode') ?? '';
+          }
+          if (this.ruleTypeLocked && this.contextRuleType) {
+            this.rule.ruleType = this.contextRuleType;
+          }
+        },
         error: () => this.snack.open('Правило не найдено', 'OK', { duration: 2500 }),
       });
+    }
+  }
+
+  private applyNavigationContext(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const scopeType = qp.get('scopeType') as RuleScopeType | null;
+    const scopeCode = qp.get('scopeCode')?.trim() ?? '';
+
+    this.contextProductId = qp.get('productId') ?? undefined;
+    this.contextVersionNo = qp.get('versionNo') ?? undefined;
+    this.contextReturnUrl = qp.get('returnUrl') ?? undefined;
+    this.contextTab = qp.get('tab') ?? undefined;
+
+    if (scopeType && scopeCode) {
+      this.scopeLocked = true;
+      this.rule.scopeType = scopeType;
+      this.rule.scopeCode = scopeCode;
+    }
+
+    const ruleType = qp.get('ruleType') as RuleType | null;
+    if (ruleType && this.ruleTypes.includes(ruleType)) {
+      this.ruleTypeLocked = true;
+      this.contextRuleType = ruleType;
+      this.rule.ruleType = ruleType;
     }
   }
 
@@ -184,6 +233,9 @@ export class RuleEditComponent implements OnInit {
     if (draft.name && !this.rule.name) {
       this.rule.name = draft.name;
     }
+    if (draft.message) {
+      this.rule.message = draft.message;
+    }
     if (response.warnings?.length) {
       this.snack.open(response.warnings.join('; '), 'OK', { duration: 5000 });
     } else {
@@ -193,6 +245,30 @@ export class RuleEditComponent implements OnInit {
 
   back(): void {
     const tenantCode = this.route.snapshot.params['tenantId'] || this.auth.tenant || '';
+    const qp = this.route.snapshot.queryParamMap;
+    const contextScopeType = (qp.get('scopeType') as RuleScopeType | null) ?? this.rule.scopeType;
+
+    if (this.contextReturnUrl) {
+      this.router.navigateByUrl(this.contextReturnUrl);
+      return;
+    }
+
+    if (contextScopeType === 'PRODUCT' && this.contextProductId) {
+      const queryParams: Record<string, string> = {};
+      if (this.contextTab) {
+        queryParams['tab'] = this.contextTab;
+      }
+      if (this.contextVersionNo) {
+        this.router.navigate(
+          ['/', tenantCode, 'product', this.contextProductId, 'version', this.contextVersionNo],
+          { queryParams },
+        );
+      } else {
+        this.router.navigate(['/', tenantCode, 'product', this.contextProductId], { queryParams });
+      }
+      return;
+    }
+
     this.router.navigate(['/', tenantCode, 'admin', 'rules']);
   }
 }

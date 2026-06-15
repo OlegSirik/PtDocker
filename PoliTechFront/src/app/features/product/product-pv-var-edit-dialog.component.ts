@@ -1,11 +1,17 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import type { PolicyVar } from '../../shared/services/product.service';
+import {
+  RefDataItem,
+  RefDict,
+  RefDictsService,
+} from '../../shared/services/api/refdicts.service';
 
 export interface ProductPvVarEditDialogData {
   variable: PolicyVar;
@@ -29,6 +35,13 @@ function parseOptionalNullableLong(text: string): number | null | undefined {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseVarValueCodes(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
 @Component({
   selector: 'app-product-pv-var-edit-dialog',
   standalone: true,
@@ -39,28 +52,18 @@ function parseOptionalNullableLong(text: string): number | null | undefined {
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatSelectModule,
   ],
   template: `
     <h2 mat-dialog-title>Редактирование переменной (PvVar)</h2>
     <mat-dialog-content class="dialog-body" style="padding-top: 30px;">
-   <!--   
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>id</mat-label>
-          <input matInput name="id" [(ngModel)]="idText" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>parent_id</mat-label>
-          <input matInput name="parent_id" [(ngModel)]="parentIdText" />
-        </mat-form-field>
--->
         <mat-form-field appearance="outline" class="full">
           <mat-label>varCode</mat-label>
           <input matInput name="varCode" [(ngModel)]="model.varCode" readonly />
         </mat-form-field>
         <mat-form-field appearance="outline" class="full">
           <mat-label>varName</mat-label>
-          <input matInput name="varName" [(ngModel)]="model.varName" readonly />
+          <input matInput name="varName" [(ngModel)]="model.varName" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full">
@@ -74,16 +77,32 @@ function parseOptionalNullableLong(text: string): number | null | undefined {
 
         <mat-form-field appearance="outline" class="full">
           <mat-label>varList</mat-label>
-          <input matInput name="varList" [(ngModel)]="model.varList" readonly />
+          <input matInput [value]="varListDisplay" readonly />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>varValue</mat-label>
-          <input matInput name="varValue" [(ngModel)]="model.varValue" />
-        </mat-form-field>
+        @if (selectedVarListCode) {
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>varValue</mat-label>
+            <mat-select
+              multiple
+              name="varValue"
+              [(ngModel)]="selectedVarValues"
+              (ngModelChange)="onVarValueChange($event)"
+              [disabled]="loadingItems"
+            >
+              @for (item of refDataItems; track item.code) {
+                <mat-option [value]="item.code">{{ item.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        } @else {
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>varValue</mat-label>
+            <input matInput name="varValue" [(ngModel)]="model.varValue" />
+          </mat-form-field>
+        }
 
         <mat-checkbox [(ngModel)]="model.isTarifFactor" name="isTarifFactor">isTarifFactor</mat-checkbox>
-      
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-stroked-button mat-dialog-close type="button">Отмена</button>
@@ -106,8 +125,15 @@ function parseOptionalNullableLong(text: string): number | null | undefined {
     `,
   ],
 })
-export class ProductPvVarEditDialogComponent {
+export class ProductPvVarEditDialogComponent implements OnInit {
+  private refDictsService = inject(RefDictsService);
+
   model: PolicyVar;
+  dicts: RefDict[] = [];
+  refDataItems: RefDataItem[] = [];
+  selectedVarListCode: string | null = null;
+  selectedVarValues: string[] = [];
+  loadingItems = false;
 
   idText = '';
   parentIdText = '';
@@ -128,7 +154,6 @@ export class ProductPvVarEditDialogComponent {
       varCdm: data.variable.varCdm ?? '',
       varNr: data.variable.varNr ?? 0,
       varList: data.variable.varList ?? '',
-      
       isSystem: data.variable.isSystem ?? false,
       isDeleted: data.variable.isDeleted ?? false,
       isTarifFactor: data.variable.isTarifFactor ?? false,
@@ -136,6 +161,49 @@ export class ProductPvVarEditDialogComponent {
     this.idText = data.variable.id != null ? String(data.variable.id) : '';
     this.parentIdText = data.variable.parent_id != null ? String(data.variable.parent_id) : '';
     this.varNrText = data.variable.varNr != null ? String(data.variable.varNr) : '0';
+
+    const listCode = this.model.varList?.trim();
+    this.selectedVarListCode = listCode || null;
+    this.selectedVarValues = parseVarValueCodes(this.model.varValue);
+  }
+
+  ngOnInit(): void {
+    this.refDictsService.listDicts().subscribe({
+      next: (dicts) => {
+        this.dicts = dicts ?? [];
+      },
+    });
+
+    if (this.selectedVarListCode) {
+      this.loadRefDataItems(this.selectedVarListCode);
+    }
+  }
+
+  get varListDisplay(): string {
+    if (!this.selectedVarListCode) {
+      return '—';
+    }
+    const dict = this.dicts.find((d) => d.code === this.selectedVarListCode);
+    return dict?.name ?? this.selectedVarListCode;
+  }
+
+  onVarValueChange(codes: string[]): void {
+    this.selectedVarValues = codes;
+    this.model.varValue = codes.join(',');
+  }
+
+  private loadRefDataItems(dictCode: string): void {
+    this.loadingItems = true;
+    this.refDictsService.listItems(dictCode).subscribe({
+      next: (items) => {
+        this.refDataItems = items ?? [];
+        this.loadingItems = false;
+      },
+      error: () => {
+        this.refDataItems = [];
+        this.loadingItems = false;
+      },
+    });
   }
 
   isValid(): boolean {
@@ -148,6 +216,9 @@ export class ProductPvVarEditDialogComponent {
     }
     this.model.varCode = this.model.varCode.trim();
     this.model.varName = this.model.varName.trim();
+    this.model.varValue = this.selectedVarListCode
+      ? this.selectedVarValues.join(',')
+      : (this.model.varValue ?? '').trim();
 
     const idParsed = parseOptionalLong(this.idText);
     this.model.id = idParsed;

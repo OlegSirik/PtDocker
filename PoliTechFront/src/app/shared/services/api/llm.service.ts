@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Calculator } from '../calculator.service';
 import { AuthService } from '../auth.service';
 
 export type LlmTaskType = 'RULE' | 'COVER' | 'CALCULATOR';
@@ -16,6 +17,7 @@ export interface LlmRuleDraft {
   code: string;
   name: string;
   condition: string;
+  message?: string;
 }
 
 export interface LlmAssistResponse {
@@ -25,6 +27,19 @@ export interface LlmAssistResponse {
   rawContent?: string;
   warnings?: string[];
   errors?: string[];
+}
+
+export interface LlmCalculatorAssistRequest {
+  userMessage: string;
+  calculator: Calculator;
+  providerCode?: string;
+  model?: string;
+}
+
+export interface LlmCalculatorAssistResponse {
+  success: boolean;
+  calculator?: Calculator;
+  message?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,5 +62,21 @@ export class LlmService {
       versionNo,
     };
     return this.http.post<LlmAssistResponse>(url, body);
+  }
+
+  assistCalculator(
+    productId: number,
+    versionNo: number,
+    packageNo: string,
+    userMessage: string,
+    calculator: Calculator
+  ): Observable<LlmCalculatorAssistResponse> {
+    const url =
+      `${this.auth.baseApiUrl}/admin/calculators/products/${productId}/versions/${versionNo}/packages/${packageNo}/llm/assist`;
+    const body: LlmCalculatorAssistRequest = {
+      userMessage,
+      calculator,
+    };
+    return this.http.post<LlmCalculatorAssistResponse>(url, body);
   }
 }

@@ -148,6 +148,32 @@
             </mat-card-content>
           </mat-card>
         }
+
+        <mat-card class="datatable-card">
+          <mat-card-content>
+            <div class="table-header">
+              <h3>LLM Text</h3>
+            </div>
+            <mat-form-field appearance="outline" class="llm-text-field">
+              <mat-label>LLM Text</mat-label>
+              <textarea
+                matInput
+                rows="3"
+                [(ngModel)]="llmText"
+                placeholder="Опишите логику расчёта премии на естественном языке">
+              </textarea>
+            </mat-form-field>
+            <div class="llm-actions">
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="askingLlm || !(llmText || '').trim()"
+                (click)="askLlm()">
+                Ask
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
       </div>
     </mat-tab>
 

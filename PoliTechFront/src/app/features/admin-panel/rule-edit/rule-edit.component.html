@@ -5,6 +5,26 @@
 
   <div class="pt-box form-box">
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Область (scope)</mat-label>
+      <mat-select [(ngModel)]="rule.scopeType" [disabled]="scopeLocked">
+        @for (s of scopeTypes; track s) {
+          <mat-option [value]="s">{{ s }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Scope code</mat-label>
+      <input
+        matInput
+        [(ngModel)]="rule.scopeCode"
+        [readonly]="scopeLocked"
+        placeholder="код продукта / LOB / tenant / client_id"
+      />
+    </mat-form-field>
+
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Код</mat-label>
       <input matInput [(ngModel)]="rule.code" [readonly]="!isNew" />
     </mat-form-field>
@@ -16,25 +36,11 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Тип правила</mat-label>
-      <mat-select [(ngModel)]="rule.ruleType">
+      <mat-select [(ngModel)]="rule.ruleType" [disabled]="ruleTypeLocked">
         @for (t of ruleTypes; track t) {
           <mat-option [value]="t">{{ t }}</mat-option>
         }
       </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Область (scope)</mat-label>
-      <mat-select [(ngModel)]="rule.scopeType">
-        @for (s of scopeTypes; track s) {
-          <mat-option [value]="s">{{ s }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Scope code</mat-label>
-      <input matInput [(ngModel)]="rule.scopeCode" placeholder="код продукта / LOB / tenant / client_id" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
@@ -43,7 +49,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>LLM текст</mat-label>
+      <mat-label>Текст правила</mat-label>
       <textarea matInput rows="2" [(ngModel)]="rule.llmText" placeholder="Опишите правило на естественном языке"></textarea>
     </mat-form-field>
 
@@ -53,7 +59,7 @@
         type="button"
         [disabled]="askingLlm || !(rule.llmText || '').trim()"
         (click)="askLlm()">
-        Ask
+        Запросить
       </button>
     </div>
 

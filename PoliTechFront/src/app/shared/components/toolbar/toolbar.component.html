@@ -8,6 +8,8 @@
         <button mat-button [routerLink]="['/', tenantCode, 'business-line']" class="nav-button">Группа продуктов</button>
         <button mat-button [routerLink]="['/', tenantCode, 'products']" class="nav-button">Продукты</button>
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'addon', 'sp-list']" class="nav-button">Доп.продукты</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'rules']" class="nav-button">Правила</button>
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'refdicts', 'edit']" class="nav-button">Справочники</button>
       }
 
       @if (user && hasRole(TOOLBAR_ROLE.GROUP_ADMIN) || hasRole(TOOLBAR_ROLE.ACCOUNT)) {
@@ -21,7 +23,6 @@
       @if (user && hasRole(TOOLBAR_ROLE.SYS_ADMIN) || hasRole(TOOLBAR_ROLE.TNT_ADMIN) ) {
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'tenants']" class="nav-button">Тенанты</button>
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'clients']" class="nav-button">Клиенты</button>
-        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'rules']" class="nav-button">Правила</button>
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
       }
 

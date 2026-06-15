@@ -25,6 +25,7 @@ import { ColumnDialogComponent } from './column-dialog/column-dialog.component';
 import { SqlDialogComponent } from './sql-dialog/sql-dialog.component';
 import { TemplateNameDialogComponent } from './template-name-dialog/template-name-dialog.component';
 import { Product, ProductService } from '../../shared/services/product.service';
+import { LlmCalculatorAssistResponse, LlmService } from '../../shared/services/api/llm.service';
 import { TextProcessorService } from './text-processor';
 
 import * as XLSX from 'xlsx';
@@ -116,6 +117,9 @@ export class CalculatorComponent implements OnInit {
   // Text processor
   textProcessorContent: string = '';
 
+  llmText = '';
+  askingLlm = false;
+
   // Lines table: toggle Текст (varName) / Код (varCode)
   varDisplayMode: 'text' | 'code' = 'text';
 
@@ -157,7 +161,8 @@ export class CalculatorComponent implements OnInit {
     private productService: ProductService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private textProcessorService: TextProcessorService
+    private textProcessorService: TextProcessorService,
+    private llmService: LlmService
   ) {}
 
   ngOnInit(): void {
@@ -1280,6 +1285,81 @@ this.coefficientDataRows = rows;
     // Use PUT to update full table
     this.calculatorService.updateCoefficientData(this.calculator.id, this.selectedCoefficientCode, this.coefficientDataRows)
       .subscribe(() => this.snackBar.open('Данные коэффициентов сохранены', 'Закрыть', { duration: 2000 }));
+  }
+
+  askLlm(): void {
+    const text = (this.llmText || '').trim();
+    if (!text) {
+      return;
+    }
+
+    const productId = this.calculator.productId || this.route.snapshot.paramMap.get('productId');
+    const versionNo = this.calculator.versionNo || this.route.snapshot.paramMap.get('versionNo');
+    const packageNo = this.calculator.packageNo || this.route.snapshot.paramMap.get('packageNo');
+
+    if (!productId || !versionNo || !packageNo) {
+      this.snackBar.open('Не удалось определить параметры калькулятора', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    this.askingLlm = true;
+    this.llmService
+      .assistCalculator(+productId, +versionNo, packageNo, text, this.calculator)
+      .subscribe({
+        next: (response) => this.applyLlmResponse(response),
+        error: (err) => {
+          this.askingLlm = false;
+          const msg = err?.error?.message || err?.message || 'Ошибка вызова LLM';
+          this.snackBar.open(msg, 'Закрыть', { duration: 4000 });
+        },
+      });
+  }
+
+  private applyLlmResponse(response: LlmCalculatorAssistResponse): void {
+    this.askingLlm = false;
+    if (!response.success) {
+      const msg = response.message || 'LLM вернул ошибку';
+      this.snackBar.open(msg, 'Закрыть', { duration: 4000 });
+      return;
+    }
+
+    if (!response.calculator) {
+      this.snackBar.open('В ответе нет обновлённого калькулятора', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    this.calculator = this.normalizeCalculator(response.calculator);
+    this.hasChanges = true;
+    if (this.selectedFormulaIndex < 0 && this.calculator.formulas.length > 0) {
+      this.selectedFormulaIndex = 0;
+    }
+    this.updateTables();
+    this.updateLinesTable();
+    this.snackBar.open('Калькулятор обновлён, сохраните изменения', 'Закрыть', { duration: 2500 });
+  }
+
+  private normalizeCalculator(calculator: Calculator): Calculator {
+    return {
+      ...calculator,
+      productId: calculator.productId != null ? String(calculator.productId) : this.calculator.productId,
+      versionNo: calculator.versionNo != null ? String(calculator.versionNo) : this.calculator.versionNo,
+      packageNo: calculator.packageNo ?? this.calculator.packageNo,
+      id: calculator.id != null ? String(calculator.id) : this.calculator.id,
+      formulas: (calculator.formulas ?? []).map((formula) => ({
+        ...formula,
+        lines: (formula.lines ?? []).map((line) => ({
+          ...line,
+          nr: line.nr != null ? String(line.nr) : '',
+        })),
+      })),
+      coefficients: (calculator.coefficients ?? []).map((coefficient) => ({
+        ...coefficient,
+        columns: (coefficient.columns ?? []).map((column) => ({
+          ...column,
+          nr: column.nr != null ? String(column.nr) : '',
+        })),
+      })),
+    };
   }
 
   syncVars() {

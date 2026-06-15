@@ -3,7 +3,7 @@ package ru.pt.api.dto.product;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.pt.api.dto.numbers.NumberGeneratorDescription;
-
+import ru.pt.api.dto.rules.RuleDto;
 
 import java.util.List;
 
@@ -61,6 +61,10 @@ public class ProductVersionModel {
 
     @JsonProperty("rules")
     private PvProductRules rules;
+
+    /** CEL rules from pt_rules for product / LOB / tenant scope (not persisted in product JSON). */
+    @JsonProperty("celRules")
+    private List<RuleDto> celRules;
 
     public Long getId() {
         return id;
@@ -196,6 +200,14 @@ public class ProductVersionModel {
 
     public void setRules(PvProductRules rules) {
         this.rules = rules;
+    }
+
+    public List<RuleDto> getCelRules() {
+        return celRules;
+    }
+
+    public void setCelRules(List<RuleDto> celRules) {
+        this.celRules = celRules;
     }
 
 }

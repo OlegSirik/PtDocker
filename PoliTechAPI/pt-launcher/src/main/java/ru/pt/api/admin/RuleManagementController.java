@@ -39,7 +39,7 @@ public class RuleManagementController extends SecuredController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<List<RuleDto>> list(
             @RequestParam(required = false) RuleType ruleType,
             @RequestParam(required = false) RuleScopeType scopeType,
@@ -51,14 +51,14 @@ public class RuleManagementController extends SecuredController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<RuleDto> get(@PathVariable Long id) {
         UserDetailsImpl user = getCurrentUser();
         return ResponseEntity.ok(ruleManagementService.getById(user.getTenantId(), id));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<RuleDto> create(@RequestBody RuleDto dto) {
         UserDetailsImpl user = getCurrentUser();
         RuleDto created = ruleManagementService.create(user.getTenantId(), dto);
@@ -66,14 +66,14 @@ public class RuleManagementController extends SecuredController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<RuleDto> update(@PathVariable Long id, @RequestBody RuleDto dto) {
         UserDetailsImpl user = getCurrentUser();
         return ResponseEntity.ok(ruleManagementService.update(user.getTenantId(), id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         UserDetailsImpl user = getCurrentUser();
         ruleManagementService.delete(user.getTenantId(), id);
@@ -81,7 +81,7 @@ public class RuleManagementController extends SecuredController {
     }
 
     @PostMapping("/cmd/reload")
-    @PreAuthorize("hasRole('TNT_ADMIN') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<Map<String, String>> reload() {
         ruleManagementService.reloadCache();
         return ResponseEntity.ok(Map.of("status", "ok"));

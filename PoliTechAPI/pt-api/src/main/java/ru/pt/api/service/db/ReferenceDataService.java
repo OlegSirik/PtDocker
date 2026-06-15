@@ -26,6 +26,8 @@ public interface ReferenceDataService {
     */
    Map<String, String> getRefData(String attributeCode);
 
+   Map<String, String> getRefData(Long tid, String attributeCode);
+
    /**
     * Получить отфильтрованный по ключам справочник
     * @param attributeCode
@@ -33,6 +35,8 @@ public interface ReferenceDataService {
     * @return
     */
    Map<String, String> getRefData(String attributeCode, List<String> filter);
+
+   Map<String, String> getRefData(Long tid, String attributeCode, List<String> filter);
    
 
 }

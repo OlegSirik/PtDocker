@@ -1,0 +1,133 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">
+      @if (mode === 'edit') {
+        Справочники
+      } @else {
+        Выбор значений: {{ selectedDictCode }}
+      }
+    </h1>
+  </div>
+
+  <div class="pt-box refdicts-layout" [class.select-mode]="mode === 'select'">
+    @if (mode === 'edit') {
+      <div class="dict-panel">
+        <div class="panel-header">
+          <h3>Справочники</h3>
+          <button mat-flat-button type="button" (click)="addDict()">Добавить</button>
+        </div>
+        <div *ngIf="loadingDicts" class="loading">Загрузка...</div>
+        <table mat-table [dataSource]="dicts" class="business-table" *ngIf="!loadingDicts">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Код</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Название</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button type="button" (click)="editDict(row, $event)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" color="warn" (click)="deleteDict(row, $event)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="dictColumns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: dictColumns"
+            (click)="selectDict(row)"
+            class="clickable-row"
+            [class.row-selected]="selectedDictCode === row.code">
+          </tr>
+        </table>
+      </div>
+    }
+
+    <div class="items-panel">
+      <div class="panel-header">
+        <h3>
+          @if (mode === 'edit') {
+            Значения
+            @if (selectedDictCode) {
+              ({{ selectedDictCode }})
+            }
+          } @else {
+            Значения справочника
+          }
+        </h3>
+        @if (mode === 'edit' && selectedDictCode) {
+          <button mat-flat-button type="button" (click)="addItem()">Добавить</button>
+        }
+      </div>
+
+      @if (mode === 'select') {
+        <div class="selected-summary">
+          Выбрано: {{ selectedValues || '—' }}
+        </div>
+      }
+
+      <div *ngIf="loadingItems" class="loading">Загрузка...</div>
+
+      @if (mode === 'edit') {
+        <table mat-table [dataSource]="items" class="business-table" *ngIf="!loadingItems && selectedDictCode">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Код</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Название</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button type="button" (click)="editItem(row, $event)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" color="warn" (click)="deleteItem(row, $event)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+        </table>
+      } @else {
+        <table mat-table [dataSource]="items" class="business-table" *ngIf="!loadingItems">
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <mat-checkbox
+                [checked]="isSelected(row.code)"
+                (change)="toggleSelection(row.code, $event.checked)">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Код</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Название</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="selectItemColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: selectItemColumns"></tr>
+        </table>
+      }
+    </div>
+  </div>
+
+  @if (mode === 'select') {
+    <div class="footer-actions">
+      <button mat-stroked-button type="button" (click)="cancelSelect()">Cancel</button>
+      <button mat-flat-button color="primary" type="button" (click)="confirmSelect()">Ok</button>
+    </div>
+  }
+</div>

@@ -46,6 +46,7 @@ public class RuleResponseProcessor implements LlmResponseProcessor {
             String code = text(ruleNode, "code");
             String name = text(ruleNode, "name");
             String condition = text(ruleNode, "condition");
+            String message = text(ruleNode, "message");
             if (code.isBlank() || name.isBlank() || condition.isBlank()) {
                 return LlmProcessedResult.fail(List.of("rule.code, rule.name and rule.condition are required"));
             }
@@ -58,6 +59,7 @@ public class RuleResponseProcessor implements LlmResponseProcessor {
             draft.setCode(code);
             draft.setName(name);
             draft.setCondition(condition);
+            draft.setMessage(message);
             return LlmProcessedResult.ok(draft, warnings);
         } catch (Exception ex) {
             return LlmProcessedResult.fail(List.of("Parse error: " + ex.getMessage()));
