@@ -8,6 +8,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import {AuthService} from '../../services/auth.service';
 import {AsyncPipe} from '@angular/common';
 import { ThemeService } from '../../theme/theme.service';
+import { BUILD_INFO } from '../../../../build-info';
 
 /** Имена ролей с бэкенда (см. JWT /auth/me: userRole, authorities). */
 export const TOOLBAR_ROLE = {
@@ -78,5 +79,21 @@ export class ToolbarComponent {
 
   get isDarkMode(): boolean {
     return this.themeService.isDarkMode;
+  }
+
+  readonly buildInfo = BUILD_INFO;
+
+  get buildLabel(): string {
+    const date = new Date(this.buildInfo.builtAt);
+    if (Number.isNaN(date.getTime())) {
+      return this.buildInfo.builtAt;
+    }
+    return date.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

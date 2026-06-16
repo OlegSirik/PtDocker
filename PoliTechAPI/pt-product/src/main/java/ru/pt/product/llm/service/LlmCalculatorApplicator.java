@@ -15,6 +15,9 @@ import java.util.Map;
 public class LlmCalculatorApplicator {
 
     private static final int NEW_VAR_NR_START = 1001;
+    private static final String TYPE_CONST = "CONST";
+    private static final String TYPE_VAR = "VAR";
+    private static final String TYPE_COEFFICIENT = "COEFFICIENT";
 
     public void apply(CalculatorModel target, CalculatorModel source) {
         if (target == null || source == null) {
@@ -50,7 +53,9 @@ public class LlmCalculatorApplicator {
                     result.add(copyVar(requestVar));
                     requestByCode.remove(responseVar.getVarCode());
                 } else {
-                    result.add(createNewVar(responseVar, nextVarNr++));
+                    PvVar created = createNewVar(responseVar, nextVarNr++);
+                    normalizeNewVarType(created);
+                    result.add(created);
                 }
             }
         }
@@ -67,7 +72,65 @@ public class LlmCalculatorApplicator {
             calculator.setVars(new ArrayList<>());
         }
 
-        int nextVarNr = calculator.getVars().stream()
+        int nextVarNr = nextAvailableVarNr(calculator.getVars());
+
+        for (CoefficientDef coefficient : calculator.getCoefficients()) {
+            if (coefficient == null || isBlank(coefficient.getVarCode())) {
+                continue;
+            }
+
+            PvVar existing = findVarByCode(calculator.getVars(), coefficient.getVarCode());
+            if (existing != null) {
+                applyCoefficientVarShape(existing, coefficient);
+            } else {
+                calculator.getVars().add(createCoefficientVar(coefficient, nextVarNr++));
+            }
+        }
+    }
+
+    private static void applyCoefficientVarShape(PvVar var, CoefficientDef coefficient) {
+        var.setVarType(TYPE_COEFFICIENT);
+        var.setVarCdm("CALCULATOR");
+        if (var.getVarValue() == null) {
+            var.setVarValue("");
+        }
+        if (isBlank(var.getVarName()) && coefficient.getVarName() != null) {
+            var.setVarName(coefficient.getVarName());
+        }
+    }
+
+    private static PvVar createCoefficientVar(CoefficientDef coefficient, int varNr) {
+        PvVar created = new PvVar();
+        created.setVarDataType(VarDataType.NUMBER);
+        created.setVarCode(coefficient.getVarCode());
+        created.setVarName(coefficient.getVarName() != null ? coefficient.getVarName() : coefficient.getVarCode());
+        created.setVarPath(null);
+        created.setVarType(TYPE_COEFFICIENT);
+        created.setVarValue("");
+        created.setVarCdm("CALCULATOR");
+        created.setVarNr(String.valueOf(varNr));
+        created.setId(null);
+        created.setParent_id(null);
+        created.setVarList(null);
+        created.setIsSystem(false);
+        created.setIsDeleted(false);
+        created.setIsTarifFactor(true);
+        created.setIsOptional(true);
+        created.setName(null);
+        return created;
+    }
+
+    private static void normalizeNewVarType(PvVar var) {
+        if (TYPE_CONST.equalsIgnoreCase(var.getVarType())) {
+            var.setVarType(TYPE_CONST);
+            var.setVarCdm("CALCULATOR");
+            return;
+        }
+        var.setVarType(TYPE_VAR);
+    }
+
+    private static int nextAvailableVarNr(List<PvVar> vars) {
+        return vars.stream()
                 .map(PvVar::getVarNr)
                 .filter(nr -> nr != null && !nr.isBlank())
                 .mapToInt(nr -> {
@@ -79,22 +142,18 @@ public class LlmCalculatorApplicator {
                 })
                 .max()
                 .orElse(NEW_VAR_NR_START - 1) + 1;
+    }
 
-        for (CoefficientDef coefficient : calculator.getCoefficients()) {
-            if (coefficient == null || isBlank(coefficient.getVarCode())) {
-                continue;
-            }
-            boolean exists = calculator.getVars().stream()
-                    .anyMatch(v -> coefficient.getVarCode().equals(v.getVarCode()));
-            if (exists) {
-                continue;
-            }
-
-            PvVar stub = new PvVar();
-            stub.setVarCode(coefficient.getVarCode());
-            stub.setVarName(coefficient.getVarName() != null ? coefficient.getVarName() : coefficient.getVarCode());
-            calculator.getVars().add(createNewVar(stub, nextVarNr++));
+    private static PvVar findVarByCode(List<PvVar> vars, String varCode) {
+        if (vars == null) {
+            return null;
         }
+        for (PvVar var : vars) {
+            if (var != null && varCode.equals(var.getVarCode())) {
+                return var;
+            }
+        }
+        return null;
     }
 
     private static Map<String, PvVar> indexByVarCode(List<PvVar> vars) {
@@ -116,7 +175,7 @@ public class LlmCalculatorApplicator {
         created.setVarCode(responseVar.getVarCode());
         created.setVarName(responseVar.getVarCode());
         created.setVarPath(null);
-        created.setVarType("VAR");
+        created.setVarType(TYPE_VAR);
         created.setVarValue("");
         created.setVarCdm("CALCULATOR");
         created.setVarNr(String.valueOf(varNr));

@@ -14,7 +14,17 @@ mat-toolbar {
   font-weight: bold;
   font-size: $font-size-lg;
   color: $white;
+  margin-right: $spacing-md;
+}
+
+.build-info {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.85);
   margin-right: $spacing-lg;
+  white-space: nowrap;
+  cursor: default;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .app-icon {

@@ -1,6 +1,12 @@
 <mat-toolbar color="primary">
   <div class="toolbar-content">
-    <div class="tenant-code">{{ tenantCode }}</div>
+    <div class="tenant-code">{{ tenantCode }}
+
+<!--    </div>
+    <div class="build-info" [title]="'Сборка ' + buildInfo.version + ' от ' + buildInfo.builtAt">
+    -->      
+    <p class="build-info">{{ buildLabel }}</p>
+    </div>
     <div class="nav-sections">
       @let user = currentUser$ | async;
 
