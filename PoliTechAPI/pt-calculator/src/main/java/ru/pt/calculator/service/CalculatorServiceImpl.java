@@ -146,16 +146,17 @@ public class CalculatorServiceImpl implements CalculatorService {
                             model.getVars().add(varDeductibleNr);
                         }
 
-/*                         
-                        PvVar varLimitMin = PvVar.varLimitMin(cover.getCode());
-                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMin.getVarCode()))) {
-                            model.getVars().add(varLimitMin);
-                        }
-                        PvVar varLimitMax = PvVar.varLimitMax(cover.getCode());
-                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varLimitMax.getVarCode()))) {
-                            model.getVars().add(varLimitMax);
-                        }
-*/
+                        // loop by deductible types
+                        cover.getDeductibles().forEach(deductibleType -> {
+                            PvVar varDeductibleType = PvVar.varDeductibleNr(cover.getCode());
+                            varDeductibleType.setVarCode(varDeductibleType.getVarCode() + "_" + deductibleType.getId());
+                            varDeductibleType.setVarName(deductibleType.getText());
+
+                            if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleType.getVarCode()))) {
+                                varDeductibleType.setVarCdm("CALCULATOR");
+                                model.getVars().add(varDeductibleType);
+                            }
+                        });
                     });
                 }
             });
@@ -778,8 +779,8 @@ public class CalculatorServiceImpl implements CalculatorService {
         // ---------- COMPUTE ----------
         BigDecimal result = compute( left, line.getExpressionOperator(), right );
 
-        String rslt = result.toString();
-        String lft = left.toString();
+        String rslt = result != null ? result.toString() : "";
+        String lft = left != null ? left.toString() : "";
         String rgt = right != null ? right.toString() : "";
         String opr = line.getExpressionOperator();
 

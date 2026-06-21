@@ -46,6 +46,36 @@ import {
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 import { AuthService } from '../../shared/services/auth.service';
 import { MatDivider } from "@angular/material/divider";
+import { ProductRuleGroupComponent } from '../product/product-rule-group/product-rule-group.component';
+import { RulesService, type Rule, type RuleType } from '../../shared/services/api/rules.service';
+
+const LOB_CEL_RULE_GROUP_TYPES: RuleType[] = [
+  'PRE_QUOTE_VALIDATION',
+  'POST_QUOTE_VALIDATION',
+  'PRE_SAVE_VALIDATION',
+  'POST_SAVE_VALIDATION',
+  'UNDERWRITING',
+];
+
+const LOB_CEL_RULE_TYPE_TITLES: Record<RuleType, string> = {
+  PRE_QUOTE_VALIDATION: 'PRE QUOTE',
+  POST_QUOTE_VALIDATION: 'POST QUOTE',
+  PRE_SAVE_VALIDATION: 'PRE SAVE',
+  POST_SAVE_VALIDATION: 'POST SAVE',
+  QUOTE_CALCULATION: 'QUOTE CALCULATION',
+  UNDERWRITING: 'UNDERWRITING',
+  WORKFLOW: 'WORKFLOW',
+  CROSS_SELL: 'CROSS SELL',
+  FRAUD_CHECK: 'FRAUD CHECK',
+  ISSUANCE: 'ISSUANCE',
+  RENEWAL: 'RENEWAL',
+};
+
+interface LobCelRuleGroup {
+  ruleType: RuleType;
+  title: string;
+  rules: Rule[];
+}
 
 @Component({
     selector: 'app-business-line-edit',
@@ -64,7 +94,8 @@ import { MatDivider } from "@angular/material/divider";
     MatSlideToggleModule,
     MatTooltipModule,
     TreeTableComponent,
-    MatDivider
+    MatDivider,
+    ProductRuleGroupComponent,
 ],
     templateUrl: './business-line-edit.component.html',
     styleUrls: ['./business-line-edit.component.scss']
@@ -79,7 +110,27 @@ export class BusinessLineEditComponent implements OnInit {
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
   private calculatorService = inject(CalculatorService);
+  private rulesService = inject(RulesService);
   varService = inject(VarsService);
+
+  lobCelRules: Rule[] = [];
+  lobCelRuleGroups: LobCelRuleGroup[] = LOB_CEL_RULE_GROUP_TYPES.map((type) => ({
+    ruleType: type,
+    title: LOB_CEL_RULE_TYPE_TITLES[type],
+    rules: [],
+  }));
+  lobRulesLoading = false;
+
+  readonly lobTabKeys = [
+    'main',
+    'covers',
+    'files',
+    'strings',
+    'celRules',
+    'formulas',
+    'coefficients',
+  ] as const;
+  selectedTabIndex = 0;
 
   businessLine: BusinessLineEdit = {
     id: -1,
@@ -223,6 +274,8 @@ export class BusinessLineEditComponent implements OnInit {
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('id');
 
+    this.route.queryParamMap.subscribe((params) => this.applyTabFromQuery(params.get('tab')));
+
     this.varService.getAllVars();
     this.calculatorService.getConditionOperatorOptions().subscribe((o) => (this.conditionOperatorOptions = o));
     this.calculatorService.getSortOrderOptions().subscribe((o) => (this.sortOrderOptions = o));
@@ -247,6 +300,7 @@ export class BusinessLineEditComponent implements OnInit {
         this.selectedLobColumnKey = null;
         this.syncTreeTableFromMpVars();
         this.loadCalculatorTemplatesForLob();
+        this.loadLobCelRules();
         /*
         this.businessLine = {
           ...doc,
@@ -279,6 +333,115 @@ export class BusinessLineEditComponent implements OnInit {
 
   updateChanges(): void {
     this.hasChanges = !this.originalBusinessLine || JSON.stringify(this.businessLine) !== JSON.stringify(this.originalBusinessLine);
+  }
+
+  private applyTabFromQuery(tab: string | null): void {
+    if (!tab) {
+      return;
+    }
+    const idx = this.lobTabKeys.indexOf(tab as (typeof this.lobTabKeys)[number]);
+    if (idx >= 0) {
+      this.selectedTabIndex = idx;
+      if (tab === 'celRules') {
+        this.loadLobCelRules();
+      }
+    }
+  }
+
+  onLobTabChange(index: number): void {
+    const tabKey = this.lobTabKeys[index];
+    if (tabKey === 'celRules') {
+      this.loadLobCelRules();
+    }
+  }
+
+  loadLobCelRules(): void {
+    const lobCode = (this.businessLine.mpCode ?? '').trim();
+    if (!lobCode) {
+      this.lobCelRules = [];
+      this.updateLobCelRuleGroups();
+      return;
+    }
+    this.lobRulesLoading = true;
+    this.rulesService.list({ scopeType: 'LOB', scopeCode: lobCode }).subscribe({
+      next: (rules) => {
+        this.lobCelRules = rules ?? [];
+        this.updateLobCelRuleGroups();
+        this.lobRulesLoading = false;
+      },
+      error: () => {
+        this.lobCelRules = [];
+        this.updateLobCelRuleGroups();
+        this.lobRulesLoading = false;
+        this.snack.open('Ошибка загрузки правил LOB', 'Закрыть', { duration: 3000 });
+      },
+    });
+  }
+
+  private updateLobCelRuleGroups(): void {
+    const byType = new Map<RuleType, Rule[]>();
+    for (const rule of this.lobCelRules) {
+      const list = byType.get(rule.ruleType) ?? [];
+      list.push(rule);
+      byType.set(rule.ruleType, list);
+    }
+    this.lobCelRuleGroups = LOB_CEL_RULE_GROUP_TYPES.map((type) => ({
+      ruleType: type,
+      title: LOB_CEL_RULE_TYPE_TITLES[type],
+      rules: byType.get(type) ?? [],
+    }));
+  }
+
+  private buildLobCelRuleNavigationQueryParams(
+    extra: Record<string, string> = {},
+  ): Record<string, string> {
+    return {
+      scopeType: 'LOB',
+      scopeCode: this.businessLine.mpCode,
+      lobCode: this.businessLine.mpCode,
+      tab: 'celRules',
+      ...extra,
+    };
+  }
+
+  addLobCelRule(ruleType: RuleType): void {
+    if (!this.businessLine.mpCode?.trim()) {
+      this.snack.open('Сначала укажите код LOB и сохраните линию бизнеса', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'rules', 'edit'], {
+      queryParams: this.buildLobCelRuleNavigationQueryParams({ ruleType }),
+    });
+  }
+
+  editLobCelRule(rule: Rule): void {
+    if (!rule.id) {
+      return;
+    }
+    this.router.navigate(['/', this.authService.tenant, 'admin', 'rules', String(rule.id)], {
+      queryParams: this.buildLobCelRuleNavigationQueryParams({
+        ruleType: rule.ruleType,
+      }),
+    });
+  }
+
+  deleteLobCelRule(rule: Rule): void {
+    if (!rule.id) {
+      return;
+    }
+    if (!confirm(`Деактивировать правило «${rule.name}» (${rule.code})?`)) {
+      return;
+    }
+    this.rulesService.delete(rule.id).subscribe({
+      next: () => {
+        this.lobCelRules = this.lobCelRules.filter((r) => r.id !== rule.id);
+        this.updateLobCelRuleGroups();
+        this.snack.open('Правило деактивировано', 'Закрыть', { duration: 2000 });
+      },
+      error: () => {
+        this.snack.open('Ошибка деактивации правила', 'Закрыть', { duration: 3000 });
+      },
+    });
   }
 
   /**

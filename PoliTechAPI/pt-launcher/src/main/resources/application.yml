@@ -41,7 +41,7 @@ app:
     providers:
       routerai:
         base-url: https://routerai.ru/api/v1
-        api-key: sk-qqlwdQV57fiZbpnUxi9RO49lXyItEsh9
+        api-key: sk-gifXGm71NRw2eX4KYW44F56onSLx4wwu
         default-model: deepseek/deepseek-v4-flash
       deepseek:
         base-url: https://api.deepseek.com
@@ -143,6 +143,7 @@ logging:
     ru.pt.process.service.PreProcessServiceImpl: TRACE
     ru.pt.process.service.ProcessOrchestratorService: TRACE
     ru.pt.process.service.ValidatorServiceImpl: TRACE
+    ru.pt.process.utils.ValidatorImpl: DEBUG
     ru.pt.rules.service: TRACE
     ru.pt.files.service.FileServiceImpl: DEBUG
     ru.pt.auth.security.filter: TRACE
@@ -156,6 +157,7 @@ logging:
     ru.pt.product.service.addon.PolicyAddOnServiceImpl: TRACE
     ru.pt.domain.model.VariableContext: TRACE
     ru.pt.domain.model.VariableContextImpl: DEBUG
+    ru.pt.domain.model.VariableContextImpl2: DEBUG
     org.hibernate.SQL: OFF
     org.hibernate.type.descriptor.sql.BasicBinder: OFF
     org.hibernate.orm.jdbc.bind: OFF

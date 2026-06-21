@@ -2,7 +2,7 @@ import { Component, OnInit, inject, Inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabsModule, MatTabChangeEvent } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -46,6 +46,7 @@ import { VarsService } from '../../shared/services/vars.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
 import { RulesService, RuleType, type Rule } from '../../shared/services/api/rules.service';
 import { ProductRuleGroupComponent } from './product-rule-group/product-rule-group.component';
+import { ProductDocumentationComponent } from './product-documentation/product-documentation.component';
 import { TreeTableComponent, isObjectVarTypeRow } from '../../shared/components/tree-table';
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
 import { MatDivider } from "@angular/material/divider";
@@ -100,6 +101,7 @@ export interface ProductCelRuleGroup {
     TreeTableComponent,
     MatDivider,
     ProductRuleGroupComponent,
+    ProductDocumentationComponent,
 ],
     templateUrl: './product.component.html',
     styleUrls: ['./product.component.scss']
@@ -227,9 +229,11 @@ export class ProductComponent implements OnInit {
     'schema',
     'packages',
     'print',
+    'documentation',
     'test',
   ] as const;
   selectedTabIndex = 0;
+  documentationReloadToken = 0;
 
   /** Дерево переменных: правки только в DEV-версии продукта. */
   get productTreeMutationsLocked(): boolean {
@@ -298,6 +302,16 @@ export class ProductComponent implements OnInit {
     const idx = this.productTabKeys.indexOf(tab as (typeof this.productTabKeys)[number]);
     if (idx >= 0) {
       this.selectedTabIndex = idx;
+      if (tab === 'documentation') {
+        this.documentationReloadToken++;
+      }
+    }
+  }
+
+  onProductTabChange(event: MatTabChangeEvent): void {
+    const tabKey = this.productTabKeys[event.index];
+    if (tabKey === 'documentation') {
+      this.documentationReloadToken++;
     }
   }
 

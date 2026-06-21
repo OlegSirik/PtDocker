@@ -34,9 +34,21 @@ public final class VariableContextImpl2 implements CalculatorContext
                 logger.trace("Registering definition: code={}, type={}, sourceType={}", 
                         v.getCode(), v.getType(), v.getSourceType());
                 definitions.put(v.getCode(), v);
-                Object value = get(v.getCode());
+//                Object value = get(v.getCode());
             });
         }
+    }
+
+    @Override
+    public void warmUp() {
+        logger.debug("warmUp: starting");
+        definitions.values().forEach(v -> {
+            Object value = get(v.getCode());
+            putValueInternal(v.getCode(), value);
+            
+            logger.debug("warmUp: code='{}', value='{}'", v.getCode(), value);
+        });
+        logger.debug("warmUp: finished");
     }
 
     public Map<String, Object> getValues() {
@@ -160,14 +172,14 @@ public final class VariableContextImpl2 implements CalculatorContext
         
         // Ключ только строковый
         if (!(key instanceof String code)) return null;
-        logger.trace("get: code='{}'", code);
+        logger.debug("get: code='{}'", code);
         try {
             // Поиск значения в кеше (в т.ч. cached null через sentinel)
             Object cached = values.get(code);
             if (cached == null && !values.containsKey(code)) {
                 Object evaluated = evaluate(code);
                 putValueInternal(code, evaluated);
-                logger.trace("get: code='{}', evaluated='{}'", code, evaluated);
+                logger.debug("get: code='{}', evaluated='{}'", code, evaluated);
                 return evaluated;
             }
             Object value = decodeNullValue(cached);

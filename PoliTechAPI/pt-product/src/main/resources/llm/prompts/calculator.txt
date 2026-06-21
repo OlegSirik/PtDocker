@@ -60,7 +60,8 @@
   - числом (10000)
   - varCode из vars (io_sumInsured)
   - varCode результата предыдущей строки (X)
-- expressionOperator — арифметическая операция
+- expressionOperator — арифметическая операция: + | - | * | / | min | max
+- для операторов min и max в expressionOperator используй ТОЛЬКО строчные буквы: "min", "max" (не MIN, Max и т.п.)
 - postProcessor — постобработка результата ("round2_up" или null)
 - НЕ удаляй существующие lines — сохраняй все и добавляй новые с правильными nr
 
@@ -116,3 +117,4 @@
 - При обнаружении неизвестного varCode — верни ошибку с сообщением
 - Ответ — ТОЛЬКО JSON, без пояснений
 - calculator в ответе = currentCalculator + изменения по запросу пользователя
+- В строках formulas поле expressionOperator для min/max — только "min" и "max" в нижнем регистре

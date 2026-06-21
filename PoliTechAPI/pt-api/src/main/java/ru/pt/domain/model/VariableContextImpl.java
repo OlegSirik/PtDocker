@@ -38,6 +38,13 @@ public final class VariableContextImpl implements CalculatorContext
         }
     }
 
+    @Override
+    public void warmUp() {
+        definitions.values().forEach(v -> {
+            Object value = get(v.getCode());
+        });
+    }
+
     public Map<String, Object> getValues() {
         Map<String, Object> decoded = new HashMap<>();
         values.forEach((k, v) -> decoded.put(k, decodeNullValue(v)));

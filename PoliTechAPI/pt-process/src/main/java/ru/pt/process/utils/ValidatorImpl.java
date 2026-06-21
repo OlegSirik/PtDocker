@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public class ValidatorImpl {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidatorImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ValidatorImpl.class);
     /*
     * ToDoc
     * Проверки строк:
@@ -112,12 +112,22 @@ public class ValidatorImpl {
             case "<=": {
                 return s1.compareTo(s2) <= 0;
             }
+            case "NOT_NULL": {
+                return s1 != null && !s1.toString().isEmpty();
+            }
             default:
                 throw new IllegalArgumentException("Unknown operator: " + type);
         }
     }
     
     public static boolean validate(VariableContext ctx, ValidatorRule rule) {
+
+        logger.debug("*******VALIDATE START***************************");
+        ctx.getDefinitions().forEach(v -> {
+            logger.debug("validate: code='{}', value='{}'", v.getCode(), ctx.get(v.getCode()));
+        });
+        logger.debug("**********************************");
+
         String leftKey = rule.getKeyLeft();
         String rightKey = rule.getKeyRight();
         String rightValue = "";
@@ -129,18 +139,18 @@ public class ValidatorImpl {
         try {
             PvVarDefinition leftDef = ctx.getDefinition(leftKey);
             if (leftDef == null) {
-                LOGGER.trace("Validation skipped: left definition missing for key {}", leftKey);
+                logger.trace("Validation skipped: left definition missing for key {}", leftKey);
                 return false;
             }
     
             PvVarDefinition rightDef = ctx.getDefinition(rightKey);
     
-            Object rightVal;
+            Object rightVal = null;
     
             if (rightDef != null) {
                 // проверяем совпадение типа
                 if (leftDef.getType() != rightDef.getType()) {
-                    LOGGER.trace(
+                    logger.trace(
                         "Validation failed: type mismatch for keys {} and {} ({} vs {})",
                         leftKey,
                         rightKey,
@@ -153,7 +163,9 @@ public class ValidatorImpl {
             } else {
                 // если нет переменной в контексте, используем константу
                 if (leftDef.getType() == PvVarDefinition.Type.NUMBER) {
-                    rightVal = new BigDecimal(rightValue.trim());
+                    if (rightValue != null && !rightValue.isEmpty()) {
+                        rightVal = new BigDecimal(rightValue.trim());
+                    }
                 } else {
                     rightVal = rightValue;
                 }
@@ -162,7 +174,7 @@ public class ValidatorImpl {
             Object leftVal = ctx.get(leftKey);
             
             if (leftVal == null ) {
-                LOGGER.trace(
+                logger.trace(
                     "Validation failed: null value for keys {} or {}",
                     leftKey,
                     rightKey
@@ -172,9 +184,9 @@ public class ValidatorImpl {
     
             switch (leftDef.getType()) {
                 case NUMBER -> {
-                    BigDecimal leftNum = (BigDecimal) leftVal;
+                    BigDecimal leftNum = new BigDecimal(leftVal.toString());
                     BigDecimal rightNum = null;
-                    if (rightVal != null) { rightNum = (BigDecimal) rightVal; }
+                    if (rightVal != null) { rightNum = new BigDecimal(rightVal.toString()); }
                     return checkBigD(ruleType, leftNum, rightNum);
                 }
                 case STRING -> {
@@ -184,13 +196,13 @@ public class ValidatorImpl {
                     return checkString(ruleType, leftStr, rightStr);
                 }
                 default -> {
-                    LOGGER.trace("Validation failed: unsupported type {}", leftDef.getType());
+                    logger.trace("Validation failed: unsupported type {}", leftDef.getType());
                     return false;
                 }
             }
     
         } catch (Exception e) {
-            LOGGER.trace("Validation exception for keys {} and {} with rule {}", leftKey, rightKey, ruleType, e);
+            logger.trace("Validation exception for keys {} and {} with rule {}", leftKey, rightKey, ruleType, e);
             return false;
         }
     }

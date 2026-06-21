@@ -39,6 +39,10 @@ public class RuleResponseProcessor implements LlmResponseProcessor {
     public LlmProcessedResult process(String rawContent, Set<String> knownVarCodes, List<PvVar> productVars) {
         try {
             JsonNode root = JsonExtractor.parseObject(rawContent, objectMapper);
+            if (root.path("error").asBoolean(false)) {
+                String message = root.path("message").asText("Значение не найдено среди допустимых");
+                return LlmProcessedResult.fail(List.of(message));
+            }
             JsonNode ruleNode = root.path("rule");
             if (ruleNode.isMissingNode()) {
                 return LlmProcessedResult.fail(List.of("Missing 'rule' object in response"));

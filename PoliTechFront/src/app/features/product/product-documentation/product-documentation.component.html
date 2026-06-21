@@ -1,0 +1,22 @@
+<div class="product-documentation">
+  <div class="doc-toolbar">
+    <button mat-stroked-button type="button" (click)="loadDocumentation()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Обновить
+    </button>
+    <button mat-stroked-button type="button" (click)="downloadPdf()" [disabled]="loading || !markdown">
+      <mat-icon>picture_as_pdf</mat-icon>
+      Скачать PDF
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="doc-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (error) {
+    <div class="doc-error">{{ error }}</div>
+  } @else {
+    <div #pdfSource class="doc-content markdown-body" [innerHTML]="renderedHtml"></div>
+  }
+</div>

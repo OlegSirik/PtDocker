@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.dto.llm.LlmAssistRequest;
 import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.product.Product;
+import ru.pt.api.dto.product.ProductDocumentationDto;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvCover;
 import ru.pt.api.dto.product.PvPackage;
@@ -277,6 +278,15 @@ public class ProductController extends SecuredController {
             @PathVariable("versionNo") Long versionNo,
             @RequestBody ValidatorRule payload) {
         return ResponseEntity.ok(productService.deleteValidator(user.getTenantId(), productId, versionNo, payload));
+    }
+
+    @GetMapping(value = "/{productId}/versions/{versionNo}/documentation")
+    public ResponseEntity<ProductDocumentationDto> getDocumentation(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("productId") Long productId,
+            @PathVariable("versionNo") Long versionNo) {
+        return ResponseEntity.ok(productService.generateDocumentation(user.getTenantId(), productId, versionNo));
     }
 
     @GetMapping(value = "/{productId}/versions/{versionNo}/example_quote", produces = "application/json")

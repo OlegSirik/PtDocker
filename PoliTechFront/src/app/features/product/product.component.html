@@ -20,7 +20,7 @@
   </div>
 
 
-  <mat-tab-group [(selectedIndex)]="selectedTabIndex">
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedTabChange)="onProductTabChange($event)">
     <!-- Main Product Data Tab -->
     <mat-tab label="Основные данные">
 
@@ -650,6 +650,17 @@
     <!-- Packages Tab -->
 
     <!-- Test Tab -->
+    <mat-tab label="Документация">
+      @if (product.id && product.versionNo) {
+        <app-product-documentation
+          [productId]="product.id"
+          [versionNo]="product.versionNo"
+          [productCode]="product.code"
+          [reloadToken]="documentationReloadToken">
+        </app-product-documentation>
+      }
+    </mat-tab>
+
     <mat-tab label="Test">
       <div class="pt-box" style="margin-top: 20px;">
         <div class="pt-box-title-row">

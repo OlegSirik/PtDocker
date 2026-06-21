@@ -29,7 +29,8 @@ export default defineConfig({
         text: 'Руководство пользователя',
         items: [
           { text: 'Обзор', link: '/user-docs/README.md' },
-          { text: 'Личный кабинет', link: '/user-docs/personal-cabinet' },
+          { text: 'Настройка продукта', link: '/user-docs/how-to-product' },
+          { text: 'Настройка тарифа', link: '/user-docs/how-to-calculator' },
           { text: 'Оформление договора', link: '/user-docs/contract-issuance' }
         ]
       },

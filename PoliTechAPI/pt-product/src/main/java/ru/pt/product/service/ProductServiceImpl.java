@@ -85,6 +85,7 @@ public class ProductServiceImpl implements ProductService {
     private final AccountDataService accountDataService;
     private final AccountService accountService;
     private final RuleManagementService ruleManagementService;
+    private final ProductDocumentationGenerator productDocumentationGenerator;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -971,6 +972,16 @@ public class ProductServiceImpl implements ProductService {
                 varValues);
 
         return schemaJson;
+    }
+
+    @Override
+    public ProductDocumentationDto generateDocumentation(Long tenantId, Long productId, Long versionNo) {
+        ProductVersionModel productVersionModel = getVersion(tenantId, productId, versionNo);
+        ProductDocumentationDto dto = new ProductDocumentationDto();
+        dto.setProductId(productId);
+        dto.setVersionNo(versionNo);
+        dto.setMarkdown(productDocumentationGenerator.generate(productVersionModel, tenantId));
+        return dto;
     }
 
     @Override

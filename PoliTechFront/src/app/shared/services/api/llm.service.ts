@@ -68,6 +68,21 @@ export class LlmService {
     return this.http.post<LlmAssistResponse>(url, body);
   }
 
+  assistLob(
+    lobCode: string,
+    userMessage: string,
+    taskType: LlmTaskType = 'RULE'
+  ): Observable<LlmAssistResponse> {
+    const url =
+      `${this.auth.baseApiUrl}/admin/lobs/${encodeURIComponent(lobCode)}/llm/assist`;
+    const body = {
+      taskType,
+      userMessage,
+      lobCode,
+    };
+    return this.http.post<LlmAssistResponse>(url, body);
+  }
+
   assistCalculator(
     productId: number,
     versionNo: number,

@@ -42,6 +42,12 @@ export interface Product {
   celRules?: Rule[];
 }
 
+export interface ProductDocumentation {
+  productId: number;
+  versionNo: number;
+  markdown: string;
+}
+
 export interface PolicyVar {
   /** С бэкенда (схема / PvVar); для дерева на экране продукта */
   id?: number;
@@ -512,6 +518,11 @@ handleHttpError(error: any): string {
   getTestRequestQuote(productId: number, versionNo: number): Observable<string> {
     const url = `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/example_quote`;
     return this.http.get(url, { responseType: 'text' });
+  }
+
+  getDocumentation(productId: number, versionNo: number): Observable<ProductDocumentation> {
+    const url = `${this.authService.baseApiUrl}/admin/products/${productId}/versions/${versionNo}/documentation`;
+    return this.http.get<ProductDocumentation>(url);
   }
 
   getTestRequestSave(productId: number, versionNo: number): Observable<string> {

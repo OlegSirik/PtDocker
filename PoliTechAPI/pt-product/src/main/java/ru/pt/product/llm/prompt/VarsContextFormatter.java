@@ -2,7 +2,9 @@ package ru.pt.product.llm.prompt;
 
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.db.service.RefDataService;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -15,23 +17,29 @@ public class VarsContextFormatter {
 
     private static final Set<String> EXCLUDED_VAR_TYPES = Set.of("OBJECT", "TEXT");
 
-    public String formatForRules(List<PvVar> vars) {
+    private final RefDataService refDataService;
+
+    public VarsContextFormatter(RefDataService refDataService) {
+        this.refDataService = refDataService;
+    }
+
+    public String formatForRules(List<PvVar> vars, Long tenantId) {
         if (vars == null || vars.isEmpty()) {
             return "";
         }
         return vars.stream()
                 .filter(this::isIncluded)
-                .map(this::toRuleLine)
+                .map(var -> toRuleLine(var, tenantId))
                 .collect(Collectors.joining("\n"));
     }
 
-    public String format(List<PvVar> vars) {
+    public String format(List<PvVar> vars, Long tenantId) {
         if (vars == null || vars.isEmpty()) {
             return "";
         }
         return vars.stream()
                 .filter(this::isIncluded)
-                .map(this::toLine)
+                .map(var -> toLine(var, tenantId))
                 .collect(Collectors.joining("\n"));
     }
 
@@ -45,9 +53,9 @@ public class VarsContextFormatter {
                 .collect(Collectors.toSet());
     }
 
-    public String formatMerged(List<PvVar> productVars, List<PvVar> calculatorVars) {
+    public String formatMerged(List<PvVar> productVars, List<PvVar> calculatorVars, Long tenantId) {
         return mergeVars(productVars, calculatorVars).values().stream()
-                .map(this::toLine)
+                .map(var -> toLine(var, tenantId))
                 .collect(Collectors.joining("\n"));
     }
 
@@ -74,11 +82,13 @@ public class VarsContextFormatter {
         return merged;
     }
 
-    private String toLine(PvVar var) {
-        return var.getVarCode() + ": " + firstNonBlank(var.getVarName(), var.getName());
+    private String toLine(PvVar var, Long tenantId) {
+        String base = var.getVarCode() + ": " + firstNonBlank(var.getVarName(), var.getName());
+        String allowed = formatAllowedValues(resolveRefValues(var, tenantId));
+        return allowed.isEmpty() ? base : base + allowed;
     }
 
-    private String toRuleLine(PvVar var) {
+    private String toRuleLine(PvVar var, Long tenantId) {
         String code = var.getVarCode();
         String desc = firstNonBlank(var.getVarName(), var.getName());
         String dataType = var.getVarDataType() != null
@@ -87,7 +97,56 @@ public class VarsContextFormatter {
         String celAccessor = isNumericDataType(dataType)
                 ? "num(\"" + code + "\")"
                 : "str(\"" + code + "\")";
-        return code + ": " + desc + " [" + dataType + ", в CEL: " + celAccessor + "]";
+        String allowed = formatAllowedValues(resolveRefValues(var, tenantId));
+        return code + ": " + desc + " [" + dataType + ", в CEL: " + celAccessor + allowed + "]";
+    }
+
+    /**
+     * varList — код справочника; varValue — CSV допустимых кодов (тот же список, что IN_LIST).
+     * Пустой varValue — весь справочник.
+     */
+    private Map<String, String> resolveRefValues(PvVar var, Long tenantId) {
+        if (var == null || var.getVarList() == null || var.getVarList().isBlank()) {
+            return Map.of();
+        }
+        if (tenantId == null) {
+            return Map.of();
+        }
+        Map<String, String> refData = refDataService.getRefData(tenantId, var.getVarList().trim());
+        if (refData.isEmpty()) {
+            return Map.of();
+        }
+        String varValue = var.getVarValue();
+        if (varValue != null && !varValue.isBlank()) {
+            List<String> filter = Arrays.stream(varValue.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+            if (!filter.isEmpty()) {
+                refData.entrySet().removeIf(entry -> !filter.contains(entry.getKey()));
+            }
+        }
+        return refData;
+    }
+
+    private String formatAllowedValues(Map<String, String> refValues) {
+        if (refValues == null || refValues.isEmpty()) {
+            return "";
+        }
+        String entries = refValues.entrySet().stream()
+                .map(e -> e.getKey() + "=\"" + escapeQuotes(e.getValue()) + "\"")
+                .collect(Collectors.joining(", "));
+        String codes = refValues.keySet().stream()
+                .map(code -> "\"" + escapeQuotes(code) + "\"")
+                .collect(Collectors.joining(", "));
+        return ", допустимые значения: " + entries + " (в CEL только коды: [" + codes + "])";
+    }
+
+    private static String escapeQuotes(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\"", "'");
     }
 
     private static boolean isNumericDataType(String dataType) {

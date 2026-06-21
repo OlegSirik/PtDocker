@@ -20,7 +20,7 @@
     </div>
   </div>
 
-  <mat-tab-group>
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onLobTabChange($event)">
     <!-- Main Info Tab -->
     <mat-tab label="Основная информация">
 
@@ -259,6 +259,32 @@
             <tr mat-row *matRowDef="let row; columns: textVarDisplayedColumns;" (click)="editTextVar(row)" class="clickable-row"></tr>
           </table>
         </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Продуктовые правила">
+      <div class="pt-box" style="margin-top: 20px;">
+        <div class="pt-box-title-row">
+          <h3 class="pt-box-title">Продуктовые правила</h3>
+        </div>
+        <h4 class="pt-box-subtitle">Правила с областью LOB для кода {{ businessLine.mpCode || '—' }}.</h4>
+
+        @if (lobRulesLoading) {
+          <div class="pt-box-body">Загрузка правил...</div>
+        } @else if (!(businessLine.mpCode || '').trim()) {
+          <div class="pt-box-body">Укажите код продуктовой группы (mpCode) и сохраните линию бизнеса.</div>
+        } @else {
+          @for (group of lobCelRuleGroups; track group.ruleType) {
+            <app-product-rule-group
+              [title]="group.title"
+              [ruleType]="group.ruleType"
+              [rules]="group.rules"
+              (edit)="editLobCelRule($event)"
+              (delete)="deleteLobCelRule($event)"
+              (add)="addLobCelRule($event)"
+            />
+          }
+        }
       </div>
     </mat-tab>
 

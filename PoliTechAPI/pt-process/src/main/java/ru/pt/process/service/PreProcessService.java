@@ -424,12 +424,12 @@ public class PreProcessService {
     }
  
     public void enrichVariables(VariableContext ctx) {
-        ComputedVars.getMagicValue(ctx, "ph_age_issue");
-        ComputedVars.getMagicValue(ctx, "ph_age_end" );
-        ComputedVars.getMagicValue(ctx, "io_age_issue" );
-        ComputedVars.getMagicValue(ctx, "io_age_end" );
-        ComputedVars.getMagicValue(ctx, "pl_TermMonths" );
-        ComputedVars.getMagicValue(ctx, "pl_TermDays" );
+    //    ComputedVars.getMagicValue(ctx, "ph_age_issue");
+    //    ComputedVars.getMagicValue(ctx, "ph_age_end" );
+    //    ComputedVars.getMagicValue(ctx, "io_age_issue" );
+    //    ComputedVars.getMagicValue(ctx, "io_age_end" );
+    //    ComputedVars.getMagicValue(ctx, "pl_TermMonths" );
+    //    ComputedVars.getMagicValue(ctx, "pl_TermDays" );
     }
 
 }

@@ -405,6 +405,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 6. PvVar → PvVarDefinition
         List<PvVarDefinition> varDefinitions = 
             product.getVars().stream()
+                .filter(v -> !v.getIsDeleted())
                 .map(this::toDefinition)
                 .toList();
 
@@ -413,6 +414,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         // 8. Предобработка (если нужно задать значения явно)
         preProcessService.enrichVariables(varCtx);
+
+        varCtx.warmUp();
+
+        logger.debug("**********************************");
+        varCtx.getDefinitions().forEach(v -> {
+            logger.debug("warmUp: code='{}', value='{}'", v.getCode(), varCtx.get(v.getCode()));
+        });
+        logger.debug("**********************************");
 
         // 9. Валидация (lazy!)
         logger.debug("Validating policy for QUOTE");
@@ -571,6 +580,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         // 6. PvVar → PvVarDefinition
         List<PvVarDefinition> varDefinitions = 
             product.getVars().stream()
+                .filter(v -> !v.getIsDeleted())
                 .map(this::toDefinition)
                 .toList();
 

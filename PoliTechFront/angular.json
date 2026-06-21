@@ -36,6 +36,10 @@
             ],
             "scripts": []
           },
+          "allowedCommonJsDependencies": [
+            "html2pdf.js",
+            "marked"
+          ],
           "configurations": {
             "production": {
               "budgets": [

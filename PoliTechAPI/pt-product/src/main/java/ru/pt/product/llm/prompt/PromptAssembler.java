@@ -34,11 +34,12 @@ public class PromptAssembler {
     public List<LlmMessage> assemble(
             LlmTaskType taskType,
             String userMessage,
-            ProductVersionModel product) {
+            ProductVersionModel product,
+            Long tenantId) {
         String system = loadPrompt(taskType);
         String varsText = taskType == LlmTaskType.RULE
-                ? varsContextFormatter.formatForRules(product.getVars())
-                : varsContextFormatter.format(product.getVars());
+                ? varsContextFormatter.formatForRules(product.getVars(), tenantId)
+                : varsContextFormatter.format(product.getVars(), tenantId);
         String celRulesHint = taskType == LlmTaskType.RULE
                 ? """
 
@@ -46,6 +47,8 @@ public class PromptAssembler {
                 - переменные с типом NUMBER — только через num("varCode")
                 - переменные с типом STRING — только через str("varCode")
                 - не используй голые идентификаторы varCode в condition
+                - если у переменной указаны «допустимые значения», используй только коды из списка;
+                  при отсутствии подходящего кода верни {"error": true, "message": "..."}, не придумывай новые коды
                 """
                 : "";
         String user = """
@@ -61,6 +64,47 @@ public class PromptAssembler {
                 nullToEmpty(product.getCode()),
                 nullToEmpty(product.getLob()),
                 product.getVersionNo() != null ? product.getVersionNo() : "",
+                celRulesHint,
+                varsText);
+        return List.of(
+                new LlmMessage("system", system),
+                new LlmMessage("user", user));
+    }
+
+    public List<LlmMessage> assembleForLob(
+            LlmTaskType taskType,
+            String userMessage,
+            String lobCode,
+            String lobName,
+            List<PvVar> vars,
+            Long tenantId) {
+        String system = loadPrompt(taskType);
+        String varsText = taskType == LlmTaskType.RULE
+                ? varsContextFormatter.formatForRules(vars, tenantId)
+                : varsContextFormatter.format(vars, tenantId);
+        String celRulesHint = taskType == LlmTaskType.RULE
+                ? """
+
+                Правила CEL для condition:
+                - переменные с типом NUMBER — только через num("varCode")
+                - переменные с типом STRING — только через str("varCode")
+                - не используй голые идентификаторы varCode в condition
+                - если у переменной указаны «допустимые значения», используй только коды из списка;
+                  при отсутствии подходящего кода верни {"error": true, "message": "..."}, не придумывай новые коды
+                """
+                : "";
+        String user = """
+                Запрос пользователя:
+                %s
+
+                LOB: %s (%s)
+                %s
+                Словарь переменных (varCode: описание [тип, в CEL: ...]):
+                %s
+                """.formatted(
+                userMessage,
+                nullToEmpty(lobCode),
+                nullToEmpty(lobName),
                 celRulesHint,
                 varsText);
         return List.of(

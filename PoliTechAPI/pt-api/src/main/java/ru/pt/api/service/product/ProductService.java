@@ -1,6 +1,7 @@
 package ru.pt.api.service.product;
 
 import ru.pt.api.dto.product.Product;
+import ru.pt.api.dto.product.ProductDocumentationDto;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvCover;
 import ru.pt.api.dto.product.PvPackage;
@@ -211,4 +212,9 @@ public interface ProductService {
     ProductVersionModel updateValidator(Long tenantId, Long productId, Long versionNo, ValidatorRule validator);
 
     ProductVersionModel deleteValidator(Long tenantId, Long productId, Long versionNo, ValidatorRule validator);
+
+    /**
+     * Markdown-документация по метаданным версии продукта.
+     */
+    ProductDocumentationDto generateDocumentation(Long tenantId, Long productId, Long versionNo);
 }

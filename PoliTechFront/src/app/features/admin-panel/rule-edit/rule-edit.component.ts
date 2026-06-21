@@ -14,8 +14,10 @@ import {
   RuleType,
 } from '../../../shared/services/api/rules.service';
 import { LlmAssistResponse, LlmRuleDraft, LlmService } from '../../../shared/services/api/llm.service';
-import { ProductsService } from '../../../shared/services/products.service';
+import { ProductsService, ProductList } from '../../../shared/services/products.service';
 import { AuthService } from '../../../shared/services/auth.service';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-rule-edit',
@@ -176,29 +178,38 @@ export class RuleEditComponent implements OnInit {
     if (!text) {
       return;
     }
-    if (this.rule.scopeType !== 'PRODUCT' || !this.rule.scopeCode?.trim()) {
-      this.snack.open('Укажите scope PRODUCT и код продукта в Scope code', 'OK', { duration: 3500 });
+
+    if (this.rule.scopeType === 'TENANT' || this.rule.scopeType === 'CLIENT') {
+      this.snack.open('LLM для scope TENANT и CLIENT пока не поддерживается', 'OK', { duration: 3500 });
+      return;
+    }
+
+    if (!this.rule.scopeCode?.trim()) {
+      this.snack.open('Укажите scope code', 'OK', { duration: 3500 });
       return;
     }
 
     this.askingLlm = true;
-    const productCode = this.rule.scopeCode.trim();
+    const scopeCode = this.rule.scopeCode.trim();
 
-    this.productsService.getProducts().subscribe({
-      next: (products) => {
-        const product = products.find((p) => p.code === productCode);
-        if (!product?.id) {
+    if (this.rule.scopeType === 'LOB') {
+      this.llmService.assistLob(scopeCode, text, 'RULE').subscribe({
+        next: (response) => this.applyLlmResponse(response),
+        error: (err) => {
           this.askingLlm = false;
-          this.snack.open(`Продукт не найден: ${productCode}`, 'OK', { duration: 3500 });
+          const msg = err?.error?.message || err?.message || 'Ошибка вызова LLM';
+          this.snack.open(msg, 'OK', { duration: 4000 });
+        },
+      });
+      return;
+    }
+
+    this.resolveProductLlmContext(scopeCode).subscribe({
+      next: (ctx) => {
+        if (!ctx) {
           return;
         }
-        const versionNo = product.devVersionNo ?? product.prodVersionNo;
-        if (!versionNo) {
-          this.askingLlm = false;
-          this.snack.open('У продукта нет версии для LLM', 'OK', { duration: 3500 });
-          return;
-        }
-        this.llmService.assist(product.id, versionNo, text, 'RULE').subscribe({
+        this.llmService.assist(ctx.productId, ctx.versionNo, text, 'RULE').subscribe({
           next: (response) => this.applyLlmResponse(response),
           error: (err) => {
             this.askingLlm = false;
@@ -209,9 +220,53 @@ export class RuleEditComponent implements OnInit {
       },
       error: () => {
         this.askingLlm = false;
-        this.snack.open('Не удалось загрузить список продуктов', 'OK', { duration: 3000 });
+        this.snack.open('Не удалось подготовить контекст для LLM', 'OK', { duration: 3000 });
       },
     });
+  }
+
+  private resolveProductLlmContext(
+    productCode: string,
+  ): Observable<{ productId: number; versionNo: number } | null> {
+    return this.productsService.getProducts().pipe(
+      map((products) =>
+        this.resolveProductContext(products, productCode, `Продукт не найден: ${productCode}`),
+      ),
+      catchError(() => {
+        this.failLlmContext('Не удалось загрузить список продуктов');
+        return of(null);
+      }),
+    );
+  }
+
+  private resolveProductContext(
+    products: ProductList[],
+    productCode: string,
+    notFoundMessage: string,
+  ): { productId: number; versionNo: number } | null {
+    const product = products.find((p) => p.code === productCode);
+    if (!product?.id) {
+      this.failLlmContext(notFoundMessage);
+      return null;
+    }
+    return this.pickProductVersion(product, 'У продукта нет версии для LLM');
+  }
+
+  private pickProductVersion(
+    product: ProductList,
+    noVersionMessage: string,
+  ): { productId: number; versionNo: number } | null {
+    const versionNo = product.devVersionNo ?? product.prodVersionNo;
+    if (!product.id || !versionNo) {
+      this.failLlmContext(noVersionMessage);
+      return null;
+    }
+    return { productId: product.id, versionNo };
+  }
+
+  private failLlmContext(message: string): void {
+    this.askingLlm = false;
+    this.snack.open(message, 'OK', { duration: 3500 });
   }
 
   private applyLlmResponse(response: LlmAssistResponse): void {
@@ -267,6 +322,18 @@ export class RuleEditComponent implements OnInit {
         this.router.navigate(['/', tenantCode, 'product', this.contextProductId], { queryParams });
       }
       return;
+    }
+
+    if (contextScopeType === 'LOB') {
+      const lobCode = qp.get('lobCode')?.trim() || this.rule.scopeCode?.trim();
+      if (lobCode) {
+        const queryParams: Record<string, string> = {};
+        if (this.contextTab) {
+          queryParams['tab'] = this.contextTab;
+        }
+        this.router.navigate(['/', tenantCode, 'lob-edit', lobCode], { queryParams });
+        return;
+      }
     }
 
     this.router.navigate(['/', tenantCode, 'admin', 'rules']);

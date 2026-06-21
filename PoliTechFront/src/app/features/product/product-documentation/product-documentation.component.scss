@@ -1,0 +1,107 @@
+.product-documentation {
+  margin-top: 20px;
+}
+
+.doc-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.doc-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.doc-error {
+  color: #c62828;
+  padding: 16px;
+}
+
+.doc-content {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 24px 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host-context(.dark-theme) .doc-content {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e0e0e0;
+}
+
+:host-context(.dark-theme) ::ng-deep .markdown-body table {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:host-context(.dark-theme) ::ng-deep .markdown-body th,
+:host-context(.dark-theme) ::ng-deep .markdown-body td {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:host-context(.dark-theme) ::ng-deep .markdown-body th {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+.markdown-body {
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+}
+
+// innerHTML не получает _ngcontent-* — стили через ::ng-deep
+:host ::ng-deep .markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+:host ::ng-deep .markdown-body th,
+:host ::ng-deep .markdown-body td {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+:host ::ng-deep .markdown-body th {
+  background: #f5f5f5;
+  color: #424242;
+  font-weight: 600;
+}
+
+.markdown-body pre {
+  background: rgba(0, 0, 0, 0.04);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.markdown-body code {
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.markdown-body ul {
+  padding-left: 1.4em;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 16px 0;
+}

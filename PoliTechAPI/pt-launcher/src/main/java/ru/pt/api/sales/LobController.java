@@ -7,8 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.llm.LlmAssistRequest;
+import ru.pt.api.dto.llm.LlmAssistResponse;
+import ru.pt.api.dto.llm.LlmLobAssistRequest;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.hz.JsonExampleBuilder123;
@@ -30,9 +34,11 @@ import java.util.stream.Collectors;
 public class LobController {
 
     private final LobService lobService;
+    private final LlmAssistantService llmAssistantService;
 
-    public LobController(LobService lobService) {
+    public LobController(LobService lobService, LlmAssistantService llmAssistantService) {
         this.lobService = lobService;
+        this.llmAssistantService = llmAssistantService;
     }
 
     // get /admin/lobs return id, Code, Name from repository
@@ -123,6 +129,16 @@ public class LobController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @PostMapping("/{code}/llm/assist")
+    public ResponseEntity<LlmAssistResponse> llmAssist(
+            @PathVariable String tenantCode,
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable("code") String code,
+            @RequestBody LlmLobAssistRequest request) {
+        request.setLobCode(code);
+        return ResponseEntity.ok(llmAssistantService.assistLob(request, user));
     }
 
 
