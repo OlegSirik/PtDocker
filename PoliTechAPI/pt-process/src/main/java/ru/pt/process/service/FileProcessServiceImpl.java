@@ -132,7 +132,10 @@ public class FileProcessServiceImpl implements FileProcessService {
         List<PvVarDefinition> varDefinitions =
                 new ArrayList<>(pvVarList.stream().map(this::toDefinition).toList());
         // 7. Runtime-контекст
-        VariableContext varCtx = new VariableContextImpl(policy.getPolicy(), varDefinitions);
+        VariableContext varCtx = VariableContextImpl.builder()
+                .json(policy.getPolicy())
+                .varDefinitions(varDefinitions)
+                .build();
 
         varDefinitions.forEach(
                 (def) -> logger.debug("Processing variable: code={}, value={}", def.getCode(), varCtx.get(def.getCode()))

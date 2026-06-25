@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -14,35 +13,89 @@ import org.slf4j.LoggerFactory;
 
 import com.jayway.jsonpath.JsonPath;
 
-public final class VariableContextImpl implements CalculatorContext
-{
+import ru.pt.api.dto.product.ProductVersionModel;
+
+public final class VariableContextImpl implements CalculatorContext {
 
     private static final Logger logger = LoggerFactory.getLogger(VariableContextImpl.class);
-    /** ConcurrentHashMap не поддерживает null-значения; используем sentinel. */
-    private static final Object NULL_VALUE = new Object();
 
-    private final Object jsonDocument; // parsed once
+    /** ConcurrentHashMap не поддерживает null; sentinel по типу var из definitions. */
+    private static final Object NULL_VALUE_NUMBER = new Object();
+    private static final Object NULL_VALUE_STRING = new Object();
+
     private final Map<String, PvVarDefinition> definitions;
     private final Map<String, Object> values = new ConcurrentHashMap<>();
 
-    public VariableContextImpl(String json, List<PvVarDefinition> vars) {
-        logger.trace("Creating VariableContext with {} definitions", vars != null ? vars.size() : 0);
-        this.jsonDocument = JsonPath.parse(json).json();
-        this.definitions = new HashMap<>();
-        if (vars != null) {
-            vars.forEach(v -> {
-                logger.trace("Registering definition: code={}, type={}, sourceType={}", 
-                        v.getCode(), v.getType(), v.getSourceType());
-                definitions.put(v.getCode(), v);
-            });
-        }
+    public static Builder builder() {
+        return new Builder();
     }
 
-    @Override
-    public void warmUp() {
-        definitions.values().forEach(v -> {
-            Object value = get(v.getCode());
-        });
+    private VariableContextImpl(Map<String, PvVarDefinition> definitions) {
+        this.definitions = new HashMap<>(definitions);
+        logger.trace("Creating VariableContext with {} definitions", this.definitions.size());
+    }
+
+    public static final class Builder {
+        private String json;
+        private ProductVersionModel productVersion;
+        private List<PvVarDefinition> varDefinitions;
+
+        public Builder json(String json) {
+            this.json = json;
+            return this;
+        }
+
+        public Builder productVersion(ProductVersionModel productVersion) {
+            this.productVersion = productVersion;
+            return this;
+        }
+
+        public Builder varDefinitions(List<PvVarDefinition> varDefinitions) {
+            this.varDefinitions = varDefinitions;
+            return this;
+        }
+
+        public VariableContextImpl build() {
+            if (json == null) {
+                throw new IllegalArgumentException("json is required");
+            }
+            Object jsonDocument = JsonPath.parse(json).json();
+            List<PvVarDefinition> defs = resolveDefinitions();
+            VariableContextImpl ctx = new VariableContextImpl(toDefinitionMap(defs));
+
+            for (PvVarDefinition def : defs) {
+                if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
+                    continue;
+                }
+                Object value = ctx.resolveFromJson(jsonDocument, def);
+                ctx.putValueInternal(def.getCode(), value);
+                logger.trace("materialize: code='{}', value='{}'", def.getCode(), value);
+            }
+            ctx.calcEmptyMagic();
+
+            return ctx;
+        }
+
+        private List<PvVarDefinition> resolveDefinitions() {
+            if (varDefinitions != null) {
+                return varDefinitions;
+            }
+            if (productVersion == null || productVersion.getVars() == null) {
+                return List.of();
+            }
+            return productVersion.getVars().stream()
+                    .filter(v -> !v.getIsDeleted())
+                    .map(PvVarDefinition::fromPvVar)
+                    .toList();
+        }
+
+        private static Map<String, PvVarDefinition> toDefinitionMap(List<PvVarDefinition> defs) {
+            Map<String, PvVarDefinition> map = new HashMap<>();
+            if (defs != null) {
+                defs.forEach(def -> map.put(def.getCode(), def));
+            }
+            return map;
+        }
     }
 
     public Map<String, Object> getValues() {
@@ -50,38 +103,25 @@ public final class VariableContextImpl implements CalculatorContext
         values.forEach((k, v) -> decoded.put(k, decodeNullValue(v)));
         return decoded;
     }
-    // ---------- Typed API ----------
+
     @Override
     public BigDecimal getDecimal(String code) {
-        if (code.equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
-            logger.debug("####################################################getDecimal: code='{}'", code);
-        }
         Object v = get(code);
         if (v == null) {
-            logger.trace("getDecimal: code='{}' is null, returning null", code);
             return null;
         }
-        BigDecimal result = safeToBigDecimal(v);
-        logger.trace("getDecimal: code='{}', raw='{}', result='{}'", code, v, result);
-        return result;
+        return safeToBigDecimal(v);
     }
 
-    private BigDecimal safeToBigDecimal(Object value) {    
-        logger.trace("safeToBigDecimal: input='{}' (type={})", value, value != null ? value.getClass().getName() : "null");
-
+    private BigDecimal safeToBigDecimal(Object value) {
         if (value == null) {
-            logger.trace("safeToBigDecimal: value is null, returning 0");
-            return null; //BigDecimal.ZERO;
+            return null;
         }
-        
-        if (value instanceof BigDecimal) {
-            return (BigDecimal) value;
+        if (value instanceof BigDecimal bd) {
+            return bd;
         }
-        
-        // Handle different number types
-        if (value instanceof Number) {
-            Number num = (Number) value;
-            BigDecimal result = switch (num) {
+        if (value instanceof Number num) {
+            return switch (num) {
                 case Integer i -> BigDecimal.valueOf(i);
                 case Long l -> BigDecimal.valueOf(l);
                 case Double d -> BigDecimal.valueOf(d);
@@ -90,35 +130,21 @@ public final class VariableContextImpl implements CalculatorContext
                 case Byte b -> BigDecimal.valueOf(b);
                 default -> BigDecimal.valueOf(num.doubleValue());
             };
-            logger.trace("safeToBigDecimal: converted Number '{}' to '{}'", num, result);
-            return result;
         }
-        
-        // Try to parse as string if it's a string representation of a number
-        if (value instanceof String) {
+        if (value instanceof String s) {
             try {
-                BigDecimal result = new BigDecimal((String) value);
-                logger.trace("safeToBigDecimal: parsed String '{}' to '{}'", value, result);
-                return result;
+                return new BigDecimal(s);
             } catch (NumberFormatException e) {
-                logger.trace("safeToBigDecimal: cannot parse String '{}' to BigDecimal, returning 0", value);
-                return null; //BigDecimal.ZERO;
+                return null;
             }
         }
-        
-        return null; //BigDecimal.ZERO;
+        return null;
     }
 
     @Override
     public String getString(String code) {
-        if (code.equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
-            logger.debug("############################################getDecimal: code='{}'", code);
-        }
-
         Object v = get(code);
-        String result = v != null ? v.toString() : null;
-        logger.trace("getString: code='{}', result='{}'", code, result);
-        return result;
+        return v != null ? v.toString() : null;
     }
 
     @Override
@@ -131,11 +157,7 @@ public final class VariableContextImpl implements CalculatorContext
             logger.warn("putDefinition: null definition ignored");
             return;
         }
-        if (def.getCode().equalsIgnoreCase("co_COMPLEX_ACCIDENT_deductibleNr")) {
-            logger.debug("####################################################putDefinition: code='{}'", def.getCode());
-        }
-
-        logger.trace("putDefinition: code='{}', type='{}', sourceType='{}'", 
+        logger.trace("putDefinition: code='{}', type='{}', sourceType='{}'",
                 def.getCode(), def.getType(), def.getSourceType());
         definitions.put(def.getCode(), def);
     }
@@ -145,182 +167,135 @@ public final class VariableContextImpl implements CalculatorContext
     }
 
     @Override
-    public Object getByPath(String path) {
-        return JsonPath.read(jsonDocument, path);
-    }
-
-    @Override
     public void calcEmptyMagic() {
         definitions.values().stream()
-            .filter(def -> def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC)
-            .forEach(def -> {
-                Object value = evaluate(def.getCode());
-                String code = def.getCode();
-                putValueInternal(code, value);
-            });
+                .filter(def -> def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC)
+                .forEach(def -> {
+                    Object value = ComputedVars.getMagicValue(this, def.getCode());
+                    putValueInternal(def.getCode(), value);
+                });
     }
-    // ---------- Lazy evaluation ----------
 
     @Override
     public Object get(Object key) {
-        
-        // Ключ только строковый
-        if (!(key instanceof String code)) return null;
-        logger.trace("get: code='{}'", code);
-        try {
-            // Поиск значения в кеше (в т.ч. cached null через sentinel)
-            Object cached = values.get(code);
-            if (cached == null && !values.containsKey(code)) {
-                Object evaluated = evaluate(code);
-                putValueInternal(code, evaluated);
-                logger.trace("get: code='{}', evaluated='{}'", code, evaluated);
-                return evaluated;
-            }
-            Object value = decodeNullValue(cached);
-            logger.trace("get: code='{}', resolvedValue='{}'", code, value);
-            return value;
-        } catch (Exception e) {
-            logger.warn("get: error evaluating variable '{}': {}", code, e.getMessage());
-            return null; //"Error evaluating variable: " + code + " " + e.getMessage();
+        if (!(key instanceof String code)) {
+            return null;
         }
+        Object cached = values.get(code);
+        if (cached == null && !values.containsKey(code)) {
+            PvVarDefinition def = definitions.get(code);
+            if (def != null && def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
+                Object magic = ComputedVars.getMagicValue(this, code);
+                putValueInternal(code, magic);
+                return magic;
+            }
+            return null;
+        }
+        return decodeNullValue(cached);
     }
 
-    private Object evaluate(String code) {
-        logger.trace("evaluate: code='{}'", code);
-        PvVarDefinition def = definitions.get(code);
-        if (def == null) {
-            logger.warn("evaluate: Unknown variable '{}'", code);
-            throw new IllegalArgumentException("Unknown variable: " + code);
-        }
-
-        // Это хардкодные функции. 
-        if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
-            Object magic = ComputedVars.getMagicValue(this, code);
-            logger.trace("evaluate: code='{}' (MAGIC) -> '{}'", code, magic);
-            return magic;
-        }
-
-        // Если не задан JsonPath значит это расчетная переменная, из запроса ее не получим.
+    private Object resolveFromJson(Object jsonDocument, PvVarDefinition def) {
         if (def.getJsonPath() == null) {
-            logger.trace("evaluate: code='{}' has null jsonPath, returning null (calc-only variable)", code);
-            return null; // calc-only variable
+            return null;
         }
-
-        // Получаем значение из jsonDocument по заданному JsonPath
-        Object raw = JsonPath.read(jsonDocument, def.getJsonPath());
-        logger.trace("evaluate: code='{}', jsonPath='{}', raw='{}'", code, def.getJsonPath(), raw);
-        // Конвертируем значение в нужный тип и группируем если нужно
-        Object ret =  convert(raw, def.getType(), def.getGroupFunctionName());
-        logger.trace("evaluate: code='{}', converted='{}'", code, ret);
-        return ret;
+        try {
+            Object raw = JsonPath.read(jsonDocument, def.getJsonPath());
+            return convert(raw, def.getType(), def.getGroupFunctionName());
+        } catch (Exception e) {
+            logger.trace("resolveFromJson: code='{}', path='{}', error={}",
+                    def.getCode(), def.getJsonPath(), e.getMessage());
+            return null;
+        }
     }
 
     private Object convert(Object raw, PvVarDefinition.Type type, PvVarDefinition.GroupFunctionName groupFunctionName) {
-        logger.trace("convert: raw='{}' (type={}), varType={}, groupFunction={}", 
-                raw, raw != null ? raw.getClass().getName() : "null", type, groupFunctionName);
-        if (raw == null) return null;
+        if (raw == null) {
+            return null;
+        }
 
-        if (raw instanceof List) {
-            List<?> list = (List<?>) raw;
-            logger.trace("convert: list size={}, firstElement={}", list.size(), list.isEmpty() ? null : list.get(0));
-            
+        if (raw instanceof List<?> list) {
             if (groupFunctionName == null) {
-                // If no group function specified, return based on type
-                Object result = switch (type) {
+                return switch (type) {
                     case STRING -> list.stream()
-                        .map(Object::toString)
-                        .collect(Collectors.joining(", "));
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
                     case NUMBER -> list.isEmpty() ? BigDecimal.ZERO : new BigDecimal(list.get(0).toString());
                 };
-                logger.trace("convert: result without groupFunction='{}'", result);
-                return result;
             }
-            
-            Object grouped = switch (groupFunctionName) {
+
+            return switch (groupFunctionName) {
                 case COUNT -> BigDecimal.valueOf(list.size());
-                case SUM -> {
-                    BigDecimal sum = list.stream()
+                case SUM -> list.stream()
                         .map(this::safeToBigDecimal)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    yield sum;
-                }
                 case AVG -> {
                     List<Double> numbers = list.stream()
-                        .filter(Number.class::isInstance)
-                        .map(n -> ((Number) n).doubleValue())
-                        .toList();
+                            .filter(Number.class::isInstance)
+                            .map(n -> ((Number) n).doubleValue())
+                            .toList();
                     if (numbers.isEmpty()) {
                         yield BigDecimal.ZERO;
                     }
                     double avg = numbers.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
                     yield BigDecimal.valueOf(avg);
                 }
-                case MIN -> {
-                    Optional<BigDecimal> min = list.stream()
+                case MIN -> list.stream()
                         .map(this::safeToBigDecimal)
-                        .min(BigDecimal::compareTo);
-                    yield min.orElse(BigDecimal.ZERO);
-                }
-                case MAX -> {
-                    Optional<BigDecimal> max = list.stream()
+                        .min(BigDecimal::compareTo)
+                        .orElse(BigDecimal.ZERO);
+                case MAX -> list.stream()
                         .map(this::safeToBigDecimal)
-                        .max(BigDecimal::compareTo);
-                    yield max.orElse(BigDecimal.ZERO);
-                }
-                case FIRST -> {
-                    yield list.isEmpty() ? null : list.get(0);
-                }
-                case HZ -> {
-                    yield switch (type) {
-                        case STRING -> list.stream()
+                        .max(BigDecimal::compareTo)
+                        .orElse(BigDecimal.ZERO);
+                case FIRST -> list.isEmpty() ? null : list.get(0);
+                case HZ -> switch (type) {
+                    case STRING -> list.stream()
                             .map(Object::toString)
                             .collect(Collectors.toList());
-                        case NUMBER -> list.isEmpty() ? BigDecimal.ZERO : new BigDecimal(list.get(0).toString());
-                    };    
-                }
+                    case NUMBER -> list.isEmpty() ? BigDecimal.ZERO : new BigDecimal(list.get(0).toString());
+                };
                 default -> null;
             };
-            logger.trace("convert: result with groupFunction='{}'", grouped);
-            return grouped;
         }
 
-        Object scalarResult = switch (type) {
+        return switch (type) {
             case STRING -> raw.toString();
             case NUMBER -> new BigDecimal(raw.toString());
         };
-        logger.trace("convert: scalar result='{}'", scalarResult);
-        return scalarResult;
-
     }
 
-    // ---------- Runtime mutation ----------
-
-    //@Override
+    @Override
     public Object put(String key, Object value) {
         if (key == null || key.isBlank()) {
-            logger.warn("put: key is null/blank, value='{}'", value);
             throw new IllegalArgumentException("Variable key is null or blank");
         }
         PvVarDefinition def = definitions.get(key);
         if (def == null) {
-            logger.warn("put: Unknown variable '{}'", key);
             throw new IllegalArgumentException("Unknown variable: " + key);
         }
-        logger.trace("put: key='{}', value='{}'", key, value);
         return putValueInternal(key, value);
     }
 
     private Object putValueInternal(String key, Object value) {
-        Object previous = values.put(key, encodeNullValue(value));
+        PvVarDefinition def = definitions.get(key);
+        Object previous = values.put(key, encodeNullValue(value, def));
         return decodeNullValue(previous);
     }
 
-    private Object encodeNullValue(Object value) {
-        return value == null ? NULL_VALUE : value;
+    private Object encodeNullValue(Object value, PvVarDefinition def) {
+        if (value != null) {
+            return value;
+        }
+        if (def != null && def.getType() == PvVarDefinition.Type.NUMBER) {
+            return NULL_VALUE_NUMBER;
+        }
+        return NULL_VALUE_STRING;
     }
 
     private Object decodeNullValue(Object value) {
-        return value == NULL_VALUE ? null : value;
+        if (value == NULL_VALUE_NUMBER || value == NULL_VALUE_STRING) {
+            return null;
+        }
+        return value;
     }
-
 }

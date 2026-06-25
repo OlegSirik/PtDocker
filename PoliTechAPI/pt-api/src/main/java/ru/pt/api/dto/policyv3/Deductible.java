@@ -1,4 +1,4 @@
-package ru.pt.api.dto.process;
+package ru.pt.api.dto.policyv3;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

@@ -35,6 +35,9 @@ public class PolicyIndexEntity {
     @Column(name = "product_code", length = 30)
     private String productCode;
 
+    @Column(name = "document_format", length = 50, nullable = false)
+    private String documentFormat = "INSURANCE_CONTRACT";
+
     @Column(name = "create_date")
     private ZonedDateTime createDate;
 
@@ -145,6 +148,14 @@ public class PolicyIndexEntity {
 
     public void setProductCode(String productCode) {
         this.productCode = productCode;
+    }
+
+    public String getDocumentFormat() {
+        return documentFormat;
+    }
+
+    public void setDocumentFormat(String documentFormat) {
+        this.documentFormat = documentFormat;
     }
 
     public ZonedDateTime getCreateDate() {

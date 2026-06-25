@@ -2,11 +2,10 @@ package ru.pt.db.utils;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import ru.pt.api.dto.db.PolicyIndex;
 import ru.pt.api.dto.db.PolicyStatus;
+import ru.pt.api.dto.policy.StdPolicy;
+import ru.pt.api.dto.policy.StdPolicyFormat;
 import ru.pt.db.entity.PolicyEntity;
 import ru.pt.db.entity.PolicyIndexEntity;
 import ru.pt.domain.process.document.ProcessList;
@@ -18,7 +17,6 @@ import java.util.UUID;
 import static java.time.ZonedDateTime.ofInstant;
 import static java.util.Optional.ofNullable;
 
-import ru.pt.api.dto.process.PolicyDTO;
 import ru.pt.api.security.AuthenticatedUser;
 
 @Component
@@ -40,6 +38,7 @@ public class PolicyMapper {
         dto.setPolicyNumber(entity.getPolicyNr());
         dto.setPolicyStatus(entity.getPolicyStatus());
         dto.setProductCode(entity.getProductCode());
+        dto.setDocumentFormat(entity.getDocumentFormat());
         dto.setClientAccountId(entity.getClientAccountId());
         dto.setUserAccountId(entity.getUserAccountId());
         dto.setDataScope(entity.getDataScope());
@@ -58,6 +57,7 @@ public class PolicyMapper {
         entity.setPolicyNumber(dto.getPolicyNumber());
         entity.setPolicyStatus(dto.getPolicyStatus());
         entity.setProductCode(dto.getProductCode());
+        entity.setDocumentFormat(resolveDocumentFormat(dto.getDocumentFormat()));
         entity.setClientAccountId(dto.getClientAccountId());
         entity.setUserAccountId(dto.getUserAccountId());
         entity.setDataScope(dto.getDataScope());
@@ -66,62 +66,43 @@ public class PolicyMapper {
         return entity;
     }
 
-    private String policyToJson(PolicyDTO policyDTO) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            objectMapper.registerModule(new JavaTimeModule());
-            
-            objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-                        
-            return objectMapper.writeValueAsString(policyDTO);
-            
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public PolicyEntity policyEntityFromDTO(PolicyDTO policy, AuthenticatedUser userData) {
-
+    public PolicyEntity policyEntityFromStdPolicy(StdPolicy policy) {
         ProcessList processList = policy.getProcessList();
         policy.setProcessList(null);
-        String policyJson = policyToJson(policy);
+        String policyJson = policy.toJson();
         policy.setProcessList(processList);
 
         var entity = new PolicyEntity();
         entity.setPolicy(policyJson);
-
         return entity;
     }
 
-    public PolicyIndexEntity policyIndexFromDTO(PolicyDTO policy, AuthenticatedUser userData) {
-        
+    public PolicyIndexEntity policyIndexFromStdPolicy(StdPolicy policy, AuthenticatedUser userData) {
         ProcessList processList = policy.getProcessList();
         String phDigest = processList.getPhDigest();
         String ioDigest = processList.getIoDigest();
-        
+
         var index = new PolicyIndexEntity();
         index.setPublicId(UUID.fromString(policy.getPublicId()));
         index.setPolicyNumber(policy.getPolicyNumber());
         index.setVersionNo(1L);
         index.setProductCode(policy.getProductCode());
+        index.setDocumentFormat(resolveDocumentFormat(policy.getFormat()));
         index.setProductVersionNo(policy.getProductVersion());
         index.setTopVersion(true);
         index.setCreateDate(ZonedDateTime.now());
         index.setIssueDate(policy.getIssueDate());
-        
+
         index.setPaymentDate(null);
         index.setStartDate(policy.getStartDate());
         index.setEndDate(policy.getEndDate());
         index.setTid(userData.getTenantId());
         index.setUserAccountId(userData.getAccountId());
         index.setClientAccountId(userData.getClientId());
-        index.setDataScope(policy.getProcessList().getDataScope());
-        index.setPolicyStatus(PolicyStatus.valueOf(policy.getStatusCode()));
-//        index.setPaymentOrderId(policy.getPaymentOrderId());
+        index.setDataScope(processList.getDataScope());
+        index.setPolicyStatus(resolvePolicyStatus(policy.getStatusCode()));
         index.setInsCompany(policy.getInsurer() != null ? policy.getInsurer().getCode() : null);
-        
+
         index.setPhDigest(phDigest);
         index.setIoDigest(ioDigest);
         index.setUserLogin(userData.getUsername());
@@ -131,5 +112,17 @@ public class PolicyMapper {
         return index;
     }
 
-    
+    private static String resolveDocumentFormat(String format) {
+        if (format == null || format.isBlank()) {
+            return StdPolicyFormat.INSURANCE_CONTRACT;
+        }
+        return format.trim();
+    }
+
+    private static PolicyStatus resolvePolicyStatus(String statusCode) {
+        if (statusCode == null || statusCode.isBlank()) {
+            return PolicyStatus.ISSUED;
+        }
+        return PolicyStatus.valueOf(statusCode.trim());
+    }
 }

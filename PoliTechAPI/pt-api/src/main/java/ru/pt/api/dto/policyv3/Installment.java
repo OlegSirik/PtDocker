@@ -1,4 +1,4 @@
-package ru.pt.api.dto.process;
+package ru.pt.api.dto.policyv3;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

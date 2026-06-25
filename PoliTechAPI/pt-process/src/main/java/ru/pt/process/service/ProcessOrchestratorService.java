@@ -3,10 +3,7 @@ package ru.pt.process.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ch.qos.logback.classic.Level;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
@@ -16,7 +13,11 @@ import org.springframework.stereotype.Service;
 import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.calculator.CalculatorModel;
-import ru.pt.api.dto.commission.CommissionDto;
+import ru.pt.api.dto.policy.Cover;
+import ru.pt.api.dto.policy.Installment;
+import ru.pt.api.dto.policy.InsuredObject;
+import ru.pt.api.dto.policy.Commission;
+import ru.pt.api.dto.policy.StdPolicy;
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.dto.errors.ErrorConstants;
@@ -32,9 +33,6 @@ import ru.pt.api.dto.payment.CreateInstallmentsRequest;
 import ru.pt.api.dto.payment.InstallmentDto;
 import ru.pt.api.dto.payment.PaymentData;
 import ru.pt.api.dto.payment.PaymentType;
-import ru.pt.api.dto.process.Cover;
-import ru.pt.api.dto.process.Installment;
-import ru.pt.api.dto.process.InsuredObject;
 import ru.pt.api.dto.rules.RuleType;
 import ru.pt.api.dto.rules.RuleValidationContext;
 import ru.pt.api.service.rules.RuleValidationService;
@@ -44,20 +42,17 @@ import ru.pt.api.service.auth.AuthorizationService;
 //import ru.pt.api.dto.product.LobModel;
 //import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.service.calculator.CalculatorService;
-import ru.pt.api.service.commission.CommissionService;
 import ru.pt.api.service.db.StorageService;
 import ru.pt.api.service.numbers.NumberGeneratorService;
+import ru.pt.api.service.payment.PaymentService;
 import ru.pt.process.service.PostProcessService;
-import ru.pt.process.service.PreProcessService;
 import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.api.service.process.ValidatorService;
-import ru.pt.api.service.product.LobService;
-import ru.pt.api.service.product.ProductService;
 
 import ru.pt.api.utils.JsonProjection;
+import ru.pt.api.utils.JsonSetter;
 
 import ru.pt.api.security.AuthenticatedUser;
-import ru.pt.api.utils.JsonSetter;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.service.ClientService;
@@ -65,7 +60,6 @@ import ru.pt.domain.model.CalculatorContext;
 import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
-import ru.pt.domain.model.VariableContextImpl2;
 import ru.pt.domain.process.document.ProcessList;
 import ru.pt.domain.process.document.ValidatorType;
 import ru.pt.files.service.email.EmailGateService;
@@ -84,27 +78,16 @@ import java.util.stream.Collectors;
 import ru.pt.api.dto.product.InsuranceCompanyDto;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
-import ru.pt.api.mapper.InsurerMapper;
 
 import java.math.BigDecimal;
 
 import ru.pt.api.dto.addon.PolicyAddOnDto;
-import ru.pt.api.dto.commission.CommissionAction;
-import ru.pt.api.dto.process.PolicyDTO;
-import ru.pt.api.service.product.InsCompanyService;
-import ru.pt.api.service.payment.PaymentService;
+
 @Service
 @RequiredArgsConstructor
 public class ProcessOrchestratorService implements ProcessOrchestrator {
 
     private final Logger logger = LoggerFactory.getLogger(ProcessOrchestratorService.class);
-
-    @PostConstruct
-    void setDebugLogLevel() {
-        if (logger instanceof ch.qos.logback.classic.Logger logbackLogger) {
-            logbackLogger.setLevel(Level.DEBUG);
-        }
-    }
 
     private final ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
     private final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -112,23 +95,18 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     private final StorageService storageService;
     private final SecurityContextHelper securityContextHelper;
     private final NumberGeneratorService numberGeneratorService;
-    private final ProductService productService;
     private final CalculatorService calculatorService;
-    private final LobService lobService;
     private final ValidatorService validatorService;
-    private final PreProcessService preProcessService;
     private final PostProcessService postProcessService;
     private final PaymentClientSwitch paymentClient;
     private final ClientService clientService;
     private final EmailGateService emailGateService;
-    private final TextDocumentView textDocumentView;
     private final AuthorizationService authorizationService;
-    private final CommissionService commissionService;
-    private final InsCompanyService insCompanyService;
     private final PaymentService paymentService;
     private final PolicyAddOnService policyAddOnService;
     private final RuleValidationService ruleValidationService;
     private final RequestContext requestContext;
+    private final PolicyProcessSupport policyProcessSupport;
     /**
      * Get current authenticated user from security context.
      * @return AuthenticatedUser representing the current user
@@ -148,130 +126,68 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 });
     }
 
-    private PolicyDTO policyFromJson(String policy) {
-        logger.debug("Parsing policy from JSON");
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-            
-
-        PolicyDTO policyDTO = null;
-        try {
-            policyDTO = objectMapper.readValue(policy, PolicyDTO.class);
-            logger.debug("Successfully parsed policy. productCode={}", policyDTO.getProductCode());
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to parse policy JSON: {}", e.getMessage(), e);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                400,
-                ErrorConstants.invalidJsonFormat("policy"),
-                ErrorConstants.DOMAIN_POLICY,
-                ErrorConstants.REASON_INVALID_FORMAT,
-                "policy"
-            );
-            throw new BadRequestException(errorModel);
-        }
-        return policyDTO;
-    }
-    private String policyToJson(PolicyDTO policyDTO) {
-        logger.debug("Serializing policy to JSON. policyNumber={}", policyDTO.getPolicyNumber());
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            objectMapper.registerModule(new JavaTimeModule());
-            
-            objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-                        
-            String json = objectMapper.writeValueAsString(policyDTO);
-            logger.debug("Successfully serialized policy to JSON");
-            return json;
-            
-        } catch (JsonProcessingException e) {
-            logger.error("Error serializing PolicyDTO to JSON: {}", e.getMessage(), e);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                500,
-                "Failed to serialize policy to JSON: " + e.getMessage(),
-                ErrorConstants.DOMAIN_POLICY,
-                ErrorConstants.REASON_INTERNAL_ERROR,
-                "policy"
-            );
-            throw new InternalServerErrorException(errorModel);
-        } catch (Exception e) {
-            logger.error("Unexpected error serializing PolicyDTO to JSON: {}", e.getMessage(), e);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                500,
-                "Unexpected error serializing policy: " + e.getMessage(),
-                ErrorConstants.DOMAIN_POLICY,
-                ErrorConstants.REASON_INTERNAL_ERROR,
-                "policy"
-            );
-            throw new InternalServerErrorException(errorModel);
-        }
-    }
-
-    private void calculatePremium(Long tenantId, PolicyDTO policyDTO, ProductVersionModel product, CalculatorContext varCtx) {
+    private void calculatePremium(Long tenantId, StdPolicy stdPolicy, ProductVersionModel product, CalculatorContext varCtx) {
         logger.debug("Calculating premium. productCode={}, packageCode={}", 
-            product.getCode(), policyDTO.getInsuredObjects().get(0).getPackageCode());
+            product.getCode(), stdPolicy.getInsuredObjects().get(0).getPackageCode());
         
-        addMandatoryVars(policyDTO, varCtx);
+        //Map<String, Object> allVars = stdPolicy.getMap();
+
+        addMandatoryVars(stdPolicy, varCtx);
 
         CalculatorModel calculatorModel = calculatorService.getCalculator(
             tenantId,
             product.getId(), 
             product.getVersionNo(), 
-            policyDTO.getInsuredObjects().get(0).getPackageCode());
+            stdPolicy.getInsuredObjects().get(0).getPackageCode());
 
         if (calculatorModel != null) {
             logger.debug("Running calculator for product {} version {} package {}", 
-                product.getId(), product.getVersionNo(), policyDTO.getInsuredObjects().get(0).getPackageCode());
+                product.getId(), product.getVersionNo(), stdPolicy.getInsuredObjects().get(0).getPackageCode());
             calculatorService.runCalculator(
                 tenantId,
                 product.getId(), 
                 product.getVersionNo(), 
-                policyDTO.getInsuredObjects().get(0).getPackageCode(), 
+                stdPolicy.getInsuredObjects().get(0).getPackageCode(), 
                 varCtx );
 
-
-                postProcessService.setCovers(policyDTO.getInsuredObjects().get(0), varCtx);
+                postProcessService.setCovers(stdPolicy.getInsuredObjects().get(0), varCtx);
 
         } else {
             logger.warn("No calculator found for product {} version {} package {}", 
-                product.getId(), product.getVersionNo(), policyDTO.getInsuredObjects().get(0).getPackageCode());
+                product.getId(), product.getVersionNo(), stdPolicy.getInsuredObjects().get(0).getPackageCode());
         }
 
         
-        policyDTO.getProcessList().setVars(varCtx.getValues());
+        //stdPolicy.getProcessList().setVars(varCtx.getValues());
 
         // Если расчет велся по договору без покрытий то можно записать премию в pl_premium
         BigDecimal policyPremium = varCtx.getDecimal("pl_premium");
         if (policyPremium != null && policyPremium.compareTo(BigDecimal.ZERO) > 0) {
-            policyDTO.setPremium(policyPremium);    
+            stdPolicy.setPremium(policyPremium);    
             logger.debug("Premium calculated. policyPremium={}", policyPremium);
         } else {
-            BigDecimal totalPremium = calculateTotalPremium(policyDTO);
-            policyDTO.setPremium(totalPremium);
+            BigDecimal totalPremium = calculateTotalPremium(stdPolicy);
+            stdPolicy.setPremium(totalPremium);
             logger.debug("Premium calculated. totalPremium={}", totalPremium);
         }
-        varCtx.put("pl_premium", policyDTO.getPremium());
 
         BigDecimal sumInsured = varCtx.getDecimal("io_sumInsured");
         if (sumInsured != null ) {
             if ( sumInsured.compareTo(BigDecimal.ZERO) > 0) {
-                policyDTO.getInsuredObjects().get(0).setSumInsured(sumInsured);
+                stdPolicy.getInsuredObjects().get(0).setSumInsured(sumInsured);
                 logger.debug("Sum insured calculated. sumInsured={}", sumInsured);
             } else {
                 throw new UnprocessableEntityException(new ErrorModel(0, "Сумма страхования не соответсвует условиям тарифа.", "Calculator", "sumInsured=0", "sumInsured")); 
             }
         }
-        varCtx.put("io_sumInsured", policyDTO.getInsuredObjects().get(0).getSumInsured());
+        varCtx.put("io_sumInsured", stdPolicy.getInsuredObjects().get(0).getSumInsured());
     }
 
-    private void addMandatoryVars(PolicyDTO policyDTO, CalculatorContext varCtx) {
+    private void addMandatoryVars(StdPolicy stdPolicy, CalculatorContext varCtx) {
         //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
         //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
 
-        List<PvVarDefinition> varDefinitions =varCtx.getDefinitions();
-
-        for (InsuredObject insuredObject : policyDTO.getInsuredObjects()) {
+        for (InsuredObject insuredObject : stdPolicy.getInsuredObjects()) {
             for (Cover cover : insuredObject.getCovers()) {
                 String coverCode = cover.getCover().getCode();
 
@@ -291,366 +207,114 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     }
 
     @Override
-    public String calculate(String policy) {
-        String result = null;
-        logger.info("Starting calculate process");
+    public StdPolicy quote(StdPolicy stdPolicy) {
+        logger.info("Starting quote process");
 
         AuthenticatedUser user = getCurrentUser();
-        // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
-        // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
-//        boolean iAmTester =         authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
+        String dataScope = policyProcessSupport.requireDataScope(user);
+        policyProcessSupport.normalizeForProcess(stdPolicy, new ProcessList(ProcessList.QUOTE), dataScope);
 
-        String dataScope = user.getDataScope();
-
-        if (dataScope == null || dataScope.isEmpty()) {
-            throw new UnprocessableEntityException(new ErrorModel(0, "Data scope is not set", "Calculator", "dataScope=null", "dataScope"));
-        }
-
-        // 1. JSON → DTO contract
-        PolicyDTO policyDTO;
-        try {
-            policyDTO = policyFromJson(policy);
-        } catch (BadRequestException e) {
-            // Re-throw BadRequestException as-is
-            throw e;
-        } catch (Exception e) {
-            logger.error("Invalid policy JSON in calculate: {}", e.getMessage(), e);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                400,
-                ErrorConstants.invalidJsonFormat("calculate request body"),
-                ErrorConstants.DOMAIN_POLICY,
-                ErrorConstants.REASON_INVALID_FORMAT,
-                "requestBody"
-            );
-            throw new BadRequestException(errorModel);
-        }
-
-        policyDTO.setProcessList(new ProcessList(ProcessList.QUOTE));
-        /* Удалить возможный хлам */
-        policyDTO.setPremium(null);
-        policyDTO.setPolicyNumber(null);
-        policyDTO.setProductVersion(0L);
-        policyDTO.setId(null);
-        policyDTO.setStatusCode("NEW");
-
-        if (dataScope.equals("DEV")) {
-            policyDTO.getProcessList().setDataScope(ProcessList.DEV);
-        } else {
-            policyDTO.getProcessList().setDataScope(ProcessList.PROD);
-        }
-
-        // 3. Получить продукт
-        ProductVersionModel product;
-        String productCode = policyDTO.getProductCode();
-        logger.debug("Fetching product. productCode={}", productCode);        
-
-        try {
-            // Для тестера ghjlern d cnfnect дев
-            product = productService.getProductByCode(user.getTenantId(), productCode, dataScope.equals("DEV"));
-            logger.debug("Product fetched. productId={}, versionNo={}", product.getId(), product.getVersionNo());
-        } catch (NotFoundException e) {
-            // Re-throw NotFoundException as-is
-            logger.warn("Invalid product code: {}", productCode);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                422,
-                ErrorConstants.productNotFound(productCode),
-                ErrorConstants.DOMAIN_PRODUCT,
-                ErrorConstants.REASON_NOT_FOUND,
-                "productCode"
-            );
-            throw new UnprocessableEntityException(errorModel);
-        } catch (Exception e) {
-            logger.error("Error fetching product for productCode={}: {}", productCode, e.getMessage(), e);
-            throw e;
-        }
-
+        ProductVersionModel product = policyProcessSupport.loadProduct( user.getTenantId(), stdPolicy.getProductCode(), dataScope);
         authorizationService.check(user, AuthZ.ResourceType.PRODUCT, product.getId().toString(), null, AuthZ.Action.QUOTE);
-        
-        // 4. Применение метаданных продукта
-        try {
-            preProcessService.applyProductMetadata(policyDTO, product);
-        } catch (Exception e) {
-            logger.error("Error applying product metadata for productCode={}: {}", productCode, e.getMessage(), e);
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                422,
-                String.format("Error applying product metadata for productCode '%s': %s", productCode, e.getMessage()),
-                ErrorConstants.DOMAIN_PRODUCT,
-                ErrorConstants.REASON_INTERNAL_ERROR,
-                "productCode"
-            );
-            throw new UnprocessableEntityException(errorModel);
-        }
 
-        // 4.1 Получить страховщика
-        InsuranceCompanyDto insCompany = insCompanyService.get(user.getTenantId(), product.getInsCompanyId());
-        policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
+        policyProcessSupport.applyProductMetadata(user.getTenantId(), stdPolicy, product);
 
-        // 4.5 Проверить желаемую комиссию агента
-        CommissionDto commissionDTO = new CommissionDto();
-        if (policyDTO.getCommission()!=null) { commissionDTO = policyDTO.getCommission(); };
-        // задана %
-        if ( commissionDTO != null && commissionDTO.getRequestedCommissionRate() != null ) {
-            commissionService.checkRequestedCommissionRate(
-                commissionDTO.getRequestedCommissionRate(), 
-                user.getAccountId(),  
-                product.getId(), 
-                CommissionAction.SALE);   // ToDo make enum
-        // Если норм то меняет % на запрашиваемый
-            policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
-        }
-        
-        // 5. DTO → JSON (эталонная модель)
-        String policyJSON = policyToJson(policyDTO);
-        
-        // 6. PvVar → PvVarDefinition
-        List<PvVarDefinition> varDefinitions = 
-            product.getVars().stream()
-                .filter(v -> !v.getIsDeleted())
-                .map(this::toDefinition)
-                .toList();
+        /* Проверка комиссии */
+        Commission commission = policyProcessSupport.resolveCommission(stdPolicy);
+        policyProcessSupport.validateRequestedCommission(stdPolicy, commission, user, product);
 
-        // 7. Runtime-контекст
-        CalculatorContext varCtx = new VariableContextImpl2(policyJSON, varDefinitions);
+        /* Заполнить контекст */
+        CalculatorContext varCtx = policyProcessSupport.initVarContext(stdPolicy, product);
 
-        // 8. Предобработка (если нужно задать значения явно)
-        preProcessService.enrichVariables(varCtx);
-
-        varCtx.warmUp();
-
-        logger.debug("**********************************");
-        varCtx.getDefinitions().forEach(v -> {
-            logger.debug("warmUp: code='{}', value='{}'", v.getCode(), varCtx.get(v.getCode()));
-        });
-        logger.debug("**********************************");
-
-        // 9. Валидация (lazy!)
-        logger.debug("Validating policy for QUOTE");
+        logger.debug("Validating policy for pre QUOTE");
         List<ValidationError> errors = new ArrayList<>();
         errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
         errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
+        if (!errors.isEmpty()) { throwValidationErrors("QUOTE", errors); }
 
-        if (!errors.isEmpty()) {
-            logger.warn("Validation failed for QUOTE. errors={}", errors.size());
-            List<ErrorModel.ErrorDetail> errorDetails = errors.stream()
-                    .map(err -> new ErrorModel.ErrorDetail(
-                        ErrorConstants.DOMAIN_VALIDATION,
-                        ErrorConstants.REASON_VALIDATION_FAILED,
-                        err.getReason(),
-                        err.getPath()
-                    ))
-                    .collect(Collectors.toList());
-            String errorMessage = "Validation failed: " + errors.stream()
-                    .map(ValidationError::getReason)
-                    .collect(Collectors.joining(", "));
-            ErrorModel errorModel = new ErrorModel(400, errorMessage, errorDetails);
-            throw new BadRequestException(errorModel);
-        }
+        /* Рассчитать премию */
+        calculatePremium(user.getTenantId(), stdPolicy, product, varCtx);
 
-        // 4.4 Проверить список опций
-
-        List<PolicyAddOnDto> policyAddOns = policyAddOnService.checkRequestedAddOns(product, varCtx, policyDTO.getOptions());
-        policyDTO.setOptions(policyAddOns);
-
-        // 10. Расчёт премии (lazy!)
-/* 
-        var packageCode = policyDTO.getInsuredObjects().get(0).getPackageCode();
-        var package = product.getPackages().stream()
-            .filter(p -> p.getCode().equals(packageCode))
-            .findFirst()
-            .orElse(null);
-        if (package == null) {
-            throw new NotFoundException("Package not found: " + packageCode);
-        }
-        var calculatorId = package.getCalculatorId();
-        var calculator = calculatorService.getCalculator(user.getTenantId(), product.getId(), product.getVersionNo(), packageCode);
-        if (calculator == null) {
-            throw new NotFoundException("Calculator not found: " + packageCode);
-        }
-*/        
-        calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
-
+        /* Выполнить пост-валидацию */
         List<ValidationError> postQuoteErrors = runCelValidation(RuleType.POST_QUOTE_VALIDATION, user, product, varCtx);
-        if (!postQuoteErrors.isEmpty()) {
-            throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors);
-        }
+        if (!postQuoteErrors.isEmpty()) { throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors); }
 
-        // 11. Перенос результатов в DTO
-        //policyDTO.setPremium(ctx.getDecimal("PREMIUM"));
-        String ph_digest = textDocumentView.get(varCtx, "ph_digest");
-        String io_digest = textDocumentView.get(varCtx, "io_digest");
-        policyDTO.getProcessList().setPhDigest(ph_digest);
-        policyDTO.getProcessList().setIoDigest(io_digest);
+        /* Применить digest'ы */
+        policyProcessSupport.applyDigests(stdPolicy, varCtx);
 
-        // 11. Рассчет КВ
-        commissionDTO = commissionService.calculateCommission(
-            commissionDTO.getRequestedCommissionRate(), 
-            user.getAccountId(), 
-            product.getId(), 
-            CommissionAction.SALE,
-            policyDTO.getPremium()
-        );
+        /* Рассчитать комиссию */
+        commission = policyProcessSupport.calculateCommission(
+                commission, user, product, stdPolicy.getPremium());
+        stdPolicy.setCommission(commission);
 
-        policyDTO.setCommission(commissionDTO);
-        //    requestedCommissionRate, accountId, productId, policy, premium)
+        /* Проверить, что премии не отрицательная */
+        logger.info("Quote process completed. premium={}", stdPolicy.getPremium());
+        policyProcessSupport.assertPositivePremium(stdPolicy);
+        policyProcessSupport.stripProcessListForProdResponse(stdPolicy);
 
-        // 12. Ответ
-        logger.info("Calculate process completed. premium={}", policyDTO.getPremium());
+        /* Добавить кроссы */
+        List<PolicyAddOnDto> policyAddOns = policyAddOnService.checkRequestedAddOns(product, varCtx, stdPolicy.getOptions());
+        stdPolicy.setOptions(policyAddOns);
 
-        if (policyDTO.getPremium() == null || policyDTO.getPremium().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new UnprocessableEntityException(new ErrorModel(0, "Запрос не соответствует условиям тарифа.", "Calculator", "premium=0", "premium")); 
-        }
-
-        if ( policyDTO.getProcessList().getDataScope().equals(ProcessList.PROD)) {
-            policyDTO.setProcessList(null);
-        }    
-        
-        //return result;
-        return policyToJson(policyDTO);
-
+        return stdPolicy;
     }
 
     @Override
-    public String save(String policy) {
+    public StdPolicy save(StdPolicy stdPolicy) {
         logger.info("Starting save process");
+
         AuthenticatedUser user = getCurrentUser();
+        String dataScope = policyProcessSupport.requireDataScope(user);
+        policyProcessSupport.normalizeForProcess(stdPolicy, new ProcessList(ProcessList.SAVE), dataScope);
 
-        // Считать и продавать могут только учетки с ролью ACCOUNT & SUB
-        // Для них расчет идет по продовой версии. Все остальные должны иметь разрешение TESTER, тогда они могут считаться по версии продукта DEV
-        //boolean iAmTester = authorizationService.userHasPermition(user, AuthZ.ResourceType.POLICY, AuthZ.Action.TEST);
-        
-        String dataScope = user.getDataScope();
-        if (dataScope == null || dataScope.isEmpty()) {
-            throw new UnprocessableEntityException(new ErrorModel(0, "Data scope is not set", "Calculator", "dataScope=null", "dataScope"));
-        }
-
-        logger.info("current accoutn - id:{}, name:{}, role:{}", user.getAccountId(), user.getAccountName(), user.getUserRole());
-        // 1. JSON → DTO core
-        PolicyDTO policyDTO = policyFromJson(policy);
-        // Добавить помойку
-        policyDTO.setProcessList(new ProcessList(ProcessList.SAVE));
-        /* Удалить возможный хлам */
-        policyDTO.setPremium(null);
-        policyDTO.setPolicyNumber(null);
-        policyDTO.setProductVersion(0L);
-        policyDTO.setId(null);
-        policyDTO.setStatusCode("NEW");
-        
-        if (dataScope.equals("DEV")) {
-            policyDTO.getProcessList().setDataScope(ProcessList.DEV);
-        } else {
-            policyDTO.getProcessList().setDataScope(ProcessList.PROD);
-        }
-
-        // 3. Продукт
-        String productCode = policyDTO.getProductCode();
-        logger.debug("Fetching product for save. productCode={}", productCode);
-        var product = productService.getProductByCode(user.getTenantId(), productCode, dataScope.equals("DEV"));
-        logger.debug("Product fetched for save. productId={}, versionNo={}", product.getId(), product.getVersionNo());
+        ProductVersionModel product = policyProcessSupport.loadProduct(user.getTenantId(), stdPolicy.getProductCode(), dataScope);
 
         if (dataScope.equals("PROD")) {
             authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.SELL);
             authorizationService.checkProductAction(user, Long.valueOf(product.getId()), AuthZ.Action.SELL);
         }
-        // 4. Применение метаданных продукта
-        preProcessService.applyProductMetadata(policyDTO, product);
 
-        // 4.1 Получить страховщика
-        InsuranceCompanyDto insCompany = insCompanyService.get(user.getTenantId(), product.getInsCompanyId());
-        policyDTO.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
+        policyProcessSupport.applyProductMetadata(user.getTenantId(), stdPolicy, product);
 
-        // 4.5 Проверить желаемую комиссию агента
-        CommissionDto commissionDTO = new CommissionDto();
-        if (policyDTO.getCommission()!=null) { commissionDTO = policyDTO.getCommission(); };
-        // задана %
-        if ( commissionDTO != null && commissionDTO.getRequestedCommissionRate() != null ) {
-            commissionService.checkRequestedCommissionRate(
-                commissionDTO.getRequestedCommissionRate(), 
-                user.getAccountId(), 
-                product.getId(), 
-                CommissionAction.SALE);
-        // Если норм то меняет % на запрашиваемый
-            policyDTO.getCommission().setAppliedCommissionRate(policyDTO.getCommission().getRequestedCommissionRate() );
-        }
+        /* Проверка комиссии */
+        Commission commission = policyProcessSupport.resolveCommission(stdPolicy);
+        policyProcessSupport.validateRequestedCommission(stdPolicy, commission, user, product);
 
+        /* Заполнить контекст */
+        CalculatorContext varCtx = policyProcessSupport.initVarContext(stdPolicy, product);
 
-        // 5. DTO → JSON (эталонная модель)
-        /* обогащенные данные */
-        String policyJSON = policyToJson(policyDTO);
-
-        // 6. PvVar → PvVarDefinition
-        List<PvVarDefinition> varDefinitions = 
-            product.getVars().stream()
-                .filter(v -> !v.getIsDeleted())
-                .map(this::toDefinition)
-                .toList();
-
-        // 7. Runtime-контекст
-        CalculatorContext varCtx = new VariableContextImpl2(policyJSON, varDefinitions);
-
-        // 8. Предобработка (если нужно задать значения явно)
-        preProcessService.enrichVariables(varCtx);
-
-        // 9. Валидация 
         logger.debug("Validating policy for QUOTE and SAVE");
         List<ValidationError> errors = new ArrayList<>();
         errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
         errors.addAll(validatorService.validate(ValidatorType.SAVE, product, varCtx));
-
         errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
         errors.addAll(runCelValidation(RuleType.PRE_SAVE_VALIDATION, user, product, varCtx));
+        if (!errors.isEmpty()) { throwValidationErrors("SAVE", errors);}
 
-        if (!errors.isEmpty()) {
-            logger.warn("Validation failed for SAVE. errors={}", errors.size());
-            // TODO нормальную структуру под ошибки
-            throw new BadRequestException(errors.stream()
-                    .map(ValidationError::getReason)
-                    .collect(Collectors.joining(","))
-            );
-        }
+        calculatePremium(user.getTenantId(), stdPolicy, product, varCtx);
 
-        // 10. Расчёт премии 
-        calculatePremium(user.getTenantId(), policyDTO, product, varCtx);
-  
-        // 11. Рассчет КВ
-        commissionDTO = commissionService.calculateCommission(
-            commissionDTO.getRequestedCommissionRate(), 
-            user.getAccountId(), 
-            product.getId(), 
-            CommissionAction.SALE,
-            policyDTO.getPremium()
-        );
+        /* Выполнить пост-валидацию */
+        List<ValidationError> postQuoteErrors = runCelValidation(RuleType.POST_QUOTE_VALIDATION, user, product, varCtx);
+        if (!postQuoteErrors.isEmpty()) { throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors); }
 
-        policyDTO.setCommission(commissionDTO);
-        
-        // 11. Получить номер полиса
-        //Long id = product.getNumberGeneratorDescription().getId();
+        commission = policyProcessSupport.calculateCommission( commission, user, product, stdPolicy.getPremium());
+        stdPolicy.setCommission(commission);
+
         String nextNumber = numberGeneratorService.getNextNumber(user.getTenantId(), product.getNumberGeneratorDescription(), varCtx);
-        policyDTO.setPolicyNumber(nextNumber);
+        stdPolicy.setPolicyNumber(nextNumber);
         logger.debug("Generated policy number: {}", nextNumber);
 
-        // Доп атрибуты вычислить
-        //String ph_digest = VariablesService.getPhDigest(product.getPhType(), varCtx);
-        //String io_digest = VariablesService.getIoDigest(product.getIoType(), varCtx);
+        /* Применить digest'ы */
+        policyProcessSupport.applyDigests(stdPolicy, varCtx);
 
-        String ph_digest = textDocumentView.get(varCtx, "ph_digest");
-        String io_digest = textDocumentView.get(varCtx, "io_digest");
-
-        logger.debug("Generated digests. phDigest={}, ioDigest={}", ph_digest, io_digest);
-
-        policyDTO.getProcessList().setPhDigest(ph_digest);
-        policyDTO.getProcessList().setIoDigest(io_digest);
-        policyDTO.getProcessList().setInsCompanyCode(insCompany.getCode());
-
-        // 12 Создать график платежей (id полиса нужен до save для FK в pt_payment_installment)
-
+        /* Создать график платежей */
         CreateInstallmentsRequest installmentsRequest = new CreateInstallmentsRequest();
-        
-        installmentsRequest.setAmount(policyDTO.getPremium());
+        installmentsRequest.setAmount(stdPolicy.getPremium());
         installmentsRequest.setCurrency("RUB");
-        if (policyDTO.getStartDate() != null) {
-            installmentsRequest.setStartDate(policyDTO.getStartDate().toLocalDate());
+        if (stdPolicy.getStartDate() != null) {
+            installmentsRequest.setStartDate(stdPolicy.getStartDate().toLocalDate());
         }
-        String installmentType = policyDTO.getInstallmentType();
+        String installmentType = stdPolicy.getInstallmentType();
         if (installmentType == null || installmentType.isBlank()) {
             installmentType = "SINGLE";
         }
@@ -664,28 +328,26 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                     installmentDto.getDueDate(),
                     installmentDto.getAmount()));
         }
-        policyDTO.setInstallments(installments);
+        stdPolicy.setInstallments(installments);
 
-
-        List<ValidationError> postSaveErrors = runCelValidation(RuleType.POST_SAVE_VALIDATION, user, product, varCtx);
+        /* Проверить, что договор не прошел подтверждение */
+        List<ValidationError> postSaveErrors = runCelValidation(RuleType.UNDERWRITING, user, product, varCtx);
         if (!postSaveErrors.isEmpty()) {
-            throwValidationErrors("POST_SAVE_VALIDATION", postSaveErrors);
+            stdPolicy.setStatusCode(PolicyStatus.UNDERWRITING.name());
+        } else {
+            stdPolicy.setStatusCode(PolicyStatus.ISSUED.name());
         }
 
-        // 15. Сохранить договор в хранилище
+        /* Сохранить договор в хранилище */
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
-        storageService.save(policyDTO, getCurrentUser());
+        storageService.save(stdPolicy, getCurrentUser());
 
-        // 16. Ответ, удалить помойку
-        policyDTO.setProcessList(null);
-        String newPolicyJson = policyToJson(policyDTO);
+        stdPolicy.setProcessList(null);
 
-        // TODO async send KID + draft print form
-        // 17. Сохранить график платежей
-        paymentService.save(user.getTenantId(), policyDTO.getId(), installmentsDto);
+        paymentService.save(user.getTenantId(), stdPolicy.getId(), installmentsDto);
 
-        logger.info("Save process completed. policyNumber={}, premium={}", nextNumber, policyDTO.getPremium());
-        return newPolicyJson;
+        logger.info("Save process completed. policyNumber={}, premium={}", nextNumber, stdPolicy.getPremium());
+        return stdPolicy;
     }
 
     @Override
@@ -813,7 +475,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             throw new NotFoundException(errorModel);
         }
         
-        if (policyData.getPolicyStatus() != PolicyStatus.NEW) {
+        if (!policyData.getPolicyStatus().equals(PolicyStatus.QUOTE.name())) {
             logger.warn("Attempt to update policy with bad status. policyNumber={}, status={}", policyNumber, policyData.getPolicyStatus());
             ErrorModel errorModel = ErrorConstants.createErrorModel(
                 422,
@@ -925,9 +587,9 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         return policyData;
     }
 
-    private BigDecimal calculateTotalPremium(PolicyDTO policyDTO) {
+    private BigDecimal calculateTotalPremium(StdPolicy stdPolicy) {
         BigDecimal premium = BigDecimal.ZERO;
-        InsuredObject insObject = policyDTO.getInsuredObjects().get(0);
+        InsuredObject insObject = stdPolicy.getInsuredObjects().get(0);
 
         for (Cover cover : insObject.getCovers()) {
             if (cover.getPremium() != null) {
@@ -937,32 +599,6 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         return premium;
     }
 
-    private boolean checkSumInsured(PolicyDTO policyDTO) {
-        BigDecimal sumInsured = BigDecimal.ZERO;
-        InsuredObject insObject = policyDTO.getInsuredObjects().get(0);
-
-        for (Cover cover : insObject.getCovers()) {
-            if (cover.getSumInsured() != null) {
-                // отрицательная сумма если не сработал какойто валидатор суммы
-                if ( sumInsured.compareTo(cover.getSumInsured()) > 0) {
-                    logger.warn("Sum insured is less than the sum insured of the cover. coverCode={}, sumInsured={}, coverSumInsured={}", cover.getCover().getCode(), sumInsured, cover.getSumInsured());
-                    return false;
-                }
-            }
-        }
-        return true;
-        
-    }
-
-    private PvVarDefinition toDefinition(PvVar var) {
-        return PvVarDefinition.fromPvVar(var); 
-    }
-
-    /**
-     * {@link VariableContext#getValues()} contains only cached vars; CEL needs lazy-resolved product variables.
-     * Numeric values are coerced via {@link VariableContext#getDecimal(String)} so rules like {@code pl_premium > 0}
-     * work even when metadata marks the var as STRING (MAGIC / JSON string).
-     */
     private Map<String, Object> buildCelVariables(VariableContext varCtx) {
         Map<String, Object> variables = new HashMap<>();
         for (PvVarDefinition def : varCtx.getDefinitions()) {

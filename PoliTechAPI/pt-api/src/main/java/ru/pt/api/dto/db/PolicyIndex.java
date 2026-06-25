@@ -17,6 +17,8 @@ public class PolicyIndex {
 
     private String productCode;
 
+    private String documentFormat;
+
     private ZonedDateTime startDate;
 
     private ZonedDateTime endDate;
@@ -78,6 +80,14 @@ public class PolicyIndex {
 
     public void setProductCode(String productCode) {
         this.productCode = productCode;
+    }
+
+    public String getDocumentFormat() {
+        return documentFormat;
+    }
+
+    public void setDocumentFormat(String documentFormat) {
+        this.documentFormat = documentFormat;
     }
 
     public ZonedDateTime getStartDate() {

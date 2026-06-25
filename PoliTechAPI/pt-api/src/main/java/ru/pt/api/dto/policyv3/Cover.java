@@ -1,0 +1,134 @@
+package ru.pt.api.dto.policyv3;
+
+import java.time.ZonedDateTime;
+import java.util.List;
+import ru.pt.api.dto.policyv3.Deductible;
+import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+//@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY) 
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Cover {
+
+    @JsonProperty("cover")
+    private CoverInfo cover;
+
+    @JsonProperty("risk")
+    private List<String> risk;
+
+    @JsonProperty("startDate")
+    private ZonedDateTime startDate;
+
+    @JsonProperty("endDate")
+    private ZonedDateTime endDate;
+
+    @JsonProperty("sumInsured")
+    private BigDecimal sumInsured;
+
+    @JsonProperty("premium")
+    private BigDecimal premium;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("deductible")
+    private Deductible deductible;
+
+    @JsonProperty("limitMin")
+    private BigDecimal limitMin;
+
+    @JsonProperty("limitMax")
+    private BigDecimal limitMax;
+
+    // Constructors
+    public Cover() {}
+
+    public Cover(CoverInfo cover, List<String> risk, ZonedDateTime startDate, ZonedDateTime endDate,
+                 BigDecimal sumInsured, BigDecimal premium, Deductible deductible) {
+        this.cover = cover;
+        this.risk = risk;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.sumInsured = sumInsured;
+        this.premium = premium;
+//        this.deductibleType = deductibleType;
+        this.deductible = deductible;
+    }
+
+    // Getters and Setters
+    public CoverInfo getCover() {
+        return cover;
+    }
+
+    public void setCover(CoverInfo cover) {
+        this.cover = cover;
+    }
+
+    public List<String> getRisk() {
+        return risk;
+    }
+
+    public void setRisk(List<String> risk) {
+        this.risk = risk;
+    }
+
+    public ZonedDateTime getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(ZonedDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public ZonedDateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(ZonedDateTime endDate) {
+        this.endDate = endDate;
+    }
+
+    public BigDecimal getSumInsured() {
+        return sumInsured;
+    }
+
+    public void setSumInsured(BigDecimal sumInsured) {
+        this.sumInsured = sumInsured;
+    }
+
+    public BigDecimal getPremium() {
+        return premium;
+    }
+
+    public void setPremium(BigDecimal premium) {
+        this.premium = premium;
+    }
+
+    public Deductible getDeductible() {
+        return deductible;
+    }
+
+    public void setDeductible(Deductible deductible) {
+        this.deductible = deductible;
+    }
+
+    public BigDecimal getLimitMin() {
+        return limitMin;
+    }
+
+    public void setLimitMin(BigDecimal limitMin) {
+        this.limitMin = limitMin;
+    }
+
+    public BigDecimal getLimitMax() {
+        return limitMax;
+    }
+
+    public void setLimitMax(BigDecimal limitMax) {
+        this.limitMax = limitMax;
+    }
+
+    
+}

@@ -3,6 +3,7 @@ package ru.pt.api.sales;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +15,12 @@ import ru.pt.api.dto.errors.ErrorConstants;
 import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.policy.StdPolicy;
+import ru.pt.api.dto.policy.StdPolicyFormat;
 import ru.pt.api.dto.sales.QuoteDto;
 import ru.pt.api.security.SecuredController;
 import ru.pt.api.service.db.StorageService;
+import ru.pt.api.service.policy.StdPolicyFactory;
 import ru.pt.api.service.process.FileProcessService;
 import ru.pt.api.service.process.ProcessOrchestrator;
 import ru.pt.auth.security.SecurityContextHelper;
@@ -46,16 +50,19 @@ public class SalesController extends SecuredController {
     private static final Logger logger = LoggerFactory.getLogger(SalesController.class);
 
     private final ProcessOrchestrator processOrchestrator;
+    private final StdPolicyFactory stdPolicyFactory;
     private final StorageService dbStorageService;
     private final FileProcessService fileProcessService;
 
     public SalesController(ProcessOrchestrator processOrchestrator,
+                           StdPolicyFactory stdPolicyFactory,
                            SecurityContextHelper securityContextHelper,
                            StorageService dbStorageService,
                            FileProcessService fileProcessService
     ) {
         super(securityContextHelper);
         this.processOrchestrator = processOrchestrator;
+        this.stdPolicyFactory = stdPolicyFactory;
         this.dbStorageService = dbStorageService;
         this.fileProcessService = fileProcessService;
     }
@@ -197,23 +204,13 @@ public class SalesController extends SecuredController {
     public ResponseEntity<String> quoteValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
-        
-        // Validate request body
-        if (requestBody == null || requestBody.trim().isEmpty()) {
-            ErrorModel errorModel = ErrorConstants.createErrorModel(
-                400,
-                ErrorConstants.missingRequiredField("request body"),
-                ErrorConstants.DOMAIN_POLICY,
-                ErrorConstants.REASON_MISSING_REQUIRED,
-                "requestBody"
-            );
-            throw new BadRequestException(errorModel);
-        }
-        
-        String result = processOrchestrator.calculate(requestBody);
+
+        requireRequestBody(requestBody);
+
+        StdPolicy policy = stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, requestBody);
+        String result = processOrchestrator.quote(policy).toJson();
         return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
-
 
     @GetMapping("/quotes")
     public ResponseEntity<List<QuoteDto>> getAccountQuotes(
@@ -228,8 +225,15 @@ public class SalesController extends SecuredController {
     public ResponseEntity<String> saveValidator(
             @PathVariable("tenantCode") String tenantCode,
             @RequestBody String requestBody) {
-        
-        // Validate request body
+
+        requireRequestBody(requestBody);
+
+        StdPolicy policy = stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, requestBody);
+        String result = processOrchestrator.save(policy).toJson();
+        return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
+    }
+
+    private static void requireRequestBody(String requestBody) {
         if (requestBody == null || requestBody.trim().isEmpty()) {
             ErrorModel errorModel = ErrorConstants.createErrorModel(
                 400,
@@ -240,9 +244,6 @@ public class SalesController extends SecuredController {
             );
             throw new BadRequestException(errorModel);
         }
-        
-        String result = processOrchestrator.save(requestBody);
-        return ResponseEntity.ok().contentType(APPLICATION_JSON).body(result);
     }
 
     @GetMapping("/policies/{policy-nr}/printpf/{pf-type}")
@@ -278,4 +279,13 @@ public class SalesController extends SecuredController {
         return fileProcessService.generatePrintForm(policyNr, pfType);
     }
 
+
+    @PostMapping("/v2/quotes")
+    public ResponseEntity<String> quoteV2(
+            @PathVariable("tenantCode") String tenantCode,
+            @RequestBody String requestBody) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .contentType(APPLICATION_JSON)
+                .body("method not implemented");
+    }
 }

@@ -6,15 +6,14 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.exception.UnprocessableEntityException;
-import ru.pt.api.dto.process.Cover;
-import ru.pt.api.dto.process.CoverInfo;
-import ru.pt.api.dto.process.Deductible;
-import ru.pt.api.dto.process.InsuredObject;
+import ru.pt.api.dto.policy.Cover;
+import ru.pt.api.dto.policy.CoverInfo;
+import ru.pt.api.dto.policy.Deductible;
+import ru.pt.api.dto.policy.InsuredObject;
 import ru.pt.api.dto.product.*;
 import ru.pt.process.utils.PeriodUtils;
 import ru.pt.domain.model.ComputedVars;
 import ru.pt.domain.model.VariableContext;
-import ru.pt.api.dto.process.PolicyDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.time.ZoneId;
-
+import ru.pt.api.dto.policy.StdPolicy;
+import ru.pt.domain.process.document.ProcessList;
+import ru.pt.api.dto.db.PolicyStatus;
 import ru.pt.api.service.product.InsCompanyService;
 
 @Component
@@ -37,8 +38,25 @@ public class PreProcessService {
     private static final Logger logger = LoggerFactory.getLogger(PreProcessService.class);
 
     //private final InsCompanyService insCompanyService;
+    public void normalizePolicy(StdPolicy policy, ProcessList processList, String dataScope) {
+        if (dataScope.equals("DEV")) {
+            processList.setDataScope(ProcessList.DEV);
+        } else {
+            processList.setDataScope(ProcessList.PROD);
+        }
 
-    public void normalizePolicyDates(PolicyDTO policy, ProductVersionModel productVersionModel) {
+        policy.setProcessList(processList);
+        policy.setPremium(null);
+        policy.setPolicyNumber(null);
+        policy.setProductVersion(0L);
+        policy.setId(null);
+        if (policy.getStatusCode() == null || !PolicyStatus.ISSUED.name().equals(policy.getStatusCode())) {
+            policy.setStatusCode(PolicyStatus.QUOTE.name());
+        }
+
+    }
+
+    public void normalizePolicyDates(StdPolicy policy, ProductVersionModel productVersionModel) {
         logger.debug("Normalizing policy dates. productCode={}", productVersionModel.getCode());
         
         if (policy.getIssueDate() == null) {
@@ -50,7 +68,7 @@ public class PreProcessService {
         logger.debug("Policy dates normalized. startDate={}, endDate={}", policy.getStartDate(), policy.getEndDate());
     }
 
-    public void applyProductMetadata(PolicyDTO policy, ProductVersionModel productVersionModel) {
+    public void applyProductMetadata(StdPolicy policy, ProductVersionModel productVersionModel) {
         logger.info("Applying product metadata. productCode={}", productVersionModel.getCode());
         
         policy.setProductVersion(productVersionModel.getVersionNo());
@@ -82,8 +100,9 @@ public class PreProcessService {
 */
         // если задано в правилах что объект страхования = страхователь
         if (productVersionModel.getRules().isInsuredEqualsPolicyHolder()) {
-            Map<String, Object> additionalAttributes = policy.getPolicyHolder().getAdditionalAttributes();
-            insuredObject.setAdditionalAttributes(additionalAttributes);
+//            Map<String, Object> additionalAttributes = policy.getPolicyHolder().getAdditionalAttributes();
+//            insuredObject.setAdditionalAttributes(additionalAttributes);
+            policy.copyPhtoInsObject();
         }
 
 
@@ -172,10 +191,10 @@ public class PreProcessService {
             }
         }
 
-        policy.setInsuredObjects(List.of(insuredObject));
+        policy.setInsuredObjects(new ArrayList<>(List.of(insuredObject)));
     }
 
-    public PolicyDTO setActivationDelay(PolicyDTO policy, ProductVersionModel policyVersionModel) {
+    public StdPolicy setActivationDelay(StdPolicy policy, ProductVersionModel policyVersionModel) {
         logger.debug("Setting activation delay. validatorType={}", policyVersionModel.getWaitingPeriod().getValidatorType());
 
         String validatorType = policyVersionModel.getWaitingPeriod().getValidatorType();
@@ -273,7 +292,7 @@ public class PreProcessService {
     }
 
     
-    public PolicyDTO setPolicyTerm(PolicyDTO policy, ProductVersionModel policyVersionModel) {
+    public StdPolicy setPolicyTerm(StdPolicy policy, ProductVersionModel policyVersionModel) {
         logger.debug("Setting policy term. validatorType={}", policyVersionModel.getPolicyTerm().getValidatorType());
         // activationDelay - RANGE LIST NEXT_MONTH
         String validatorType = policyVersionModel.getPolicyTerm().getValidatorType();

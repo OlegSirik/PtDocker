@@ -19,7 +19,7 @@ public interface PolicyAddOnService {
 
     List<PolicyAddOnDto> recommendAddOn(ProductVersionModel product, VariableContext ctx);
 
-    void bookAddOn(UUID policyId, Long addOnId, ProductVersionModel product, VariableContext ctx);
+    void bookAddOn(UUID policyId, Long addOnId, ProductVersionModel product, List<PolicyAddOnDto> requested);
 
     void markPaid(UUID policyId, Long addOnId);
 

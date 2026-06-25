@@ -1,7 +1,5 @@
 package ru.pt.product.service.addon;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,15 +12,16 @@ import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.service.addon.PolicyAddOnService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.AddonPolicyEntity;
-import ru.pt.product.entity.AddonPricelistEntity;
 import ru.pt.product.repository.AddonPolicyRepository;
 import ru.pt.product.repository.AddonPricelistRepository;
 import ru.pt.product.repository.AddonProductRepository;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.domain.model.VariableContext;
 
-import java.math.BigDecimal;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,14 +29,12 @@ import java.util.stream.Collectors;
 public class PolicyAddOnServiceImpl implements PolicyAddOnService {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyAddOnServiceImpl.class);
-    private static final String SERVICES_PATH = "services";
 
     private final AddonProductRepository addonProductRepository;
     private final AddonPricelistRepository pricelistRepository;
     private final AddonPolicyRepository addonPolicyRepository;
     private final PolicyIndexRepository policyIndexRepository;
     private final SecurityContextHelper securityContextHelper;
-    private final ObjectMapper objectMapper;
 
     @Override
     public List<PolicyAddOnDto> checkRequestedAddOns(ProductVersionModel product, VariableContext ctx, List<PolicyAddOnDto> requestedList) {
@@ -50,7 +47,7 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
 
         Map<Long, PolicyAddOnDto> recommendedById = recommendedList.stream()
                 .collect(Collectors.toMap(PolicyAddOnDto::getPricelistId, a -> a, (a, b) -> a));
-        
+
         for (PolicyAddOnDto requested : requestedList) {
             if (Boolean.TRUE.equals(requested.getIsSelected())) {
                 PolicyAddOnDto found = null;
@@ -74,8 +71,6 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
         return recommendedList;
     }
 
-
-
     @Override
     public List<PolicyAddOnDto> recommendAddOn(ProductVersionModel product, VariableContext ctx) {
         log.trace("recommendAddOn productId={}", product != null ? product.getId() : null);
@@ -98,13 +93,9 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
 
         return availablePricelists.stream()
                 .map(p -> PolicyAddOnDto.builder()
-                        //.id(p.getId())
-                        //.pricelistId(p.getId())
                         .code(p.getCode())
                         .name(p.getName())
-                        //.amount(1L)
                         .price(p.getPrice())
-                        //.totalAmount(p.getPrice())
                         .isSelected(false)
                         .build())
                 .collect(Collectors.toList());
@@ -112,11 +103,11 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
 
     @Override
     @Transactional
-    public void bookAddOn(UUID policyId, Long addOnId, ProductVersionModel product, VariableContext ctx) {
+    public void bookAddOn(UUID policyId, Long addOnId, ProductVersionModel product, List<PolicyAddOnDto> requested) {
         log.trace("bookAddOn policyId={}, addOnId={}, productId={}", policyId, addOnId, product != null ? product.getId() : null);
         Long tid = getCurrentTenantId();
-        var listAvailable = recommendAddOn(product, ctx);
-        var listFact = getServicesFromContext(ctx);
+        var listAvailable = recommendAddOn(product, null);
+        var listFact = requested != null ? requested : List.<PolicyAddOnDto>of();
         log.trace("bookAddOn listAvailableSize={}, listFactSize={}", listAvailable.size(), listFact.size());
         for (var fact : listFact) {
             if (Boolean.TRUE.equals(fact.getIsSelected())) {
@@ -185,21 +176,6 @@ public class PolicyAddOnServiceImpl implements PolicyAddOnService {
                 .collect(Collectors.toList());
         log.trace("getPolicyAddOns policyId={}, resultSize={}", policyId, result.size());
         return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<PolicyAddOnDto> getServicesFromContext(VariableContext ctx) {
-        Object val = ctx.getByPath(SERVICES_PATH);
-        log.trace("getServicesFromContext path={}, valPresent={}", SERVICES_PATH, val != null);
-        if (val == null) {
-            return List.of();
-        }
-        if (val instanceof List) {
-            var list = objectMapper.convertValue(val, new TypeReference<List<PolicyAddOnDto>>() {});
-            log.trace("getServicesFromContext converted list size={}", list.size());
-            return list;
-        }
-        return List.of();
     }
 
     private Long getCurrentTenantId() {

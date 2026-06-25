@@ -6,7 +6,7 @@ import ru.pt.api.security.AuthenticatedUser;
 import java.util.List;
 import java.util.UUID;
 
-import ru.pt.api.dto.process.PolicyDTO;
+import ru.pt.api.dto.policy.StdPolicy;
 import ru.pt.api.dto.sales.QuoteDto;
 /**
  * Сервис хранения договоров + методы доступа
@@ -29,7 +29,7 @@ public interface StorageService {
      * @param userData данные о пользователе
      * @return сохраненный договор
      */
-    PolicyData save(PolicyDTO policy, AuthenticatedUser userData);
+    PolicyData save(StdPolicy policy, AuthenticatedUser userData);
     /**
      * Обновить договор целиком
      * @param policyData данные договора для сохранения

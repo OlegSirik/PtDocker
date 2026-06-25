@@ -31,7 +31,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import ru.pt.api.dto.process.PolicyDTO;
+import ru.pt.api.dto.policy.StdPolicy;
 
 @Component
 @RequiredArgsConstructor
@@ -46,7 +46,7 @@ public class DbStorageService implements StorageService {
     private final AuthorizationService authService;
 
     @Override
-    public PolicyData save(PolicyDTO policy, AuthenticatedUser userData) {
+    public PolicyData save(StdPolicy policy, AuthenticatedUser userData) {
 
         Long id = policyRepository.getNextPolicySeqValue();
         policy.setId(id);
@@ -55,14 +55,13 @@ public class DbStorageService implements StorageService {
             policy.setPublicId(UUID.randomUUID().toString());
         }
 
-    
-        var entity = policyMapper.policyEntityFromDTO(policy, userData);
+        var entity = policyMapper.policyEntityFromStdPolicy(policy);
         entity.setId(id);
         entity.setTid(userData.getTenantId());
         entity.setCid(userData.getClientId());
         entity = policyRepository.save(entity);
 
-        var index = policyMapper.policyIndexFromDTO(policy, userData);
+        var index = policyMapper.policyIndexFromStdPolicy(policy, userData);
 
         index.setId(id);
         String idPath = policyIndexRepository.findAccountIdPath(index.getUserAccountId())

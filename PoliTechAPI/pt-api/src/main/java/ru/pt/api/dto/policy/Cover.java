@@ -1,49 +1,23 @@
-package ru.pt.api.dto.process;
+package ru.pt.api.dto.policy;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
-import ru.pt.api.dto.process.Deductible;
-import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-//@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonInclude(JsonInclude.Include.NON_EMPTY) 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Cover {
 
-    @JsonProperty("cover")
     private CoverInfo cover;
-
-    @JsonProperty("risk")
     private List<String> risk;
-
-    @JsonProperty("startDate")
     private ZonedDateTime startDate;
-
-    @JsonProperty("endDate")
     private ZonedDateTime endDate;
-
-    @JsonProperty("sumInsured")
     private BigDecimal sumInsured;
-
-    @JsonProperty("premium")
     private BigDecimal premium;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty("deductible")
     private Deductible deductible;
-
-    @JsonProperty("limitMin")
     private BigDecimal limitMin;
-
-    @JsonProperty("limitMax")
     private BigDecimal limitMax;
 
-    // Constructors
-    public Cover() {}
+    public Cover() {
+    }
 
     public Cover(CoverInfo cover, List<String> risk, ZonedDateTime startDate, ZonedDateTime endDate,
                  BigDecimal sumInsured, BigDecimal premium, Deductible deductible) {
@@ -53,11 +27,9 @@ public class Cover {
         this.endDate = endDate;
         this.sumInsured = sumInsured;
         this.premium = premium;
-//        this.deductibleType = deductibleType;
         this.deductible = deductible;
     }
 
-    // Getters and Setters
     public CoverInfo getCover() {
         return cover;
     }
@@ -129,6 +101,4 @@ public class Cover {
     public void setLimitMax(BigDecimal limitMax) {
         this.limitMax = limitMax;
     }
-
-    
 }

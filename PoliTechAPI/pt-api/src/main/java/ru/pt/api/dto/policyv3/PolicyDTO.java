@@ -1,4 +1,4 @@
-package ru.pt.api.dto.process;
+package ru.pt.api.dto.policyv3;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ru.pt.api.dto.commission.CommissionDto;
 import ru.pt.api.dto.addon.PolicyAddOnDto;
-import ru.pt.api.dto.process.Installment;
+import ru.pt.api.dto.policy.PolicyJsonSupport;
 import ru.pt.domain.process.document.ProcessList;
 
 import java.time.ZonedDateTime;
@@ -18,10 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 
-import lombok.Data;
-
-//@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonInclude(JsonInclude.Include.NON_EMPTY) 
+/**
+ * JSON-модель договора INSURANCE_CONTRACT (wire format v3, API / storage).
+ * Только для десериализации/сериализации JSON до маппинга в {@link ru.pt.api.dto.policy.StdPolicy}.
+ */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PolicyDTO {
 
@@ -58,7 +59,6 @@ public class PolicyDTO {
     @JsonProperty("insuredObjects")
     private List<InsuredObject> insuredObjects;
 
-    // Additional attributes and objects (flexible structure)
     private Map<String, Object> additionalAttributes = new HashMap<>();
 
     @JsonProperty("premium")
@@ -76,16 +76,12 @@ public class PolicyDTO {
     @JsonProperty("statusCode")
     private String statusCode;
 
-//    @JsonProperty("insCompanyId")
-//    private Long insCompanyId;
-
-
     private ProcessList processList;
 
     private CommissionDto commission;
     private List<Installment> installments;
     private List<PolicyAddOnDto> options;
-    // Constructors
+
     private Insurer insurer;
 
     @JsonProperty("policyHolder")
@@ -98,8 +94,7 @@ public class PolicyDTO {
     public PolicyDTO(String draftId, String productCode, String waitingPeriod, String policyTerm,
                   ZonedDateTime startDate, ZonedDateTime endDate, ZonedDateTime issueDate,
                   String installmentType,
-                  List<InsuredObject> insuredObjects
-) {
+                  List<InsuredObject> insuredObjects) {
         this();
         this.draftId = draftId;
         this.productCode = productCode;
@@ -110,10 +105,12 @@ public class PolicyDTO {
         this.issueDate = issueDate;
         this.installmentType = installmentType;
         this.insuredObjects = insuredObjects;
-        //this.insCompanyId = insCompanyId;
     }
 
-    // Getters and Setters
+    public static PolicyDTO fromJson(String json) {
+        return PolicyJsonSupport.fromJson(json);
+    }
+
     public String getDraftId() {
         return draftId;
     }
@@ -130,14 +127,6 @@ public class PolicyDTO {
         this.productCode = productCode;
     }
 
- ///  public Long getInsCompanyId() {
- //           return insCompanyId;
- //   }
-
- //   public void setInsCompanyId(Long insCompanyId) {
- //       this.insCompanyId = insCompanyId;
- //   }
-    
     public String getWaitingPeriod() {
         return waitingPeriod;
     }
@@ -155,8 +144,8 @@ public class PolicyDTO {
     }
 
     public ZonedDateTime getStartDate() {
-            return startDate;
-        }
+        return startDate;
+    }
 
     public void setStartDate(ZonedDateTime startDate) {
         this.startDate = startDate;
@@ -186,7 +175,6 @@ public class PolicyDTO {
         this.installmentType = installmentType;
     }
 
-
     public List<InsuredObject> getInsuredObjects() {
         return insuredObjects;
     }
@@ -212,7 +200,6 @@ public class PolicyDTO {
         this.additionalAttributes = additionalAttributes;
     }
 
-    // Capture unknown properties during deserialization (handles both strings and nested objects)
     @JsonAnySetter
     public void setAdditionalAttribute(String key, Object value) {
         if (additionalAttributes == null) {
@@ -221,7 +208,6 @@ public class PolicyDTO {
         additionalAttributes.put(key, value);
     }
 
-    // Serialize additional attributes back to JSON as top-level properties
     @JsonAnyGetter
     public Map<String, Object> getAdditionalAttributesForJson() {
         if (additionalAttributes == null) {
@@ -280,12 +266,10 @@ public class PolicyDTO {
 
     public CommissionDto getCommission() {
         return this.commission;
-
     }
 
     public void setCommission(CommissionDto commission) {
         this.commission = commission;
-        
     }
 
     public List<PolicyAddOnDto> getOptions() {
@@ -327,5 +311,4 @@ public class PolicyDTO {
     public void setInstallments(List<Installment> installments) {
         this.installments = installments;
     }
-
 }

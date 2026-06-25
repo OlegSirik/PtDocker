@@ -1,28 +1,12 @@
-package ru.pt.api.dto.process;
+package ru.pt.api.dto.policy;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-//@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonInclude(JsonInclude.Include.NON_EMPTY) 
-@JsonIgnoreProperties(ignoreUnknown = true) 
 public class CoverInfo {
 
-    @JsonProperty("code")
     private String code;
-
-    @JsonProperty("option")
     private String option;
-
-    @JsonProperty("description")
     private String description;
 
-    // Constructors
     public CoverInfo() {
-        this.code = null;
-        this.option = null;
-        this.description = null;
     }
 
     public CoverInfo(String code, String option, String description) {
@@ -31,7 +15,6 @@ public class CoverInfo {
         this.description = description;
     }
 
-    // Getters and Setters
     public String getCode() {
         return code;
     }

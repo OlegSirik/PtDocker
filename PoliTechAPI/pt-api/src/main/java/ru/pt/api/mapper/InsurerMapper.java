@@ -1,6 +1,6 @@
 package ru.pt.api.mapper;
 
-import ru.pt.api.dto.process.Insurer;
+import ru.pt.api.dto.policyv3.Insurer;
 import ru.pt.api.dto.product.InsuranceCompanyDto;
 
 /**

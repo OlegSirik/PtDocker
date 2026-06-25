@@ -2,6 +2,7 @@ package ru.pt.api.service.process;
 
 import ru.pt.api.dto.db.PolicyData;
 import ru.pt.api.dto.payment.PaymentData;
+import ru.pt.api.dto.policy.StdPolicy;
 
 import java.util.UUID;
 
@@ -10,18 +11,16 @@ import java.util.UUID;
  */
 public interface ProcessOrchestrator {
     /**
-     * Посчитать премию
-     * @param policy полис
-     * @return полис с премией
+     * Расчёт котировки (формат-независимый вход).
+     * Маппинг wire JSON → {@link StdPolicy} выполняется на уровне API-контроллера.
      */
-    String calculate(String policy);
+    StdPolicy quote(StdPolicy policy);
 
     /**
-     * Посчитать премию и получить номер полиса
-     * @param policy полис
-     * @return полис с премией и номером и графиком платежей
+     * Оформление договора (формат-независимый вход).
+     * Маппинг wire JSON → {@link StdPolicy} выполняется на уровне API-контроллера.
      */
-    String save(String policy);
+    StdPolicy save(StdPolicy policy);
 
     /**
      * Обновить неоплаченный полис

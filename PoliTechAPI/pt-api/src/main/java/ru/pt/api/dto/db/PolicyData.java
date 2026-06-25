@@ -1,5 +1,7 @@
 package ru.pt.api.dto.db;
 
+import ru.pt.api.dto.policy.StdPolicyFormat;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -78,5 +80,16 @@ public class PolicyData {
 
     public void setPolicy(String policy) {
         this.policy = policy;
+    }
+
+    /**
+     * Формат wire-документа из {@link PolicyIndex}; fallback для записей до V11.
+     */
+    public String resolveDocumentFormat() {
+        if (policyIndex != null && policyIndex.getDocumentFormat() != null
+                && !policyIndex.getDocumentFormat().isBlank()) {
+            return policyIndex.getDocumentFormat().trim();
+        }
+        return StdPolicyFormat.INSURANCE_CONTRACT;
     }
 }

@@ -2,7 +2,7 @@ package ru.pt.api.utils;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import ru.pt.api.dto.process.InsuredObject;
+import ru.pt.api.dto.policyv3.InsuredObject;
 import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;

@@ -147,7 +147,7 @@ public class YoukassaPaymentClient implements PaymentClient {
         if (policyByNumber.getPolicyIndex().getStartDate().compareTo(ZonedDateTime.now()) < 0) {
             errors.add(new ValidationError("paymentDate", "can't pay for this policy - it's already started", "startDate"));
         }
-        if (policyByNumber.getPolicyStatus().equals(PolicyStatus.IN_PAYMENT) || policyByNumber.getPolicyStatus().equals(PolicyStatus.PAID)) {
+        if (!policyByNumber.getPolicyStatus().equals(PolicyStatus.ISSUED.name())) {
             errors.add(new ValidationError("policyStatus", "can't pay for this policy, incorrect status", "status"));
         }
 
