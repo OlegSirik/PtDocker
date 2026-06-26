@@ -1,4 +1,3 @@
-SET session_replication_role = 'replica';
 
 INSERT INTO mt_attribute_def VALUES (1216, NULL, 1, 'INSURANCE_CONTRACT', 'policy', 'Договор страхования', '*', 1, 'OBJECT', 'SINGLE', 'OBJECT', '', '*', NULL, 'policy', 'Договор страхования', false);
 
@@ -267,8 +266,6 @@ INSERT INTO mt_attribute_def VALUES (1514, NULL, 1, 'INSURANCE_CONTRACT', 'txt_p
 INSERT INTO mt_attribute_def VALUES (1515, NULL, 1, 'INSURANCE_CONTRACT', 'txt_ph', 'Страхователь', '', 1243, 'TEXT', 'SINGLE', 'STRING', '{{ph_lastName}} {{ph_firstName}} {{ph_middleName}}', 'strings.txt_ph', NULL, NULL, NULL, false);
 INSERT INTO mt_attribute_def VALUES (1516, NULL, 1, 'INSURANCE_CONTRACT', 'txt', 'txt', '', 1243, 'TEXT', 'SINGLE', 'STRING', '', 'strings.txt', NULL, NULL, NULL, false);
 
-
-SET session_replication_role = 'origin';
 
 INSERT INTO pt_insurance_company VALUES (112, 1, 'vsk', 'VSK', 'active', '{}', 'ACTIVE', '2026-04-06 14:59:36.107812', '2026-04-06 14:59:36.107812');
 
