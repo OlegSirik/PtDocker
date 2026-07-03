@@ -14,11 +14,12 @@ import ru.pt.api.dto.llm.LlmUsage;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.llm.TenantLlmRuntimeConfig;
 import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.service.llm.TenantLlmConfigService;
 import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
-import ru.pt.product.llm.configuration.LlmProperties;
 import ru.pt.product.llm.processor.LlmProcessedResult;
 import ru.pt.product.llm.processor.LlmResponseProcessor;
 import ru.pt.product.llm.processor.LlmResponseProcessorRegistry;
@@ -42,7 +43,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
     private final LlmGateway llmGateway;
     private final LlmResponseProcessorRegistry processorRegistry;
     private final LlmExchangeLogService exchangeLogService;
-    private final LlmProperties llmProperties;
+    private final TenantLlmConfigService tenantLlmConfigService;
     private final LlmCalculatorApplicator calculatorApplicator;
 
     public LlmAssistantServiceImpl(
@@ -53,7 +54,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             LlmGateway llmGateway,
             LlmResponseProcessorRegistry processorRegistry,
             LlmExchangeLogService exchangeLogService,
-            LlmProperties llmProperties,
+            TenantLlmConfigService tenantLlmConfigService,
             LlmCalculatorApplicator calculatorApplicator) {
         this.productService = productService;
         this.lobService = lobService;
@@ -62,7 +63,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         this.llmGateway = llmGateway;
         this.processorRegistry = processorRegistry;
         this.exchangeLogService = exchangeLogService;
-        this.llmProperties = llmProperties;
+        this.tenantLlmConfigService = tenantLlmConfigService;
         this.calculatorApplicator = calculatorApplicator;
     }
 
@@ -157,11 +158,13 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             List<LlmMessage> messages,
             Set<String> knownVarCodes,
             AuthenticatedUser user) {
-        String providerCode = resolveProviderCode(request);
+        TenantLlmRuntimeConfig tenantConfig = tenantLlmConfigService.resolve(user.getTenantId());
+        String providerCode = resolveProviderCode(request, tenantConfig);
         LlmCompletionResult completion;
         try {
             completion = llmGateway.complete(
                     new LlmCompletionRequest(messages, null, 0.1, 4096, true),
+                    tenantConfig,
                     request.getProviderCode(),
                     request.getModel());
         } catch (RuntimeException ex) {
@@ -202,11 +205,13 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             Set<String> knownVarCodes,
             List<PvVar> vars,
             AuthenticatedUser user) {
-        String providerCode = resolveLobProviderCode(request);
+        TenantLlmRuntimeConfig tenantConfig = tenantLlmConfigService.resolve(user.getTenantId());
+        String providerCode = resolveLobProviderCode(request, tenantConfig);
         LlmCompletionResult completion;
         try {
             completion = llmGateway.complete(
                     new LlmCompletionRequest(messages, null, 0.1, 4096, true),
+                    tenantConfig,
                     request.getProviderCode(),
                     request.getModel());
         } catch (RuntimeException ex) {
@@ -285,18 +290,18 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         return fallback;
     }
 
-    private String resolveProviderCode(LlmAssistRequest request) {
+    private String resolveProviderCode(LlmAssistRequest request, TenantLlmRuntimeConfig tenantConfig) {
         if (request.getProviderCode() != null && !request.getProviderCode().isBlank()) {
             return request.getProviderCode();
         }
-        return llmProperties.getDefaultProvider();
+        return tenantConfig.getDefaultProvider();
     }
 
-    private String resolveLobProviderCode(LlmLobAssistRequest request) {
+    private String resolveLobProviderCode(LlmLobAssistRequest request, TenantLlmRuntimeConfig tenantConfig) {
         if (request.getProviderCode() != null && !request.getProviderCode().isBlank()) {
             return request.getProviderCode();
         }
-        return llmProperties.getDefaultProvider();
+        return tenantConfig.getDefaultProvider();
     }
 
     private void validateRequest(LlmAssistRequest request) {

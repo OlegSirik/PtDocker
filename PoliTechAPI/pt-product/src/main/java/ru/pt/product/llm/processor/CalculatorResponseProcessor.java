@@ -48,10 +48,12 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
             }
 
             Set<String> responseVarCodes = mergeVarCodes(knownVarCodes, calculator.getVars());
+            Set<String> referencedInFormulas = collectReferencedVarCodes(calculator.getFormulas());
             List<String> unknownVars = findUnknownVars(
                     calculator.getFormulas(),
                     calculator.getCoefficients(),
-                    responseVarCodes);
+                    responseVarCodes,
+                    referencedInFormulas);
             if (!unknownVars.isEmpty()) {
                 String code = unknownVars.getFirst();
                 return LlmProcessedResult.fail(List.of(
@@ -101,7 +103,8 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
     private List<String> findUnknownVars(
             List<FormulaDef> formulas,
             List<CoefficientDef> coefficients,
-            Set<String> knownVarCodes) {
+            Set<String> knownVarCodes,
+            Set<String> referencedInFormulas) {
         Set<String> unknown = new LinkedHashSet<>();
         if (formulas != null) {
             for (FormulaDef formula : formulas) {
@@ -112,11 +115,19 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
                     checkVarCode(line.getExpressionLeft(), knownVarCodes, unknown);
                     checkVarCode(line.getExpressionRight(), knownVarCodes, unknown);
                     checkVarCode(line.getExpressionResult(), knownVarCodes, unknown);
+                    checkVarCode(line.getConditionLeft(), knownVarCodes, unknown);
+                    checkVarCode(line.getConditionRight(), knownVarCodes, unknown);
                 }
             }
         }
         if (coefficients != null) {
             for (CoefficientDef coefficient : coefficients) {
+                String coefficientVarCode = coefficient.getVarCode();
+                if (coefficientVarCode == null
+                        || coefficientVarCode.isBlank()
+                        || !referencedInFormulas.contains(coefficientVarCode)) {
+                    continue;
+                }
                 if (coefficient.getColumns() == null) {
                     continue;
                 }
@@ -126,6 +137,33 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
             }
         }
         return new ArrayList<>(unknown);
+    }
+
+    private static Set<String> collectReferencedVarCodes(List<FormulaDef> formulas) {
+        Set<String> referenced = new LinkedHashSet<>();
+        if (formulas == null) {
+            return referenced;
+        }
+        for (FormulaDef formula : formulas) {
+            if (formula.getLines() == null) {
+                continue;
+            }
+            for (FormulaLine line : formula.getLines()) {
+                addVarCodeReference(line.getExpressionLeft(), referenced);
+                addVarCodeReference(line.getExpressionRight(), referenced);
+                addVarCodeReference(line.getExpressionResult(), referenced);
+                addVarCodeReference(line.getConditionLeft(), referenced);
+                addVarCodeReference(line.getConditionRight(), referenced);
+            }
+        }
+        return referenced;
+    }
+
+    private static void addVarCodeReference(String value, Set<String> referenced) {
+        if (value == null || value.isBlank() || isNumericLiteral(value)) {
+            return;
+        }
+        referenced.add(value);
     }
 
     private void checkVarCode(String value, Set<String> knownVarCodes, Set<String> unknown) {

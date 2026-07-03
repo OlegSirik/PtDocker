@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Calculator } from '../calculator.service';
@@ -51,6 +51,8 @@ export class LlmService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
 
+  private readonly llmHeaders = new HttpHeaders({ 'X-Skip-Global-Error': 'true' });
+
   assist(
     productId: number,
     versionNo: number,
@@ -65,7 +67,7 @@ export class LlmService {
       productId,
       versionNo,
     };
-    return this.http.post<LlmAssistResponse>(url, body);
+    return this.http.post<LlmAssistResponse>(url, body, { headers: this.llmHeaders });
   }
 
   assistLob(
@@ -80,7 +82,7 @@ export class LlmService {
       userMessage,
       lobCode,
     };
-    return this.http.post<LlmAssistResponse>(url, body);
+    return this.http.post<LlmAssistResponse>(url, body, { headers: this.llmHeaders });
   }
 
   assistCalculator(
@@ -99,6 +101,6 @@ export class LlmService {
       packageNo,
       currentCalculator: calculator,
     };
-    return this.http.post<LlmCalculatorAssistResponse>(url, body);
+    return this.http.post<LlmCalculatorAssistResponse>(url, body, { headers: this.llmHeaders });
   }
 }

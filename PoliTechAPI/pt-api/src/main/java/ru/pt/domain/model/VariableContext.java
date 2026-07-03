@@ -21,12 +21,4 @@ public interface VariableContext
 
     List<PvVarDefinition> getDefinitions();
 
-       /**
-     * Выполняет расчёт «пустой магии» — служебную пост‑обработку контекста
-     * после основных вычислений (например, заполнение производных полей).
-     */
-       void calcEmptyMagic();
-    
-    
-
 }

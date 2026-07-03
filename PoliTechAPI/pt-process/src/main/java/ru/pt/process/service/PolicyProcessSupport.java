@@ -24,7 +24,7 @@ import ru.pt.api.service.policy.StdPolicyFactory;
 import ru.pt.api.service.product.InsCompanyService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.domain.model.CalculatorContext;
-import ru.pt.domain.model.TextDocumentView;
+import ru.pt.files.template.TextDocumentView;
 import ru.pt.domain.process.document.ProcessList;
 
 import java.math.BigDecimal;
@@ -158,7 +158,7 @@ public class PolicyProcessSupport {
     public CalculatorContext initVarContext(StdPolicy policy, ProductVersionModel product) {
         policy.setVars(product);
         CalculatorContext varCtx = policy.asCalculatorContext();
-        preProcessService.enrichVariables(varCtx);
+        
         return varCtx;
     }
 
@@ -184,10 +184,14 @@ public class PolicyProcessSupport {
         
     }
 
-    public void stripProcessListForProdResponse(StdPolicy policy) {
-        if (policy.getProcessList() != null
-                && ProcessList.PROD.equals(policy.getProcessList().getDataScope())) {
+    public void stripProcessListForProdResponse(StdPolicy policy, CalculatorContext varCtx) {
+        if (policy.getProcessList() == null) {
+            return;
+        }
+        if (ProcessList.PROD.equals(policy.getProcessList().getDataScope())) {
             policy.setProcessList(null);
+        } else {
+            policy.getProcessList().setVars(varCtx.getValues());
         }
     }
 

@@ -1,0 +1,63 @@
+.llm-config-box {
+  margin-top: 8px;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.llm-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+  }
+}
+
+.llm-banner-warn {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #5d4037;
+}
+
+.section-title {
+  margin: 8px 16px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.toggle-row {
+  padding-top: 8px;
+}
+
+.form-field-wide {
+  flex: 1;
+  min-width: 280px;
+}
+
+.pt-box-title-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  button mat-spinner {
+    display: inline-block;
+    margin-right: 6px;
+  }
+}

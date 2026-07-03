@@ -10,10 +10,14 @@ import ru.pt.domain.model.CalculatorContext;
 import ru.pt.domain.model.VariableContextImpl;
 import ru.pt.domain.process.document.ProcessList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +27,12 @@ import java.util.Map;
  */
 public final class InsuranceContractPolicy implements StdPolicy {
 
+    private static final Logger logger = LoggerFactory.getLogger(InsuranceContractPolicy.class);
+
     private final PolicyDTO contract;
     private String sourceJson;
     private ProductVersionModel productVersion;
-    private VariableContextImpl variableContext;
+    private CalculatorContext variableContext;
 
     /** Кэш domain-view; синхронизируется в {@link PolicyDTO} перед toJson/storage. */
     private List<InsuredObject> insuredObjectsView;
@@ -375,6 +381,8 @@ public final class InsuranceContractPolicy implements StdPolicy {
 
     @Override
     public void copyPhtoInsObject() {
+        // print contract to logger
+        logger.info("Contract: {}", contract);
         List<ru.pt.api.dto.policyv3.InsuredObject> objects = contract.getInsuredObjects();
         if (objects == null || objects.isEmpty()) {
             objects = new ArrayList<>();
@@ -386,8 +394,24 @@ public final class InsuranceContractPolicy implements StdPolicy {
             objects.set(0, insuredObject);
         }
         if (contract.getPolicyHolder() != null) {
-            insuredObject.setAdditionalAttributes(contract.getPolicyHolder().getAdditionalAttributes());
+            Map<String, Object> phAttrs = contract.getPolicyHolder().getAdditionalAttributes();
+            Map<String, Object> additionalAttributes = new HashMap<>();
+            logger.info("PolicyHolder additional attributes: {}", phAttrs);
+            if (phAttrs != null) {
+                for (Map.Entry<String, Object> entry : phAttrs.entrySet()) {
+                    logger.info("Additional attribute: {} = {}", entry.getKey(), entry.getValue());
+                }
+                additionalAttributes.putAll(phAttrs);
+            }
+            logger.info("InsuredObject additional attributes (copy): {}", additionalAttributes);
+            if (!additionalAttributes.isEmpty()) {
+                insuredObject.setAdditionalAttributes(additionalAttributes);
+            }
+            logger.info("insuredObject additional attributes: {}", insuredObject);
         }
+
         insuredObjectsView = null;
+        //rebuildVariableContext();
+
     }
 }

@@ -26,6 +26,8 @@ import { SqlDialogComponent } from './sql-dialog/sql-dialog.component';
 import { TemplateNameDialogComponent } from './template-name-dialog/template-name-dialog.component';
 import { Product, ProductService } from '../../shared/services/product.service';
 import { LlmCalculatorAssistResponse, LlmService } from '../../shared/services/api/llm.service';
+import { TenantLlmConfigService } from '../../shared/services/api/tenant-llm-config.service';
+import { resolveLlmErrorMessage } from '../../shared/utils/llm-error.util';
 import { TextProcessorService } from './text-processor';
 
 import * as XLSX from 'xlsx';
@@ -118,6 +120,7 @@ export class CalculatorComponent implements OnInit {
   textProcessorContent: string = '';
 
   askingLlm = false;
+  llmReady = true;
 
   // Lines table: toggle Текст (varName) / Код (varCode)
   varDisplayMode: 'text' | 'code' = 'text';
@@ -161,10 +164,12 @@ export class CalculatorComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private textProcessorService: TextProcessorService,
-    private llmService: LlmService
+    private llmService: LlmService,
+    private tenantLlmConfigService: TenantLlmConfigService
   ) {}
 
   ngOnInit(): void {
+    this.loadLlmStatus();
     this.loadDropdownOptions();
     
     const productId = this.route.snapshot.paramMap.get('productId');
@@ -1286,6 +1291,17 @@ this.coefficientDataRows = rows;
       .subscribe(() => this.snackBar.open('Данные коэффициентов сохранены', 'Закрыть', { duration: 2000 }));
   }
 
+  private loadLlmStatus(): void {
+    this.tenantLlmConfigService.getConfig().subscribe({
+      next: (view) => {
+        this.llmReady = view.configured && view.enabled;
+      },
+      error: () => {
+        this.llmReady = false;
+      },
+    });
+  }
+
   askLlm(): void {
     const text = (this.calculator.llmText || '').trim();
     if (!text) {
@@ -1308,8 +1324,7 @@ this.coefficientDataRows = rows;
         next: (response) => this.applyLlmResponse(response),
         error: (err) => {
           this.askingLlm = false;
-          const msg = err?.error?.message || err?.message || 'Ошибка вызова LLM';
-          this.snackBar.open(msg, 'Закрыть', { duration: 4000 });
+          this.snackBar.open(resolveLlmErrorMessage(err), 'Закрыть', { duration: 5000 });
         },
       });
   }

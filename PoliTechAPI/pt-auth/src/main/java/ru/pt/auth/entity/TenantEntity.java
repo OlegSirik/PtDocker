@@ -49,6 +49,9 @@ public class TenantEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, String> authConfig = new HashMap<>();
 
+    @Column(name = "llm_config_enc")
+    private String llmConfigEnc;
+
     // constructors, getters, setters
     public TenantEntity() {}
 
@@ -122,6 +125,14 @@ public class TenantEntity {
 
     public void setAuthConfig(Map<String, String> authConfig) {
         this.authConfig = authConfig != null ? authConfig : new HashMap<>();
+    }
+
+    public String getLlmConfigEnc() {
+        return llmConfigEnc;
+    }
+
+    public void setLlmConfigEnc(String llmConfigEnc) {
+        this.llmConfigEnc = llmConfigEnc;
     }
 
     public boolean isSystem() {return SYS_TENANT_CODE.equals(code);}

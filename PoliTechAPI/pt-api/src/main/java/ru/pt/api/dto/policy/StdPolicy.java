@@ -38,12 +38,13 @@ public interface StdPolicy {
     final static String PL_STATUS_CODE = "pl_statusCode";
     final static String PL_PREMIUM = "pl_premium";
     final static String PL_ID = "pl_id";
+    final static String IO_PACKAGE_CODE = "io_packageCode";
 
     Set<String> SYSTEM_VAR_CODES = Set.of(
             PL_PUBLIC_ID, PL_DRAFT_ID, PL_PRODUCT_CODE, PL_PRODUCT_NAME,
             PL_WAITING_PERIOD, PL_POLICY_TERM, PL_START_DATE, PL_END_DATE,
             PL_ISSUE_DATE, PL_INSTALLMENT_TYPE, PL_INSURED_OBJECTS,
-            PL_COMMISSION, PL_COMM_RATE, PL_POLICY_NUMBER, PL_PRODUCT_VERSION, PL_STATUS_CODE, PL_PREMIUM, PL_ID
+            PL_COMMISSION, PL_COMM_RATE, PL_POLICY_NUMBER, PL_PRODUCT_VERSION, PL_STATUS_CODE, PL_PREMIUM, PL_ID, IO_PACKAGE_CODE
     );
 
     String getFormat();

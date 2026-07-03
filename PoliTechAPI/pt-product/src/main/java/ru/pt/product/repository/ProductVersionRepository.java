@@ -18,7 +18,7 @@ public interface ProductVersionRepository extends JpaRepository<ProductVersionEn
 
     @Modifying(clearAutomatically = true)
     @Query("delete from ProductVersionEntity pv where pv.productId = :productId and pv.versionNo = :versionNo and pv.tid = :tId")
-    Long deleteByProductIdAndVersionNo(@Param("tId") Long tId,
+    int deleteByProductIdAndVersionNo(@Param("tId") Long tId,
                                       @Param("productId") Long productId,
                                       @Param("versionNo") Long versionNo);
 

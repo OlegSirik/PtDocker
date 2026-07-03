@@ -13,41 +13,37 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
-import ru.pt.product.llm.configuration.LlmProperties;
+import ru.pt.api.dto.llm.TenantLlmProviderConfig;
 
 import java.time.Duration;
 
 public abstract class OpenAiCompatibleLlmProvider implements LlmProvider {
 
-    private final LlmProperties properties;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate;
+    private final RestTemplateBuilder restTemplateBuilder;
 
     protected OpenAiCompatibleLlmProvider(
-            LlmProperties properties,
             ObjectMapper objectMapper,
             RestTemplateBuilder restTemplateBuilder) {
-        this.properties = properties;
         this.objectMapper = objectMapper;
-        this.restTemplate = restTemplateBuilder
-                .setConnectTimeout(Duration.ofMillis(properties.getTimeoutMs()))
-                .setReadTimeout(Duration.ofMillis(properties.getTimeoutMs()))
-                .build();
+        this.restTemplateBuilder = restTemplateBuilder;
     }
 
     protected abstract String defaultBaseUrl();
 
-    protected abstract String apiKeyConfigHint();
-
     @Override
-    public LlmCompletionResult complete(LlmCompletionRequest request) {
+    public LlmCompletionResult complete(
+            LlmCompletionRequest request,
+            TenantLlmProviderConfig providerConfig,
+            int timeoutMs) {
         String code = getCode();
-        LlmProperties.ProviderConfig cfg = properties.getProviders().get(code);
-        if (cfg == null || cfg.getApiKey() == null || cfg.getApiKey().isBlank()) {
-            throw new BadRequestException("API key is not configured (" + apiKeyConfigHint() + ")");
+        if (providerConfig == null
+                || providerConfig.getApiKey() == null
+                || providerConfig.getApiKey().isBlank()) {
+            throw new BadRequestException("API key is not configured for provider: " + code);
         }
-        String baseUrl = cfg.getBaseUrl() != null && !cfg.getBaseUrl().isBlank()
-                ? cfg.getBaseUrl()
+        String baseUrl = providerConfig.getBaseUrl() != null && !providerConfig.getBaseUrl().isBlank()
+                ? providerConfig.getBaseUrl()
                 : defaultBaseUrl();
         String url = baseUrl.replaceAll("/$", "") + "/chat/completions";
 
@@ -70,7 +66,12 @@ public abstract class OpenAiCompatibleLlmProvider implements LlmProvider {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(cfg.getApiKey());
+        headers.setBearerAuth(providerConfig.getApiKey());
+
+        RestTemplate restTemplate = restTemplateBuilder
+                .setConnectTimeout(Duration.ofMillis(timeoutMs))
+                .setReadTimeout(Duration.ofMillis(timeoutMs))
+                .build();
 
         long started = System.currentTimeMillis();
         try {

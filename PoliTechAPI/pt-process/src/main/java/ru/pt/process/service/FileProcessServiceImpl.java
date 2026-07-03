@@ -11,6 +11,7 @@ import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
+import ru.pt.api.dto.policy.StdPolicy;
 import ru.pt.api.dto.product.PvFile;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.FileProcessService;
@@ -18,8 +19,6 @@ import ru.pt.process.service.PreProcessService;
 import ru.pt.process.service.PostProcessService;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
-import ru.pt.domain.model.PolicyCoreView;
-import ru.pt.domain.model.PvVarDefinition;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.domain.model.VariableContextImpl;
 import ru.pt.product.repository.ProductRepository;
@@ -29,7 +28,6 @@ import ru.pt.api.service.product.ProductService;
 
 import java.util.ArrayList;
 import java.util.List;
-import ru.pt.domain.model.PolicyCoreView;
 
 @Component
 public class FileProcessServiceImpl implements FileProcessService {
@@ -129,26 +127,21 @@ public class FileProcessServiceImpl implements FileProcessService {
             }
         }
 
-        List<PvVarDefinition> varDefinitions =
-                new ArrayList<>(pvVarList.stream().map(this::toDefinition).toList());
         // 7. Runtime-контекст
         VariableContext varCtx = VariableContextImpl.builder()
                 .json(policy.getPolicy())
-                .varDefinitions(varDefinitions)
+                .pvVars(pvVarList)
                 .build();
 
-        varDefinitions.forEach(
-                (def) -> logger.debug("Processing variable: code={}, value={}", def.getCode(), varCtx.get(def.getCode()))
+        pvVarList.forEach(
+                v -> logger.debug("Processing variable: code={}, value={}", v.getVarCode(), varCtx.get(v.getVarCode()))
         );
 
-        logger.debug("########################################################");
         varCtx.getValues().forEach(
                 (code, value) -> logger.debug("Processing variable: code={}, value={}", code, value)
         );
         
-        PolicyCoreView policyView = new PolicyCoreView();
-
-        String packageNo = policyView.getPackageNo(varCtx);
+        String packageNo = varCtx.getString(StdPolicy.IO_PACKAGE_CODE);
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
         Integer fileId = null;
 
@@ -179,10 +172,6 @@ public class FileProcessServiceImpl implements FileProcessService {
         logger.info("Print form resolved. policyNumber={}, fileId={}", policyNumber, fileId);
         return fileService.getFile(fileId, varCtx);
     
-    }
-
-    private PvVarDefinition toDefinition(PvVar var) {
-        return PvVarDefinition.fromPvVar(var);
     }
 
     /**

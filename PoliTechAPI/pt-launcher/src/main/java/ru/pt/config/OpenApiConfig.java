@@ -33,7 +33,7 @@ public class OpenApiConfig {
                     .type(SecurityScheme.Type.APIKEY)
                     .in(SecurityScheme.In.HEADER)
                     .name("X-Api-Key")
-                    .description("API key для маркетплейс интеграции. Резолвится в tenant, client, account"))
+                    .description("API key. Резолвится в tenant, client, account"))
             )
             .info(new Info()
                 .title("PoliTech API")

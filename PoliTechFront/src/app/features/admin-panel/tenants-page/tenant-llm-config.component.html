@@ -1,0 +1,116 @@
+<div class="pt-box llm-config-box">
+  <div class="pt-box-title">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Настройки LLM</h3>
+      <div class="pt-box-title-buttons">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="testConnection()"
+          [disabled]="loading || saving || testing || !configured">
+          @if (testing) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>network_check</mat-icon>
+          }
+          Проверить подключение
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="save()"
+          [disabled]="loading || saving || testing">
+          @if (saving) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          Сохранить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-row">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Загрузка настроек...</span>
+    </div>
+  } @else {
+    @if (!configured) {
+      <div class="llm-banner llm-banner-warn">
+        <mat-icon>info</mat-icon>
+        <span>LLM не настроен. Укажите API key и сохраните — иначе ассистент в правилах и калькуляторе будет недоступен.</span>
+      </div>
+    } @else if (!enabled) {
+      <div class="llm-banner llm-banner-warn">
+        <mat-icon>pause_circle</mat-icon>
+        <span>LLM отключён. Включите переключатель и сохраните для работы ассистента.</span>
+      </div>
+    }
+
+    <div class="pt-box-card">
+      <div class="pt-box-card-row toggle-row">
+        <mat-slide-toggle [(ngModel)]="enabled" color="primary">
+          LLM включён
+        </mat-slide-toggle>
+      </div>
+
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Провайдер</mat-label>
+          <mat-select [(ngModel)]="defaultProvider" (ngModelChange)="onProviderChange()">
+            @for (p of providers; track p.code) {
+              <mat-option [value]="p.code">{{ p.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Модель по умолчанию</mat-label>
+          <input matInput [(ngModel)]="defaultModel" />
+        </mat-form-field>
+      </div>
+
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Timeout (мс)</mat-label>
+          <input matInput type="number" [(ngModel)]="timeoutMs" min="1000" step="1000" />
+        </mat-form-field>
+      </div>
+
+      <h4 class="section-title">Провайдер: {{ defaultProvider }}</h4>
+
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field form-field-wide" appearance="outline">
+          <mat-label>Base URL</mat-label>
+          <input matInput [(ngModel)]="providerBaseUrl" />
+        </mat-form-field>
+      </div>
+
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field form-field-wide" appearance="outline">
+          <mat-label>Модель провайдера</mat-label>
+          <input matInput [(ngModel)]="providerDefaultModel" />
+          <mat-hint>Если пусто — используется модель по умолчанию выше</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field form-field-wide" appearance="outline">
+          <mat-label>API key</mat-label>
+          <input
+            matInput
+            type="password"
+            [(ngModel)]="apiKeyInput"
+            autocomplete="new-password"
+            [placeholder]="apiKeyConfigured ? 'Оставьте пустым, чтобы не менять' : 'sk-...'" />
+          @if (apiKeyConfigured && apiKeyMasked) {
+            <mat-hint>Текущий ключ: {{ apiKeyMasked }}</mat-hint>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+  }
+</div>

@@ -40,7 +40,7 @@ import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.file.FileStorage;
 import ru.pt.auth.repository.TenantRepository;
 import ru.pt.auth.security.SecurityContextHelper;
-import ru.pt.domain.model.TextDocumentView;
+import ru.pt.files.template.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.files.entity.FileEntity;
 import ru.pt.files.repository.FileRepository;
@@ -297,7 +297,6 @@ public class FileServiceImpl implements FileService {
             throw new NotFoundException("File ID is not found");
         }
 
-        keyValues.calcEmptyMagic();
         return process(fileId.longValue(), keyValues);
     }
 

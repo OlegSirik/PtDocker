@@ -14,6 +14,7 @@ import ru.pt.api.dto.auth.Client;
 import ru.pt.api.dto.auth.ClientConfiguration;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.policy.Cover;
+import ru.pt.api.dto.policy.Deductible;
 import ru.pt.api.dto.policy.Installment;
 import ru.pt.api.dto.policy.InsuredObject;
 import ru.pt.api.dto.policy.Commission;
@@ -58,7 +59,6 @@ import ru.pt.auth.security.context.RequestContext;
 import ru.pt.auth.service.ClientService;
 import ru.pt.domain.model.CalculatorContext;
 import ru.pt.domain.model.PvVarDefinition;
-import ru.pt.domain.model.TextDocumentView;
 import ru.pt.domain.model.VariableContext;
 import ru.pt.domain.process.document.ProcessList;
 import ru.pt.domain.process.document.ValidatorType;
@@ -70,6 +70,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,6 +78,9 @@ import java.util.stream.Collectors;
 
 import ru.pt.api.dto.product.InsuranceCompanyDto;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvCover;
+import ru.pt.api.dto.product.PvDeductible;
+import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;
@@ -130,10 +134,29 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         logger.debug("Calculating premium. productCode={}, packageCode={}", 
             product.getCode(), stdPolicy.getInsuredObjects().get(0).getPackageCode());
         
-        //Map<String, Object> allVars = stdPolicy.getMap();
+        // Добавить vars для всех покрытий, для сс, премии и франшизы
+        // Сейчас есть ограничение на 1 объект страхования.
+        if (stdPolicy.getInsuredObjects().size() != 1) {
+            throw new UnprocessableEntityException(new ErrorModel(0, "Сейчас есть ограничение на 1 объект страхования.", "Calculator", "insuredObjects.size()!=1", "insuredObjects.size()")); 
+        }
 
-        addMandatoryVars(stdPolicy, varCtx);
+        for (InsuredObject insuredObject : stdPolicy.getInsuredObjects()) {
+            for (Cover cover : insuredObject.getCovers()) {
+                String coverCode = cover.getCover().getCode();
 
+                PvVarDefinition sumInsuredDef = PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode));
+                PvVarDefinition premiumDef = PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode));
+                PvVarDefinition deductibleNrDef = PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode));
+
+                varCtx.putDefinition(sumInsuredDef);
+                varCtx.putDefinition(premiumDef);
+                varCtx.putDefinition(deductibleNrDef);
+
+                varCtx.put(sumInsuredDef.getCode(), null);
+                varCtx.put(premiumDef.getCode(), null);
+                varCtx.put(deductibleNrDef.getCode(), null);
+            }
+        }
         CalculatorModel calculatorModel = calculatorService.getCalculator(
             tenantId,
             product.getId(), 
@@ -150,7 +173,34 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 stdPolicy.getInsuredObjects().get(0).getPackageCode(), 
                 varCtx );
 
-                postProcessService.setCovers(stdPolicy.getInsuredObjects().get(0), varCtx);
+//                postProcessService.setCovers(stdPolicy.getInsuredObjects().get(0), varCtx);
+        // Добавить vars для всех покрытий, для сс, премии и франшизы
+        for (InsuredObject insuredObject : stdPolicy.getInsuredObjects()) {
+            for (Cover cover : insuredObject.getCovers()) {
+
+                String coverCode = cover.getCover().getCode();
+
+                PvVarDefinition sumInsuredDef = PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode));
+                PvVarDefinition premiumDef = PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode));
+                PvVarDefinition deductibleNrDef = PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode));
+
+                BigDecimal sumInsured = varCtx.getDecimal(sumInsuredDef.getCode());
+                cover.setSumInsured(sumInsured);
+
+                BigDecimal premium = varCtx.getDecimal(premiumDef.getCode());
+                cover.setPremium(premium);
+
+                BigDecimal deductibleNr = varCtx.getDecimal(deductibleNrDef.getCode());
+                if (deductibleNr != null) {
+                    String deductibleText = resolveDeductibleText(
+                            product,
+                            insuredObject.getPackageCode(),
+                            coverCode,
+                            deductibleNr.longValue());
+                    cover.setDeductible(new Deductible(deductibleNr.longValue(), deductibleText));
+                }
+            }
+        }
 
         } else {
             logger.warn("No calculator found for product {} version {} package {}", 
@@ -183,31 +233,10 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         varCtx.put("io_sumInsured", stdPolicy.getInsuredObjects().get(0).getSumInsured());
     }
 
-    private void addMandatoryVars(StdPolicy stdPolicy, CalculatorContext varCtx) {
-        //varDefinitions.add(new PvVarDefinition("pl_product", "productCode", PvVarDefinition.Type.STRING, "IN"));
-        //varDefinitions.add(new PvVarDefinition("pl_package", "packageCode", PvVarDefinition.Type.STRING, "IN"));
-
-        for (InsuredObject insuredObject : stdPolicy.getInsuredObjects()) {
-            for (Cover cover : insuredObject.getCovers()) {
-                String coverCode = cover.getCover().getCode();
-
-                PvVarDefinition sumInsuredDef = PvVarDefinition.fromPvVar(PvVar.varSumInsured(coverCode));
-                PvVarDefinition premiumDef = PvVarDefinition.fromPvVar(PvVar.varPremium(coverCode));
-                PvVarDefinition deductibleNrDef = PvVarDefinition.fromPvVar(PvVar.varDeductibleNr(coverCode));
-
-                varCtx.putDefinition(sumInsuredDef);
-                varCtx.putDefinition(premiumDef);
-                varCtx.putDefinition(deductibleNrDef);
-// ##### TODO
-                varCtx.put(sumInsuredDef.getCode(), null);
-                varCtx.put(premiumDef.getCode(), null);
-                varCtx.put(deductibleNrDef.getCode(), null);
-            }
-        }
-    }
-
     @Override
     public StdPolicy quote(StdPolicy stdPolicy) {
+        long quoteStartedAt = System.nanoTime();
+        long stepStartedAt = quoteStartedAt;
         logger.info("Starting quote process");
 
         AuthenticatedUser user = getCurrentUser();
@@ -216,51 +245,68 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
 
         ProductVersionModel product = policyProcessSupport.loadProduct( user.getTenantId(), stdPolicy.getProductCode(), dataScope);
         authorizationService.check(user, AuthZ.ResourceType.PRODUCT, product.getId().toString(), null, AuthZ.Action.QUOTE);
+        stepStartedAt = logProcessStep("quote", "normalize+loadProduct+auth", stepStartedAt);
 
         policyProcessSupport.applyProductMetadata(user.getTenantId(), stdPolicy, product);
+        stepStartedAt = logProcessStep("quote", "applyProductMetadata", stepStartedAt);
 
         /* Проверка комиссии */
         Commission commission = policyProcessSupport.resolveCommission(stdPolicy);
         policyProcessSupport.validateRequestedCommission(stdPolicy, commission, user, product);
+        stepStartedAt = logProcessStep("quote", "validateCommission", stepStartedAt);
 
         /* Заполнить контекст */
         CalculatorContext varCtx = policyProcessSupport.initVarContext(stdPolicy, product);
+        stepStartedAt = logProcessStep("quote", "initVarContext", stepStartedAt);
 
         logger.debug("Validating policy for pre QUOTE");
         List<ValidationError> errors = new ArrayList<>();
+        stepStartedAt = logProcessStep("quote", "preValidation1", stepStartedAt);
         errors.addAll(validatorService.validate(ValidatorType.QUOTE, product, varCtx));
+        stepStartedAt = logProcessStep("quote", "preValidation2", stepStartedAt);
         errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
         if (!errors.isEmpty()) { throwValidationErrors("QUOTE", errors); }
+        stepStartedAt = logProcessStep("quote", "preValidation3", stepStartedAt);
 
         /* Рассчитать премию */
         calculatePremium(user.getTenantId(), stdPolicy, product, varCtx);
+        stepStartedAt = logProcessStep("quote", "calculatePremium", stepStartedAt);
 
         /* Выполнить пост-валидацию */
         List<ValidationError> postQuoteErrors = runCelValidation(RuleType.POST_QUOTE_VALIDATION, user, product, varCtx);
         if (!postQuoteErrors.isEmpty()) { throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors); }
+        stepStartedAt = logProcessStep("quote", "postQuoteValidation", stepStartedAt);
 
         /* Применить digest'ы */
         policyProcessSupport.applyDigests(stdPolicy, varCtx);
+        stepStartedAt = logProcessStep("quote", "applyDigests", stepStartedAt);
 
         /* Рассчитать комиссию */
         commission = policyProcessSupport.calculateCommission(
                 commission, user, product, stdPolicy.getPremium());
         stdPolicy.setCommission(commission);
+        stepStartedAt = logProcessStep("quote", "calculateCommission", stepStartedAt);
 
         /* Проверить, что премии не отрицательная */
-        logger.info("Quote process completed. premium={}", stdPolicy.getPremium());
         policyProcessSupport.assertPositivePremium(stdPolicy);
-        policyProcessSupport.stripProcessListForProdResponse(stdPolicy);
+        policyProcessSupport.stripProcessListForProdResponse(stdPolicy, varCtx);
+        stepStartedAt = logProcessStep("quote", "stripProcessList", stepStartedAt);
 
         /* Добавить кроссы */
         List<PolicyAddOnDto> policyAddOns = policyAddOnService.checkRequestedAddOns(product, varCtx, stdPolicy.getOptions());
         stdPolicy.setOptions(policyAddOns);
+        logProcessStep("quote", "checkAddOns", stepStartedAt);
+
+        logger.info("Quote process completed. premium={}, totalMs={}",
+                stdPolicy.getPremium(), millisSince(quoteStartedAt));
 
         return stdPolicy;
     }
 
     @Override
     public StdPolicy save(StdPolicy stdPolicy) {
+        long saveStartedAt = System.nanoTime();
+        long stepStartedAt = saveStartedAt;
         logger.info("Starting save process");
 
         AuthenticatedUser user = getCurrentUser();
@@ -273,15 +319,19 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
             authorizationService.check(user, AuthZ.ResourceType.POLICY, null, null, AuthZ.Action.SELL);
             authorizationService.checkProductAction(user, Long.valueOf(product.getId()), AuthZ.Action.SELL);
         }
+        stepStartedAt = logProcessStep("save", "normalize+loadProduct+auth", stepStartedAt);
 
         policyProcessSupport.applyProductMetadata(user.getTenantId(), stdPolicy, product);
+        stepStartedAt = logProcessStep("save", "applyProductMetadata", stepStartedAt);
 
         /* Проверка комиссии */
         Commission commission = policyProcessSupport.resolveCommission(stdPolicy);
         policyProcessSupport.validateRequestedCommission(stdPolicy, commission, user, product);
+        stepStartedAt = logProcessStep("save", "validateCommission", stepStartedAt);
 
         /* Заполнить контекст */
         CalculatorContext varCtx = policyProcessSupport.initVarContext(stdPolicy, product);
+        stepStartedAt = logProcessStep("save", "initVarContext", stepStartedAt);
 
         logger.debug("Validating policy for QUOTE and SAVE");
         List<ValidationError> errors = new ArrayList<>();
@@ -290,22 +340,28 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         errors.addAll(runCelValidation(RuleType.PRE_QUOTE_VALIDATION, user, product, varCtx));
         errors.addAll(runCelValidation(RuleType.PRE_SAVE_VALIDATION, user, product, varCtx));
         if (!errors.isEmpty()) { throwValidationErrors("SAVE", errors);}
+        stepStartedAt = logProcessStep("save", "preValidation", stepStartedAt);
 
         calculatePremium(user.getTenantId(), stdPolicy, product, varCtx);
+        stepStartedAt = logProcessStep("save", "calculatePremium", stepStartedAt);
 
         /* Выполнить пост-валидацию */
         List<ValidationError> postQuoteErrors = runCelValidation(RuleType.POST_QUOTE_VALIDATION, user, product, varCtx);
         if (!postQuoteErrors.isEmpty()) { throwValidationErrors("POST_QUOTE_VALIDATION", postQuoteErrors); }
+        stepStartedAt = logProcessStep("save", "postQuoteValidation", stepStartedAt);
 
         commission = policyProcessSupport.calculateCommission( commission, user, product, stdPolicy.getPremium());
         stdPolicy.setCommission(commission);
+        stepStartedAt = logProcessStep("save", "calculateCommission", stepStartedAt);
 
         String nextNumber = numberGeneratorService.getNextNumber(user.getTenantId(), product.getNumberGeneratorDescription(), varCtx);
         stdPolicy.setPolicyNumber(nextNumber);
         logger.debug("Generated policy number: {}", nextNumber);
+        stepStartedAt = logProcessStep("save", "numberGenerator", stepStartedAt);
 
         /* Применить digest'ы */
         policyProcessSupport.applyDigests(stdPolicy, varCtx);
+        stepStartedAt = logProcessStep("save", "applyDigests", stepStartedAt);
 
         /* Создать график платежей */
         CreateInstallmentsRequest installmentsRequest = new CreateInstallmentsRequest();
@@ -329,6 +385,7 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                     installmentDto.getAmount()));
         }
         stdPolicy.setInstallments(installments);
+        stepStartedAt = logProcessStep("save", "createInstallments", stepStartedAt);
 
         /* Проверить, что договор не прошел подтверждение */
         List<ValidationError> postSaveErrors = runCelValidation(RuleType.UNDERWRITING, user, product, varCtx);
@@ -337,16 +394,21 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         } else {
             stdPolicy.setStatusCode(PolicyStatus.ISSUED.name());
         }
+        stepStartedAt = logProcessStep("save", "underwritingValidation", stepStartedAt);
 
         /* Сохранить договор в хранилище */
         logger.debug("Saving policy to storage. policyNumber={}", nextNumber);
         storageService.save(stdPolicy, getCurrentUser());
+        stepStartedAt = logProcessStep("save", "storageSave", stepStartedAt);
 
         stdPolicy.setProcessList(null);
 
         paymentService.save(user.getTenantId(), stdPolicy.getId(), installmentsDto);
+        logProcessStep("save", "paymentSave", stepStartedAt);
 
-        logger.info("Save process completed. policyNumber={}, premium={}", nextNumber, stdPolicy.getPremium());
+        logger.info("Save process completed. policyNumber={}, premium={}, totalMs={}",
+                nextNumber, stdPolicy.getPremium(), millisSince(saveStartedAt));
+
         return stdPolicy;
     }
 
@@ -587,6 +649,32 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         return policyData;
     }
 
+    private static String resolveDeductibleText(
+            ProductVersionModel product,
+            String packageCode,
+            String coverCode,
+            long deductibleId) {
+        if (product.getPackages() == null) {
+            return null;
+        }
+        for (PvPackage pvPackage : product.getPackages()) {
+            if (!Objects.equals(pvPackage.getCode(), packageCode) || pvPackage.getCovers() == null) {
+                continue;
+            }
+            for (PvCover pvCover : pvPackage.getCovers()) {
+                if (!Objects.equals(pvCover.getCode(), coverCode) || pvCover.getDeductibles() == null) {
+                    continue;
+                }
+                for (PvDeductible pvDeductible : pvCover.getDeductibles()) {
+                    if (pvDeductible.getId() != null && pvDeductible.getId() == deductibleId) {
+                        return pvDeductible.getText();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private BigDecimal calculateTotalPremium(StdPolicy stdPolicy) {
         BigDecimal premium = BigDecimal.ZERO;
         InsuredObject insObject = stdPolicy.getInsuredObjects().get(0);
@@ -613,30 +701,38 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
         String code = def.getCode();
         BigDecimal numeric = varCtx.getDecimal(code);
         if (numeric != null) {
-            return numeric;
+            return numeric.stripTrailingZeros().toPlainString();
         }
         Object raw = varCtx.get(code);
-        if (isEmptyCelValue(raw) && isNumericPolicyVar(code, def)) {
-            return BigDecimal.ZERO;
+        if (raw == null) {
+            if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
+                return null;
+            }
+            if (isNumericPolicyVar(code, def)) {
+                return "0";
+            }
+            return null;
+        }
+        if (raw instanceof String s) {
+            if (s.trim().isEmpty()
+                    && isNumericPolicyVar(code, def)
+                    && def.getSourceType() != PvVarDefinition.VarSourceType.MAGIC) {
+                return "0";
+            }
+            return s;
+        }
+        if (raw instanceof Number) {
+            BigDecimal asDecimal = varCtx.getDecimal(code);
+            return asDecimal != null ? asDecimal.stripTrailingZeros().toPlainString() : raw.toString();
         }
         return raw;
     }
 
     private static Object decodeCelValue(Object value) {
         if (value instanceof BigDecimal bd) {
-            return bd;
+            return bd.stripTrailingZeros().toPlainString();
         }
         return value;
-    }
-
-    private static boolean isEmptyCelValue(Object raw) {
-        if (raw == null) {
-            return true;
-        }
-        if (raw instanceof String s) {
-            return s.trim().isEmpty();
-        }
-        return false;
     }
 
     private static boolean isNumericPolicyVar(String code, PvVarDefinition def) {
@@ -701,5 +797,14 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
                 .map(ValidationError::getReason)
                 .collect(Collectors.joining(", "));
         throw new BadRequestException(new ErrorModel(400, errorMessage, errorDetails));
+    }
+
+    private static long millisSince(long startedAtNanos) {
+        return (System.nanoTime() - startedAtNanos) / 1_000_000L;
+    }
+
+    private long logProcessStep(String process, String step, long stepStartedAtNanos) {
+        logger.info("{} step {}: {} ms", process, step, millisSince(stepStartedAtNanos));
+        return System.nanoTime();
     }
 }

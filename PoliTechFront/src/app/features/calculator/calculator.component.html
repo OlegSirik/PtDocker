@@ -164,6 +164,9 @@
                 placeholder="Опишите логику расчёта премии на естественном языке">
               </textarea>
             </mat-form-field>
+            @if (!llmReady) {
+              <p class="llm-hint">LLM не настроен или отключён. Настройте интеграцию в разделе Tenants → LLM.</p>
+            }
             <div class="llm-actions">
               <button
                 mat-stroked-button

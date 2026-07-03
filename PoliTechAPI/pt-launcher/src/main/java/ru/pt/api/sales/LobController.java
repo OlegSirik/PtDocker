@@ -14,11 +14,12 @@ import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.LobService;
+import ru.pt.api.service.schema.SchemaService;
 import ru.pt.auth.security.UserDetailsImpl;
-import ru.pt.hz.JsonExampleBuilder123;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
  * Контроллер для управления LOB (Line of Business)
@@ -35,10 +36,15 @@ public class LobController {
 
     private final LobService lobService;
     private final LlmAssistantService llmAssistantService;
+    private final SchemaService schemaService;
 
-    public LobController(LobService lobService, LlmAssistantService llmAssistantService) {
+    public LobController(
+            LobService lobService,
+            LlmAssistantService llmAssistantService,
+            SchemaService schemaService) {
         this.lobService = lobService;
         this.llmAssistantService = llmAssistantService;
+        this.schemaService = schemaService;
     }
 
     // get /admin/lobs return id, Code, Name from repository
@@ -115,20 +121,28 @@ public class LobController {
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable("code") String code) {
-                
+
         LobModel lob = lobService.getByCode(user.getTenantId(), code);
         if (lob == null) {
             return ResponseEntity.notFound().build();
         }
-        try {
-            List<String> varPaths = lob.getMpVars() != null
-                    ? lob.getMpVars().stream().map(LobVar::getVarPath).collect(Collectors.toList())
-                    : List.of();
-            String jsonExample = JsonExampleBuilder123.buildJsonExample(varPaths);
-            return ResponseEntity.ok(jsonExample);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+
+        Map<String, String> varValues = new HashMap<>();
+        if (lob.getMpVars() != null) {
+            for (LobVar var : lob.getMpVars()) {
+                if (var.getIsDeleted() || var.getVarCode() == null || var.getVarCode().isBlank()) {
+                    continue;
+                }
+                String value = var.getVarValue();
+                varValues.put(var.getVarCode(), value != null ? value : "");
+            }
         }
+
+        String jsonExample = varValues.isEmpty()
+                ? schemaService.getAttributesMetadataJson(user.getTenantId(), SchemaService.INSURANCE_CONTRACT)
+                : schemaService.getAttributesMetadataJson(
+                        user.getTenantId(), SchemaService.INSURANCE_CONTRACT, varValues);
+        return ResponseEntity.ok(jsonExample);
     }
 
     @PostMapping("/{code}/llm/assist")

@@ -103,12 +103,18 @@ public class CalculatorServiceImpl implements CalculatorService {
         if (found.isEmpty()) {
             return null;
         }
-        
-        String json = found.get().getCalculator();
+
+        CalculatorEntity entity = found.get();
+        String json = entity.getCalculator();
         
         try {
             logger.trace("Parsing calculator JSON for productId={}", productId);
             CalculatorModel model = objectMapper.readValue(json, CalculatorModel.class);
+            model.setId(entity.getId());
+            model.setProductId(entity.getProductId());
+            model.setProductCode(entity.getProductCode());
+            model.setVersionNo(entity.getVersionNo());
+            model.setPackageNo(entity.getPackageNo());
 
             ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
             
@@ -430,7 +436,9 @@ public class CalculatorServiceImpl implements CalculatorService {
         CalculatorModel calcExists = getCalculator(tenantId, productId, versionNo, packageNo); 
         if (calcExists != null) {
             if (!isUpdate) {
-                throw new RuntimeException();
+                throw new BadRequestException(
+                        "Calculator already exists: productId=" + productId
+                                + ", versionNo=" + versionNo + ", packageNo=" + packageNo);
             } else {
                 id = calcExists.getId();
             }
@@ -475,17 +483,25 @@ public class CalculatorServiceImpl implements CalculatorService {
         logger.info("Copying calculator: productId={}, from version={} to version={}, packageNo={}", 
                 productId, versionNo, versionNoTo, packageNo);
 
+        if (Objects.equals(versionNo, versionNoTo)) {
+            logger.warn("Source and target version are the same ({}), skipping copy", versionNo);
+            return;
+        }
+
         CalculatorModel calc = getCalculator(tenantId, productId, versionNo, packageNo);
         if ( calc == null ) {
             logger.warn("Source calculator not found, skipping copy");
             return;
         }
 
-        calc.setVersionNo(versionNoTo);
         Long calcIdFrom = calc.getId();
+        calc.setVersionNo(versionNoTo);
         calc.setId(null);
 
-        CalculatorModel newCalc = saveCalculator(tenantId, calc, false);
+        boolean targetExists = calculatorRepository
+                .findByKeys(tenantId, productId, versionNoTo, packageNo)
+                .isPresent();
+        CalculatorModel newCalc = saveCalculator(tenantId, calc, targetExists);
         logger.info("Calculator copied successfully to version {}", versionNoTo);
 
         if (calcIdFrom == null || newCalc.getId() == null) {
@@ -724,28 +740,16 @@ public class CalculatorServiceImpl implements CalculatorService {
             return;
         }
 
-        
-//        logger.debug("Calculator loaded: {} variables, {} formulas, {} coefficients", model.getVars().size(), model.getFormulas().size(), model.getCoefficients().size());
-
         // Добавить переменные калькулятора в контекст.
         model.getVars().forEach(v -> {
             PvVarDefinition varDef = PvVarDefinition.fromPvVar(v);
             ctx.putDefinition(varDef);
-
 
             if (v.getVarType().equals("CONST")) {
                 ctx.put(v.getVarCode(), new BigDecimal(v.getVarValue()));
             };
         });
 
-
-        /*         
-        System.out.println("=== Variable Definitions ===");
-        ctx.getDefinitions().forEach(def -> {
-            System.out.println("varCode: " + def.getCode() + ", varDataType: " + def.getType());
-        });
-        System.out.println("===========================");
-*/
         // Получить формулу калькулятора. Она у пакета одна
         FormulaDef formula = model.getFormulas().getFirst();
         logger.debug("Executing formula: {}", formula.getVarCode());

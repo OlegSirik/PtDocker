@@ -66,7 +66,8 @@ public class CelRuleEngine {
     public boolean evaluate(String expression, Map<String, Object> variables)
             throws CelValidationException, CelEvaluationException {
         Map<String, Object> ctx = variables != null ? variables : Map.of();
-        Set<String> keys = ctx.keySet();
+        Set<String> keys = new HashSet<>(ctx.keySet());
+        keys.addAll(extractVariableNames(expression));
         CelAbstractSyntaxTree ast = compile(expression, keys);
         CelRuntime runtime = newRuntimeBuilder(ctx).build();
         CelRuntime.Program program = runtime.createProgram(ast);

@@ -50,7 +50,7 @@ export class RulesPageComponent implements OnInit {
     'PRE_QUOTE_VALIDATION',
     'POST_QUOTE_VALIDATION',
     'PRE_SAVE_VALIDATION',
-    'POST_SAVE_VALIDATION',
+//    'POST_SAVE_VALIDATION',
   ];
   readonly scopeTypes: RuleScopeType[] = ['PRODUCT', 'LOB', 'TENANT', 'CLIENT'];
 

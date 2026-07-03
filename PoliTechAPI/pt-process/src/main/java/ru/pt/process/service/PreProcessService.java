@@ -73,10 +73,6 @@ public class PreProcessService {
         
         policy.setProductVersion(productVersionModel.getVersionNo());
         policy.setProductName(productVersionModel.getName());
-// TODU setProductFormat
-        //InsuranceCompanyDto insCompany = insCompanyService.get(user.getTenantId(), productVersionModel.getInsCompanyId());
-        //document.setInsurer(InsurerMapper.fromInsuranceCompany(insCompany));
-        //insCompany2context(insCompany, varCtx);
 
 
         normalizePolicyDates( policy,  productVersionModel);
@@ -91,20 +87,6 @@ public class PreProcessService {
         }
 
         var insuredObject = insuredObjects.get(0);
-/* 
-        if (insuredObject == null || insuredObject.getCovers() == null) {
-            var emptyInsuredObject = new InsuredObject();
-            emptyInsuredObject.setCovers(new ArrayList<>());
-            insuredObject = emptyInsuredObject;
-        }
-*/
-        // если задано в правилах что объект страхования = страхователь
-        if (productVersionModel.getRules().isInsuredEqualsPolicyHolder()) {
-//            Map<String, Object> additionalAttributes = policy.getPolicyHolder().getAdditionalAttributes();
-//            insuredObject.setAdditionalAttributes(additionalAttributes);
-            policy.copyPhtoInsObject();
-        }
-
 
         String inPackageNo;
         if (insuredObject.getPackageCode() == null) {
@@ -192,6 +174,12 @@ public class PreProcessService {
         }
 
         policy.setInsuredObjects(new ArrayList<>(List.of(insuredObject)));
+
+
+        // если задано в правилах что объект страхования = страхователь
+        if (productVersionModel.getRules().isInsuredEqualsPolicyHolder()) {
+            policy.copyPhtoInsObject();
+        }
     }
 
     public StdPolicy setActivationDelay(StdPolicy policy, ProductVersionModel policyVersionModel) {
@@ -442,13 +430,5 @@ public class PreProcessService {
         return null;
     }
  
-    public void enrichVariables(VariableContext ctx) {
-    //    ComputedVars.getMagicValue(ctx, "ph_age_issue");
-    //    ComputedVars.getMagicValue(ctx, "ph_age_end" );
-    //    ComputedVars.getMagicValue(ctx, "io_age_issue" );
-    //    ComputedVars.getMagicValue(ctx, "io_age_end" );
-    //    ComputedVars.getMagicValue(ctx, "pl_TermMonths" );
-    //    ComputedVars.getMagicValue(ctx, "pl_TermDays" );
-    }
 
 }

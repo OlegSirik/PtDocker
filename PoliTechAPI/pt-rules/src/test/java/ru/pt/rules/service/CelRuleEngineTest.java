@@ -13,6 +13,17 @@ class CelRuleEngineTest {
     private final CelRuleEngine engine = new CelRuleEngine();
 
     @Test
+    void evaluate_magicAgeAsBigDecimal_passes() throws Exception {
+        assertTrue(engine.evaluate("io_age_issue <= 40", Map.of("io_age_issue", new java.math.BigDecimal("25"))));
+        assertTrue(engine.evaluate("num(\"io_age_issue\") > 18", Map.of("io_age_issue", new java.math.BigDecimal("25"))));
+    }
+
+    @Test
+    void evaluate_expressionVarNotInMapButInCondition_compiles() throws Exception {
+        assertFalse(engine.evaluate("io_age_issue > 18", Map.of("io_age_issue", "17")));
+    }
+
+    @Test
     void evaluate_ageLimit_passes() throws Exception {
         assertTrue(engine.evaluate("io_age <= 75", Map.of("io_age", 30)));
     }

@@ -20,6 +20,7 @@ import { LoginService, Login } from '../../../shared/services/api/logins.service
 import { TenantAdminService, TenantAdmin } from '../../../shared/services/api/tenant-admins.service';
 import { AuthService as RestAuthService, User } from '../../../shared/services/auth.service';
 import { LoginDialogComponent } from '../components/login-dialog/login-dialog.component';
+import { TenantLlmConfigComponent } from './tenant-llm-config.component';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -40,7 +41,8 @@ import { take } from 'rxjs/operators';
     MatOptionModule,
     MatPaginatorModule,
     MatChip,
-    DatePipe
+    DatePipe,
+    TenantLlmConfigComponent
   ],
   templateUrl: './tenants-page.component.html',
   styleUrls: ['./tenants-page.component.scss']

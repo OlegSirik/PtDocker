@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.jayway.jsonpath.JsonPath;
 
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvVar;
 
 public final class VariableContextImpl implements CalculatorContext {
 
@@ -38,6 +39,7 @@ public final class VariableContextImpl implements CalculatorContext {
     public static final class Builder {
         private String json;
         private ProductVersionModel productVersion;
+        private List<PvVar> pvVars;
         private List<PvVarDefinition> varDefinitions;
 
         public Builder json(String json) {
@@ -50,33 +52,62 @@ public final class VariableContextImpl implements CalculatorContext {
             return this;
         }
 
+        /** Явный список переменных продукта/LOB; маппинг в {@link PvVarDefinition} внутри {@link #build()}. */
+        public Builder pvVars(List<PvVar> pvVars) {
+            this.pvVars = pvVars;
+            return this;
+        }
+
         public Builder varDefinitions(List<PvVarDefinition> varDefinitions) {
             this.varDefinitions = varDefinitions;
             return this;
         }
 
         public VariableContextImpl build() {
+            long startedAtNanos = System.nanoTime();
             if (json == null) {
                 throw new IllegalArgumentException("json is required");
             }
             Object jsonDocument = JsonPath.parse(json).json();
+            long jsonParsedAtNanos = System.nanoTime();
             List<PvVarDefinition> defs = resolveDefinitions();
             VariableContextImpl ctx = new VariableContextImpl(toDefinitionMap(defs));
 
+            int materializedCount = 0;
             for (PvVarDefinition def : defs) {
                 if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
                     continue;
                 }
-                Object value = ctx.resolveFromJson(jsonDocument, def);
-                ctx.putValueInternal(def.getCode(), value);
-                logger.trace("materialize: code='{}', value='{}'", def.getCode(), value);
+                if (def.getSourceType() == PvVarDefinition.VarSourceType.IN) {
+                    Object value = ctx.resolveFromJson(jsonDocument, def);
+                    ctx.putValueInternal(def.getCode(), value);
+                    materializedCount++;
+                    logger.trace("materialize: code='{}', value='{}'", def.getCode(), value);
+                }
             }
-            ctx.calcEmptyMagic();
+
+            long finishedAtNanos = System.nanoTime();
+            logger.debug(
+                    "VariableContext build: total={} ms, jsonParse={} ms, materialize={} ms, definitions={}, materialized={}",
+                    nanosToMillis(finishedAtNanos - startedAtNanos),
+                    nanosToMillis(jsonParsedAtNanos - startedAtNanos),
+                    nanosToMillis(finishedAtNanos - jsonParsedAtNanos),
+                    defs.size(),
+                    materializedCount);
 
             return ctx;
         }
 
+        private static long nanosToMillis(long nanos) {
+            return nanos / 1_000_000L;
+        }
+
         private List<PvVarDefinition> resolveDefinitions() {
+            if (pvVars != null) {
+                return pvVars.stream()
+                        .map(PvVarDefinition::fromPvVar)
+                        .toList();
+            }
             if (varDefinitions != null) {
                 return varDefinitions;
             }
@@ -99,6 +130,7 @@ public final class VariableContextImpl implements CalculatorContext {
     }
 
     public Map<String, Object> getValues() {
+        materializeMagicVars();
         Map<String, Object> decoded = new HashMap<>();
         values.forEach((k, v) -> decoded.put(k, decodeNullValue(v)));
         return decoded;
@@ -166,14 +198,10 @@ public final class VariableContextImpl implements CalculatorContext {
         return new ArrayList<>(definitions.values());
     }
 
-    @Override
-    public void calcEmptyMagic() {
+    private void materializeMagicVars() {
         definitions.values().stream()
                 .filter(def -> def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC)
-                .forEach(def -> {
-                    Object value = ComputedVars.getMagicValue(this, def.getCode());
-                    putValueInternal(def.getCode(), value);
-                });
+                .forEach(def -> get(def.getCode()));
     }
 
     @Override
@@ -181,14 +209,15 @@ public final class VariableContextImpl implements CalculatorContext {
         if (!(key instanceof String code)) {
             return null;
         }
+        PvVarDefinition def = definitions.get(code);
+        if (def != null && def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
+            Object value = ComputedVars.getMagicValue(this, code);
+            putValueInternal(code, value);
+            return value;
+        }
+
         Object cached = values.get(code);
         if (cached == null && !values.containsKey(code)) {
-            PvVarDefinition def = definitions.get(code);
-            if (def != null && def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
-                Object magic = ComputedVars.getMagicValue(this, code);
-                putValueInternal(code, magic);
-                return magic;
-            }
             return null;
         }
         return decodeNullValue(cached);

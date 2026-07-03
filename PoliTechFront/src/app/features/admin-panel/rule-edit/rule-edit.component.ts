@@ -14,6 +14,8 @@ import {
   RuleType,
 } from '../../../shared/services/api/rules.service';
 import { LlmAssistResponse, LlmRuleDraft, LlmService } from '../../../shared/services/api/llm.service';
+import { TenantLlmConfigService } from '../../../shared/services/api/tenant-llm-config.service';
+import { resolveLlmErrorMessage } from '../../../shared/utils/llm-error.util';
 import { ProductsService, ProductList } from '../../../shared/services/products.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { Observable, of } from 'rxjs';
@@ -37,6 +39,7 @@ import { catchError, map } from 'rxjs/operators';
 export class RuleEditComponent implements OnInit {
   private rulesService = inject(RulesService);
   private llmService = inject(LlmService);
+  private tenantLlmConfigService = inject(TenantLlmConfigService);
   private productsService = inject(ProductsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -60,6 +63,7 @@ export class RuleEditComponent implements OnInit {
   isNew = true;
   saving = false;
   askingLlm = false;
+  llmReady = true;
   scopeLocked = false;
   ruleTypeLocked = false;
 
@@ -74,18 +78,19 @@ export class RuleEditComponent implements OnInit {
     'PRE_QUOTE_VALIDATION',
     'POST_QUOTE_VALIDATION',
     'PRE_SAVE_VALIDATION',
-    'POST_SAVE_VALIDATION',
-    'QUOTE_CALCULATION',
+//    'POST_SAVE_VALIDATION',
+//    'QUOTE_CALCULATION',
     'UNDERWRITING',
-    'WORKFLOW',
-    'CROSS_SELL',
-    'FRAUD_CHECK',
-    'ISSUANCE',
-    'RENEWAL',
+//    'WORKFLOW',
+//    'CROSS_SELL',
+//    'FRAUD_CHECK',
+//    'ISSUANCE',
+//    'RENEWAL',
   ];
   readonly scopeTypes: RuleScopeType[] = ['PRODUCT', 'LOB', 'TENANT', 'CLIENT'];
 
   ngOnInit(): void {
+    this.loadLlmStatus();
     this.applyNavigationContext();
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -173,6 +178,17 @@ export class RuleEditComponent implements OnInit {
     });
   }
 
+  private loadLlmStatus(): void {
+    this.tenantLlmConfigService.getConfig().subscribe({
+      next: (view) => {
+        this.llmReady = view.configured && view.enabled;
+      },
+      error: () => {
+        this.llmReady = false;
+      },
+    });
+  }
+
   askLlm(): void {
     const text = (this.rule.llmText || '').trim();
     if (!text) {
@@ -197,8 +213,7 @@ export class RuleEditComponent implements OnInit {
         next: (response) => this.applyLlmResponse(response),
         error: (err) => {
           this.askingLlm = false;
-          const msg = err?.error?.message || err?.message || 'Ошибка вызова LLM';
-          this.snack.open(msg, 'OK', { duration: 4000 });
+          this.snack.open(resolveLlmErrorMessage(err), 'OK', { duration: 5000 });
         },
       });
       return;
@@ -213,8 +228,7 @@ export class RuleEditComponent implements OnInit {
           next: (response) => this.applyLlmResponse(response),
           error: (err) => {
             this.askingLlm = false;
-            const msg = err?.error?.message || err?.message || 'Ошибка вызова LLM';
-            this.snack.open(msg, 'OK', { duration: 4000 });
+            this.snack.open(resolveLlmErrorMessage(err), 'OK', { duration: 5000 });
           },
         });
       },

@@ -293,6 +293,10 @@ POST /api/v1/products/llm/assist
 
 ## 9. Провайдеры
 
+> **Конфигурация (to-be):** только **per tenant**, зашифровано в `acc_tenants.llm_config_enc`.  
+> Platform default **не используется** — нет настроек tenant → ошибка «LLM недоступен».  
+> Предпроект: [llm-tenant-config-preproject.md](./llm-tenant-config-preproject.md).
+
 | Provider | URL | Модель по умолчанию |
 |----------|-----|---------------------|
 | **routerai** (default) | `https://routerai.ru/api/v1/chat/completions` | `deepseek/deepseek-v4-flash` |
@@ -316,15 +320,7 @@ curl -X POST "https://routerai.ru/api/v1/chat/completions" \
 
 `OpenAiCompatibleLlmProvider` формирует тот же запрос (+ `temperature`, `max_tokens`, `response_format` для JSON-ответа правил).
 
-```yaml
-app.llm:
-  default-provider: routerai
-  providers:
-    routerai:
-      base-url: https://routerai.ru/api/v1
-      api-key: ${ROUTERAI_API_KEY:}
-      default-model: deepseek/deepseek-v4-flash
-```
+**As-is (будет удалено):** конфиг в `application.yml`. **To-be:** только tenant `llm_config_enc` — см. [llm-tenant-config-preproject.md](./llm-tenant-config-preproject.md).
 
 ---
 
@@ -332,7 +328,6 @@ app.llm:
 
 ```
 ru.pt.product.llm
-  configuration/LlmProperties.java
   provider/...
   prompt/
     PromptAssembler.java

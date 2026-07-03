@@ -256,13 +256,4 @@ public class PvVar {
         , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMax", "1001");
     }
 
-    // Policy
-    public static final String POLICY_NUMBER = "pl_policy_nr";
-    public static final String POLICY_STATUS = "pl_status";
-    public static final String POLICY_VERSION = "pl_version";
-
-    // Product
-    public static final String PRODUCT_CODE = "pl_product_code";
-    public static final String PRODUCT_VERSION = "pl_product_version";
-
 }

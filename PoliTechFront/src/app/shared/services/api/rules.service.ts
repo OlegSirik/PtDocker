@@ -11,14 +11,14 @@ export type RuleType =
   | 'PRE_QUOTE_VALIDATION'
   | 'POST_QUOTE_VALIDATION'
   | 'PRE_SAVE_VALIDATION'
-  | 'POST_SAVE_VALIDATION'
-  | 'QUOTE_CALCULATION'
+//  | 'POST_SAVE_VALIDATION'
+//  | 'QUOTE_CALCULATION'
   | 'UNDERWRITING'
-  | 'WORKFLOW'
-  | 'CROSS_SELL'
-  | 'FRAUD_CHECK'
-  | 'ISSUANCE'
-  | 'RENEWAL';
+//  | 'WORKFLOW'
+//  | 'CROSS_SELL'
+//  | 'FRAUD_CHECK'
+//  | 'ISSUANCE'
+//  | 'RENEWAL';
 
 export interface Rule {
   id?: number;

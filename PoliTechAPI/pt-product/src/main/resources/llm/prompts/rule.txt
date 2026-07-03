@@ -28,13 +28,18 @@
   - переменные с типом NUMBER — ТОЛЬКО через num("varCode")
   - переменные с типом STRING — ТОЛЬКО через str("varCode")
   - НЕ используй голые идентификаторы (pl_premium, ph_gender и т.д.) — только num() / str()
+  - перед ЛЮБЫМ сравнением NUMBER (>, <, >=, <=) сначала проверь, что значение не null:
+    num("varCode") != null && num("varCode") > 18
+  - НЕ пиши num("varCode") > 18 без проверки на null — так нельзя
 
 Синтаксис CEL:
   сравнения: ==, !=, <, <=, >, >=
   логика: &&, ||, !
-  диапазон: num("var") >= min && num("var") <= max
+  диапазон: num("var") != null && num("var") >= min && num("var") <= max
   списки: str("var") in ["A", "B"]
   пустота: num("var") == null, str("var") == null || str("var") == ""
+  если поле может отсутствовать и правило не должно срабатывать — используй:
+    num("var") == null || (num("var") != null && num("var") >= 18)
 
 Формат ответа — ТОЛЬКО JSON, без markdown:
 
@@ -56,7 +61,18 @@
   "rule": {
     "code": "PH_AGE_SUM_INSURED_RANGE",
     "name": "Диапазон СС для страхователя 18–50 лет",
-    "condition": "num(\"ph_age_issue\") >= 18 && num(\"ph_age_issue\") <= 50 && num(\"io_sumInsured\") >= 100000 && num(\"io_sumInsured\") <= 2000000",
+    "condition": "num(\"ph_age_issue\") != null && num(\"ph_age_issue\") >= 18 && num(\"ph_age_issue\") <= 50 && num(\"io_sumInsured\") != null && num(\"io_sumInsured\") >= 100000 && num(\"io_sumInsured\") <= 2000000",
     "message": "Возраст страхователя должен быть от 18 до 50 лет, страховая сумма — от 100 000 до 2 000 000"
+  }
+}
+
+Пример проверки минимального возраста (io_age_issue):
+
+{
+  "rule": {
+    "code": "IO_AGE_ISSUE_GT_18",
+    "name": "Возраст застрахованного не менее 18 лет",
+    "condition": "num(\"io_age_issue\") != null && num(\"io_age_issue\") > 18",
+    "message": "Возраст застрахованного должен быть не менее 18 лет"
   }
 }

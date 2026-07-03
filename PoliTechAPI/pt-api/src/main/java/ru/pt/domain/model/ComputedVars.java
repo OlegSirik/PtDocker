@@ -16,7 +16,7 @@ public class ComputedVars {
 
     private ComputedVars() {}
 
-    public static String getMagicValue(VariableContext ctx, String key) {
+    public static Object getMagicValue(VariableContext ctx, String key) {
         logger.trace("getMagicValue called with key: {}", key);
         try {
             PvVarDefinition varDef = ctx.getDefinition(key);
@@ -32,68 +32,86 @@ public class ComputedVars {
                     String birthDateStr = ctx.getString("ph_birthDate");
                     String issueDateStr = ctx.getString("pl_issueDate");
                     logger.trace("Computing ph_age_issue: birthDate={}, issueDate={}", birthDateStr, issueDateStr);
+                    if (birthDateStr == null || issueDateStr == null) {
+                        logger.trace("ph_age_issue: birthDate or issueDate is null, returning null");
+                        return null;
+                    }
                     LocalDate birthDate = getDate(birthDateStr);
                     LocalDate issueDate = getDate(issueDateStr);
                     int age = Period.between(birthDate, issueDate).getYears();
-                    result = Integer.toString(age);
                     logger.trace("ph_age_issue result: {} years", age);
-                    return result;
+                    return BigDecimal.valueOf(age);
                     
                 case "ph_age_end":
                     String birthDatePhEndStr = ctx.getString("ph_birthDate");
                     String endDatePhEndStr = ctx.getString("pl_endDate");
                     logger.trace("Computing ph_age_end: birthDate={}, endDate={}", birthDatePhEndStr, endDatePhEndStr);
+                    if (birthDatePhEndStr == null || endDatePhEndStr == null) {
+                        logger.trace("ph_age_end: birthDate or endDate is null, returning null");
+                        return null;
+                    }
                     LocalDate birthDatePhEnd = getDate(birthDatePhEndStr);
                     LocalDate endDatePhEnd = getDate(endDatePhEndStr);
                     int ageEnd = Period.between(birthDatePhEnd, endDatePhEnd).getYears();
-                    result = Integer.toString(ageEnd);
                     logger.trace("ph_age_end result: {} years", ageEnd);
-                    return result;
+                    return BigDecimal.valueOf(ageEnd);
                     
                 case "io_age_issue":
                     String birthDateIOStr = ctx.getString("io_birthDate");
                     String issueDateIOStr = ctx.getString("pl_issueDate");
                     logger.trace("Computing io_age_issue: birthDate={}, issueDate={}", birthDateIOStr, issueDateIOStr);
+                    if (birthDateIOStr == null || issueDateIOStr == null) {
+                        logger.trace("io_age_issue: birthDate or issueDate is null, returning null");
+                        return null;
+                    }
                     LocalDate birthDateIO = getDate(birthDateIOStr);
                     LocalDate issueDateIO = getDate(issueDateIOStr);
                     int ageIO = Period.between(birthDateIO, issueDateIO).getYears();
-                    result = Integer.toString(ageIO);
                     logger.trace("io_age_issue result: {} years", ageIO);
-                    return result;
+                    return BigDecimal.valueOf(ageIO);
                     
                 case "io_age_end":
                     String birthDateIOEndStr = ctx.getString("io_birthDate");
                     String endDateIOEndStr = ctx.getString("pl_endDate");
                     logger.trace("Computing io_age_end: birthDate={}, endDate={}", birthDateIOEndStr, endDateIOEndStr);
+                    if (birthDateIOEndStr == null || endDateIOEndStr == null) {
+                        logger.trace("io_age_end: birthDate or endDate is null, returning null");
+                        return null;
+                    }
                     LocalDate birthDateIOEnd = getDate(birthDateIOEndStr);
                     LocalDate endDateIOEnd = getDate(endDateIOEndStr);
                     int ageIOEnd = Period.between(birthDateIOEnd, endDateIOEnd).getYears();
-                    result = Integer.toString(ageIOEnd);
                     logger.trace("io_age_end result: {} years", ageIOEnd);
-                    return result;
+                    return BigDecimal.valueOf(ageIOEnd);
                     
                 case "pl_TermMonths":
                     String startDateStr = ctx.getString("pl_startDate");
                     String endDateStr = ctx.getString("pl_endDate");
                     logger.trace("Computing pl_TermMonths: startDate={}, endDate={}", startDateStr, endDateStr);
+                    if (startDateStr == null || endDateStr == null) {
+                        logger.trace("pl_TermMonths: startDate or endDate is null, returning null");
+                        return null;
+                    }
                     LocalDate st = getDate(startDateStr);
                     LocalDate ed = getDate(endDateStr).plusDays(1);
                     Period p = Period.between(st, ed);
                     int m = p.getYears() * 12 + p.getMonths();
-                    result = Integer.toString(m);
                     logger.trace("pl_TermMonths result: {} months", m);
-                    return result;
+                    return BigDecimal.valueOf(m);
                     
                 case "pl_TermDays":
                     String startDateDaysStr = ctx.getString("pl_startDate");
                     String endDateDaysStr = ctx.getString("pl_endDate");
                     logger.trace("Computing pl_TermDays: startDate={}, endDate={}", startDateDaysStr, endDateDaysStr);
+                    if (startDateDaysStr == null || endDateDaysStr == null) {
+                        logger.trace("pl_TermDays: startDate or endDate is null, returning null");
+                        return null;
+                    }
                     LocalDate startDate = getDate(startDateDaysStr);
                     LocalDate endDate = getDate(endDateDaysStr);
                     long days = ChronoUnit.DAYS.between(startDate, endDate);
-                    result = Long.toString(days);
                     logger.trace("pl_TermDays result: {} days", days);
-                    return result;
+                    return BigDecimal.valueOf(days);
 
                 case "io_travelRoutes":   // полный маршрут для печати
                     String io_departureCity = ctx.getString("io_departureCity");
@@ -132,7 +150,7 @@ public class ComputedVars {
                     logger.trace("Computing gross-up_factor: pl_commRate={}", appliedCommissionRate);
                     if (appliedCommissionRate == null) {
                         logger.trace("gross-up_factor: pl_commRate is null, returning 1");
-                        return "1";
+                        return BigDecimal.ONE;
                     }
                     // Rate < 1 means decimal (e.g. 0.1 for 10%); >= 1 means percentage (e.g. 10 for 10%)
                     BigDecimal oneMinusRate = appliedCommissionRate.compareTo(BigDecimal.ONE) < 0
@@ -140,15 +158,14 @@ public class ComputedVars {
                             : BigDecimal.ONE.subtract(appliedCommissionRate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP));
                     if (oneMinusRate.compareTo(BigDecimal.ZERO) <= 0) {
                         logger.warn("gross-up_factor: division by zero (rate={}), returning 1", appliedCommissionRate);
-                        return "1";
+                        return BigDecimal.ONE;
                     }
                     BigDecimal factor = BigDecimal.ONE.divide(oneMinusRate, 10, RoundingMode.HALF_UP);
-                    result = factor.toPlainString();
-                    logger.trace("gross-up_factor result: {} (rate={}, oneMinusRate={})", result, appliedCommissionRate, oneMinusRate);
-                    return result;
+                    logger.trace("gross-up_factor result: {} (rate={}, oneMinusRate={})", factor, appliedCommissionRate, oneMinusRate);
+                    return factor;
                     } catch (Exception e) {
                         logger.error(e.getMessage());
-                        return "1";
+                        return BigDecimal.ONE;
                     }
                 }
                 default:

@@ -369,6 +369,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductVersionModel createVersionFrom(Long tenantId, Long productId, Long versionNo) {
         
         authService.check(
@@ -389,9 +390,23 @@ public class ProductServiceImpl implements ProductService {
             throw new UnprocessableEntityException("only one version can be in dev status");
         }
 
-        Long newVersion = product.getProdVersionNo() == null ? 1 : product.getProdVersionNo() + 1;
+        Long prodVersionNo = product.getProdVersionNo();
+        if (prodVersionNo == null) {
+            throw new UnprocessableEntityException("No prod version to create from");
+        }
+        if (!prodVersionNo.equals(versionNo)) {
+            throw new UnprocessableEntityException(
+                    "New version can only be created from prod version " + prodVersionNo);
+        }
 
-        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
+        Long sourceVersion = prodVersionNo;
+        Long newVersion = prodVersionNo + 1;
+
+        if (productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, newVersion).isPresent()) {
+            throw new UnprocessableEntityException("Version already exists: " + newVersion);
+        }
+
+        String productVersionJson = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, sourceVersion)
                 .orElseThrow(() -> new NotFoundException("Base version not found"))
                 .getProduct();
 
@@ -402,28 +417,8 @@ public class ProductServiceImpl implements ProductService {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
 
-        Set<String> productVarCodes = new HashSet<>();
-
-        for (PvVar var : productVersionModel.getVars()) {
-            productVarCodes.add(var.getVarCode());
-        }
-
         LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
-
-        List<PvVar> newPvVars = new ArrayList<>();
-
-        lob.getMpVars().forEach(var -> {
-            if (!productVarCodes.contains(var.getVarCode())) {
-                PvVar pvVar = new PvVar(var);
-                if (!productVarCodes.contains(pvVar.getVarCode())) {
-                    pvVar.setIsDeleted(true);
-                }
-                newPvVars.add(pvVar);
-            }
-        });
-
-        productVersionModel.setVars(newPvVars);
-        
+        productVersionModel.setVars(mergeProductVarsWithLob(productVersionModel.getVars(), lob));
 
         productVersionModel.setVersionNo(newVersion);
         productVersionModel.setVersionStatus("DEV");
@@ -444,12 +439,51 @@ public class ProductServiceImpl implements ProductService {
         product.setDevVersionNo(newVersion);
         productRepository.save(product);
 
-        // Copy calculators for each package from old version to new version
+        // Copy calculators for each package from prod version to new version
         productVersionModel.getPackages().forEach(pkg ->
-            calculatorService.copyCalculator(tenantId, productId, versionNo, pkg.getCode(), newVersion)
+            calculatorService.copyCalculator(tenantId, productId, sourceVersion, pkg.getCode(), newVersion)
         );
 
         return productVersionModel;
+    }
+
+    /**
+     * Новая DEV-версия: полный словарь из LOB; для каждого varCode, отсутствующего в PROD-версии — isDeleted=true.
+     * Если код есть в PROD — переносим настройки продукта (isDeleted, isTarifFactor, isOptional, varValue).
+     */
+    private List<PvVar> mergeProductVarsWithLob(List<PvVar> prodVars, LobModel lob) {
+        Map<String, PvVar> prodByCode = new LinkedHashMap<>();
+        if (prodVars != null) {
+            for (PvVar var : prodVars) {
+                if (var != null && var.getVarCode() != null && !var.getVarCode().isBlank()) {
+                    prodByCode.put(var.getVarCode(), var);
+                }
+            }
+        }
+
+        if (lob == null || lob.getMpVars() == null || lob.getMpVars().isEmpty()) {
+            return List.of();
+        }
+
+        List<PvVar> merged = new ArrayList<>();
+        for (LobVar lobVar : lob.getMpVars()) {
+            if (lobVar == null || lobVar.getVarCode() == null || lobVar.getVarCode().isBlank()) {
+                continue;
+            }
+            PvVar pvVar = new PvVar(lobVar);
+            PvVar prodVar = prodByCode.get(lobVar.getVarCode());
+            if (prodVar != null) {
+                pvVar.setIsDeleted(prodVar.getIsDeleted());
+                pvVar.setIsTarifFactor(prodVar.getIsTarifFactor());
+                pvVar.setIsOptional(prodVar.getIsOptional());
+                pvVar.setVarValue(prodVar.getVarValue());
+            } else {
+                pvVar.setIsDeleted(true);
+                pvVar.setIsTarifFactor(false);
+            }
+            merged.add(pvVar);
+        }
+        return merged;
     }
 
     @Override
@@ -845,7 +879,7 @@ public class ProductServiceImpl implements ProductService {
                 }
             }
         }
-        Long deleted = productVersionRepository.deleteByProductIdAndVersionNo(tenantId, id, versionNo);
+        int deleted = productVersionRepository.deleteByProductIdAndVersionNo(tenantId, id, versionNo);
         if (deleted == 0) {
             throw new NotFoundException("Version not found");
         }
