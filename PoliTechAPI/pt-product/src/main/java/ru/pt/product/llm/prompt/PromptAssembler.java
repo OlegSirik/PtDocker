@@ -44,9 +44,9 @@ public class PromptAssembler {
                 ? """
 
                 Правила CEL для condition:
-                - переменные с типом NUMBER — только через num("varCode")
-                - переменные с типом STRING — только через str("varCode")
-                - не используй голые идентификаторы varCode в condition
+                - проверка null: только голый varCode (ph_doc_typeCode != null), НЕ str("varCode") != null
+                - NUMBER для сравнений: num("varCode"); перед > < >= <= сначала varCode != null
+                - STRING для in [...] и сравнения строк: str("varCode")
                 - если у переменной указаны «допустимые значения», используй только коды из списка;
                   при отсутствии подходящего кода верни {"error": true, "message": "..."}, не придумывай новые коды
                 """
@@ -86,9 +86,9 @@ public class PromptAssembler {
                 ? """
 
                 Правила CEL для condition:
-                - переменные с типом NUMBER — только через num("varCode")
-                - переменные с типом STRING — только через str("varCode")
-                - не используй голые идентификаторы varCode в condition
+                - проверка null: только голый varCode (ph_doc_typeCode != null), НЕ str("varCode") != null
+                - NUMBER для сравнений: num("varCode"); перед > < >= <= сначала varCode != null
+                - STRING для in [...] и сравнения строк: str("varCode")
                 - если у переменной указаны «допустимые значения», используй только коды из списка;
                   при отсутствии подходящего кода верни {"error": true, "message": "..."}, не придумывай новые коды
                 """

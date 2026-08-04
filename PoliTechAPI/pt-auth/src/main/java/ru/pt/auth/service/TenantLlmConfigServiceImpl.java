@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.InternalServerErrorException;
 import ru.pt.api.dto.exception.LlmUnavailableException;
 import ru.pt.api.dto.exception.NotFoundException;
@@ -16,11 +17,18 @@ import ru.pt.api.dto.llm.TenantLlmProviderConfig;
 import ru.pt.api.dto.llm.TenantLlmProviderConfigUpdate;
 import ru.pt.api.dto.llm.TenantLlmProviderConfigView;
 import ru.pt.api.dto.llm.TenantLlmRuntimeConfig;
+import ru.pt.api.security.AuthenticatedUser;
+import ru.pt.api.service.auth.AuthZ;
+import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.llm.TenantLlmConfigService;
 import ru.pt.auth.crypto.SecretEncryptionService;
+import ru.pt.auth.entity.AccountEntity;
 import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.llm.LlmApiKeyMask;
+import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.TenantRepository;
+import ru.pt.auth.security.SecurityContextHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,22 +37,130 @@ import java.util.Map;
 public class TenantLlmConfigServiceImpl implements TenantLlmConfigService {
 
     private final TenantRepository tenantRepository;
+    private final AccountRepository accountRepository;
     private final SecretEncryptionService encryptionService;
     private final ObjectMapper objectMapper;
+    private final SecurityContextHelper securityContextHelper;
+    private final AuthorizationService authorizationService;
 
     public TenantLlmConfigServiceImpl(
             TenantRepository tenantRepository,
+            AccountRepository accountRepository,
             SecretEncryptionService encryptionService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            SecurityContextHelper securityContextHelper,
+            AuthorizationService authorizationService) {
         this.tenantRepository = tenantRepository;
+        this.accountRepository = accountRepository;
         this.encryptionService = encryptionService;
         this.objectMapper = objectMapper;
+        this.securityContextHelper = securityContextHelper;
+        this.authorizationService = authorizationService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public TenantLlmRuntimeConfig resolve(Long tenantId) {
         TenantEntity tenant = loadTenant(tenantId);
+        checkTenantAccess(tenant, AuthZ.Action.VIEW);
+        return buildRuntimeConfig(tenant);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TenantLlmRuntimeConfig resolveForTest(String tenantCode) {
+        TenantEntity tenant = requireTenantByCode(tenantCode, AuthZ.Action.MANAGE);
+        return buildRuntimeConfig(tenant);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TenantLlmConfigView getConfigView(String tenantCode) {
+        TenantEntity tenant = requireTenantByCode(tenantCode, AuthZ.Action.VIEW);
+        TenantLlmConfig config = loadDecryptedConfig(tenant);
+        if (config == null) {
+            TenantLlmConfigView empty = new TenantLlmConfigView();
+            empty.setConfigured(false);
+            empty.setEnabled(false);
+            empty.setTimeoutMs(TenantLlmConfig.DEFAULT_TIMEOUT_MS);
+            empty.setDefaultProvider(TenantLlmConfig.DEFAULT_PROVIDER);
+            empty.setDefaultModel(TenantLlmConfig.DEFAULT_MODEL);
+            return empty;
+        }
+        return toView(config);
+    }
+
+    @Override
+    @Transactional
+    public TenantLlmConfigView saveConfig(String tenantCode, TenantLlmConfigUpdateRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body is required");
+        }
+        TenantEntity tenant = requireTenantByCode(tenantCode, AuthZ.Action.MANAGE);
+        TenantLlmConfig merged = mergeConfig(loadDecryptedConfig(tenant), request);
+        persistConfig(tenant, merged);
+        return toView(merged);
+    }
+
+    @Override
+    @Transactional
+    public TenantLlmConfigView updateApiKey(String tenantCode, TenantLlmApiKeyUpdateRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body is required");
+        }
+        if (request.getProviderCode() == null || request.getProviderCode().isBlank()) {
+            throw new BadRequestException("providerCode is required");
+        }
+        if (request.getApiKey() == null || request.getApiKey().isBlank()) {
+            throw new BadRequestException("apiKey is required");
+        }
+        TenantEntity tenant = requireTenantByCode(tenantCode, AuthZ.Action.MANAGE);
+        TenantLlmConfig config = loadDecryptedConfig(tenant);
+        if (config == null) {
+            config = new TenantLlmConfig();
+        }
+        String providerCode = request.getProviderCode().trim();
+        TenantLlmProviderConfig provider = config.getProviders().computeIfAbsent(
+                providerCode, ignored -> new TenantLlmProviderConfig());
+        provider.setApiKey(request.getApiKey().trim());
+        persistConfig(tenant, config);
+        return toView(config);
+    }
+
+    private TenantEntity requireTenantByCode(String tenantCode, AuthZ.Action action) {
+        TenantEntity tenant = tenantRepository.findByCode(tenantCode.toLowerCase())
+                .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantCode));
+        checkTenantAccess(tenant, action);
+        return tenant;
+    }
+
+    private void checkTenantAccess(TenantEntity tenant, AuthZ.Action action) {
+        AuthenticatedUser user = getCurrentUser();
+        if (!UserRole.SYS_ADMIN.getValue().equals(user.getUserRole())
+                && !tenant.getId().equals(user.getTenantId())) {
+            throw new ForbiddenException("Access denied to tenant");
+        }
+        AccountEntity tenantAccount = accountRepository.findByTenantId(tenant.getId())
+                .orElseThrow(() -> new NotFoundException("Tenant account not found for tenant: " + tenant.getCode()));
+        authorizationService.check(
+                user,
+                AuthZ.ResourceType.TENANT,
+                String.valueOf(tenant.getId()),
+                tenantAccount.getId(),
+                action);
+    }
+
+    private AuthenticatedUser getCurrentUser() {
+        return securityContextHelper.getAuthenticatedUser()
+                .orElseThrow(() -> new ForbiddenException("Not authenticated"));
+    }
+
+    private TenantEntity loadTenant(Long tenantId) {
+        return tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
+    }
+
+    private TenantLlmRuntimeConfig buildRuntimeConfig(TenantEntity tenant) {
         TenantLlmConfig config = loadDecryptedConfig(tenant);
         if (config == null) {
             throw new LlmUnavailableException();
@@ -66,65 +182,6 @@ public class TenantLlmConfigServiceImpl implements TenantLlmConfigService {
         runtime.setTimeoutMs(config.getTimeoutMs() > 0 ? config.getTimeoutMs() : TenantLlmConfig.DEFAULT_TIMEOUT_MS);
         runtime.setProviders(config.getProviders());
         return runtime;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public TenantLlmConfigView getConfigView(Long tenantId) {
-        TenantEntity tenant = loadTenant(tenantId);
-        TenantLlmConfig config = loadDecryptedConfig(tenant);
-        if (config == null) {
-            TenantLlmConfigView empty = new TenantLlmConfigView();
-            empty.setConfigured(false);
-            empty.setEnabled(false);
-            empty.setTimeoutMs(TenantLlmConfig.DEFAULT_TIMEOUT_MS);
-            empty.setDefaultProvider(TenantLlmConfig.DEFAULT_PROVIDER);
-            empty.setDefaultModel(TenantLlmConfig.DEFAULT_MODEL);
-            return empty;
-        }
-        return toView(config);
-    }
-
-    @Override
-    @Transactional
-    public TenantLlmConfigView saveConfig(Long tenantId, TenantLlmConfigUpdateRequest request) {
-        if (request == null) {
-            throw new BadRequestException("Request body is required");
-        }
-        TenantEntity tenant = loadTenant(tenantId);
-        TenantLlmConfig merged = mergeConfig(loadDecryptedConfig(tenant), request);
-        persistConfig(tenant, merged);
-        return toView(merged);
-    }
-
-    @Override
-    @Transactional
-    public TenantLlmConfigView updateApiKey(Long tenantId, TenantLlmApiKeyUpdateRequest request) {
-        if (request == null) {
-            throw new BadRequestException("Request body is required");
-        }
-        if (request.getProviderCode() == null || request.getProviderCode().isBlank()) {
-            throw new BadRequestException("providerCode is required");
-        }
-        if (request.getApiKey() == null || request.getApiKey().isBlank()) {
-            throw new BadRequestException("apiKey is required");
-        }
-        TenantEntity tenant = loadTenant(tenantId);
-        TenantLlmConfig config = loadDecryptedConfig(tenant);
-        if (config == null) {
-            config = new TenantLlmConfig();
-        }
-        String providerCode = request.getProviderCode().trim();
-        TenantLlmProviderConfig provider = config.getProviders().computeIfAbsent(
-                providerCode, ignored -> new TenantLlmProviderConfig());
-        provider.setApiKey(request.getApiKey().trim());
-        persistConfig(tenant, config);
-        return toView(config);
-    }
-
-    private TenantEntity loadTenant(Long tenantId) {
-        return tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
     }
 
     private TenantLlmConfig loadDecryptedConfig(TenantEntity tenant) {

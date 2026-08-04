@@ -61,8 +61,15 @@ public class ProcessList {
         return vars;
     }
 
-    public void setVars (Map<String, Object> vars) {
-        this.vars.putAll(vars);
+    public void setVars(Map<String, Object> vars) {
+        if (vars == null) {
+            return;
+        }
+        vars.forEach((key, value) -> {
+            if (value != null) {
+                this.vars.put(key, value);
+            }
+        });
     }
 
     public void setDataScope(String value){

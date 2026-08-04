@@ -307,11 +307,12 @@ public class ProcessOrchestratorService implements ProcessOrchestrator {
     public StdPolicy save(StdPolicy stdPolicy) {
         long saveStartedAt = System.nanoTime();
         long stepStartedAt = saveStartedAt;
-        logger.info("Starting save process");
+        logger.info("Starting save process - {}", stdPolicy.toJson());
 
         AuthenticatedUser user = getCurrentUser();
         String dataScope = policyProcessSupport.requireDataScope(user);
         policyProcessSupport.normalizeForProcess(stdPolicy, new ProcessList(ProcessList.SAVE), dataScope);
+
 
         ProductVersionModel product = policyProcessSupport.loadProduct(user.getTenantId(), stdPolicy.getProductCode(), dataScope);
 

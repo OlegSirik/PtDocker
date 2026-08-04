@@ -98,7 +98,7 @@ public class VarsContextFormatter {
                 ? "num(\"" + code + "\")"
                 : "str(\"" + code + "\")";
         String allowed = formatAllowedValues(resolveRefValues(var, tenantId));
-        return code + ": " + desc + " [" + dataType + ", в CEL: " + celAccessor + allowed + "]";
+        return code + ": " + desc + " [" + dataType + ", null: " + code + " != null, значение: " + celAccessor + allowed + "]";
     }
 
     /**

@@ -25,21 +25,25 @@
 НЕ генерируй rule, если подходящего кода в списке допустимых значений нет.
 
 Обязательные правила для condition:
-  - переменные с типом NUMBER — ТОЛЬКО через num("varCode")
-  - переменные с типом STRING — ТОЛЬКО через str("varCode")
-  - НЕ используй голые идентификаторы (pl_premium, ph_gender и т.д.) — только num() / str()
-  - перед ЛЮБЫМ сравнением NUMBER (>, <, >=, <=) сначала проверь, что значение не null:
-    num("varCode") != null && num("varCode") > 18
-  - НЕ пиши num("varCode") > 18 без проверки на null — так нельзя
+  - проверка null/отсутствия значения — ТОЛЬКО голым varCode:
+    ph_doc_typeCode != null, pl_premium == null
+    НЕ пиши str("varCode") != null и num("varCode") != null — так не работает
+  - сравнение и арифметика NUMBER — через num("varCode"):
+    num("ph_age_issue") > 18
+  - сравнение STRING, in [...], равенство строк — через str("varCode"):
+    str("ph_gender") in ["M", "F"]
+  - перед сравнением NUMBER (>, <, >=, <=) сначала проверь null голым varCode:
+    ph_age_issue != null && num("ph_age_issue") > 18
+  - НЕ пиши num("varCode") > 18 без проверки на null
 
 Синтаксис CEL:
   сравнения: ==, !=, <, <=, >, >=
   логика: &&, ||, !
-  диапазон: num("var") != null && num("var") >= min && num("var") <= max
+  диапазон: ph_age_issue != null && num("ph_age_issue") >= min && num("ph_age_issue") <= max
   списки: str("var") in ["A", "B"]
-  пустота: num("var") == null, str("var") == null || str("var") == ""
+  пустота: varCode == null, varCode != null, varCode == "" || str("varCode") == ""
   если поле может отсутствовать и правило не должно срабатывать — используй:
-    num("var") == null || (num("var") != null && num("var") >= 18)
+    ph_age_issue == null || (ph_age_issue != null && num("ph_age_issue") >= 18)
 
 Формат ответа — ТОЛЬКО JSON, без markdown:
 
@@ -61,7 +65,7 @@
   "rule": {
     "code": "PH_AGE_SUM_INSURED_RANGE",
     "name": "Диапазон СС для страхователя 18–50 лет",
-    "condition": "num(\"ph_age_issue\") != null && num(\"ph_age_issue\") >= 18 && num(\"ph_age_issue\") <= 50 && num(\"io_sumInsured\") != null && num(\"io_sumInsured\") >= 100000 && num(\"io_sumInsured\") <= 2000000",
+    "condition": "ph_age_issue != null && num(\"ph_age_issue\") >= 18 && num(\"ph_age_issue\") <= 50 && io_sumInsured != null && num(\"io_sumInsured\") >= 100000 && num(\"io_sumInsured\") <= 2000000",
     "message": "Возраст страхователя должен быть от 18 до 50 лет, страховая сумма — от 100 000 до 2 000 000"
   }
 }
@@ -72,7 +76,7 @@
   "rule": {
     "code": "IO_AGE_ISSUE_GT_18",
     "name": "Возраст застрахованного не менее 18 лет",
-    "condition": "num(\"io_age_issue\") != null && num(\"io_age_issue\") > 18",
+    "condition": "io_age_issue != null && num(\"io_age_issue\") > 18",
     "message": "Возраст застрахованного должен быть не менее 18 лет"
   }
 }

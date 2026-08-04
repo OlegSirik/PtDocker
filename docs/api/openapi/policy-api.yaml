@@ -959,7 +959,7 @@ components:
         cargoCategory:
           type: string
           description: категория груза. Например - ОЦГ - особо ценный, 
-        cargoСondition:
+        cargoCondition:
           type: string
           description: состояние груза. Новый - NEW, б.у. - USED
         weight:

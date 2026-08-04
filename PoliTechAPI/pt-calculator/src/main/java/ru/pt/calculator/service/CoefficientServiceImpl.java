@@ -202,8 +202,13 @@ public class CoefficientServiceImpl implements CoefficientService {
             if (varCode == null || nr == null || op == null) return null;
             if (!nr.matches("1?0|[0-9]")) return null; // only 0..10
 
-            String varValue = values != null ? values.get(varCode).toString() : null;
-            if (varValue == null) return null;
+            Object rawValue = values != null ? values.get(varCode) : null;
+            if (rawValue == null) {
+                logger.warn("Variable {} not set in context for coefficient {}", varCode, coefficientCode);
+                return null;
+            }
+            String varValue = rawValue.toString();
+            if (varValue.isBlank()) return null;
 
             String operator = normalizeOperator(op);
             if (operator == null) return null;

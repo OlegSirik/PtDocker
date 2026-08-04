@@ -25,6 +25,7 @@ import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.errors.ErrorConstants;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.auth.AuthZ.Action;
 import ru.pt.api.service.auth.AuthZ.ResourceType;
@@ -831,8 +832,8 @@ public class CalculatorServiceImpl implements CalculatorService {
             String s = coefficientService.getCoefficientValue(calcId, varCode, ctx, cd.getColumns());
             logger.debug("Coefficient value resolved: {}={}", varCode, s);
             
-            // Если вернулся null то ничего не найдено или еще какаято ошибка. 
-            // Можно задать алтернативный var на этот случай, например другой коэффициент или константу и т.д.
+            // Если вернулся null — строка в таблице не найдена или не задана переменная условия.
+            // Можно задать альтернативу (altVarValue / altVarCode) или errorTextIfNotFound.
             if (s == null) {
                 if (cd.getAltVarValue() != null ) {
                     s = cd.getAltVarValue().toString();
@@ -840,6 +841,14 @@ public class CalculatorServiceImpl implements CalculatorService {
                     s = (ctx.getDecimal(cd.getAltVarCode())).toString();
                 } else if (cd.getErrorTextIfNotFound() != null && !cd.getErrorTextIfNotFound().isBlank()) {
                     throw new BadRequestException(cd.getErrorTextIfNotFound());
+                } else {
+                    throw new BadRequestException(ErrorConstants.createErrorModel(
+                            400,
+                            ErrorConstants.coefficientNotFound(varCode),
+                            ErrorConstants.DOMAIN_CALCULATOR,
+                            ErrorConstants.REASON_NOT_FOUND,
+                            varCode
+                    ));
                 }
             }
             try {

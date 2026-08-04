@@ -82,4 +82,8 @@ public class ErrorConstants {
     public static String printFormNotFound(String policyNumber, String printFormType) {
         return String.format("Print form not found: policyNumber=%s, printFormType=%s", policyNumber, printFormType);
     }
+
+    public static String coefficientNotFound(String coefficientCode) {
+        return String.format("Coefficient not found: %s", coefficientCode);
+    }
 }

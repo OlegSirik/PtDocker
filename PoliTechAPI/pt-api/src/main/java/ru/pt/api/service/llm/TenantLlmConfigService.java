@@ -9,9 +9,11 @@ public interface TenantLlmConfigService {
 
     TenantLlmRuntimeConfig resolve(Long tenantId);
 
-    TenantLlmConfigView getConfigView(Long tenantId);
+    TenantLlmRuntimeConfig resolveForTest(String tenantCode);
 
-    TenantLlmConfigView saveConfig(Long tenantId, TenantLlmConfigUpdateRequest request);
+    TenantLlmConfigView getConfigView(String tenantCode);
 
-    TenantLlmConfigView updateApiKey(Long tenantId, TenantLlmApiKeyUpdateRequest request);
+    TenantLlmConfigView saveConfig(String tenantCode, TenantLlmConfigUpdateRequest request);
+
+    TenantLlmConfigView updateApiKey(String tenantCode, TenantLlmApiKeyUpdateRequest request);
 }

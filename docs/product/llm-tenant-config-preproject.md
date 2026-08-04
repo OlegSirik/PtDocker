@@ -170,7 +170,9 @@ PUT  /api/v1/{tenantCode}/admin/tenant/llm-config
 POST /api/v1/{tenantCode}/admin/tenant/llm-config/test
 ```
 
-Права: `SYS_ADMIN` / `TENANT_ADMIN`.
+Права: через `AuthorizationService.check` в `TenantLlmConfigServiceImpl`:
+- **VIEW** (`TENANT`) — GET
+- **MANAGE** (`TENANT`) — PUT, POST test
 
 **GET** — расшифровать, отдать DTO **без** полного ключа:
 
@@ -275,7 +277,7 @@ PUT /api/v1/{tenantCode}/admin/tenant/llm-config/api-key
 
 ### Фаза C — Admin API + UI
 
-- [x] GET/PUT/test/api-key с mask
+- [x] GET/PUT/test/api-key с mask (GET также для PRODUCT_ADMIN — баннер на экранах assist)
 - [x] Экран настроек tenant (вкладка LLM)
 - [x] Обработка ошибки на фронте assist
 

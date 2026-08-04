@@ -92,6 +92,7 @@ CREATE TABLE acc_tenants (
     storage_type VARCHAR(30) REFERENCES ref_storage_types (code),
     storage_config JSONB,
     auth_config    JSONB,
+    llm_config_enc TEXT,
 
     record_status   VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' REFERENCES ref_record_statuses (code),
     created_at   TIMESTAMP not null DEFAULT CURRENT_TIMESTAMP,
@@ -99,6 +100,8 @@ CREATE TABLE acc_tenants (
 );
 
 CREATE UNIQUE INDEX acc_tenants_code_uk ON acc_tenants (code) where record_status = 'ACTIVE';
+
+COMMENT ON COLUMN acc_tenants.llm_config_enc IS 'AES-GCM encrypted tenant LLM config (API keys). NULL = LLM not configured.';
 
 CREATE TABLE acc_clients (
     -- ----
@@ -374,11 +377,14 @@ CREATE TABLE policy_index (
     premium            NUMERIC(18, 2),
     agent_kv_percent   NUMERIC(18, 2),
     agent_kv_amount    NUMERIC(18, 2),
+    document_format  VARCHAR(50) NOT NULL DEFAULT 'INSURANCE_CONTRACT',
     CONSTRAINT policy_index_id_fkey FOREIGN KEY (id) REFERENCES policy_data (id) ON DELETE CASCADE,
     CONSTRAINT policy_index_policy_nr UNIQUE (tid, policy_nr)
 );
 
 CREATE UNIQUE INDEX policy_index_public_id_uk ON policy_index (public_id);
+
+COMMENT ON COLUMN policy_index.document_format IS 'Wire format / StdPolicy mapper id (e.g. INSURANCE_CONTRACT)';
 
 -- =============================================================================
 -- ADD-ON (POLICY OPTIONS)
@@ -472,11 +478,20 @@ CREATE TABLE mt_attribute_def (
     CONSTRAINT mt_attribute_def_parent_fk FOREIGN KEY (parent_id) REFERENCES mt_attribute_def (id)
 );
 
+CREATE TABLE pt_refdicts (
+    tid  BIGINT       NOT NULL,
+    code VARCHAR(50)  NOT NULL,
+    name VARCHAR(300) NOT NULL,
+    CONSTRAINT pt_refdicts_pkey PRIMARY KEY (tid, code)
+);
+
 CREATE TABLE pt_refdata (
-    ref_code VARCHAR(50),
-    md_code  VARCHAR(50) NOT NULL,
+    tid      BIGINT       NOT NULL DEFAULT 1,
+    ref_code VARCHAR(50)  NOT NULL,
+    md_code  VARCHAR(50)  NOT NULL,
     md_name  VARCHAR(100) NOT NULL,
-    PRIMARY KEY (ref_code, md_code)
+    CONSTRAINT pt_refdata_pkey PRIMARY KEY (tid, ref_code, md_code),
+    CONSTRAINT pt_refdata_refdicts_fk FOREIGN KEY (tid, ref_code) REFERENCES pt_refdicts (tid, code)
 );
 
 

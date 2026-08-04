@@ -92,17 +92,48 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
             //loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
 
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_0.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_1.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_2.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_3.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "k_Nsib_Tariff", "classpath:bootstrap/ACC/coefficients_k_Nsib_Tariff.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+            loadCoefficients(calculatorId, "SI_DISEASE_Check", "classpath:bootstrap/ACC/coefficients_SI_DISEASE_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_4.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "k_Nsib_Tariff", "classpath:bootstrap/ACC/coefficients_k_Nsib_Tariff.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+            loadCoefficients(calculatorId, "SI_DISEASE_Check", "classpath:bootstrap/ACC/coefficients_SI_DISEASE_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/calculator__HC_5.json");
+            loadCoefficients(calculatorId, "K_Age", "classpath:bootstrap/ACC/coefficients_K_Age.csv");
+            loadCoefficients(calculatorId, "k_Nsib_Tariff", "classpath:bootstrap/ACC/coefficients_k_Nsib_Tariff.csv");
+            loadCoefficients(calculatorId, "K_Period", "classpath:bootstrap/ACC/coefficients_K_Period.csv");
+            loadCoefficients(calculatorId, "SI_ACCIDENT_Check", "classpath:bootstrap/ACC/coefficients_SI_ACCIDENT_Check.csv");
+            loadCoefficients(calculatorId, "SI_DISEASE_Check", "classpath:bootstrap/ACC/coefficients_SI_DISEASE_Check.csv");
+
             calculatorId = loadCalculators("classpath:bootstrap/ACC/NS_CLASSIC/calculator__NS_CLASSIC.json");
 
             loadCoefficients(calculatorId, "K_sport", "classpath:bootstrap/ACC/NS_CLASSIC/coefficients_K_sport.csv");
             loadCoefficients(calculatorId, "Kprof", "classpath:bootstrap/ACC/NS_CLASSIC/coefficients_Kprof.csv");
             loadCoefficients(calculatorId, "Ksport1", "classpath:bootstrap/ACC/NS_CLASSIC/coefficients_Ksport1.csv");
             loadCoefficients(calculatorId, "Ksrok", "classpath:bootstrap/ACC/NS_CLASSIC/coefficients_Ksrok.csv");
+
 
             calculatorId = loadCalculators("classpath:bootstrap/GAD/calculator__1_0.json");
             calculatorId = loadCalculators("classpath:bootstrap/GAD/calculator__1_1.json");

@@ -60,8 +60,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# pt-launcher bin directory
-pt-launcher/bin/
+# IDE / Eclipse output
+**/bin/
+
+# Generated JWT dev tokens (see generate_jwt_tokens.sh)
+jwt_tokens.txt
 
 # Node.js (if any frontend components)
 node_modules/
