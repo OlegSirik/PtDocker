@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { AuthService } from './auth.service';
-import { VarsService } from './vars.service';
 import { BaseApiService } from './api/base-api.service';
 import { EnvService } from './env.service';
 
@@ -14,7 +13,6 @@ export interface BusinessLineVar {
   varDataType: string;
   varValue: string;
   varNr: number;
-  varCdm: string;
   id?: number;
   parent_id?: number;
   varList?: string;

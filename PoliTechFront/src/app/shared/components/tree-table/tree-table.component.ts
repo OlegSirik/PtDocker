@@ -18,7 +18,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { isObjectVarTypeRow, type TreeTableFlatRow, type TreeTableSourceRow } from '../../models/tree-table.models';
-import { TreeTableRowEditDialogComponent } from './tree-table-row-edit-dialog.component';
+import {
+  TreeTableRowEditDialogComponent,
+  type TreeTableRowEditFields,
+} from './tree-table-row-edit-dialog.component';
 
 /** Черновик дочернего узла после диалога «Создать»; id задаёт родитель. */
 export interface TreeTableChildCreatePayload<T extends TreeTableSourceRow = TreeTableSourceRow> {
@@ -89,6 +92,11 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
    */
   @Input() enableVarEditDialog = true;
 
+  /**
+   * Поля диалога правки: `all` (схема) или `valueList` — только varList / varValue (LOB, продукт).
+   */
+  @Input() editableFields: TreeTableRowEditFields = 'all';
+
   /** Скрыть встроенную кнопку мягкого удаления (например, только просмотр или PROD). */
   @Input() disableBuiltInSoftDelete = false;
 
@@ -98,7 +106,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
   /** Событие при клике на строку */
   @Output() rowClick = new EventEmitter<T>();
 
-  /** После сохранения в диалоге редактирования переменной (только если {@link enableVarEditDialog} и не OBJECT) */
+  /** После сохранения в диалоге редактирования переменной (если {@link enableVarEditDialog}) */
   @Output() rowVarUpdated = new EventEmitter<T>();
 
   /** После сохранения в диалоге создания дочернего узла (id в {@code draft} игнорируйте — задайте в родителе) */
@@ -243,11 +251,12 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     this.markRowDeleted(node);
   }
 
-  /** Диалог редактирования строки (не для узлов OBJECT и не для isDeleted). */
+  /** Диалог редактирования строки (не для isDeleted). */
   openEditRowDialog(row: T): void {
-    if (!this.enableVarEditDialog || isObjectVarTypeRow(row) || row.isDeleted) {
+    if (!this.enableVarEditDialog || row.isDeleted) {
       return;
     }
+    const valueListOnly = this.editableFields === 'valueList';
     const ref = this.dialog.open(TreeTableRowEditDialogComponent, {
       width: '520px',
       data: {
@@ -255,20 +264,30 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
         row: { ...row },
         parentId: row.parent_id,
         codeReadonly: row.isSystem === true,
+        editableFields: this.editableFields,
       },
     });
     ref.afterClosed().subscribe((res?: TreeTableSourceRow) => {
       if (!res) return;
-      Object.assign(row, {
-        varCode: res.varCode,
-        varName: res.varName,
-        varType: res.varType,
-        varDataType: res.varDataType,
-        varList: res.varList,
-        varPath: res.varPath,
-        varValue: res.varValue,
-        name: (res.name?.trim() || res.varName) ?? '',
-      });
+      if (valueListOnly) {
+        Object.assign(row, {
+          varList: res.varList,
+          varValue: res.varValue,
+        });
+      } else {
+        Object.assign(row, {
+          varCode: res.varCode,
+          varName: res.varName,
+          varType: res.varType,
+          varDataType: res.varDataType,
+          varList: res.varList,
+          varPath: res.varPath,
+          varValue: res.varValue,
+          varNr: res.varNr ?? 0,
+          name: (res.name?.trim() || res.varName) ?? '',
+        });
+      }
+      this.rebuildFlat();
       this.rowVarUpdated.emit(row);
       this.cdr.markForCheck();
     });
@@ -279,16 +298,18 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     if (!this.enableVarEditDialog || parent.isDeleted) {
       return;
     }
+    const siblings = this._rows.filter((r) => r.parent_id === parent.id && !r.isDeleted);
+    const maxOrd = siblings.reduce((m, r) => Math.max(m, r.varNr ?? 0), 0);
     const empty: TreeTableSourceRow = {
       id: 0,
       parent_id: parent.id,
-      varNr: 0,
+      varNr: maxOrd + 1,
       varName: '',
       varCode: '',
       varPath: '',
       varValue: '',
       varCdm: '',
-      varType: 'STRING',
+      varType: 'IN',
       varDataType: 'STRING',
       name: '',
     };
@@ -367,7 +388,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
   }
 
   /**
-   * Дети одного родителя отсортированы по varNr.
+   * Дети одного родителя отсортированы по {@code varNr} ({@code var_ord}), затем {@code id}.
    * parentKey: null — корневой уровень (parent_id null / undefined / 0 при отсутствии родителя в данных)
    */
   private buildChildrenMap(rows: T[]): Map<string, T[]> {
@@ -393,7 +414,12 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     }
     
     for (const [, list] of byParent) {
-      list.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
+      list.sort((a, b) => {
+        const ao = a.varNr ?? 0;
+        const bo = b.varNr ?? 0;
+        if (ao !== bo) return ao - bo;
+        return (a.id ?? 0) - (b.id ?? 0);
+      });
     }
     return byParent;
   }

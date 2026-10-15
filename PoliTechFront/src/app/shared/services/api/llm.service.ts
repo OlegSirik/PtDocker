@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Calculator } from '../calculator.service';
 import { AuthService } from '../auth.service';
 
-export type LlmTaskType = 'RULE' | 'COVER' | 'CALCULATOR';
+export type LlmTaskType = 'RULE' | 'COVER' | 'PACKAGE' | 'CALCULATOR' | 'SCHEMA';
 
 export interface LlmAssistRequest {
   taskType: LlmTaskType;
@@ -20,10 +20,55 @@ export interface LlmRuleDraft {
   message?: string;
 }
 
+export interface LlmCoverDraft {
+  code: string;
+  name: string;
+  risks?: string;
+  isMandatory?: boolean;
+  vars?: unknown[];
+}
+
+export interface LlmPackageDeductibleDraft {
+  id: number;
+  text: string;
+}
+
+export interface LlmPackageCoverDraft {
+  code: string;
+  isMandatory?: boolean;
+  waitingPeriod?: string;
+  coverageTerm?: string;
+  isDeductibleMandatory?: boolean;
+  deductibles?: LlmPackageDeductibleDraft[];
+}
+
+export interface LlmPackageDraft {
+  code: string;
+  name: string;
+  covers?: LlmPackageCoverDraft[];
+}
+
+export interface LlmSchemaAttributeDraft {
+  varCode: string;
+  varName: string;
+  varPath: string;
+  varType: string;
+  varDataType?: string;
+  varList?: string | null;
+  varValue?: string;
+  isSystem?: boolean;
+  parent_id?: number | null;
+  parentVarCode?: string | null;
+}
+
+export interface LlmSchemaDraft {
+  attributes: LlmSchemaAttributeDraft[];
+}
+
 export interface LlmAssistResponse {
   success: boolean;
   taskType: LlmTaskType;
-  result?: LlmRuleDraft | unknown;
+  result?: LlmRuleDraft | LlmSchemaDraft | unknown;
   rawContent?: string;
   warnings?: string[];
   errors?: string[];
@@ -102,5 +147,21 @@ export class LlmService {
       currentCalculator: calculator,
     };
     return this.http.post<LlmCalculatorAssistResponse>(url, body, { headers: this.llmHeaders });
+  }
+
+  assistSchema(
+    contractCode: string,
+    userMessage: string,
+    parentVarCode?: string
+  ): Observable<LlmAssistResponse> {
+    const url =
+      `${this.auth.baseApiUrl}/admin/schema/${encodeURIComponent(contractCode)}/llm/assist`;
+    const body = {
+      taskType: 'SCHEMA' as const,
+      userMessage,
+      contractCode,
+      ...(parentVarCode?.trim() ? { parentVarCode: parentVarCode.trim() } : {}),
+    };
+    return this.http.post<LlmAssistResponse>(url, body, { headers: this.llmHeaders });
   }
 }

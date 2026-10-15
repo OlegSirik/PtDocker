@@ -5,6 +5,19 @@ public record LlmCompletionResult(
         String model,
         int promptTokens,
         int completionTokens,
-        long latencyMs
+        long latencyMs,
+        String finishReason
 ) {
+    public LlmCompletionResult(
+            String content,
+            String model,
+            int promptTokens,
+            int completionTokens,
+            long latencyMs) {
+        this(content, model, promptTokens, completionTokens, latencyMs, null);
+    }
+
+    public boolean truncated() {
+        return finishReason != null && "length".equalsIgnoreCase(finishReason.trim());
+    }
 }

@@ -1,0 +1,41 @@
+@import '../../../../../styles/variables';
+@import '../../styles/policy-plaque';
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: $spacing-md;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $gray-700;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius-sm;
+  font: inherit;
+  background: $white;
+  color: $gray-900;
+}
+
+:host-context(body.theme-dark) {
+  .field {
+    color: #b8b8c2;
+  }
+
+  .field input,
+  .field select {
+    background: #242424;
+    border-color: #3a3a3a;
+    color: #e6e6e6;
+  }
+}

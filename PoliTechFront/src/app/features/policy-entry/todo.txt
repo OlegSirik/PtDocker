@@ -1,0 +1,244 @@
+# policy-entry — спецификация UI (источник для генерации / перегенерации)
+#
+# Как использовать:
+#   Реализовать или перегенерировать features/policy-entry/ строго по этому файлу.
+#   Не выдумывать маппинг в API сверх явно указанного.
+#   При изменении требований — править этот файл, затем перегенерировать код.
+#
+# Маршруты (все продуктовые страницы под /lk/):
+#   /:tenantId/lk/ns-policy  → страница ns-policy
+#   /:tenantId/lk/quotes     → список; «Создать» → продукт НС
+#   (klesh / антиклещ — НЕ сейчас)
+#
+# productCode: NS
+# Старые страницы (ns-quote, sales/pages/*) — не развивать; целевая — lk/ns-policy.
+
+
+═══════════════════════════════════════════════════════════════════
+0. ПРИНЯТЫЕ УТОЧНЕНИЯ
+═══════════════════════════════════════════════════════════════════
+
+--- Страница / продукт ---
+1. ns-policy, шаг оформления: insured02 (с полом M/F).
+2. productCode = NS.
+3. Целевая страница: ns-policy (не ns-quote). Маршрут /lk/ns-policy.
+4. Вход: lk/quotes → «Создать» — статический список createProducts;
+   пока только «Несчастный случай (NS)»; позже добавят pageId.
+5. Сейчас только НС (ns-policy + quote-ns1). quote-klesh1 / антиклещ — отложить.
+
+--- UI / стили ---
+6. Оболочка страницы как у остальных (products/quotes):
+   page-container + page-header + page-title.
+7. Плашки блоков: mat-card, фон белый (класс policy-plaque).
+   Общий стиль: features/policy-entry/styles/policy-plaque.scss.
+8. Степпер: 3 шага (Предрасчёт / Оформление / Оплата).
+   Индикатор шагов (не MatStepper с контентом внутри — зависания CD).
+   Контент шагов через @if по store.stepIndex.
+   Навигация назад: клик по достигнутому шагу в индикаторе ИЛИ кнопка «Назад».
+   Вперёд по индикатору — только на уже достигнутые шаги;
+   первый переход вперёд — через «Оформить» / «Далее к оплате».
+9. Layout предрасчёта: левая ~60% ввод, правая ~40% результат.
+10. Кнопка «Оформить»: активна только если premium > 0;
+    ТОЛЬКО переход на шаг 2. Без save/quote.
+11. Кнопка «Полис оплачен»: пустая заглушка, без API.
+12. Не использовать ngModel+Date-объекты в datepicker (цикл CD / зависание).
+    Даты UI: input type="date" + строки YYYY-MM-DD; store хранит wire ISO.
+
+--- Предрасчёт NS (поля) ---
+13. Виды спорта: захардкодить тестовые значения (FOOTBALL, HOCKEY, …).
+14. Виды спорта UI: мультиселект, максимум 5.
+15. Выбранные виды спорта: ПОКА НИКУДА НЕ ПИСАТЬ в Policy / draft
+    (только локальный UI-state блока; маппинг позже).
+16. Пакет: 0..5 → insuredObjects[0].packageCode как "0".."5".
+17. Срок: блок policy-term — дата начала + список месяцев 1..36
+    → policyTerm "P1M".."P36M". Дефолт: сегодня + P12M.
+    endDate на вводе не задаём (считает backend).
+18. Застрахованный на предрасчёте: birthDate, gender (M/F), sumInsured.
+
+--- Оформление ---
+19. policyHolderPerson: ФИО, birthDate, phone, email;
+    документ select (пока PASSPORT / «Паспорт», расширяемый);
+    только номер (без серии), dateIssue, whom, divisionCode;
+    адрес регистрации — одно текстовое поле → addresses[0].addressStr.
+20. insured02: ФИО, birthDate, gender M/F.
+21. Данные застрахованного (person) копировать и в policyHolder.person
+    (при изменении insured, перед quote, перед «Оформить»).
+
+--- Wire JSON / API ---
+22. Backend: POST .../sales/quotes|policies, @RequestBody String → PolicyDTO.
+    Даты wire: ZonedDateTime ISO, напр. "2026-08-27T00:00:00Z"
+    (не date-only "2026-08-27"). Пустой id "" ломает Long — не слать.
+23. Пустые атрибуты НЕ передавать ("" / пустые объекты / пустые массивы).
+24. Всегда массив "insuredObjects": [ ... ], никогда singular "insuredObject".
+25. При «Рассчитать»: собирать JSON ЗАНОВО с нуля
+    (PolicyService.buildFreshQuoteBody) — только поля ввода.
+    НЕ использовать данные предыдущего расчёта (id, premium, covers,
+    processList, status из ответа и т.п.).
+26. Ответ quote НЕ перетирает draft ввода в store:
+    пишем только premium (+ endDate для отображения при необходимости).
+    resetQuote сбрасывает premium/endDate перед новым запросом.
+27. Модели: shared/models (Policy, PolicyHolder, Person, InsuredObject, …).
+    Store: PolicyDraftStore (providers на shell).
+
+
+═══════════════════════════════════════════════════════════════════
+1. ОБЩИЙ ТИПОВОЙ КОМПОНЕНТ — страница договора
+═══════════════════════════════════════════════════════════════════
+
+Shell: PolicyEntryShell
+  — page-container / page-header / page-title
+  — индикатор шагов (stepIndex 0|1|2)
+  — контент по шагам
+
+1.1. Наименование продукта (заголовок).
+1.2. Степпер: Предрасчёт → Оформление → Оплата.
+1.3. Шаг 1 — Предрасчёт: 60/40; «Оформить» если premium > 0 → шаг 2.
+1.4. Шаг 2 — Оформление: после «Оформить».
+1.5. Шаг 3 — Оплата: кнопка-заглушка.
+
+
+═══════════════════════════════════════════════════════════════════
+2. ПРОДУКТОВЫЕ БЛОКИ ПРЕДРАСЧЁТА (шаг 1)
+═══════════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────────
+2.1. quote-klesh1  (ОТЛОЖЕНО)
+───────────────────────────────────────────────────────────────────
+Левая: «Застрахованный» mat-card белый — birthDate
+       «Срок действия полиса» mat-card белый — startDate, endDate
+Правая: «Антиклещ», срок, Рассчитать → fastCalc, premium, Оформить
+
+───────────────────────────────────────────────────────────────────
+2.2. quote-ns1  (ns-policy, шаг 1)
+───────────────────────────────────────────────────────────────────
+Левая (60%):
+
+  «Спорт» mat-card белый
+    — мультиселект до 5; тестовый список; НЕ писать в Policy
+
+  «Застрахованный» mat-card белый
+    — birthDate, gender M/F, sumInsured → insuredObjects[0]
+
+  «Покрытия» mat-card белый
+    — пакет 0..5 → packageCode "0".."5"
+        0 — НС обычный
+        1 — НС + Потеря работы 150000
+        2 — НС + Потеря работы 300000
+        3 — НСиБ
+        4 — НСиБ + Потеря работы 150000
+        5 — НСиБ + Потеря работы 300000
+
+  policy-term mat-card белый
+    — startDate (wire Z), policyTerm P{n}M (1..36), дефолт P12M
+
+Правая (40%) mat-card белый:
+  «Страхование от НС»
+  Срок: дата начала + N мес. / PnM
+  Пакет: название
+  «Рассчитать» → fastCalc(buildFreshQuoteBody) — JSON с нуля
+  Показать premium; «Оформить» если premium > 0 → шаг 2
+
+
+═══════════════════════════════════════════════════════════════════
+3. БЛОКИ ОФОРМЛЕНИЯ (шаг 2)
+═══════════════════════════════════════════════════════════════════
+
+3.1. policyHolderPerson — mat-card белый «Страхователь»
+     ФИО, birthDate, phone, email, документ PASSPORT+, номер (без серии),
+     dateIssue, whom, divisionCode, addressStr
+
+3.2. insured01 — НЕ для ns-policy (ФИО, birthDate, без пола)
+
+3.3. insured02 — mat-card белый «Застрахованный»
+     ФИО, birthDate, gender M/F
+     → insuredObjects[0].person (+ sync в policyHolder.person)
+
+
+═══════════════════════════════════════════════════════════════════
+4. БЛОК ОПЛАТЫ (шаг 3)
+═══════════════════════════════════════════════════════════════════
+
+payment — mat-card белый; кнопка «Полис оплачен» — заглушка без API
+
+
+═══════════════════════════════════════════════════════════════════
+5. СТРАНИЦА ns-policy
+═══════════════════════════════════════════════════════════════════
+
+pageId:       ns-policy
+title:        Несчастный случай
+productCode:  NS
+route:        /:tenantId/lk/ns-policy
+
+Шаги:
+  1 quote-ns1
+  2 policyHolderPerson + insured02
+  3 payment
+
+Файлы (ориентир):
+  shell/policy-entry-shell.*
+  state/policy-draft.store.ts
+  blocks/quote-ns1/, policy-term/, policy-holder-person/, insured02/, payment/
+  styles/policy-plaque.scss
+  registry/policy-page.registry.ts, policy-block.registry.ts
+  shared/services/policy.service.ts → buildFreshQuoteBody / fastCalc
+
+
+═══════════════════════════════════════════════════════════════════
+6. WIRE JSON (quote) — правила сборки
+═══════════════════════════════════════════════════════════════════
+
+Метод: PolicyService.buildFreshQuoteBody(policy)
+
+Включать только заполненное, например:
+{
+  "productCode": "NS",
+  "statusCode": "DRAFT",
+  "startDate": "2026-08-27T00:00:00Z",
+  "policyTerm": "P12M",
+  "policyHolder": {
+    "person": { "birthDate": "2000-06-14", "gender": "M", ... }
+  },
+  "insuredObjects": [
+    {
+      "ioType": "PERSON",
+      "sumInsured": "500000",
+      "packageCode": "0",
+      "person": { "birthDate": "2000-06-14", "gender": "M" }
+    }
+  ]
+}
+
+Запрещено в запросе quote:
+  — пустые строки / пустые объекты / пустые массивы
+  — "insuredObject" (singular)
+  — id: "" / поля прошлого ответа (premium, covers, processList, …)
+  — date-only startDate без времени (нужен ZonedDateTime)
+
+
+═══════════════════════════════════════════════════════════════════
+7. СТРАНИЦА антиклещ / klesh  (НЕ СЕЙЧАС)
+═══════════════════════════════════════════════════════════════════
+
+Позже: quote-klesh1 + оформление + оплата. Без маршрута, пока не попросят.
+
+
+═══════════════════════════════════════════════════════════════════
+8. ЧЕКЛИСТ РЕАЛИЗАЦИИ / ПЕРЕГЕНЕРАЦИИ
+═══════════════════════════════════════════════════════════════════
+
+[x] Shell: page-container + заголовок + индикатор 3 шагов
+[x] Layout 60/40 на предрасчёте
+[x] quote-ns1 + policy-term (P{n}M)
+[x] policyHolderPerson, insured02, payment
+[x] Реестр ns-policy, route lk/ns-policy, lk/quotes → Создать НС
+[x] Спорт локально, не в Policy
+[x] mat-card фон белый (policy-plaque)
+[x] Wire: даты Z, prune empty, insuredObjects[]
+[x] Quote: JSON с нуля (buildFreshQuoteBody); ответ не перетирает draft
+[x] Sync insured person → policyHolder
+[x] НЕ quote-klesh1
+[x] Навигация назад: степпер + кнопка «Назад»
+[ ] Убрать formly-forms / старый form route (опционально)
+
+Конец спецификации.

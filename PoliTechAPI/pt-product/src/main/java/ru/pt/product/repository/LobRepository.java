@@ -19,6 +19,9 @@ public interface LobRepository extends JpaRepository<LobEntity, Long> {
     @Query("select l.id as id, l.code as code, l.name as name from LobEntity l where l.tId = :tId and l.recordStatus = 'ACTIVE' order by l.code")
     List<Object[]> listActiveSummaries(@Param("tId") Long tenantId);
 
+    @Query("select l from LobEntity l where l.tId = :tId and l.recordStatus = 'ACTIVE' order by l.code")
+    List<LobEntity> findActiveByTid(@Param("tId") Long tenantId);
+
     @org.springframework.data.jpa.repository.Query(value = "SELECT nextval('pt_seq')", nativeQuery = true)
     Long nextLobId();
 }

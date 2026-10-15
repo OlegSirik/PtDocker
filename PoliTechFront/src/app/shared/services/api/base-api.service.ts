@@ -83,14 +83,17 @@ export abstract class BaseApiService<T> {
 
   protected createHeaders(customHeaders?: { [key: string]: string }): HttpHeaders {
     let headers = new HttpHeaders();
-        
-    // Кастомные headers
+
+    // Кастомные headers (null/undefined ломают HttpHeaders.set — .length на null)
     if (customHeaders) {
       Object.keys(customHeaders).forEach(key => {
-        headers = headers.set(key, customHeaders[key]);
+        const value = customHeaders[key];
+        if (value != null && value !== '') {
+          headers = headers.set(key, value);
+        }
       });
     }
-    
+
     return headers;
   }
 }

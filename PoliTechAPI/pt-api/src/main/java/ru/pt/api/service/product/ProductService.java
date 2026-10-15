@@ -176,19 +176,6 @@ public interface ProductService {
      */
     List<PvVar> getPvVars(Long tenantId);
 
-    /**
-     * Перезагрузить переменные из LOB для указанной категории в dev-версии продукта.
-     *
-     * @param tenantId  идентификатор тенанта ({@code tid})
-     * @param productId идентификатор продукта
-     * @param versionNo номер версии (должна быть dev)
-     * @param category  категория переменных (например {@code policy}, {@code insuredObject})
-     * @return обновлённая версия продукта
-     * @throws ru.pt.api.dto.exception.BadRequestException если {@code category} пуст
-     * @throws ru.pt.api.dto.exception.UnprocessableEntityException если версия не DEV или обновление недопустимо
-     */
-    ProductVersionModel reloadVars(Long tenantId, Long productId, Long versionNo, String category);
-
     ProductVersionModel addPackage(Long tenantId, Long productId, Long versionNo, PvPackage pkg);
 
     ProductVersionModel updatePackage(Long tenantId, Long productId, Long versionNo, PvPackage pkg);
@@ -201,6 +188,10 @@ public interface ProductService {
 
     ProductVersionModel deleteCover(Long tenantId, Long productId, Long versionNo, String packageCode, String coverCode);
 
+    /**
+     * Добавить переменную в DEV-версию. Не экспонируется HTTP API — только каскад из схемы
+     * ({@link LobService#appendSchemaAttributeAsDeleted}).
+     */
     ProductVersionModel addVar(Long tenantId, Long productId, Long versionNo, PvVar var);
 
     ProductVersionModel updateVar(Long tenantId, Long productId, Long versionNo, PvVar var);

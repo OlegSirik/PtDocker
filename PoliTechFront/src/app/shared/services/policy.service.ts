@@ -55,14 +55,178 @@ override  getUrl(id?: (number | string)): string {
     return of(void 0);
   }
 
-  // Fast Calc - calculate policy
+  // Fast Calc - calculate policy (всегда свежий JSON из ввода, без прошлого ответа)
   fastCalc(policy: Policy): Observable<Policy> {
-    return this.http.post<Policy>(this.getUrl() + '/quotes', policy);
+    return this.http.post<Policy>(this.getUrl() + '/quotes', this.buildFreshQuoteBody(policy));
   }
 
   // Save policy
   savePolicy(policy: Policy): Observable<Policy> {
-    return this.http.post<Policy>(this.getUrl() + '/policies', policy);
+    return this.http.post<Policy>(this.getUrl() + '/policies', this.toWireBody(policy));
+  }
+
+  /**
+   * Собрать quote JSON с нуля только из полей ввода (без id/premium/covers/processList и т.п.).
+   */
+  buildFreshQuoteBody(policy: Policy): Record<string, unknown> {
+    const start = this.toWireDateTime(policy.startDate);
+    const insured = policy.insuredObjects?.[0];
+    const insuredPerson = insured?.person;
+    const holder = policy.policyHolder;
+    const holderPerson = holder?.person;
+
+    const personFromInsured: Record<string, unknown> = {};
+    if (insuredPerson) {
+      for (const key of ['firstName', 'lastName', 'middleName', 'birthDate', 'gender', 'fullName', 'citizenship'] as const) {
+        const v = insuredPerson[key];
+        if (v != null && String(v).trim() !== '') {
+          personFromInsured[key] = v;
+        }
+      }
+    }
+
+    const holderPersonOut: Record<string, unknown> = { ...personFromInsured };
+    if (holderPerson) {
+      for (const key of ['firstName', 'lastName', 'middleName', 'birthDate', 'gender', 'fullName', 'citizenship'] as const) {
+        const v = holderPerson[key];
+        if (v != null && String(v).trim() !== '') {
+          holderPersonOut[key] = v;
+        }
+      }
+    }
+
+    const policyHolder: Record<string, unknown> = {};
+    if (Object.keys(holderPersonOut).length > 0) {
+      policyHolder['person'] = holderPersonOut;
+    }
+
+    const contacts = holder?.contacts;
+    if (contacts) {
+      const c: Record<string, unknown> = {};
+      if (contacts.phone?.trim()) c['phone'] = contacts.phone.trim();
+      if (contacts.email?.trim()) c['email'] = contacts.email.trim();
+      if (contacts.telegram?.trim()) c['telegram'] = contacts.telegram.trim();
+      if (Object.keys(c).length > 0) {
+        policyHolder['contacts'] = c;
+      }
+    }
+
+    const id0 = holder?.identifiers?.[0];
+    if (id0 && (id0.number || id0.whom || id0.divisionCode || id0.dateIssue)) {
+      const id: Record<string, unknown> = {};
+      if (id0.typeCode) id['typeCode'] = id0.typeCode;
+      if (id0.number?.trim()) id['number'] = id0.number.trim();
+      if (id0.dateIssue?.trim()) id['dateIssue'] = id0.dateIssue.trim();
+      if (id0.whom?.trim()) id['whom'] = id0.whom.trim();
+      if (id0.divisionCode?.trim()) id['divisionCode'] = id0.divisionCode.trim();
+      if (Object.keys(id).length > 0) {
+        policyHolder['identifiers'] = [id];
+      }
+    }
+
+    const addr0 = holder?.addresses?.[0];
+    if (addr0?.addressStr?.trim()) {
+      policyHolder['addresses'] = [{ addressStr: addr0.addressStr.trim() }];
+    }
+
+    const io: Record<string, unknown> = {
+      ioType: insured?.ioType || 'PERSON'
+    };
+    if (insured?.packageCode != null && String(insured.packageCode) !== '') {
+      io['packageCode'] = String(insured.packageCode);
+    }
+    if (insured?.sumInsured != null && String(insured.sumInsured).trim() !== '') {
+      io['sumInsured'] = String(insured.sumInsured).trim();
+    }
+    if (Object.keys(personFromInsured).length > 0) {
+      io['person'] = { ...personFromInsured };
+    }
+
+    const body: Record<string, unknown> = {
+      productCode: policy.productCode,
+      statusCode: 'DRAFT',
+      insuredObjects: [io]
+    };
+    if (start) {
+      body['startDate'] = start;
+    }
+    if (policy.policyTerm?.trim()) {
+      body['policyTerm'] = policy.policyTerm.trim();
+    }
+    if (Object.keys(policyHolder).length > 0) {
+      body['policyHolder'] = policyHolder;
+    }
+
+    return (this.pruneEmpty(body) as Record<string, unknown>) ?? body;
+  }
+
+  /**
+   * Wire JSON for SalesController (@RequestBody String → PolicyDTO).
+   * - dates → ISO-8601 ZonedDateTime
+   * - empty strings / empty objects / empty arrays omitted
+   * - always insuredObjects[] (never singular insuredObject)
+   */
+  toWireBody(policy: Policy): Record<string, unknown> {
+    // save тоже без хвостов прошлого расчёта
+    return this.buildFreshQuoteBody(policy);
+  }
+
+  /**
+   * Recursively drop null/undefined/'' and empty plain objects/arrays.
+   * Keeps 0 and false.
+   */
+  private pruneEmpty(value: unknown): unknown {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+    if (typeof value === 'string') {
+      return value.trim() === '' ? undefined : value;
+    }
+    if (typeof value !== 'object') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      const next = value
+        .map(item => this.pruneEmpty(item))
+        .filter(item => item !== undefined);
+      return next.length === 0 ? undefined : next;
+    }
+
+    const obj = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      if (key === 'insuredObject') {
+        continue;
+      }
+      const pruned = this.pruneEmpty(obj[key]);
+      if (pruned !== undefined) {
+        result[key] = pruned;
+      }
+    }
+    return Object.keys(result).length === 0 ? undefined : result;
+  }
+
+  /** YYYY-MM-DD or partial ISO → 2026-08-25T00:00:00Z */
+  toWireDateTime(value?: string | null): string | undefined {
+    if (!value || !String(value).trim()) {
+      return undefined;
+    }
+    const v = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      return `${v}T00:00:00Z`;
+    }
+    if (v.includes('T') && !/[Zz]|[+-]\d{2}:\d{2}$/.test(v)) {
+      return `${v}Z`;
+    }
+    return v;
+  }
+
+  /** For date inputs: 2026-08-25T00:00:00Z → 2026-08-25 */
+  toDateInputValue(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+    return String(value).slice(0, 10);
   }
 
   conversPolicy2Box(policy: Policy): BoxPolicy {

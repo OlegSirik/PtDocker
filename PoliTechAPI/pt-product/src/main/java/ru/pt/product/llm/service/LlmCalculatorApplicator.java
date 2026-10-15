@@ -25,10 +25,11 @@ public class LlmCalculatorApplicator {
         }
 
         target.setVars(finalizeVars(target.getVars(), source.getVars()));
-        if (source.getFormulas() != null) {
+        // Delta mode: omit / empty formulas|coefficients means "leave target as-is".
+        if (source.getFormulas() != null && !source.getFormulas().isEmpty()) {
             target.setFormulas(new ArrayList<>(source.getFormulas()));
         }
-        if (source.getCoefficients() != null) {
+        if (source.getCoefficients() != null && !source.getCoefficients().isEmpty()) {
             target.setCoefficients(new ArrayList<>(source.getCoefficients()));
         }
         if (source.getLlmText() != null && !source.getLlmText().isBlank()) {

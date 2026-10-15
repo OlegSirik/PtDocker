@@ -1,6 +1,7 @@
 package ru.pt.api.service.product;
 
 import ru.pt.api.dto.product.LobModel;
+import ru.pt.api.dto.product.LobVar;
 
 import java.util.List;
 
@@ -74,4 +75,17 @@ public interface LobService {
      * @throws ru.pt.api.dto.exception.UnprocessableEntityException при некорректной структуре {@code mpVars} (например, covers)
      */
     LobModel update(Long tenantId, LobModel payload);
+
+    /**
+     * Добавить атрибут схемы во все активные LOB тенанта ({@code mpVars}) с {@code isDeleted = true},
+     * и в DEV-версии продуктов этих LOB через {@link ProductService#addVar}
+     * ({@code pt_products.dev_version_no}, {@code record_status = ACTIVE}).
+     * Если {@code varCode} уже есть — пропуск. Без отдельной auth-проверки на LOB (вызывается
+     * из {@link ru.pt.api.service.schema.SchemaService#addAttribute} после MANAGE на схеме;
+     * {@code addVar} сам проверяет PRODUCT MANAGE / DEV).
+     *
+     * @param tenantId   идентификатор тенанта ({@code tid})
+     * @param schemaVar  атрибут схемы с присвоенным {@code id}
+     */
+    void appendSchemaAttributeAsDeleted(Long tenantId, LobVar schemaVar);
 }

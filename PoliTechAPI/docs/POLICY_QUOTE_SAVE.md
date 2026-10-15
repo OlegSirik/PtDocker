@@ -2,6 +2,8 @@
 
 Документ описывает, как запросы **quote** (расчёт котировки) и **save** (оформление договора) проходят через API, оркестратор, калькулятор и хранилище; какие форматы данных используются на каждом этапе; как договор записывается в БД и читается обратно.
 
+> **Статус (as-is).** Сверено с `ProcessOrchestratorService`, `PolicyProcessSupport`, `PreProcessService`, `SalesController` (pt-process / pt-launcher). План рефакторинга — § «Рефакторинг».
+
 Pluggable wire-форматы и adapter-JAR: [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md).
 
 ---
@@ -10,34 +12,44 @@ Pluggable wire-форматы и adapter-JAR: [POLICY_WIRE_ADAPTERS.md](./POLICY
 
 | Метод | URL | Контроллер | Оркестратор |
 |-------|-----|------------|-------------|
-| `POST` | `/api/v1/{tenantCode}/sales/quotes` | `SalesController.quoteValidator` | `ProcessOrchestrator.calculate` |
-| `POST` | `/api/v1/{tenantCode}/sales/policies` | `SalesController.saveValidator` | `ProcessOrchestrator.save` |
+| `POST` | `/api/v1/{tenantCode}/sales/quotes` | `SalesController.quoteValidator` | `ProcessOrchestrator.quote(StdPolicy)` |
+| `POST` | `/api/v1/{tenantCode}/sales/policies` | `SalesController.saveValidator` | `ProcessOrchestrator.save(StdPolicy)` |
 | `GET` | `/api/v1/{tenantCode}/sales/policies/{policyNumber}` | `SalesController.getPolicyByNumber` | `ProcessOrchestrator.getPolicyByNumber` |
 
-Тело запроса quote/save — **сырой JSON-строкой** (`@RequestBody String`), не типизированный объект Spring.
+Тело запроса quote/save — **сырой JSON-строкой** (`@RequestBody String`).
 
-Ответ quote/save — тоже **JSON-строка** (сериализованный договор после обработки).
+Парсинг в контроллере:
+
+```java
+StdPolicy policy = stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, requestBody);
+String result = processOrchestrator.quote(policy).toJson(); // или .save(policy)
+```
+
+Ответ — JSON-строка (`stdPolicy.toJson()`).
+
+`PolicyProcessSupport.parsePolicy` существует, но **в текущем HTTP-пути SalesController не вызывается** — парсинг дублируется в контроллере.
 
 ---
 
 ## Слои и пакеты
 
 ```
-HTTP JSON
+HTTP JSON string
     │
     ▼
 SalesController (pt-launcher)
-    │
+    │  StdPolicyFactory.build(INSURANCE_CONTRACT, json)
     ▼
-ProcessOrchestratorService (pt-process)     ← оркестратор
-    ├── PolicyProcessSupport                ← общие шаги parse / product / vars / commission
-    ├── PreProcessService                   ← нормализация, даты, метаданные продукта
+ProcessOrchestratorService (pt-process)     ← оркестратор quote / save / payment / get
+    ├── PolicyProcessSupport                ← normalize, product, commission, digests, strip
+    ├── PreProcessService                   ← normalizePolicy, dates, covers из продукта
     ├── ValidatorService                    ← валидаторы продукта (QUOTE / SAVE)
-    ├── RuleValidationService (CEL)         ← PRE/POST quote/save rules
+    ├── RuleValidationService (CEL)         ← PRE_QUOTE / PRE_SAVE / POST_QUOTE / UNDERWRITING
     ├── CalculatorService (pt-calculator)   ← тарифный расчёт
-    ├── PostProcessService                  ← запись премий/лимитов в покрытия
+    ├── PostProcessService                  ← setCovers (есть, но из quote/save сейчас НЕ вызывается)
     ├── NumberGeneratorService              ← только save
     ├── PaymentService                      ← только save (график платежей)
+    ├── PolicyAddOnService                  ← только quote
     └── StorageService → DbStorageService   ← только save (pt-db)
 ```
 
@@ -50,11 +62,12 @@ ProcessOrchestratorService (pt-process)     ← оркестратор
 | Реализация | `InsuranceContractPolicy`* | Обёртка: `PolicyDTO` + runtime-переменные; `formatId` = `v3` |
 
 \* целевое имя при рефакторинге: `V3Policy` в `pt-adapter-v3`.
+
 | Domain-view | `ru.pt.api.dto.policy.*` (`InsuredObject`, `Cover`, `Commission`, …) | Типизированный доступ в оркестраторе |
 | Переменные расчёта | `VariableContextImpl` (`CalculatorContext`) | JsonPath → vars, калькулятор, CEL |
 | Хранилище | `PolicyData` + `policy_data` / `policy_index` | DTO передачи; JSONB + денормализованный индекс |
 
-**Важно:** отдельного «std JSON»-формата нет. `StdPolicy` — Java-абстракция. В БД и в ответе API лежит **wire JSON** (`policyv3.PolicyDTO`), но уже обогащённый процессом (премия, номер, id, commission, installments и т.д.).
+**Важно:** отдельного «std JSON»-формата нет. `StdPolicy` — Java-абстракция. В БД и в ответе API лежит **wire JSON** (`policyv3.PolicyDTO`), обогащённый процессом (премия, номер, id, commission, installments, status и т.д.).
 
 ---
 
@@ -66,36 +79,43 @@ sequenceDiagram
     participant API as SalesController
     participant Orch as ProcessOrchestratorService
     participant Support as PolicyProcessSupport
-    participant Pre as PreProcessService
     participant Calc as CalculatorService
     participant DB as DbStorageService
 
     Client->>API: POST JSON string
-    API->>Orch: calculate() / save()
-    Orch->>Support: parsePolicy(json)
-    Support->>Support: StdPolicyFactory → InsuranceContractPolicy
+    API->>API: StdPolicyFactory.build(...)
+    API->>Orch: quote(std) / save(std)
     Orch->>Support: normalizeForProcess(QUOTE|SAVE)
-    Orch->>Support: loadProduct, applyProductMetadata, attachInsurer
-    Orch->>Support: initVarContext → VariableContextImpl
-    Orch->>Orch: validate (QUOTE/SAVE + CEL)
+    Orch->>Support: loadProduct, applyProductMetadata
+    Orch->>Support: resolveCommission + validate
+    Orch->>Support: initVarContext → asCalculatorContext
+    Orch->>Orch: ValidatorService + CEL PRE_*
     Orch->>Calc: runCalculator(varCtx)
-    Orch->>Orch: calculatePremium → setPremium, setCovers
-    alt save only
-        Orch->>Orch: generate policyNumber, installments
+    Orch->>Orch: calculatePremium (covers inline, не PostProcessService)
+    Orch->>Orch: CEL POST_QUOTE_VALIDATION
+    alt quote
+        Orch->>Support: digests, commission, assertPositivePremium, stripProcessList
+        Orch->>Orch: policyAddOnService.checkRequestedAddOns
+    else save
+        Orch->>Support: commission, digests
+        Orch->>Orch: number + installments
+        Orch->>Orch: CEL UNDERWRITING → status UNDERWRITING \| ISSUED
         Orch->>DB: storageService.save(stdPolicy)
         Orch->>Orch: paymentService.save(...)
     end
-    Orch-->>API: stdPolicy.toJson()
-    API-->>Client: JSON string
+    Orch-->>API: StdPolicy
+    API-->>Client: stdPolicy.toJson()
 ```
 
 ---
 
 ## Шаг 1. Парсинг запроса → StdPolicy
 
+В HTTP-пути:
+
 ```java
-// PolicyProcessSupport.parsePolicy
-stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, json)
+// SalesController
+stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, requestBody)
 ```
 
 Цепочка:
@@ -105,23 +125,25 @@ stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, json)
    - `PolicyJsonSupport.fromJson(json)` → `PolicyDTO` (wire);
    - создаётся `InsuranceContractPolicy(contract, sourceJson)`.
 
-На этом этапе `PolicyDTO` живёт **только внутри** `InsuranceContractPolicy`. Внешний код работает с `StdPolicy`.
+На этом этапе `PolicyDTO` живёт **внутри** `InsuranceContractPolicy`. Оркестратор получает уже `StdPolicy`.
 
 ---
 
 ## Шаг 2. Нормализация (PreProcessService)
 
-`PolicyProcessSupport.normalizeForProcess(stdPolicy, processList, dataScope)`:
+`PolicyProcessSupport.normalizeForProcess` → `preProcessService.normalizePolicy`:
 
 | Поле / действие | Значение |
 |-----------------|----------|
 | `processList.processType` | `"quote"` или `"save"` |
-| `processList.dataScope` | `"DEV"` (если у пользователя dataScope=DEV) или `"PROD"` |
+| `processList.dataScope` | `DEV` или `PROD` по `user.dataScope` |
 | `premium` | `null` (пересчитывается) |
 | `policyNumber` | `null` (на save генерируется позже) |
 | `productVersion` | `0` (перезапишется из продукта) |
 | `id` | `null` |
-| `statusCode` | `"NEW"` |
+| `statusCode` | `QUOTE`, если не был `ISSUED` |
+
+Статусы домена (`PolicyStatus`): `QUOTE` → `UNDERWRITING` / `ISSUED` → `PAID`. Значения `NEW` / `IN_PAYMENT` в enum **нет**.
 
 ---
 
@@ -131,25 +153,25 @@ stdPolicyFactory.build(StdPolicyFormat.INSURANCE_CONTRACT, json)
 
 1. **Продукт** — `productService.getProductByCode(tenantId, productCode, isDev)`.
 2. **Авторизация:**
-   - quote: `PRODUCT::QUOTE`;
-   - save (PROD): `POLICY::SELL` + `PRODUCT::SELL`.
+   - quote: `PRODUCT` + `AuthZ.Action.QUOTE`;
+   - save (только если `dataScope == PROD`): `POLICY::SELL` + `checkProductAction(..., SELL)`.
 3. **Метаданные** — `PreProcessService.applyProductMetadata`:
    - `productVersion`, `productName`;
-   - нормализация дат (`issueDate`, `startDate`, `endDate`, `policyTerm`, `waitingPeriod`);
-   - инициализация покрытий/франшиз по конфигурации продукта.
-4. **Страховщик** — `InsurerMapper.fromInsuranceCompany(...)`.
-5. **Комиссия** — проверка запрошенной ставки (`CommissionService.checkRequestedCommissionRate`).
+   - нормализация дат (`issueDate`, `startDate`, `endDate`, `policyTerm`, waiting/activation);
+   - инициализация покрытий/франшиз по пакету продукта.
+4. **Страховщик** — `InsCompanyService` + `InsurerMapper` внутри `applyProductMetadata`.
+5. **Комиссия** — `resolveCommission` + `validateRequestedCommission` (ставка через `CommissionService`).
 
 ---
 
 ## Шаг 4. Контекст переменных (VariableContext)
 
-`PolicyProcessSupport.initVarContext(stdPolicy, product)`:
+`PolicyProcessSupport.initVarContext`:
 
 ```java
 policy.setVars(product);           // InsuranceContractPolicy.rebuildVariableContext()
 CalculatorContext varCtx = policy.asCalculatorContext();
-preProcessService.enrichVariables(varCtx);
+// enrichVariables больше не вызывается из initVarContext
 ```
 
 Внутри `setVars`:
@@ -160,7 +182,7 @@ preProcessService.enrichVariables(varCtx);
    - по jsonPath из определений переменных продукта материализуются значения из JSON;
    - вычисляются MAGIC-переменные (`ph_age_issue`, `pl_TermMonths`, …).
 
-Дальше оркестратор, калькулятор и CEL работают с `varCtx`, а изменения системных полей договора — через геттеры/сеттеры `StdPolicy` (`setPremium`, `setStartDate`, …).
+Дальше оркестратор, калькулятор и CEL работают с `varCtx`.
 
 ---
 
@@ -172,57 +194,64 @@ preProcessService.enrichVariables(varCtx);
 | `ValidatorService` SAVE | — | ✓ |
 | CEL `PRE_QUOTE_VALIDATION` | ✓ | ✓ |
 | CEL `PRE_SAVE_VALIDATION` | — | ✓ |
-| CEL `POST_QUOTE_VALIDATION` | ✓ (после расчёта) | — |
-| CEL `POST_SAVE_VALIDATION` | — | ✓ (перед записью в БД) |
+| CEL `POST_QUOTE_VALIDATION` | ✓ (после расчёта) | ✓ (после расчёта) |
+| CEL `UNDERWRITING` | — | ✓ (после installments; не hard-fail) |
+| Add-ons (`PolicyAddOnService`) | ✓ (в конце) | — |
 
-Дополнительно на quote: `PolicyAddOnService.checkRequestedAddOns` — проверка и нормализация опций.
+Поведение UNDERWRITING на save:
 
-При ошибках — `UnprocessableEntityException` со списком `ValidationError`.
+* если CEL вернул сообщения → `statusCode = UNDERWRITING` (договор всё равно сохраняется);
+* иначе → `statusCode = ISSUED`.
+
+Ошибки Validator/CEL PRE/POST (кроме UNDERWRITING) → `BadRequestException` (400) со списком `ErrorDetail` из `ValidationError` (`throwValidationErrors`).
 
 ---
 
 ## Шаг 6. Расчёт премии (калькулятор)
 
-`ProcessOrchestratorService.calculatePremium`:
+`ProcessOrchestratorService.calculatePremium` (private, ~100 строк):
 
-1. **Обязательные vars покрытий** — для каждого cover регистрируются `io_{code}_sumInsured`, `io_{code}_premium`, `io_{code}_deductibleNr`.
-2. **Калькулятор** — `calculatorService.getCalculator(tenantId, productId, versionNo, packageCode)`.
-3. Если калькулятор найден:
-   - `calculatorService.runCalculator(...)` — выполнение формул, запись результатов в `varCtx`;
-   - `postProcessService.setCovers(insuredObject, varCtx)` — премия/СС/франшиза/лимиты из vars в domain `Cover`.
-4. **Премия договора:**
+1. Ограничение: **ровно 1** `InsuredObject`, иначе `UnprocessableEntityException`.
+2. Регистрация vars покрытий: `sumInsured` / `premium` / `deductibleNr` на каждый cover.
+3. `calculatorService.getCalculator` + `runCalculator` по `packageCode` первого объекта.
+4. Запись результатов **прямо в** `Cover` (sumInsured, premium, deductible + текст из продукта через `resolveDeductibleText`).
+   - Вызов `postProcessService.setCovers(...)` **закомментирован** — логика частично дублирует `PostProcessService`, но с резолвом текста франшизы и без `limitMin`/`limitMax`.
+5. Премия договора:
    - если `varCtx.pl_premium > 0` → `stdPolicy.setPremium(pl_premium)`;
-   - иначе сумма `cover.premium` по покрытиям.
-5. **СС объекта** — из `io_sumInsured` в vars → `insuredObject.setSumInsured(...)`.
+   - иначе сумма `cover.premium`.
+6. СС объекта — из `io_sumInsured`; при `<= 0` — ошибка тарифа.
 
-`CalculatorServiceImpl.runCalculator` загружает модель калькулятора (формулы, коэффициенты), добавляет CONST-переменные в контекст и последовательно выполняет строки формулы с условиями.
+`CalculatorServiceImpl.runCalculator` загружает модель (формулы, коэффициенты), добавляет CONST и выполняет строки формулы.
 
 ---
 
-## Шаг 7. Постобработка (общая)
+## Шаг 7. Постобработка
 
 После расчёта:
 
-1. **Digests** — `TextDocumentView` пишет `ph_digest`, `io_digest` в `processList` (на save ещё `insCompanyCode`).
-2. **Комиссия** — `commissionService.calculateCommission` → `stdPolicy.setCommission(...)`.
-3. **quote:** `assertPositivePremium`, для PROD — `processList` убирается из ответа, `return stdPolicy.toJson()`.
+1. **CEL POST_QUOTE_VALIDATION** (и quote, и save).
+2. **Комиссия** — `policyProcessSupport.calculateCommission` → `stdPolicy.setCommission`.
+3. **Digests** — `TextDocumentView` → `ph_digest` / `io_digest` в `processList` (`applyDigests`). Поле `insCompanyCode` в digests **не пишется**.
+4. **quote only:** `assertPositivePremium`, `stripProcessListForProdResponse` (PROD → `processList=null`, DEV → vars в processList), add-ons.
+5. **save only:** номер, installments, UNDERWRITING status, storage, payment save, `processList=null`.
 
 ---
 
 ## Шаг 8. Только save — оформление и запись
 
-Дополнительные шаги после расчёта:
+| # | Действие | Сервис / код |
+|---|----------|--------------|
+| 1 | Генерация номера | `NumberGeneratorService.getNextNumber` |
+| 2 | Digests | `applyDigests` |
+| 3 | График платежей | `PaymentService.createInstallments` → `stdPolicy.setInstallments` |
+| 4 | CEL UNDERWRITING | статус `UNDERWRITING` или `ISSUED` |
+| 5 | Сохранение в БД | `StorageService.save(stdPolicy, getCurrentUser())` |
+| 6 | Сохранение платежей | `PaymentService.save(tenantId, policyId, installmentsDto)` |
+| 7 | Ответ | `processList = null`, контроллер вызывает `toJson()` |
 
-| # | Действие | Сервис |
-|---|----------|--------|
-| 1 | Генерация номера договора | `NumberGeneratorService.getNextNumber` |
-| 2 | График платежей | `PaymentService.createInstallments` → `stdPolicy.setInstallments` |
-| 3 | CEL POST_SAVE_VALIDATION | `RuleValidationService` |
-| 4 | Сохранение в БД | `StorageService.save(stdPolicy, user)` |
-| 5 | Сохранение платежей | `PaymentService.save(tenantId, policyId, installments)` |
-| 6 | Ответ | `processList = null`, `stdPolicy.toJson()` |
+После `storageService.save` на `stdPolicy` проставлены `id` и `publicId` (нужны для `paymentService.save`).
 
-После `storageService.save` на `stdPolicy` проставлены `id` и `publicId` (используются в `paymentService.save`).
+`assertPositivePremium` на save **не вызывается**.
 
 ---
 
@@ -230,107 +259,66 @@ preProcessService.enrichVariables(varCtx);
 
 `InsuranceContractPolicy.toJson()`:
 
-1. `syncViewsToContract()` — domain `InsuredObject` / `Commission` / `Installment` → поля `PolicyDTO`;
+1. `syncViewsToContract()` — domain views → `PolicyDTO`;
 2. `PolicyJsonSupport.toJson(contract)` — Jackson, pretty-print, `@JsonInclude(NON_EMPTY)`.
 
 `processList` в ответе:
-- **quote + PROD** — убирается (`stripProcessListForProdResponse`);
-- **save** — убирается перед ответом (`setProcessList(null)`);
-- **quote + DEV** — может остаться в JSON.
+
+* **quote + PROD** — убирается (`stripProcessListForProdResponse`);
+* **quote + DEV** — остаётся, с vars;
+* **save** — `setProcessList(null)` перед возвратом.
 
 ---
 
 ## Хранение в БД
 
-Запись в БД выполняется **только на save**. Quote не персистится — расчёт остаётся в памяти и уходит клиенту в ответе.
+Запись в БД — **только на save**. Quote не персистится.
 
-Реализация: `StorageService` (интерфейс, `pt-api`) → `DbStorageService` (`pt-db`). Миграции схемы — `pt-launcher/src/main/resources/db/migration/`.
+Реализация: `StorageService` → `DbStorageService` (`pt-db`). Миграции — `pt-launcher/.../db/migration/`.
 
 ### Модель: две связанные таблицы
 
-Договор хранится в **разделённой** схеме:
-
 | Таблица | JPA-сущность | Назначение |
 |---------|--------------|------------|
-| `policy_data` | `PolicyEntity` | Полный документ договора (JSONB) |
-| `policy_index` | `PolicyIndexEntity` | Денормализованный индекс для поиска, списков, отчётов и платежей |
+| `policy_data` | `PolicyEntity` | Полный документ (JSONB) |
+| `policy_index` | `PolicyIndexEntity` | Денормализованный индекс |
 
-Связь **1:1** по полю `id` (общий первичный ключ):
-
-```
-policy_seq ──► policy_data.id  ◄──FK──  policy_index.id
-                      │                      │
-                      └── policy (jsonb)     └── public_id, policy_nr, premium, …
-```
-
-`policy_index.id` ссылается на `policy_data.id` с `ON DELETE CASCADE`. При удалении строки в `policy_data` индекс удаляется автоматически.
-
-Дополнительно `policy_index` используется как FK в `po_addon_policies` (опции к договору).
+Связь **1:1** по `id` (`policy_seq`), `policy_index.id` → `policy_data.id` `ON DELETE CASCADE`.
 
 ### Идентификаторы
 
 | Поле | Где | Тип | Назначение |
 |------|-----|-----|------------|
-| `id` | обе таблицы | `BIGINT` | Внутренний PK; выдаётся из последовательности `policy_seq` (старт с 1000) |
-| `public_id` | `policy_index` | `UUID` | Внешний идентификатор договора; попадает в JSON как `publicId`; используется в платежах и API |
-| `policy_nr` | `policy_index` + JSON | `VARCHAR(30)` | Бизнес-номер договора; уникален в рамках тенанта: `UNIQUE (tid, policy_nr)` |
-
-На save:
-
-1. `policyRepository.getNextPolicySeqValue()` → `policy.setId(id)`;
-2. если `publicId` пуст — `UUID.randomUUID()` → `policy.setPublicId(...)`;
-3. тот же `id` проставляется в `PolicyEntity` и `PolicyIndexEntity`.
-
-`paymentService.save` после записи в БД использует уже проставленные `stdPolicy.getId()` и `publicId`.
+| `id` | обе таблицы | `BIGINT` | PK из `policy_seq` |
+| `public_id` | `policy_index` | `UUID` | Внешний id (`publicId` в JSON, платежи) |
+| `policy_nr` | index + JSON | `VARCHAR(30)` | Бизнес-номер; `UNIQUE (tid, policy_nr)` |
 
 ### Схема `policy_data`
 
-| Колонка | Тип | Источник при save |
-|---------|-----|-------------------|
+| Колонка | Тип | Источник |
+|---------|-----|----------|
 | `id` | `BIGINT PK` | `policy_seq` |
 | `tid` | `BIGINT` | `userData.getTenantId()` |
 | `cid` | `BIGINT` | `userData.getClientId()` |
-| `policy` | `JSONB NOT NULL` | `policy.toJson()` (wire `PolicyDTO`) |
+| `policy` | `JSONB` | `policy.toJson()` (без `processList`) |
 
-Hibernate маппит `policy` как `String` с `@JdbcTypeCode(SqlTypes.JSON)`.
+### Схема `policy_index` (ключевые поля при save)
 
-### Схема `policy_index`
+| Колонка | Источник |
+|---------|----------|
+| `id` / `public_id` / `tid` / `policy_nr` | id, UUID, tenant, номер |
+| `document_format` | `policy.getFormat()` → `v3` |
+| `product_code` / `product_version_no` | из договора |
+| `user_account_id` / `client_account_id` / `id_path` | пользователь / иерархия |
+| `data_scope` | `processList.dataScope` |
+| `policy_status` | `PolicyStatus.valueOf(statusCode)` — после save обычно `ISSUED` или `UNDERWRITING` |
+| `ins_company` | `insurer.code` |
+| `ph_digest` / `io_digest` | из `processList` до обнуления |
+| `premium` / agent KV | премия и commission |
 
-Полный перечень колонок, заполняемых при первичном save (`PolicyMapper.policyIndexFromStdPolicy`):
+`document_format` = `formatId` для `StdPolicyRegistry.fromStorage()`. См. [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md).
 
-| Колонка | Источник (`StdPolicy` / контекст) |
-|---------|-----------------------------------|
-| `id` | тот же `id`, что у `policy_data` |
-| `public_id` | `policy.getPublicId()` |
-| `tid` | `userData.getTenantId()` |
-| `policy_nr` | `policy.getPolicyNumber()` |
-| `version_no` | `1` (при save) |
-| `top_version` | `true` |
-| `product_code` | `policy.getProductCode()` |
-| `document_format` | `policy.getFormat()` → `v3` (см. [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md)) |
-| `product_version_no` | `policy.getProductVersion()` |
-| `create_date` | `ZonedDateTime.now()` |
-| `issue_date` | `policy.getIssueDate()` |
-| `payment_date` | `null` (заполняется при оплате) |
-| `start_date`, `end_date` | из договора |
-| `user_account_id` | `userData.getAccountId()` |
-| `client_account_id` | `userData.getClientId()` |
-| `id_path` | путь аккаунта из `acc_accounts.id_path` (обязателен для иерархического поиска) |
-| `data_scope` | `processList.dataScope` (`DEV` / `PROD`) |
-| `policy_status` | `PolicyStatus.valueOf(policy.getStatusCode())` — при save обычно `NEW` |
-| `payment_order_id` | `null` (позже — `setPaymentOrderId`) |
-| `ins_company` | `policy.getInsurer().getCode()` |
-| `ph_digest`, `io_digest` | из `processList` (до обнуления `processList` в ответе) |
-| `user_login` | `userData.getUsername()` |
-| `premium` | `policy.getPremium()` |
-| `agent_kv_percent` | `commission.appliedCommissionRate` |
-| `agent_kv_amount` | `commission.commissionAmount` |
-
-`document_format` хранит **`formatId`** (напр. `v3`) — тот же идентификатор, что в URL `/{formatId}/quotes`. Нужен при чтении: `PolicyData.resolveDocumentFormat()` → `StdPolicyRegistry.fromStorage()`. Подключение форматов — [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md).
-
-`id_path` — материализованный путь в дереве `acc_accounts`; по префиксу `id_path` строятся списки договоров поддерева и дашборды без JOIN к полному JSON.
-
-### Запись при save (поток)
+### Запись при save
 
 ```mermaid
 sequenceDiagram
@@ -342,150 +330,47 @@ sequenceDiagram
 
     Orch->>Storage: save(stdPolicy, user)
     Storage->>Seq: nextval('policy_seq')
-    Seq-->>Storage: id
-    Storage->>Storage: setId, setPublicId(UUID)
-    Storage->>Storage: policyMapper.policyEntityFromStdPolicy
-    Storage->>PD: save(id, tid, cid, jsonb)
-    Storage->>Storage: policyMapper.policyIndexFromStdPolicy
-    Storage->>Storage: findAccountIdPath(accountId) → id_path
-    Storage->>PI: save(index row)
+    Storage->>Storage: setId, setPublicId
+    Storage->>PD: save(jsonb)
+    Storage->>PI: save(index + id_path)
     Storage-->>Orch: PolicyData
-    Orch->>Orch: paymentService.save(tenantId, id, installments)
+    Orch->>Orch: paymentService.save(...)
 ```
 
-Порядок в `DbStorageService.save`:
-
-1. Выделить `id`, сгенерировать `publicId` при необходимости.
-2. Сериализовать JSON → `policy_data` (`tid`, `cid` из сессии пользователя).
-3. Построить индекс → подставить `id_path` → `policy_index`.
-4. Вернуть `PolicyData` (индекс + JSON + дублирующие поля верхнего уровня).
-
-Транзакция: метод `save` не помечен `@Transactional` на уровне класса; при ошибке на шаге индекса возможна рассинхронизация — на практике оба `save` вызываются последовательно в одном HTTP-запросе save.
-
-### Формат JSON в `policy_data.policy`
-
-Это **не отдельный std-формат**, а сериализованный **`policyv3.PolicyDTO`**:
-
-```java
-// PolicyMapper.policyEntityFromStdPolicy
-ProcessList processList = policy.getProcessList();
-policy.setProcessList(null);           // runtime-поле не сохраняется
-String policyJson = policy.toJson();
-policy.setProcessList(processList);    // восстанавливается in-memory
-```
-
-Отличия сохранённого JSON от сырого запроса:
-
-- заполнены `id`, `publicId`, `policyNumber`, `premium`, `productVersion`, `commission`, `installments`, `insurer`, `statusCode`, даты;
-- **`processList` отсутствует** в БД;
-- JSON pretty-printed (`PolicyJsonSupport`, `@JsonInclude(NON_EMPTY)`).
-
-Индекс дублирует ключевые поля, чтобы списки, фильтрация, дашборды и callback платежей работали **без разбора JSONB**.
+Транзакция: `DbStorageService.save` не гарантирует атомарность data+index на уровне явного `@Transactional` в оркестраторе — при сбое между шагами возможна рассинхронизация.
 
 ### DTO `PolicyData`
 
-Единый контейнер для передачи договора между слоями (`pt-api`):
-
 | Поле | Содержимое |
 |------|------------|
-| `policyId` | `UUID` = `policy_index.public_id` |
-| `policyNumber` | `policy_index.policy_nr` |
-| `policyStatus` | `PolicyStatus` из индекса (`NEW`, `IN_PAYMENT`, `PAID`) |
-| `policyIndex` | проекция `PolicyIndex` (даты, продукт, аккаунты, `documentFormat`, …) |
-| `policy` | сырая JSON-строка из `policy_data.policy` |
-| `parameterMap` | опциональная проекция (не используется в quote/save pipeline) |
-
-`resolveDocumentFormat()` — читает `policyIndex.documentFormat`; fallback `v3` (миграция V12 с `INSURANCE_CONTRACT`).
+| `policyId` | `UUID` = `public_id` |
+| `policyNumber` | `policy_nr` |
+| `policyStatus` | из индекса |
+| `policyIndex` | проекция индекса |
+| `policy` | JSON-строка из `policy_data` |
 
 ---
 
 ## Чтение из БД
 
-### API `StorageService`
+| Метод | Поиск |
+|-------|-------|
+| `getPolicyByNumber` | `policy_nr` |
+| `getPolicyById` | `public_id` |
+| `getPolicyByPaymentOrderId` | `payment_order_id` |
+| `getAccountQuotes` | `id_path` + фильтры |
 
-| Метод | Поиск | Возврат |
-|-------|-------|---------|
-| `getPolicyByNumber(policyNumber)` | `policy_index.policy_nr` | `PolicyData` |
-| `getPolicyById(publicId)` | `policy_index.public_id` | `PolicyData` |
-| `getPolicyByPaymentOrderId(paymentOrderId)` | `policy_index.payment_order_id` | `PolicyData` |
-| `getPoliciesForUser()` | `client_account_id` + `user_account_id` текущего пользователя | `List<PolicyData>` |
-| `getAccountQuotes(qstr)` | по `id_path` поддерева + `POLICY::LIST`; фильтр по `policy_nr` / `ph_digest` | `List<QuoteDto>` |
+Оркестратор на get проверяет **точное** совпадение `userAccountId` и `clientAccountId` с текущим пользователем (не иерархия `isParent`). `403` при несовпадении.
 
-Внутренний алгоритм `getPolicyData`:
+### Callback оплаты
 
-1. Найти строку в `policy_index`.
-2. `policyRepository.findById(index.id)` → JSON из `policy_data`.
-3. Собрать `PolicyData` через `PolicyMapper.toDto(index)`.
+`paymentCallback(String policyId)` ожидает **UUID `publicId`**, грузит через `getPolicyById`, ставит `PAID` в JSON (`JsonSetter`) и в индексе, опционально email/SMS по `ClientConfiguration`.
 
-Если индекс есть, а JSON в `policy_data` отсутствует — `InternalServerErrorException` (нарушение целостности 1:1).
+Для `PaymentType.CASH` оркестратор асинхронно вызывает `paymentCallback(paymentData.getPolicyNumber())` — **номер договора, не UUID**: риск несовместимости с парсингом UUID в callback.
 
-### API GET policy
+### Обновление
 
-```
-GET /api/v1/{tenantCode}/sales/policies/{policyNumber}
-  → ProcessOrchestrator.getPolicyByNumber
-  → StorageService.getPolicyByNumber
-  → DbStorageService.getPolicyData
-```
-
-Оркестратор дополнительно проверяет, что `userAccountId` и `clientAccountId` индекса совпадают с текущим пользователем (`403` при несовпадении).
-
-Клиент получает JSON договора в поле `policy` как есть из БД (wire format v3). Дополнительная десериализация на уровне контроллера **не выполняется**.
-
-### Восстановление `StdPolicy` из хранилища
-
-Для внутренней логики (печать, платежи, повторный процесс):
-
-```java
-// StdPolicyRegistry.fromStorage(PolicyData policyData)
-stdPolicyFactory.build(policyData.resolveDocumentFormat(), policyData.getPolicy())
-  → InsuranceContractStdPolicyMapper.fromJson(json)
-  → PolicyJsonSupport.fromJson(json) → PolicyDTO
-```
-
-Формат маппера берётся из **`policy_index.document_format`**, не захардкожен.
-
-После `fromJson` переменные (`VariableContext`) **не инициализированы** — нужен `policy.setVars(product)` перед расчётом/валидацией, как при новом запросе.
-
-### Обновление (`update`)
-
-`DbStorageService.update(PolicyData)` — точечное обновление существующего договора:
-
-**`policy_index`** (из `policyData.policyIndex`):
-
-- `policy_nr`, `version_no`, `policy_status`, `start_date`, `end_date`, `payment_order_id`
-
-**`policy_data`**:
-
-- полная замена колонки `policy` строкой `policyData.getPolicy()`
-
-Типичный сценарий — callback оплаты (`ProcessOrchestratorService.paymentCallback`):
-
-1. `getPolicyById(publicId)`;
-2. через `JsonSetter` в JSON выставляется `"status": "PAID"`;
-3. `policyData.setPolicyStatus(PolicyStatus.PAID)`;
-4. `storageService.update(policyData)`.
-
-Проверка «можно ли обновлять оплаченный договор» — ответственность вызывающего кода, не хранилища (см. комментарий в `StorageService`).
-
-### Платежи и индекс
-
-| Операция | Метод | Зачем |
-|----------|-------|-------|
-| Привязать платёж к договору | `setPaymentOrderId(policyNumber, paymentOrderId)` | YooKassa: найти договор по `payment_order_id` в webhook |
-| Найти договор по платежу | `getPolicyByPaymentOrderId(paymentOrderId)` | `YoukassaCallbackController`, `YoukassaPaymentClient` |
-
-`VskPaymentClient` и другие клиенты часто читают только сырой JSON: `getPolicyByNumber(...).getPolicy()` без обёртки `StdPolicy`.
-
-### Поиск и отчёты без JSON
-
-`policy_index` — основа для:
-
-- списка договоров аккаунта (`getAccountQuotes`, `PolicyReport.findPoliciesByAccountPath`);
-- агрегатов дашборда (`getDashboardCardsAggregates`, `getDashboardByProducts`, графики по `start_date`);
-- фильтрации по `id_path LIKE prefix%` (вся ветка субагентов).
-
-Полный JSON (`policy_data`) подгружается только когда нужен документ целиком.
+`updatePolicy` / `update(String)` — **заготовки** (`return null` / `""`). Сообщение об ошибке статуса всё ещё говорит про `'NEW'`, хотя проверка идёт на `PolicyStatus.QUOTE`.
 
 ---
 
@@ -493,48 +378,143 @@ stdPolicyFactory.build(policyData.resolveDocumentFormat(), policyData.getPolicy(
 
 | | Quote | Save |
 |---|-------|------|
-| `processList.processType` | `quote` | `save` |
-| Валидация SAVE | нет | да |
-| CEL PRE/POST SAVE | нет | да |
-| Add-ons check | да | нет (в текущем коде) |
-| Номер договора | не генерируется | `NumberGeneratorService` |
-| Installments | нет | `PaymentService` |
-| Запись в БД | нет | `StorageService.save` |
-| `assertPositivePremium` | да | нет (явно) |
-| Авторизация PROD | QUOTE на продукт | SELL на policy + product |
+| Метод оркестратора | `quote` | `save` |
+| `processType` | `quote` | `save` |
+| Auth | `PRODUCT::QUOTE` | PROD: `POLICY::SELL` + product SELL |
+| Validator SAVE | нет | да |
+| CEL PRE_SAVE | нет | да |
+| CEL POST_QUOTE | да | да |
+| CEL UNDERWRITING | нет | да → status |
+| Add-ons | да | нет |
+| Номер / installments / БД | нет | да |
+| `assertPositivePremium` | да | нет |
+| Итоговый status | остаётся `QUOTE` (в ответе) | `ISSUED` или `UNDERWRITING` |
 
 ---
 
-## Ключевые классы (шпаргалка)
+## Ключевые классы
 
 | Класс | Модуль | Роль |
 |-------|--------|------|
-| `SalesController` | pt-launcher | HTTP entrypoint |
-| `ProcessOrchestratorService` | pt-process | Оркестрация quote/save |
+| `SalesController` | pt-launcher | HTTP; parse JSON → StdPolicy |
+| `ProcessOrchestratorService` | pt-process | Оркестрация + payment + get + CEL helpers |
 | `PolicyProcessSupport` | pt-process | Общие шаги pipeline |
-| `PreProcessService` | pt-process | Нормализация, даты, покрытия |
+| `PreProcessService` | pt-process | Normalize, даты, покрытия продукта |
 | `CalculatorServiceImpl` | pt-calculator | Тарифные формулы |
-| `PostProcessService` | pt-process | Vars → Cover |
+| `PostProcessService` | pt-process | Vars → Cover (**не в hot path**) |
 | `InsuranceContractPolicy` | pt-api | StdPolicy impl |
-| `PolicyJsonSupport` | pt-api | JSON ↔ PolicyDTO |
-| `PolicyDtoMapper` | pt-api | policyv3 ↔ policy domain |
-| `VariableContextImpl` | pt-api | Runtime vars из JSON + product |
-| `StorageService` | pt-api | Контракт хранилища (save / get / update) |
-| `PolicyData` / `PolicyIndex` | pt-api | DTO договора и проекция индекса |
-| `PolicyEntity` / `PolicyIndexEntity` | pt-db | JPA-сущности `policy_data` / `policy_index` |
-| `DbStorageService` | pt-db | JPA persistence |
-| `PolicyMapper` | pt-db | StdPolicy → Entity / Index; Entity → DTO |
-| `StdPolicyRegistry` | pt-process | Фабрика StdPolicy по formatId |
-| `PolicyFormatPlugin` | pt-api (план) | Wire + storage; см. [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md) |
+| `DbStorageService` / `PolicyMapper` | pt-db | Persistence |
+| `StdPolicyFactory` / registry | pt-api / pt-process | Wire ↔ StdPolicy |
 
 ---
 
 ## Границы ответственности PolicyDTO
 
-`PolicyDTO` (`policyv3`) должен использоваться только как **wire-модель**:
+`PolicyDTO` (`policyv3`) — только **wire**:
 
-- входящий/исходящий JSON;
-- JSON в колонке `policy_data.policy`;
-- внутреннее поле `InsuranceContractPolicy.contract`.
+* входящий/исходящий JSON;
+* JSON в `policy_data.policy`;
+* внутреннее поле `InsuranceContractPolicy.contract`.
 
-Оркестратор, storage API и маппер БД работают с **`StdPolicy`**. Domain-типы (`ru.pt.api.dto.policy.InsuredObject`, `Cover`, …) — для типобезопасной логики внутри процесса; перед сериализацией синхронизируются обратно в `PolicyDTO`.
+Оркестратор и storage API работают с **`StdPolicy`**. Domain-типы синхронизируются в `PolicyDTO` перед `toJson`.
+
+---
+
+## Анализ ProcessOrchestratorService
+
+### Что делает хорошо
+
+* Явный pipeline quote/save с пошаговым timing (`logProcessStep`).
+* Вынос части шагов в `PolicyProcessSupport`.
+* Разделение product validators и CEL rules.
+* Save: номер → installments → underwriting status → storage → payments.
+
+### Проблемы (as-is)
+
+| # | Проблема | Где |
+|---|----------|-----|
+| 1 | God-object: quote/save + premium + CEL bridge + payment + get/update stubs в одном классе (~800 строк) | весь сервис |
+| 2 | Дублирование pipeline quote ≈ save (~70% одинаковых шагов) | `quote` / `save` |
+| 3 | `calculatePremium` дублирует `PostProcessService.setCovers` (без limitMin/Max; с deductible text) | private method |
+| 4 | Ограничение 1 insured object зашито в оркестратор | `calculatePremium` |
+| 5 | CEL activation (`buildCelVariables` / numeric defaults) раздувает оркестратор | private helpers |
+| 6 | `payment` / `paymentCallback` / email / async pool — другой bounded context | низ файла |
+| 7 | `ExecutorService` cached, без shutdown / без передачи MDC/SecurityContext | `payment` CASH |
+| 8 | CASH callback передаёт `policyNumber` в метод, ожидающий UUID | `payment` → `paymentCallback` |
+| 9 | Get-доступ: exact account match, не hierarchy / actingAccount | `getPolicyBy*` |
+| 10 | `update` / `createAddendum` / `updatePolicy` — stubs; путаница NEW vs QUOTE | stubs |
+| 11 | Повторный `getCurrentUser()` на save в `storageService.save` | `save` |
+| 12 | Парсинг JSON в контроллере и отдельно `parsePolicy` в support | SalesController vs Support |
+| 13 | Валидация → 400 `BadRequest`, хотя часть ошибок — бизнес/тариф (часто ждут 422) | `throwValidationErrors` |
+| 14 | Save без `assertPositivePremium` | `save` |
+| 15 | Нет единой транзакции вокруг storage + payment save | `save` |
+| 16 | Лишние / неиспользуемые imports; `ObjectMapper` локальный writer | класс |
+
+---
+
+## Рефакторинг — план
+
+### Фаза 0. Документация и инварианты (сделано здесь)
+
+* Зафиксировать as-is поток, статусы, CEL UNDERWRITING, отсутствие PostProcess в hot path.
+* Критерии готовности: этот документ = source of truth для quote/save.
+
+### Фаза 1. Безопасность и дефекты (высокий приоритет)
+
+1. Исправить CASH → `paymentCallback`: передавать `publicId` (UUID), не `policyNumber`.
+2. Пробросить SecurityContext / MDC в async executor или заменить на sync/event.
+3. Выровнять get-доступ с AuthZ hierarchy (`actingAccountId` / `isParent`), не только exact match.
+4. Добавить `assertPositivePremium` (или явное решение «не нужно») на save.
+5. `@Transactional` на save path (storage + payment) либо outbox.
+
+**Критерий:** CASH payment и get policy не ломают статусы/доступ; save атомарнее.
+
+### Фаза 2. Разрезка оркестратора (структура)
+
+Вынести из `ProcessOrchestratorService`:
+
+| Новый компонент | Содержимое |
+|-----------------|------------|
+| `QuoteSavePipeline` (или template method) | общий pre: normalize → product → auth → commission → vars → validate → calc → postQuote CEL |
+| `PremiumCalculationService` | `calculatePremium` + `resolveDeductibleText` + total premium; внутри вызывать/расширить `PostProcessService` |
+| `CelValidationBridge` | `buildCelVariables`, `runCelValidation`, `throwValidationErrors` |
+| `PaymentProcessService` | `payment`, `paymentCallback`, email/SMS |
+| `PolicyQueryService` | `getPolicyById/Number` + access check |
+
+Оркестратор остаётся тонким фасадом `ProcessOrchestrator`.
+
+**Критерий:** файл оркестратора < ~200 строк; quote/save читаются как список шагов.
+
+### Фаза 3. Унификация quote/save
+
+1. Общий `runPricingPipeline(ProcessType, StdPolicy)` с различиями через strategy/flags:
+   - validators set, CEL set, auth action, post-steps.
+2. Единая точка parse: либо только контроллер, либо фильтр/resolver — удалить мёртвый дубль.
+3. Вернуть `PostProcessService` в hot path: limits + deductible text в одном месте.
+
+**Критерий:** изменение шага валидации/комиссии правится один раз.
+
+### Фаза 4. Статусы и update path
+
+1. Довести `updatePolicy` под `QUOTE` (сообщения, персист) или удалить из API.
+2. Согласовать enum/docs: нет `NEW`/`IN_PAYMENT` в `PolicyStatus`.
+3. Явно задокументировать UNDERWRITING как soft-gate (save всё равно пишет в БД).
+
+### Фаза 5. Мультиобъектность и форматы (позже)
+
+1. Снять hard-limit `insuredObjects.size() == 1` с калькулятора/оркестратора.
+2. Wire adapters — по [POLICY_WIRE_ADAPTERS.md](./POLICY_WIRE_ADAPTERS.md).
+
+---
+
+### Рекомендуемый порядок внедрения
+
+```text
+1 (баги payment/access/premium)
+    → 2 (вынести Premium + CEL + Payment + Query)
+        → 3 (общий pipeline quote/save)
+            → 4 (update/status)
+                → 5 (multi-IO / adapters)
+```
+
+Не начинать фазу 3 до зелёных регрессионных сценариев quote+save+CASH callback после фазы 1–2.

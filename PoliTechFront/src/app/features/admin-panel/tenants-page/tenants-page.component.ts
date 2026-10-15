@@ -650,12 +650,16 @@ export class TenantsPageComponent implements OnInit {
   }
 
   createNewLogin() {
-
+    const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+    if (!tenantCode) {
+      this.snack.open('Выберите tenant перед созданием пользователя', 'OK', { duration: 3000 });
+      return;
+    }
 
     const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '600px',
-      data: { login: null, tenantCode: this.selectedTenantCode }}
-    );
+      data: { login: null, tenantCode }
+    });
 
     dialogRef.afterClosed().subscribe((result: { success: boolean; action: string; login?: Login } | undefined) => {
       if (result && result.success) {
@@ -674,9 +678,10 @@ export class TenantsPageComponent implements OnInit {
   }
 
   editLogin(login: Login) {
+    const tenantCode = login.tenantCode || this.selectedTenantCode || this.currentTenantCode || '';
     const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '600px',
-      data: { login: login }
+      data: { login, tenantCode }
     });
 
     dialogRef.afterClosed().subscribe((result: { success: boolean; action: string } | undefined) => {

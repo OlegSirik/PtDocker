@@ -1,4 +1,7 @@
 # Договор
+
+> **Канон перенесён.** Актуальный SoT: [`docs/curdoc/doc.md`](../curdoc/doc.md) — **§12** (даты / каркас договора), **§14.4** (waitingPeriod / policyTerm), **§14.8** (number generator). Исторический черновик рычагов: [policy-model-and-product-config.md](./policy-model-and-product-config.md).
+
 Договор состоит из нескольких обязательных частей
 1. Шапки
 2. Страхователя

@@ -40,7 +40,7 @@ public class SchemaController  {
     }
 
     /**
-     * GET .../attributes/metadata — вложенный JSON по дереву атрибутов (ключ {@code code}, листья {@code ""}).
+     * GET .../attributes/metadata — JSON-скелет по {@code var_path} (JsonPath), не по {@code var_code}.
      */
     @GetMapping(value = "/metadata", produces = "application/json")
     public ResponseEntity<String> getAttributesMetadataJson(
@@ -51,8 +51,8 @@ public class SchemaController  {
     }
 
     /**
-     * POST .../attributes/metadata/with-values — JSON по схеме с фильтром (системные + ключи из тела)
-     * и подстановкой значений из тела запроса ({@code var_code} → значение).
+     * POST .../attributes/metadata/with-values — JSON по схеме; тело: {@code var_path} → значение
+     * (не {@code var_code}).
      */
     @PostMapping(value = "/metadata/with-values", produces = "application/json")
     public ResponseEntity<String> getAttributesMetadataJsonWithValues(

@@ -16,11 +16,15 @@ export interface SchemaTreeApiRow {
   varType?: string | null;
   varDataType?: string | null;
   varValue?: string | null;
+  /** Deprecated: нет в схеме/LOB. Остаётся опционально для product/calculator JSON. */
   varCdm?: string | null;
   varList?: string | null;
   isSystem?: boolean;
   isDeleted?: boolean;
-  /** См. LobVar / PvVar на бэкенде; при отсутствии в JSON клиент подставляет из varName */
+  /**
+   * Deprecated: колонки name в mt_attribute_def нет.
+   * Клиент заполняет из varName для совместимости TreeTableSourceRow.name.
+   */
   name?: string | null;
 }
 
@@ -47,7 +51,7 @@ export function schemaTreeApiRowToSourceRow(row: SchemaTreeApiRow): TreeTableSou
     varPath: row.varPath ?? '',
     varValue: row.varValue ?? '',
     varCdm: row.varCdm ?? '',
-    name: row.name?.trim() || row.varName?.trim() || '',
+    name: row.varName?.trim() || row.name?.trim() || '',
   };
 }
 
@@ -94,7 +98,8 @@ export interface TreeTableSourceRow {
   varListFilter?: string; // фильтр для списка кодов переменных, которые относятся к этой переменной. Копируется из валидатора
   varPath: string;
   varValue: string;
-  varCdm: string;
+  /** Только product/calculator; в LOB/схеме не используется. */
+  varCdm?: string;
   name: string;
   /**
    * Только клиент: узел создан в сессии ({@code new}) или изменён и ещё не сохранён в документе

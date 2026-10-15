@@ -1,5 +1,7 @@
 # Pre-project: LLM-интеграция (DeepSeek и другие провайдеры)
 
+> **As-is SCHEMA:** задача `SCHEMA` реализована — экран contract-schema, `POST …/admin/schema/{contractCode}/llm/assist`, preview→apply через `addAttribute`. Канон: [`docs/curdoc/doc.md`](../curdoc/doc.md) **§13.5.1**. RULE / COVER / CALCULATOR — см. ниже (исторический pre-project + код).
+
 См. также: [vars.md](../development/vars.md) — словарь данных продукта.
 
 ## 1. Цель
@@ -13,6 +15,7 @@
 | **Правило** | `llm/prompts/rule.txt` | `{ rule: { code, name, condition } }` — CEL для `pt_rules` |
 | **Покрытие** | `llm/prompts/cover.txt` | `{ cover: { code, name, vars[] } }` — узлы в `product.vars` |
 | **Калькулятор** | `llm/prompts/calculator.txt` | `{ calculator: { formulas, coefficients, vars } }` |
+| **Схема** (as-is) | `llm/prompts/schema.txt` | `{ attributes: [ … ] }` — узлы `mt_attribute_def` |
 
 **Контекст для модели** — не статический список `ph_*` / `io_*`, а **`product.vars`** текущей версии продукта (`ProductVersionModel.vars`, `List<PvVar>`). Это тот же словарь, что используется в quote/save и калькуляторе.
 
@@ -123,7 +126,8 @@ LlmAssistResponse → UI preview → apply (CRUD)
 public enum LlmTaskType {
     RULE,        // CEL-правило → pt_rules
     COVER,       // новое покрытие → product.vars
-    CALCULATOR   // formulas/coefficients → CalculatorModel
+    CALCULATOR,  // formulas/coefficients → CalculatorModel
+    SCHEMA       // атрибуты схемы → mt_attribute_def (contract-schema)
 }
 ```
 

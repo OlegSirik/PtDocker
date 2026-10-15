@@ -9,6 +9,8 @@ public class LlmCoverDraft {
 
     private String code;
     private String name;
+    /** Optional risks text (LOB cover catalog). */
+    private String risks;
     private Boolean isMandatory;
     private List<PvVar> vars = new ArrayList<>();
 
@@ -26,6 +28,14 @@ public class LlmCoverDraft {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRisks() {
+        return risks;
+    }
+
+    public void setRisks(String risks) {
+        this.risks = risks;
     }
 
     public Boolean getIsMandatory() {

@@ -130,11 +130,15 @@ public class LobController {
         Map<String, String> varValues = new HashMap<>();
         if (lob.getMpVars() != null) {
             for (LobVar var : lob.getMpVars()) {
-                if (var.getIsDeleted() || var.getVarCode() == null || var.getVarCode().isBlank()) {
+                if (var.getIsDeleted()) {
+                    continue;
+                }
+                String path = var.getVarPath();
+                if (path == null || path.isBlank()) {
                     continue;
                 }
                 String value = var.getVarValue();
-                varValues.put(var.getVarCode(), value != null ? value : "");
+                varValues.put(path.trim(), value != null ? value : "");
             }
         }
 

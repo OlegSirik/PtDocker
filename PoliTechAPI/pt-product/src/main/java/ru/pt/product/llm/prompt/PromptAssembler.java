@@ -6,7 +6,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.llm.LlmTaskType;
+import ru.pt.api.dto.product.LobCover;
+import ru.pt.api.dto.product.LobModel;
+import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.ProductVersionModel;
+import ru.pt.api.dto.product.PvCover;
+import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.product.llm.provider.LlmMessage;
 
@@ -112,6 +117,34 @@ public class PromptAssembler {
                 new LlmMessage("user", user));
     }
 
+    public List<LlmMessage> assembleForSchema(
+            String userMessage,
+            String contractCode,
+            List<LobVar> schemaVars,
+            String parentVarCodeHint) {
+        String system = loadPrompt(LlmTaskType.SCHEMA);
+        String schemaText = varsContextFormatter.formatSchema(schemaVars);
+        String parentHint = (parentVarCodeHint != null && !parentVarCodeHint.isBlank())
+                ? "\nПредпочтительный родитель (parentVarCode): " + parentVarCodeHint.trim() + "\n"
+                : "";
+        String user = """
+                Запрос пользователя:
+                %s
+
+                Модель договора (contractCode): %s
+                %s
+                Текущая схема (varCode | varName | varPath | varType | id | parent_id):
+                %s
+                """.formatted(
+                userMessage,
+                nullToEmpty(contractCode),
+                parentHint,
+                schemaText.isBlank() ? "(пусто)" : schemaText);
+        return List.of(
+                new LlmMessage("system", system),
+                new LlmMessage("user", user));
+    }
+
     public List<LlmMessage> assembleCalculator(String userMessage, CalculatorModel currentCalculator) {
         String system = loadPrompt(LlmTaskType.CALCULATOR);
         String calculatorJson = serializeCalculatorContext(currentCalculator);
@@ -125,6 +158,82 @@ public class PromptAssembler {
         return List.of(
                 new LlmMessage("system", system),
                 new LlmMessage("user", user));
+    }
+
+    public List<LlmMessage> assembleForPackages(
+            String userMessage,
+            ProductVersionModel product,
+            LobModel lob) {
+        String system = loadPrompt(LlmTaskType.PACKAGE);
+        String existingPackages = formatExistingPackages(product != null ? product.getPackages() : null);
+        String lobCovers = formatLobCovers(lob != null ? lob.getMpCovers() : null);
+        String user = """
+                Запрос пользователя:
+                %s
+
+                Продукт: %s (%s), версия %s
+
+                Существующие пакеты:
+                %s
+
+                Каталог покрытий LOB (используй только эти code для covers):
+                %s
+                """.formatted(
+                userMessage,
+                nullToEmpty(product != null ? product.getCode() : null),
+                nullToEmpty(product != null ? product.getLob() : null),
+                product != null && product.getVersionNo() != null ? product.getVersionNo() : "",
+                existingPackages,
+                lobCovers);
+        return List.of(
+                new LlmMessage("system", system),
+                new LlmMessage("user", user));
+    }
+
+    private String formatExistingPackages(List<PvPackage> packages) {
+        if (packages == null || packages.isEmpty()) {
+            return "(пусто)";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (PvPackage pkg : packages) {
+            if (pkg == null) {
+                continue;
+            }
+            sb.append("- ").append(nullToEmpty(pkg.getCode()))
+                    .append(" | ").append(nullToEmpty(pkg.getName()))
+                    .append(" | covers: ");
+            List<PvCover> covers = pkg.getCovers();
+            if (covers == null || covers.isEmpty()) {
+                sb.append("(нет)");
+            } else {
+                List<String> codes = new ArrayList<>();
+                for (PvCover cover : covers) {
+                    if (cover != null && cover.getCode() != null && !cover.getCode().isBlank()) {
+                        codes.add(cover.getCode());
+                    }
+                }
+                sb.append(codes.isEmpty() ? "(нет)" : String.join(", ", codes));
+            }
+            sb.append('\n');
+        }
+        return sb.toString().trim();
+    }
+
+    private String formatLobCovers(List<LobCover> covers) {
+        if (covers == null || covers.isEmpty()) {
+            return "(пусто — можно предложить code, но лучше уточнить у пользователя)";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (LobCover cover : covers) {
+            if (cover == null || cover.getCoverCode() == null || cover.getCoverCode().isBlank()) {
+                continue;
+            }
+            sb.append("- ").append(cover.getCoverCode().trim())
+                    .append(" | ").append(nullToEmpty(cover.getCoverName()))
+                    .append('\n');
+        }
+        String text = sb.toString().trim();
+        return text.isBlank() ? "(пусто)" : text;
     }
 
     private String serializeCalculatorContext(CalculatorModel calculator) {
@@ -142,7 +251,8 @@ public class PromptAssembler {
             payload.put("vars", slimVars(calculator.getVars()));
             payload.put("formulas", calculator.getFormulas() != null ? calculator.getFormulas() : List.of());
             payload.put("coefficients", calculator.getCoefficients() != null ? calculator.getCoefficients() : List.of());
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
+            // Compact JSON: pretty-print inflates prompt tokens and slows the model.
+            return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Cannot serialize currentCalculator for LLM", ex);
         }

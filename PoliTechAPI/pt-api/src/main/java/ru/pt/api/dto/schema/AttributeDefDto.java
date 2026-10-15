@@ -3,12 +3,10 @@ package ru.pt.api.dto.schema;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * DTO for attribute definition
+ * DTO for attribute definition (legacy/simple). Display name = {@code varCode} context via callers.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AttributeDefDto {
-    private String code;
-    private String name;
     private String dataType;
     private Long nr;
     private String varCode;
@@ -17,29 +15,11 @@ public class AttributeDefDto {
     public AttributeDefDto() {
     }
 
-    public AttributeDefDto(String code, String name, String dataType, Long nr, String varCode, String varValue) {
-        this.code = code;
-        this.name = name;
+    public AttributeDefDto(String dataType, Long nr, String varCode, String varValue) {
         this.dataType = dataType;
         this.nr = nr;
         this.varCode = varCode;
         this.varValue = varValue;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getDataType() {

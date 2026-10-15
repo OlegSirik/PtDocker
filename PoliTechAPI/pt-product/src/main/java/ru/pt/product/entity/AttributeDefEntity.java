@@ -39,26 +39,14 @@ public class AttributeDefEntity {
     @Column(name = "var_type", nullable = false, length = 30)
     private String varType;
 
-    @Column(name = "var_cardinality", nullable = false, length = 10)
-    private String varCardinality = "SINGLE";
-
     @Column(name = "var_data_type", nullable = false, length = 20)
     private String varDataType;
 
     @Column(name = "var_value", length = 500)
     private String varValue;
 
-    @Column(name = "var_cdm", length = 500)
-    private String varCdm;
-
     @Column(name = "var_list", length = 100)
     private String varList;
-
-    @Column(name = "code", length = 50)
-    private String code;
-
-    @Column(name = "name", length = 250)
-    private String name;
 
     @Column(name = "is_system", nullable = false)
     private boolean system;
@@ -138,14 +126,6 @@ public class AttributeDefEntity {
         this.varType = varType;
     }
 
-    public String getVarCardinality() {
-        return varCardinality;
-    }
-
-    public void setVarCardinality(String varCardinality) {
-        this.varCardinality = varCardinality;
-    }
-
     public String getVarDataType() {
         return varDataType;
     }
@@ -162,36 +142,12 @@ public class AttributeDefEntity {
         this.varValue = varValue;
     }
 
-    public String getVarCdm() {
-        return varCdm;
-    }
-
-    public void setVarCdm(String varCdm) {
-        this.varCdm = varCdm;
-    }
-
     public String getVarList() {
         return varList;
     }
 
     public void setVarList(String varList) {
         this.varList = varList;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public boolean isSystem() {

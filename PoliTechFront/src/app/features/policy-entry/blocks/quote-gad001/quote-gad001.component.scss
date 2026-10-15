@@ -1,0 +1,86 @@
+@import '../../../../../styles/variables';
+@import '../../../../../styles/mixins';
+@import '../../styles/policy-plaque';
+
+.quote-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: $spacing-md;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .quote-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: $spacing-md;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $gray-700;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius-sm;
+  font: inherit;
+  background: $white;
+  color: $gray-900;
+}
+
+.muted {
+  margin: 0 0 $spacing-xs;
+  font-size: $font-size-sm;
+  color: $gray-600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin: $spacing-md 0;
+}
+
+.premium {
+  font-size: $font-size-lg;
+  color: $gray-900;
+}
+
+.issue-btn {
+  margin-top: $spacing-sm;
+}
+
+.error {
+  color: $warn-color;
+}
+
+:host-context(body.theme-dark) {
+  .field {
+    color: #b8b8c2;
+  }
+
+  .field input,
+  .field select {
+    background: #242424;
+    border-color: #3a3a3a;
+    color: #e6e6e6;
+  }
+
+  .muted,
+  .premium {
+    color: #e6e6e6;
+  }
+}

@@ -1,0 +1,72 @@
+@if (pageConfig) {
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">{{ pageConfig.title }}</h1>
+    </div>
+
+    <ol class="step-indicator" role="tablist" aria-label="Шаги оформления">
+      @for (step of steps; track step.label; let i = $index) {
+        <li
+          role="tab"
+          [class.active]="store.stepIndex() === i"
+          [class.done]="store.stepIndex() > i"
+          [class.clickable]="store.canNavigateToStep(i)"
+          [attr.aria-selected]="store.stepIndex() === i"
+          [attr.aria-disabled]="!store.canNavigateToStep(i)"
+          (click)="onStepClick(i)"
+          (keydown.enter)="onStepClick(i)"
+          (keydown.space)="onStepClick(i); $event.preventDefault()"
+          [attr.tabindex]="store.canNavigateToStep(i) ? 0 : -1"
+        >
+          <span class="num">{{ i + 1 }}</span>
+          <span class="label">{{ step.label }}</span>
+        </li>
+      }
+    </ol>
+
+    <div class="step-body">
+      @if (store.stepIndex() === 0) {
+        @switch (pageConfig.quoteBlock) {
+          @case ('quote-ns1') {
+            <app-quote-ns1 />
+          }
+          @case ('quote-gad001') {
+            <app-quote-gad001 />
+          }
+        }
+      }
+      @if (store.stepIndex() === 1) {
+        @for (block of pageConfig.issueBlocks; track block) {
+          @switch (block) {
+            @case ('policy-holder-person') {
+              <app-policy-holder-person />
+            }
+            @case ('insured02') {
+              <app-insured02 />
+            }
+          }
+        }
+        <div class="pt-box-actions step-actions">
+          <button mat-stroked-button type="button" (click)="store.goBack()">Назад</button>
+          <button mat-flat-button color="primary" type="button" (click)="store.goToPayment()">
+            Далее к оплате
+          </button>
+        </div>
+      }
+      @if (store.stepIndex() === 2) {
+        @switch (pageConfig.paymentBlock) {
+          @case ('payment') {
+            <app-payment-block />
+          }
+        }
+        <div class="pt-box-actions step-actions">
+          <button mat-stroked-button type="button" (click)="store.goBack()">Назад</button>
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="page-container">
+    <p class="not-found">Страница оформления не найдена</p>
+  </div>
+}

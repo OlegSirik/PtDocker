@@ -17,6 +17,17 @@
     margin-top: 8px;
   }
 
+  .agent-toggle-active {
+    background: rgba(25, 118, 210, 0.08);
+  }
+
+  .table-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
   .llm-hint {
     margin: 8px 0 0;
     padding: 8px 12px;

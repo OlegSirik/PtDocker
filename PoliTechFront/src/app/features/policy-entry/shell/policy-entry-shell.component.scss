@@ -1,0 +1,97 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.step-indicator {
+  display: flex;
+  gap: $spacing-sm;
+  list-style: none;
+  margin: 0 0 $spacing-lg;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.step-indicator li {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+  opacity: 0.55;
+  background-color: $gray-100;
+  color: $gray-800;
+  font-size: $font-size-sm;
+  user-select: none;
+}
+
+.step-indicator li.clickable {
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.step-indicator li:not(.clickable) {
+  cursor: default;
+}
+
+.step-indicator li.active,
+.step-indicator li.done {
+  opacity: 1;
+}
+
+.step-indicator li.active {
+  background-color: rgba($primary-color, 0.12);
+  font-weight: 600;
+  color: $primary-dark;
+}
+
+.step-indicator .num {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: $gray-300;
+  font-size: $font-size-xs;
+  font-weight: 600;
+}
+
+.step-indicator li.active .num,
+.step-indicator li.done .num {
+  background-color: $primary-color;
+  color: $white;
+}
+
+.step-body {
+  margin-top: $spacing-sm;
+}
+
+.step-actions {
+  padding-left: 0;
+  padding-right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.not-found {
+  padding: $spacing-md;
+  color: $warn-color;
+}
+
+:host-context(body.theme-dark) {
+  .step-indicator li {
+    background-color: #2a2a2a;
+    color: #e6e6e6;
+  }
+
+  .step-indicator li.active {
+    background-color: rgba($primary-color, 0.25);
+    color: #e6e6e6;
+  }
+}

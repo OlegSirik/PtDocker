@@ -63,9 +63,9 @@
           [rows]="treeTableData"
           [displayedColumns]="treeTableDisplayedColumns"
           [showDeleted]="showDeletedSchemaTree"
+          editableFields="valueList"
           (rowSoftDeleted)="onTreeTableDelete($event)"
           (rowVarUpdated)="onSchemaTreeRowUpdated($event)"
-          (rowChildCreate)="onSchemaTreeChildCreate($event)"
         >
           <ng-template #nameCell let-item>
             <span class="schema-tree-name-cell">
@@ -90,6 +90,7 @@
                   mat-icon-button
                   type="button"
                   color="primary"
+                  matTooltip="Вернуть в дерево"
                   [attr.aria-label]="'Вернуть в дерево: ' + item.varName"
                   (click)="onSchemaTreeRestoreNode(item); $event.stopPropagation()"
                 >
@@ -100,18 +101,11 @@
                   mat-icon-button
                   type="button"
                   [disabled]="isObjectVarTypeRow(item)"
+                  matTooltip="Редактировать"
                   [attr.aria-label]="'Изменить: ' + item.varName"
                   (click)="onTreeTableEdit(item); $event.stopPropagation()"
                 >
                   <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  type="button"
-                  [attr.aria-label]="'Создать дочерний элемент для: ' + item.varName"
-                  (click)="onTreeTableCreate(item); $event.stopPropagation()"
-                >
-                  <mat-icon>add</mat-icon>
                 </button>
               }
             </span>
@@ -124,12 +118,54 @@
   <!-- Covers Tab -->
       <mat-tab label="Покрытия">
 
+        @if (showLlmAgentCard) {
+          <div class="pt-box llm-agent-box">
+            <div class="pt-box-title-row">
+              <h3 class="pt-box-title">Агент</h3>
+            </div>
+            <mat-form-field appearance="outline" class="llm-text-field">
+              <mat-label>Команда для агента</mat-label>
+              <textarea
+                matInput
+                rows="3"
+                [(ngModel)]="coverLlmText"
+                placeholder="Например: добавь покрытия смерть и инвалидность с рисками НС"
+              ></textarea>
+            </mat-form-field>
+            @if (!llmReady) {
+              <p class="llm-hint">
+                LLM не настроен или отключён. Настройте интеграцию в разделе Tenants → LLM.
+              </p>
+            }
+            <div class="llm-actions">
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="!llmReady || askingLlm || !(coverLlmText || '').trim()"
+                (click)="askCoverLlm()"
+              >
+                {{ askingLlm ? 'Запрос…' : 'Выполнить' }}
+              </button>
+            </div>
+          </div>
+        }
+
         <div class="pt-box">
           <div class="pt-box-title-row">
             <h3 class="pt-box-title">Список покрытий, применимых к группе продуктов</h3>
-            <button mat-flat-button (click)="addCover()">
-              Добавить
-            </button>
+            <div class="pt-box-title-actions">
+              <button
+                mat-stroked-button
+                type="button"
+                [class.agent-toggle-active]="showLlmAgentCard"
+                (click)="showLlmAgentCard = !showLlmAgentCard"
+              >
+                Агент
+              </button>
+              <button mat-flat-button type="button" (click)="addCover()">
+                Добавить
+              </button>
+            </div>
           </div>
           <h4 class="pt-box-subtitle">Полный список покрытий, используемых для данной группы продуктов. Используется далее при настройке конкретных продуктов.</h4>
 

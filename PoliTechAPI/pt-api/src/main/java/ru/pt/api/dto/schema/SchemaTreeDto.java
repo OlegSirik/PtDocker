@@ -11,6 +11,5 @@ public record SchemaTreeDto(
     String varList,
     boolean isSystem,
     String varPath,
-    String varCdm,
     String varValue
 ) {}

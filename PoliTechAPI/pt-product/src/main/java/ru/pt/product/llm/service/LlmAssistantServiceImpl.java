@@ -9,9 +9,11 @@ import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.llm.LlmCalculatorAssistRequest;
 import ru.pt.api.dto.llm.LlmCalculatorAssistResponse;
 import ru.pt.api.dto.llm.LlmLobAssistRequest;
+import ru.pt.api.dto.llm.LlmSchemaAssistRequest;
 import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.llm.LlmUsage;
 import ru.pt.api.dto.product.LobModel;
+import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.llm.TenantLlmRuntimeConfig;
@@ -20,6 +22,7 @@ import ru.pt.api.service.llm.TenantLlmConfigService;
 import ru.pt.api.service.product.LlmAssistantService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
+import ru.pt.api.service.schema.SchemaService;
 import ru.pt.product.llm.processor.LlmProcessedResult;
 import ru.pt.product.llm.processor.LlmResponseProcessor;
 import ru.pt.product.llm.processor.LlmResponseProcessorRegistry;
@@ -30,14 +33,23 @@ import ru.pt.product.llm.provider.LlmCompletionResult;
 import ru.pt.product.llm.provider.LlmGateway;
 import ru.pt.product.llm.provider.LlmMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @Service
 public class LlmAssistantServiceImpl implements LlmAssistantService {
 
+    private static final int DEFAULT_MAX_TOKENS = 4096;
+    /** Calculator JSON used to require a full echo and hit the 4k ceiling mid-string. */
+    private static final int CALCULATOR_MAX_TOKENS = 16384;
+    private static final String TRUNCATION_ERROR =
+            "Ответ LLM обрезан по лимиту токенов. Упростите запрос или сократите калькулятор; "
+                    + "модель должна возвращать только изменения (дельта), не полную копию.";
+
     private final ProductService productService;
     private final LobService lobService;
+    private final SchemaService schemaService;
     private final PromptAssembler promptAssembler;
     private final VarsContextFormatter varsContextFormatter;
     private final LlmGateway llmGateway;
@@ -49,6 +61,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
     public LlmAssistantServiceImpl(
             ProductService productService,
             LobService lobService,
+            SchemaService schemaService,
             PromptAssembler promptAssembler,
             VarsContextFormatter varsContextFormatter,
             LlmGateway llmGateway,
@@ -58,6 +71,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             LlmCalculatorApplicator calculatorApplicator) {
         this.productService = productService;
         this.lobService = lobService;
+        this.schemaService = schemaService;
         this.promptAssembler = promptAssembler;
         this.varsContextFormatter = varsContextFormatter;
         this.llmGateway = llmGateway;
@@ -75,11 +89,22 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
                 request.getProductId(),
                 request.getVersionNo());
 
-        List<LlmMessage> messages = promptAssembler.assemble(
-                request.getTaskType(),
-                request.getUserMessage(),
-                product,
-                user.getTenantId());
+        List<LlmMessage> messages;
+        if (request.getTaskType() == LlmTaskType.PACKAGE) {
+            LobModel lob = product.getLob() != null && !product.getLob().isBlank()
+                    ? lobService.getByCode(user.getTenantId(), product.getLob())
+                    : null;
+            messages = promptAssembler.assembleForPackages(
+                    request.getUserMessage(),
+                    product,
+                    lob);
+        } else {
+            messages = promptAssembler.assemble(
+                    request.getTaskType(),
+                    request.getUserMessage(),
+                    product,
+                    user.getTenantId());
+        }
 
         Set<String> knownVarCodes = varsContextFormatter.varCodes(product.getVars());
         return completeAndProcess(request, product, messages, knownVarCodes, user);
@@ -105,6 +130,29 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
 
         Set<String> knownVarCodes = varsContextFormatter.varCodes(vars);
         return completeAndProcessLob(request, lob, messages, knownVarCodes, vars, user);
+    }
+
+    @Override
+    public LlmAssistResponse assistSchema(LlmSchemaAssistRequest request, AuthenticatedUser user) {
+        validateSchemaRequest(request);
+        String contractCode = request.getContractCode().trim();
+        List<LobVar> schemaVars = schemaService.getAttributes(user.getTenantId(), contractCode);
+        if (schemaVars == null) {
+            schemaVars = List.of();
+        }
+
+        List<LlmMessage> messages = promptAssembler.assembleForSchema(
+                request.getUserMessage().trim(),
+                contractCode,
+                schemaVars,
+                request.getParentVarCode());
+
+        Set<String> knownVarCodes = varsContextFormatter.schemaVarCodes(schemaVars);
+        List<PvVar> asPvVars = schemaVars.stream()
+                .filter(v -> v != null && !v.getIsDeleted())
+                .map(PvVar::new)
+                .toList();
+        return completeAndProcessSchema(request, contractCode, messages, knownVarCodes, asPvVars, user);
     }
 
     @Override
@@ -160,10 +208,13 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             AuthenticatedUser user) {
         TenantLlmRuntimeConfig tenantConfig = tenantLlmConfigService.resolve(user.getTenantId());
         String providerCode = resolveProviderCode(request, tenantConfig);
+        int maxTokens = request.getTaskType() == LlmTaskType.CALCULATOR
+                ? CALCULATOR_MAX_TOKENS
+                : DEFAULT_MAX_TOKENS;
         LlmCompletionResult completion;
         try {
             completion = llmGateway.complete(
-                    new LlmCompletionRequest(messages, null, 0.1, 4096, true),
+                    new LlmCompletionRequest(messages, null, 0.1, maxTokens, true),
                     tenantConfig,
                     request.getProviderCode(),
                     request.getModel());
@@ -172,19 +223,9 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             throw ex;
         }
 
-        LlmResponseProcessor processor = processorRegistry.get(request.getTaskType());
-        LlmProcessedResult processed = processor.process(
-                completion.content(),
-                knownVarCodes,
-                product.getVars());
-
         LlmAssistResponse response = new LlmAssistResponse();
         response.setTaskType(request.getTaskType());
         response.setRawContent(completion.content());
-        response.setSuccess(processed.isSuccess());
-        response.setResult(processed.getResult());
-        response.setWarnings(processed.getWarnings());
-        response.setErrors(processed.getErrors());
 
         LlmUsage usage = new LlmUsage();
         usage.setProvider(providerCode);
@@ -194,8 +235,43 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         usage.setLatencyMs(completion.latencyMs());
         response.setUsage(usage);
 
+        if (completion.truncated()) {
+            response.setSuccess(false);
+            response.setErrors(List.of(TRUNCATION_ERROR));
+            exchangeLogService.logExchange(request, product, messages, response, completion, providerCode, user);
+            return response;
+        }
+
+        LlmResponseProcessor processor = processorRegistry.get(request.getTaskType());
+        LlmProcessedResult processed = processor.process(
+                completion.content(),
+                knownVarCodes,
+                product.getVars());
+
+        response.setSuccess(processed.isSuccess());
+        response.setResult(processed.getResult());
+        response.setWarnings(processed.getWarnings());
+        response.setErrors(enrichParseErrorsIfTruncated(processed.getErrors(), completion, maxTokens));
+
         exchangeLogService.logExchange(request, product, messages, response, completion, providerCode, user);
         return response;
+    }
+
+    private static List<String> enrichParseErrorsIfTruncated(
+            List<String> errors,
+            LlmCompletionResult completion,
+            int maxTokens) {
+        if (errors == null || errors.isEmpty()) {
+            return errors;
+        }
+        boolean likelyTruncated = completion.completionTokens() >= maxTokens
+                || errors.stream().anyMatch(e -> e != null && e.contains("Unexpected end-of-input"));
+        if (!likelyTruncated) {
+            return errors;
+        }
+        List<String> enriched = new ArrayList<>(errors);
+        enriched.add(0, TRUNCATION_ERROR);
+        return enriched;
     }
 
     private LlmAssistResponse completeAndProcessLob(
@@ -242,6 +318,54 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         response.setUsage(usage);
 
         exchangeLogService.logLobExchange(request, lob, messages, response, completion, providerCode, user);
+        return response;
+    }
+
+    private LlmAssistResponse completeAndProcessSchema(
+            LlmSchemaAssistRequest request,
+            String contractCode,
+            List<LlmMessage> messages,
+            Set<String> knownVarCodes,
+            List<PvVar> schemaAsPvVars,
+            AuthenticatedUser user) {
+        TenantLlmRuntimeConfig tenantConfig = tenantLlmConfigService.resolve(user.getTenantId());
+        String providerCode = resolveSchemaProviderCode(request, tenantConfig);
+        LlmCompletionResult completion;
+        try {
+            completion = llmGateway.complete(
+                    new LlmCompletionRequest(messages, null, 0.1, 4096, true),
+                    tenantConfig,
+                    request.getProviderCode(),
+                    request.getModel());
+        } catch (RuntimeException ex) {
+            exchangeLogService.logSchemaFailure(request, contractCode, messages, providerCode, user, ex.getMessage());
+            throw ex;
+        }
+
+        LlmResponseProcessor processor = processorRegistry.get(LlmTaskType.SCHEMA);
+        LlmProcessedResult processed = processor.process(
+                completion.content(),
+                knownVarCodes,
+                schemaAsPvVars);
+
+        LlmAssistResponse response = new LlmAssistResponse();
+        response.setTaskType(LlmTaskType.SCHEMA);
+        response.setRawContent(completion.content());
+        response.setSuccess(processed.isSuccess());
+        response.setResult(processed.getResult());
+        response.setWarnings(processed.getWarnings());
+        response.setErrors(processed.getErrors());
+
+        LlmUsage usage = new LlmUsage();
+        usage.setProvider(providerCode);
+        usage.setModel(completion.model());
+        usage.setPromptTokens(completion.promptTokens());
+        usage.setCompletionTokens(completion.completionTokens());
+        usage.setLatencyMs(completion.latencyMs());
+        response.setUsage(usage);
+
+        exchangeLogService.logSchemaExchange(
+                request, contractCode, messages, response, completion, providerCode, user);
         return response;
     }
 
@@ -304,12 +428,22 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         return tenantConfig.getDefaultProvider();
     }
 
+    private String resolveSchemaProviderCode(LlmSchemaAssistRequest request, TenantLlmRuntimeConfig tenantConfig) {
+        if (request.getProviderCode() != null && !request.getProviderCode().isBlank()) {
+            return request.getProviderCode();
+        }
+        return tenantConfig.getDefaultProvider();
+    }
+
     private void validateRequest(LlmAssistRequest request) {
         if (request == null) {
             throw new BadRequestException("Request body is required");
         }
         if (request.getTaskType() == null) {
             throw new BadRequestException("taskType is required");
+        }
+        if (request.getTaskType() != LlmTaskType.RULE && request.getTaskType() != LlmTaskType.PACKAGE) {
+            throw new BadRequestException("Only RULE or PACKAGE taskType is supported for product assist");
         }
         if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
             throw new BadRequestException("userMessage is required");
@@ -329,14 +463,29 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         if (request.getTaskType() == null) {
             throw new BadRequestException("taskType is required");
         }
-        if (request.getTaskType() != LlmTaskType.RULE) {
-            throw new BadRequestException("Only RULE taskType is supported for LOB assist");
+        if (request.getTaskType() != LlmTaskType.RULE && request.getTaskType() != LlmTaskType.COVER) {
+            throw new BadRequestException("Only RULE or COVER taskType is supported for LOB assist");
         }
         if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
             throw new BadRequestException("userMessage is required");
         }
         if (request.getLobCode() == null || request.getLobCode().isBlank()) {
             throw new BadRequestException("lobCode is required");
+        }
+    }
+
+    private void validateSchemaRequest(LlmSchemaAssistRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request body is required");
+        }
+        if (request.getTaskType() != null && request.getTaskType() != LlmTaskType.SCHEMA) {
+            throw new BadRequestException("Only SCHEMA taskType is supported for schema assist");
+        }
+        if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
+            throw new BadRequestException("userMessage is required");
+        }
+        if (request.getContractCode() == null || request.getContractCode().isBlank()) {
+            throw new BadRequestException("contractCode is required");
         }
     }
 

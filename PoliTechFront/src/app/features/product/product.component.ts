@@ -35,16 +35,22 @@ import { CoverDialogComponent } from './cover-dialog/cover-dialog.component';
 import { DeductibleDialogComponent } from './deductible-dialog/deductible-dialog.component';
 import { LimitDialogComponent } from './limit-dialog/limit-dialog.component';
 import { ProductPvVarEditDialogComponent } from './product-pv-var-edit-dialog.component';
-import { Observable, of } from 'rxjs';
-import { tap, map, filter, catchError, switchMap } from 'rxjs/operators';
+import { Observable, of, from } from 'rxjs';
+import { tap, map, filter, catchError, switchMap, concatMap, toArray } from 'rxjs/operators';
 import { BusinessLineService } from '../../shared/services/business-line.service';
 import { BusinessLineEditService, BusinessLineFile, BusinessLineVar, BusinessLineEdit } from '../../shared/services/business-line-edit.service';
 import { FilesService, FileTemplate } from '../../shared/services/api/files.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { TestRequestService } from '../../shared/services/api/test-request.service';
-import { VarsService } from '../../shared/services/vars.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
 import { RulesService, RuleType, type Rule } from '../../shared/services/api/rules.service';
+import {
+  LlmService,
+  type LlmPackageCoverDraft,
+  type LlmPackageDraft,
+} from '../../shared/services/api/llm.service';
+import { TenantLlmConfigService } from '../../shared/services/api/tenant-llm-config.service';
+import { resolveLlmErrorMessage } from '../../shared/utils/llm-error.util';
 import { ProductRuleGroupComponent } from './product-rule-group/product-rule-group.component';
 import { ProductDocumentationComponent } from './product-documentation/product-documentation.component';
 import { TreeTableComponent, isObjectVarTypeRow } from '../../shared/components/tree-table';
@@ -205,12 +211,6 @@ export class ProductComponent implements OnInit {
   // Dropdown options
   coverCodeOptions: string[] = [];
 
-  // Policy Variables table
-  policyVarsDisplayedColumns = ['category', 'field', 'name', 'code', 'actions'];
-  policyVarsFiltered = []
-  /** Только шаблоны печати ({@code strings.*} в varCdm). */
-  policyFilter = 'strings';
-
   /** Дерево атрибутов продукта (данные из {@link Product.vars}). */
   productTreeTableData: TreeTableSourceRow[] = [];
   productTreeDisplayedColumns: string[] = ['name', 'code', 'actions'];
@@ -221,17 +221,21 @@ export class ProductComponent implements OnInit {
   }));
   showDeletedProductTree = false;
 
+  /**
+   * EXPERIMENTAL: вкладка «Пакеты2».
+   * Чтобы убрать: false + удалить блок mat-tab «Пакеты2» в product.component.html.
+   */
+  readonly experimentalPackages2Tab = true;
+
   /** Ключи вкладок продукта (query param `tab`). */
-  readonly productTabKeys = [
-    'main',
-    'validators',
-    'celRules',
-    'schema',
-    'packages',
-    'print',
-    'documentation',
-    'test',
-  ] as const;
+  get productTabKeys(): readonly string[] {
+    const keys = ['main', 'validators', 'celRules', 'schema', 'packages'];
+    if (this.experimentalPackages2Tab) {
+      keys.push('packages2');
+    }
+    keys.push('documentation', 'test');
+    return keys;
+  }
   selectedTabIndex = 0;
   documentationReloadToken = 0;
 
@@ -242,6 +246,7 @@ export class ProductComponent implements OnInit {
 
   // Files table
   filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
+  files2DisplayedColumns = ['pkg2_file_fileCode', 'pkg2_file_fileName', 'pkg2_file_actions'];
   businessLineFiles: PackageFile[] = [];
   
   // Files data
@@ -250,6 +255,13 @@ export class ProductComponent implements OnInit {
   // Auth service
   private authService = inject(AuthService);
   private rulesService = inject(RulesService);
+  private llmService = inject(LlmService);
+  private tenantLlmConfigService = inject(TenantLlmConfigService);
+
+  showLlmAgentCard = false;
+  packageLlmText = '';
+  askingLlm = false;
+  llmReady = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -261,7 +273,6 @@ export class ProductComponent implements OnInit {
     private snackBar: MatSnackBar,
     private filesService: FilesService,
     private testRequestService: TestRequestService,
-    private varsService: VarsService,
     private insCompanyService: InsCompanyService,
   ) {}
 
@@ -270,6 +281,7 @@ export class ProductComponent implements OnInit {
     const versionNo = this.route.snapshot.paramMap.get('versionNo');
 
     this.route.queryParamMap.subscribe((params) => this.applyTabFromQuery(params.get('tab')));
+    this.loadLlmStatus();
 
     this.insCompanyService.list().subscribe({
       next: (list) => {
@@ -295,11 +307,22 @@ export class ProductComponent implements OnInit {
 
   }
 
+  private loadLlmStatus(): void {
+    this.tenantLlmConfigService.getConfig().subscribe({
+      next: (view) => {
+        this.llmReady = view.configured && view.enabled;
+      },
+      error: () => {
+        this.llmReady = false;
+      },
+    });
+  }
+
   private applyTabFromQuery(tab: string | null): void {
     if (!tab) {
       return;
     }
-    const idx = this.productTabKeys.indexOf(tab as (typeof this.productTabKeys)[number]);
+    const idx = this.productTabKeys.indexOf(tab);
     if (idx >= 0) {
       this.selectedTabIndex = idx;
       if (tab === 'documentation') {
@@ -712,27 +735,6 @@ export class ProductComponent implements OnInit {
     });
   }
 
-  reloadPolicyVars(): void {
-    if (!this.product?.id || !this.product?.versionNo) {
-      this.snackBar.open('Не удалось определить ID продукта или номер версии', 'Закрыть', { duration: 3000 });
-      return;
-    }
-
-    const category = (this.policyFilter || '').trim();
-    this.productService.reloadVars(this.product.id, this.product.versionNo, category).subscribe({
-      next: (updatedProduct: any) => {
-        this.product = updatedProduct;
-        this.updatePolicyTable();
-        this.updateTables();
-        this.snackBar.open('Переменные успешно обновлены', 'Закрыть', { duration: 3000 });
-      },
-      error: (error: any) => {
-        console.error('Error reloading vars:', error);
-        this.snackBar.open('Ошибка обновления переменных', 'Закрыть', { duration: 3000 });
-      }
-    });
-  }
-
   editSaveValidator(validator: QuoteValidator, index: number): void {
     if (!this.validatorRowMutable(validator)) {
       return;
@@ -1016,6 +1018,206 @@ export class ProductComponent implements OnInit {
     this.updateChildTables();
   }
 
+  askPackageLlm(): void {
+    const text = (this.packageLlmText || '').trim();
+    if (!text || this.askingLlm) {
+      return;
+    }
+    if (!this.product.id || this.product.versionNo == null) {
+      this.snackBar.open('Сначала сохраните продукт', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    if (this.crudLockedPendingSave) {
+      this.snackBar.open('Сначала сохраните изменения в продукте', 'Закрыть', { duration: 3000 });
+      return;
+    }
+
+    const productId = this.product.id;
+    const versionNo = this.product.versionNo;
+    this.askingLlm = true;
+    this.llmService.assist(productId, versionNo, text, 'PACKAGE').subscribe({
+      next: (response) => {
+        if (!response.success) {
+          this.askingLlm = false;
+          const msg =
+            response.errors?.filter(Boolean).join('; ') || 'LLM не вернул пакеты';
+          this.snackBar.open(msg, 'OK', { duration: 5000 });
+          return;
+        }
+        const drafts = this.normalizePackageDrafts(response.result);
+        if (!drafts.length) {
+          this.askingLlm = false;
+          this.snackBar.open('Пустой ответ LLM по пакетам', 'OK', { duration: 3500 });
+          return;
+        }
+        this.applyPackageDrafts(productId, versionNo, drafts).subscribe({
+          next: (summary) => {
+            this.askingLlm = false;
+            if (response.warnings?.length) {
+              this.snackBar.open(response.warnings.join('; '), 'OK', { duration: 5000 });
+            }
+            this.snackBar.open(
+              `Пакеты: +${summary.packagesAdded}, покрытия: +${summary.coversAdded}`,
+              'OK',
+              { duration: 4000 },
+            );
+          },
+          error: (err) => {
+            this.askingLlm = false;
+            this.snackBar.open(resolveLlmErrorMessage(err), 'OK', { duration: 5000 });
+          },
+        });
+      },
+      error: (err) => {
+        this.askingLlm = false;
+        this.snackBar.open(resolveLlmErrorMessage(err), 'OK', { duration: 5000 });
+      },
+    });
+  }
+
+  private normalizePackageDrafts(result: unknown): LlmPackageDraft[] {
+    if (Array.isArray(result)) {
+      return result as LlmPackageDraft[];
+    }
+    if (result && typeof result === 'object') {
+      const obj = result as { packages?: LlmPackageDraft[]; code?: string; name?: string };
+      if (Array.isArray(obj.packages)) {
+        return obj.packages;
+      }
+      if (obj.code && obj.name) {
+        return [obj as LlmPackageDraft];
+      }
+    }
+    return [];
+  }
+
+  private applyPackageDrafts(
+    productId: number,
+    versionNo: number,
+    drafts: LlmPackageDraft[],
+  ): Observable<{ packagesAdded: number; coversAdded: number }> {
+    let packagesAdded = 0;
+    let coversAdded = 0;
+
+    return from(drafts).pipe(
+      concatMap((draft) => {
+        const code = String(draft.code ?? '').trim();
+        const name = String(draft.name ?? '').trim();
+        if (!code || !name) {
+          return of(null);
+        }
+
+        const existingIndex = this.product.packages.findIndex(
+          (p) => (p.code || '').trim().toUpperCase() === code.toUpperCase(),
+        );
+        const covers = this.mapPackageCovers(draft.covers);
+
+        if (existingIndex < 0) {
+          const pkg: Package = {
+            code,
+            name,
+            covers,
+            files: [],
+          };
+          return this.productService.addPackage(productId, versionNo, pkg).pipe(
+            tap((updated) => {
+              packagesAdded++;
+              coversAdded += covers.length;
+              this.product = updated;
+              this.afterPackageMutation(code);
+            }),
+          );
+        }
+
+        const existing = this.product.packages[existingIndex];
+        const existingCoverCodes = new Set(
+          (existing.covers || []).map((c) => (c.code || '').trim().toUpperCase()),
+        );
+        const newCovers = covers.filter(
+          (c) => !existingCoverCodes.has((c.code || '').trim().toUpperCase()),
+        );
+        if (!newCovers.length) {
+          return of(null);
+        }
+
+        return from(newCovers).pipe(
+          concatMap((cover) =>
+            this.productService.addCover(productId, versionNo, existing.code, cover).pipe(
+              tap((updated) => {
+                coversAdded++;
+                this.product = updated;
+                this.afterPackageMutation(existing.code);
+              }),
+            ),
+          ),
+          toArray(),
+          map(() => null),
+        );
+      }),
+      toArray(),
+      map(() => ({ packagesAdded, coversAdded })),
+    );
+  }
+
+  private mapPackageCovers(drafts: LlmPackageCoverDraft[] | undefined): Cover[] {
+    if (!drafts?.length) {
+      return [];
+    }
+    return drafts
+      .map((d) => {
+        const code = String(d.code ?? '').trim();
+        if (!code) {
+          return null;
+        }
+        const deductibles: Deductible[] = (d.deductibles || [])
+          .filter((x) => x && x.id != null && String(x.text ?? '').trim())
+          .map((x) => ({
+            id: Number(x.id),
+            text: String(x.text).trim(),
+          }));
+        return {
+          code,
+          isMandatory: !!d.isMandatory,
+          waitingPeriod: d.waitingPeriod ?? '',
+          coverageTerm: d.coverageTerm ?? '',
+          isDeductibleMandatory: !!d.isDeductibleMandatory,
+          deductibles,
+          limits: [],
+        } as Cover;
+      })
+      .filter((c): c is Cover => !!c);
+  }
+
+  private afterPackageMutation(packageCode: string): void {
+    this.updateTables();
+    const pkgIndex = this.product.packages.findIndex((p) => p.code === packageCode);
+    this.selectedPackageIndex = pkgIndex;
+    this.currentPackage = pkgIndex >= 0 ? this.product.packages[pkgIndex] : null;
+    this.updateChildTables();
+    this.hasChanges = false;
+    this.loadDropdownOptions();
+  }
+
+  /** EXPERIMENTAL packages2: выбор пакета в dropdown → покрытия / франшизы / файлы. */
+  onPackages2Select(index: number | null): void {
+    if (index == null || index < 0 || index >= (this.product.packages?.length ?? 0)) {
+      this.selectedPackageIndex = -1;
+      this.currentPackage = null;
+      this.selectedCoverIndex = -1;
+      this.updateChildTables();
+      return;
+    }
+    this.showFiles(this.product.packages[index], index);
+  }
+
+  /** EXPERIMENTAL packages2: удаление недоступно при id === 0. */
+  get packages2DeleteDisabled(): boolean {
+    if (this.crudLockedPendingSave || this.selectedPackageIndex < 0 || !this.currentPackage) {
+      return true;
+    }
+    return this.currentPackage.id === 0;
+  }
+
   updateChildTables(): void {
     this.updateFilesTable();
     this.updateCoversTable();
@@ -1187,6 +1389,12 @@ export class ProductComponent implements OnInit {
     this.paginatedCovers = [...selectedPackage.covers];
   }
 
+  /** EXPERIMENTAL packages2: название покрытия из LOB, иначе code. */
+  coverDisplayName(cover: Cover): string {
+    const name = this.lob?.mpCovers?.find((c) => c.coverCode === cover.code)?.coverName?.trim();
+    return name || cover.code || 'Покрытие';
+  }
+
   selectCover(cover: Cover, index: number): void {
     this.selectedCoverIndex = index;
     this.updateDeductiblesTable();
@@ -1229,6 +1437,25 @@ export class ProductComponent implements OnInit {
         this.snackBar.open(errorMessage, 'Закрыть', { duration: 3000 });
       }
     });
+  }
+
+  /** EXPERIMENTAL packages2: франшизы внутри карты покрытия. */
+  addDeductibleForCover(coverIndex: number): void {
+    this.selectedCoverIndex = coverIndex;
+    this.updateDeductiblesTable();
+    this.addDeductible();
+  }
+
+  editDeductibleForCover(coverIndex: number, deductible: Deductible, index: number): void {
+    this.selectedCoverIndex = coverIndex;
+    this.updateDeductiblesTable();
+    this.editDeductible(deductible, index);
+  }
+
+  deleteDeductibleForCover(coverIndex: number, deductible: Deductible, index: number): void {
+    this.selectedCoverIndex = coverIndex;
+    this.updateDeductiblesTable();
+    this.deleteDeductible(deductible, index);
   }
 
   // Deductible methods
@@ -1807,115 +2034,6 @@ export class ProductComponent implements OnInit {
     });
   }
 
-  get paginatedPolicyVars(): any[] {
-    const vars = this.product?.vars ?? [];
-    let filtered = vars;
-    let categories: string[] = [];
-    let prefix = '';
-    let result: any[] = [];
-
-    const cdm = (v: PolicyVar) => (v.varCdm ?? '').trim();
-
-    // Apply filter based on selected option
-    if (this.policyFilter === 'policyHolder') {
-      prefix = 'policyHolder.';
-      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
-      categories = this.varsService.getPhCategories(this.lob?.mpPhType || '');
-    } else if (this.policyFilter === 'insuredObject') {
-      prefix = 'insuredObject.';
-      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
-      categories = this.varsService.getIoCategories(this.lob?.mpInsObjectType || 'person');
-    } else if (this.policyFilter === 'policy') {
-      prefix = 'policy.';
-      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
-      categories = [''];
-    } else if (this.policyFilter === 'coverage') {
-      prefix = 'coverage.';
-      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
-      categories = [''];
-    } else if (this.policyFilter === 'strings') {
-      prefix = 'strings.';
-      filtered = vars.filter((v) => cdm(v).startsWith(prefix));
-      categories = [''];
-    }
-
-    for (const category of categories) {
-      let category_filtered = filtered.filter((v) => cdm(v).startsWith(prefix + category));
-    
-      // Sort by varNr
-      category_filtered = category_filtered.sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0));
-
-      let prevCategory = '';
-      // Process category and field columns based on varPath
-      category_filtered.map((v, index) => {
-        let category = '';
-        let field = '';
-        const path = cdm(v);
-        const parts = path.split('.');
-
-        if (path.startsWith('policyHolder.')) {
-          category = parts[1];
-          field = parts[2];
-        } else if (path.startsWith('insuredObject.')) {
-          category = parts[1];
-          field = parts[2];
-        } else if (path.startsWith('policy.')) {
-          category = '';
-          field = parts[1];
-        } else if (path.startsWith('coverage.')) {
-          category = '';
-          field = parts[1];
-        } else if (path.startsWith('strings.')) {
-          category = '';
-          field = parts.length > 1 ? parts.slice(1).join('.') : '';
-        } else {
-          category = parts.join('.');
-          field = '';
-        } 
-
-        if (category === prevCategory) {
-          category = ''; // Hide duplicate category
-        } else {
-          prevCategory = category;
-        }
-
-        result.push({
-          ...v,
-          category,
-          field,
-          name: v.varName,
-          code: v.varCode
-        });
-      });
-    }
-
-    return result;
-    
-  }
-
-  showPolicyVarDetails(variable: PolicyVar): void {
-    this.dialog.open(PolicyVarDetailsDialog, {
-      width: '600px',
-      data: { variable }
-    });
-  }
-
-  deletePolicyVar(variable: PolicyVar, index: number): void {
-    //if (confirm(`Удалить переменную "${variable.name}"?`)) {
-
-      // Удаляем переменную из this.product.vars по varCode
-      this.product.vars = this.product.vars.filter(v => v.varCode !== variable.varCode);
-
-      // Find the original index in policyVars array
-      //const originalIndex = this.policyVars.findIndex(v => v.varPath === variable.varPath);
-      //if (originalIndex !== -1) {
-        //this.policyVars.splice(originalIndex, 1);
-        this.updatePolicyTable();
-        this.updateChanges();
-      //}
-    //}
-  }
-
   // JSON File operations
   saveToFile(): void {
     const dataStr = JSON.stringify(this.product, null, 2);
@@ -2276,45 +2394,3 @@ export class TestRequestDialog {
     });
   }
 }
-
-@Component({
-    selector: 'app-policy-var-details-dialog',
-    imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-    template: `
-    <h2 mat-dialog-title>Variable Details</h2>
-    <div mat-dialog-content>
-      <div style="margin-bottom: 16px;">
-        <strong>Variable Path:</strong> {{ data.variable.varPath }}
-      </div>
-      <div style="margin-bottom: 16px;">
-        <strong>Variable Name:</strong> {{ data.variable.varName }}
-      </div>
-      <div style="margin-bottom: 16px;">
-        <strong>Variable Code:</strong> {{ data.variable.varCode }}
-      </div>
-      <div style="margin-bottom: 16px;">
-        <strong>CDM:</strong> {{ data.variable.varCdm }}
-      </div>
-      <div style="margin-bottom: 16px;">
-        <strong>Type / Data type:</strong> {{ data.variable.varType }} / {{ data.variable.varDataType }}
-      </div>
-      @if (data.variable.id != null) {
-        <div style="margin-bottom: 16px;">
-          <strong>id / parent_id:</strong> {{ data.variable.id }} / {{ data.variable.parent_id ?? '—' }}
-        </div>
-      }
-      @if (data.variable.varList) {
-        <div style="margin-bottom: 16px;">
-          <strong>varList:</strong> {{ data.variable.varList }}
-        </div>
-      }
-    </div>
-    <div mat-dialog-actions align="end">
-      <button mat-flat-button color="primary" mat-dialog-close>Close</button>
-    </div>
-  `
-})
-export class PolicyVarDetailsDialog {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { variable: PolicyVar }) {}
-}
-

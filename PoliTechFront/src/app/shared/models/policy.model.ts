@@ -3,7 +3,7 @@ import { InsuredObject } from './insured-object.model';
 import { Cover } from './cover.model';
 
 export class Policy {
-  id?: string = '';
+  id?: string;
   policyNumber?: string;
   previousPolicyNumber?: string;
   productCode: string = '';
@@ -42,9 +42,8 @@ export class Policy {
         this.policyHolder = new PolicyHolder(data.policyHolder);
       }
       if (data.insuredObjects) {
-        this.insuredObjects[0] = new InsuredObject(data.insuredObjects[0]);
-      }
+        this.insuredObjects = data.insuredObjects.map(io => new InsuredObject(io));
       }
     }
   }
-
+}

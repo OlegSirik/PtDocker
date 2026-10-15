@@ -146,5 +146,38 @@
       padding: 20px;
     }
   }
+
+  .pt-box-title-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .agent-toggle-active {
+    background: rgba(25, 118, 210, 0.08);
+  }
+
+  .llm-agent-box {
+    .llm-text-field {
+      width: 100%;
+    }
+
+    .llm-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .llm-hint {
+      margin: 0 0 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      color: #5d4037;
+      font-size: 13px;
+    }
+  }
 }
 

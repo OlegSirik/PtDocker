@@ -108,17 +108,6 @@ public class ProductController extends SecuredController {
         return ResponseEntity.ok(productService.publishToProd(user.getTenantId(), productId, versionNo));
     }
 
-    @PostMapping("/{productId}/versions/{versionNo}/cmd/reload")
-    public ResponseEntity<ProductVersionModel> reloadVars(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Long productId,
-            @PathVariable("versionNo") Long versionNo,
-            @RequestParam("cat") String category) {
-        //requireRole(user, "SYS_ADMIN");
-        return ResponseEntity.ok(productService.reloadVars(user.getTenantId(), productId, versionNo, category));
-    }
-
     @PutMapping("/{productId}/versions/{versionNo}")
     public ResponseEntity<ProductVersionModel> updateVersion(
             @PathVariable String tenantCode,
@@ -216,16 +205,6 @@ public class ProductController extends SecuredController {
             @PathVariable("packageCode") String packageCode,
             @PathVariable("coverCode") String coverCode) {
         return ResponseEntity.ok(productService.deleteCover(user.getTenantId(), productId, versionNo, packageCode, coverCode));
-    }
-
-    @PostMapping("/{productId}/versions/{versionNo}/vars")
-    public ResponseEntity<ProductVersionModel> addVar(
-            @PathVariable String tenantCode,
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable("productId") Long productId,
-            @PathVariable("versionNo") Long versionNo,
-            @RequestBody PvVar payload) {
-        return ResponseEntity.ok(productService.addVar(user.getTenantId(), productId, versionNo, payload));
     }
 
     @PutMapping("/{productId}/versions/{versionNo}/vars/{varCode}")

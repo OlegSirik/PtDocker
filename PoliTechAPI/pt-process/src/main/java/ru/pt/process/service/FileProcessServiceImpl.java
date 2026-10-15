@@ -185,7 +185,6 @@ public class FileProcessServiceImpl implements FileProcessService {
         v.setVarType("TEXT");
         v.setVarDataType(lob.getVarDataType());
         v.setVarValue(lob.getVarValue());
-        v.setVarCdm(lob.getVarCdm());
         v.setVarNr(lob.getVarNr());
         v.setId(lob.getId());
         v.setParent_id(lob.getParent_id());

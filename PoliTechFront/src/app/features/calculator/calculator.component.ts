@@ -96,7 +96,7 @@ export class CalculatorComponent implements OnInit {
 
   // Constants
   get constants(): CalculatorVar[] {
-    return this.calculator.vars.filter(v => v.varType === 'CONST');
+    return (this.calculator.vars ?? []).filter((v): v is CalculatorVar => !!v && v.varType === 'CONST');
   }
 
   // Formulas table
@@ -121,6 +121,8 @@ export class CalculatorComponent implements OnInit {
 
   askingLlm = false;
   llmReady = true;
+  /** Карта LLM-агента на вкладке «Тариф» (скрыта по умолчанию). */
+  showLlmAgentCard = false;
 
   // Lines table: toggle Текст (varName) / Код (varCode)
   varDisplayMode: 'text' | 'code' = 'text';
@@ -448,8 +450,10 @@ export class CalculatorComponent implements OnInit {
   save(): void {
     this.calculatorService.updateCalculator(this.calculator).subscribe({
       next: (updatedCalculator) => {
-        this.calculator = updatedCalculator;
+        this.calculator = this.normalizeCalculator(updatedCalculator);
         this.hasChanges = false;
+        this.syncSelectionAfterCalculatorReplace();
+        this.updateTables();
         this.snackBar.open('Калькулятор сохранен успешно', 'Закрыть', { duration: 3000 });
       },
       error: (error) => {
@@ -875,6 +879,30 @@ export class CalculatorComponent implements OnInit {
     return String(val);
   }
 
+  getSelectedCoefficientName(): string {
+    const code = this.selectedCoefficientCode;
+    if (!code) {
+      return '';
+    }
+    const found = this.calculator.coefficients?.find((c) => c.varCode === code);
+    return found?.varName || code;
+  }
+
+  /** Имя переменной по коду (без переключения text/code). */
+  getVarDisplayName(varCode: string | null | undefined): string {
+    if (!varCode) return '';
+    const code = typeof varCode === 'string' ? varCode : String(varCode);
+    const fromCalc = this.calculator.vars?.find((v) => v.varCode === code);
+    if (fromCalc?.varName) {
+      return fromCalc.varName;
+    }
+    const fromProduct = this.product?.vars?.find((v) => v.varCode === code);
+    if (fromProduct?.varName) {
+      return fromProduct.varName;
+    }
+    return code;
+  }
+
   getConditionDisplay(line: FormulaLine): string {
     const left = this.showVarName(line.conditionLeft);
     const op = (line.conditionOperator ?? '').toString();
@@ -982,12 +1010,14 @@ export class CalculatorComponent implements OnInit {
   }
 
   updateCoefficientsTable(): void {
-    this.filteredCoefficients = this.calculator.coefficients.filter(item =>
-      (item.varCode && item.varCode.toLowerCase().includes(this.coefficientsSearchText.toLowerCase())) ||
-      (item.varName && item.varName.toLowerCase().includes(this.coefficientsSearchText.toLowerCase()))
+    this.filteredCoefficients = (this.calculator.coefficients ?? []).filter(item =>
+      !!item && (
+        (item.varCode && item.varCode.toLowerCase().includes(this.coefficientsSearchText.toLowerCase())) ||
+        (item.varName && item.varName.toLowerCase().includes(this.coefficientsSearchText.toLowerCase()))
+      )
     );
     this.updateCoefficientsPagination();
-    
+
     // Auto-select first coefficient if none is selected and data exists
     if (this.filteredCoefficients.length > 0 && !this.selectedCoefficientCode) {
       const firstCoefficient = this.filteredCoefficients[0];
@@ -1079,15 +1109,15 @@ export class CalculatorComponent implements OnInit {
   }
 
   updateColumnsTable(): void {
-    if (this.selectedCoefficientIndex === -1) {
+    const coeff = this.calculator.coefficients?.[this.selectedCoefficientIndex];
+    if (this.selectedCoefficientIndex === -1 || !coeff) {
       this.filteredColumns = [];
       this.paginatedColumns = [];
       return;
     }
 
-    this.filteredColumns = this.calculator.coefficients[this.selectedCoefficientIndex].columns.filter(item =>
-     
-      (item.varCode && item.varCode.toLowerCase().includes(this.columnsSearchText.toLowerCase()))
+    this.filteredColumns = (coeff.columns ?? []).filter(item =>
+      item?.varCode && item.varCode.toLowerCase().includes(this.columnsSearchText.toLowerCase())
     );
     this.updateColumnsPagination();
   }
@@ -1164,7 +1194,7 @@ export class CalculatorComponent implements OnInit {
       const idx = Number(colKey.substring(2));
       const col = this.coefficientDataColumnsSorted[idx];
       if (!col) return 'Error';
-      const varPart = col.varCode ?? '';
+      const varPart = this.getVarDisplayName(col.varCode);
       const opPart = col.conditionOperator ?? '';
       return `${opPart} ${varPart}`.trim();
     }
@@ -1344,9 +1374,7 @@ this.coefficientDataRows = rows;
 
     this.calculator = this.normalizeCalculator(response.calculator);
     this.hasChanges = true;
-    if (this.selectedFormulaIndex < 0 && this.calculator.formulas.length > 0) {
-      this.selectedFormulaIndex = 0;
-    }
+    this.syncSelectionAfterCalculatorReplace();
     this.updateTables();
     this.updateLinesTable();
     this.snackBar.open('Калькулятор обновлён, сохраните изменения', 'Закрыть', { duration: 2500 });
@@ -1359,21 +1387,56 @@ this.coefficientDataRows = rows;
       versionNo: calculator.versionNo != null ? String(calculator.versionNo) : this.calculator.versionNo,
       packageNo: calculator.packageNo ?? this.calculator.packageNo,
       id: calculator.id != null ? String(calculator.id) : this.calculator.id,
-      formulas: (calculator.formulas ?? []).map((formula) => ({
+      vars: (calculator.vars ?? []).filter((v): v is CalculatorVar => !!v),
+      formulas: (calculator.formulas ?? []).filter((f): f is CalculatorFormula => !!f).map((formula) => ({
         ...formula,
-        lines: (formula.lines ?? []).map((line) => ({
+        lines: (formula.lines ?? []).filter((l): l is FormulaLine => !!l).map((line) => ({
           ...line,
           nr: line.nr != null ? String(line.nr) : '',
         })),
       })),
-      coefficients: (calculator.coefficients ?? []).map((coefficient) => ({
+      coefficients: (calculator.coefficients ?? []).filter((c): c is CalculatorCoefficient => !!c).map((coefficient) => ({
         ...coefficient,
-        columns: (coefficient.columns ?? []).map((column) => ({
+        columns: (coefficient.columns ?? []).filter((col): col is CoefficientColumn => !!col).map((column) => ({
           ...column,
           nr: column.nr != null ? String(column.nr) : '',
         })),
       })),
     };
+  }
+
+  /** После LLM/save индекс выбранного коэффициента/формулы может указывать мимо массива. */
+  private syncSelectionAfterCalculatorReplace(): void {
+    const formulas = this.calculator.formulas ?? [];
+    if (this.selectedFormulaIndex >= formulas.length) {
+      this.selectedFormulaIndex = formulas.length > 0 ? 0 : -1;
+    } else if (this.selectedFormulaIndex < 0 && formulas.length > 0) {
+      this.selectedFormulaIndex = 0;
+    }
+
+    const coefficients = this.calculator.coefficients ?? [];
+    const selectedCode = this.selectedColumnCoefficientCode || this.selectedCoefficientCode;
+    let nextIndex = selectedCode
+      ? coefficients.findIndex((c) => c?.varCode === selectedCode)
+      : this.selectedCoefficientIndex;
+
+    if (nextIndex < 0 || nextIndex >= coefficients.length) {
+      nextIndex = coefficients.length > 0 ? 0 : -1;
+    }
+
+    if (nextIndex >= 0) {
+      const coeff = coefficients[nextIndex];
+      this.selectedCoefficientIndex = nextIndex;
+      this.selectedColumnCoefficientCode = coeff.varCode ?? null;
+      this.selectedCoefficientCode = coeff.varCode ?? null;
+    } else {
+      this.selectedCoefficientIndex = -1;
+      this.selectedColumnCoefficientCode = null;
+      this.selectedCoefficientCode = null;
+      this.coefficientDataVisible = false;
+      this.paginatedColumns = [];
+      this.filteredColumns = [];
+    }
   }
 
   syncVars() {

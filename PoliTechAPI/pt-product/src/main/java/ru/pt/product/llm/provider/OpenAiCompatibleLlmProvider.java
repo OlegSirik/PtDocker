@@ -83,7 +83,9 @@ public abstract class OpenAiCompatibleLlmProvider implements LlmProvider {
             if (root == null) {
                 throw new InternalServerErrorException("Empty response from " + code);
             }
-            String content = root.path("choices").path(0).path("message").path("content").asText("");
+            JsonNode choice0 = root.path("choices").path(0);
+            String content = choice0.path("message").path("content").asText("");
+            String finishReason = choice0.path("finish_reason").asText(null);
             JsonNode usage = root.path("usage");
             int promptTokens = usage.path("prompt_tokens").asInt(0);
             int completionTokens = usage.path("completion_tokens").asInt(0);
@@ -92,7 +94,8 @@ public abstract class OpenAiCompatibleLlmProvider implements LlmProvider {
                     request.model(),
                     promptTokens,
                     completionTokens,
-                    System.currentTimeMillis() - started);
+                    System.currentTimeMillis() - started,
+                    finishReason);
         } catch (RestClientException ex) {
             throw new InternalServerErrorException(code + " API error: " + ex.getMessage());
         }

@@ -1,0 +1,23 @@
+<mat-card class="policy-plaque">
+  <mat-card-header>
+    <mat-card-title>Срок страхования</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="fields-grid">
+    <label class="field">
+      <span>Дата начала</span>
+      <input
+        type="date"
+        [value]="store.dateInputValue(policy().startDate)"
+        (change)="onStartDate($event)"
+      />
+    </label>
+    <label class="field">
+      <span>Срок (месяцев)</span>
+      <select [value]="selectedTerm()" (change)="onTermMonths($event)">
+        @for (opt of monthOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.months }} — {{ opt.label }}</option>
+        }
+      </select>
+    </label>
+  </mat-card-content>
+</mat-card>

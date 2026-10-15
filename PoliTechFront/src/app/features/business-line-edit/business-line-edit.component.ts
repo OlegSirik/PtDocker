@@ -40,7 +40,6 @@ import {
 import { switchMap, concatMap, last, map, tap, defaultIfEmpty } from 'rxjs/operators';
 import {
   TreeTableComponent,
-  type TreeTableChildCreatePayload,
   isObjectVarTypeRow,
 } from '../../shared/components/tree-table';
 import type { TreeTableSourceRow } from '../../shared/components/tree-table';
@@ -48,6 +47,9 @@ import { AuthService } from '../../shared/services/auth.service';
 import { MatDivider } from "@angular/material/divider";
 import { ProductRuleGroupComponent } from '../product/product-rule-group/product-rule-group.component';
 import { RulesService, type Rule, type RuleType } from '../../shared/services/api/rules.service';
+import { LlmService, type LlmCoverDraft } from '../../shared/services/api/llm.service';
+import { TenantLlmConfigService } from '../../shared/services/api/tenant-llm-config.service';
+import { resolveLlmErrorMessage } from '../../shared/utils/llm-error.util';
 
 const LOB_CEL_RULE_GROUP_TYPES: RuleType[] = [
   'PRE_QUOTE_VALIDATION',
@@ -111,7 +113,14 @@ export class BusinessLineEditComponent implements OnInit {
   private authService = inject(AuthService);
   private calculatorService = inject(CalculatorService);
   private rulesService = inject(RulesService);
+  private llmService = inject(LlmService);
+  private tenantLlmConfigService = inject(TenantLlmConfigService);
   varService = inject(VarsService);
+
+  showLlmAgentCard = false;
+  coverLlmText = '';
+  askingLlm = false;
+  llmReady = true;
 
   lobCelRules: Rule[] = [];
   lobCelRuleGroups: LobCelRuleGroup[] = LOB_CEL_RULE_GROUP_TYPES.map((type) => ({
@@ -156,8 +165,6 @@ export class BusinessLineEditComponent implements OnInit {
   varDisplayedColumns: string[] = ['varCode', 'varType', 'varPath', 'varName', 'varDataType', 'varActions'];
   coverDisplayedColumns: string[] = ['coverCode', 'coverName', 'risks', 'coverActions'];
   fileDisplayedColumns: string[] = ['fileCode', 'fileName', 'fileActions'];
-  policyHolderDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
-  policyInsObjectDisplayedColumns: string[] = ['category', 'field', 'varName', 'varCode', 'actions'];
   textVarDisplayedColumns: string[] = ['varCode', 'varName', 'varValue', 'textVarActions'];
 
   /** Таб «Коэффициенты» — список коэффициентов ЛБ (как на странице калькулятора). */
@@ -205,78 +212,12 @@ export class BusinessLineEditComponent implements OnInit {
     return this.businessLine.mpCovers;
   }
 
-  get policyHolderVars(): any[] {
-    // Получаем категории страхователя в зависимости от типа
-    
-    //this.businessLine.mpVars = this.businessLine.mpVars.map(v => this.varService.enrichVar(v));
-
-    const categories = this.varService.getPhCategories(this.businessLine.mpPhType) || [];
-    let result: any[] = [];
-    let prevCategory = '';
-    
-    for (const category of categories) {
-      // Only keep variables whose varCdm fits category
-      const matchedVars = this.businessLine.mpVars
-        .filter(v => v.varCdm && v.varCdm.startsWith(`policyHolder.${category}.`))
-        .sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0))
-        .map(v => {
-          let cat = '';
-          if (category !== prevCategory) {
-            cat = category;
-            prevCategory = category;
-          }
-          return {
-            category: cat,
-            field: v.varCdm.split('.').slice(2).join('.'),
-            varName: v.varName,
-            varCode: v.varCode,
-            original: v
-          };
-        });
-      result = result.concat(matchedVars);
-    }
-    return result;
-  }
-
-  get policyInsObjectVars(): any[] {
-    //this.businessLine.mpVars = this.businessLine.mpVars.map(v => this.varService.enrichVar(v));
-
-    const categories = this.varService.getIoCategories(this.businessLine.mpInsObjectType) || [];
-    
-    let result: any[] = [];
-    let prevCategory = '';
-
-    for (const category of categories) {
-
-      const matchedVars = this.businessLine.mpVars
-        .filter(v => v.varCdm && v.varCdm.startsWith(`insuredObject.${category}.`))
-        .sort((a, b) => (a.varNr ?? 0) - (b.varNr ?? 0))
-        .map(v => {
-          let cat = '';
-          if (category !== prevCategory) {
-            cat = category;
-            prevCategory = category;
-          }
-          
-          return {
-            category: cat,
-            field: v.varCdm.split('.').slice(2).join('.'),
-            varName: v.varName,
-            varCode: v.varCode,
-            original: v
-          };
-        });
-      result = result.concat(matchedVars);
-    }
-    return result;
-  }
-
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('id');
 
     this.route.queryParamMap.subscribe((params) => this.applyTabFromQuery(params.get('tab')));
+    this.loadLlmStatus();
 
-    this.varService.getAllVars();
     this.calculatorService.getConditionOperatorOptions().subscribe((o) => (this.conditionOperatorOptions = o));
     this.calculatorService.getSortOrderOptions().subscribe((o) => (this.sortOrderOptions = o));
 
@@ -446,7 +387,7 @@ export class BusinessLineEditComponent implements OnInit {
 
   /**
    * Узел дерева схемы договора в mpVars: {@code varType === 'OBJECT'} или потомок такого узла по {@code parent_id}.
-   * {@link BusinessLineVar.varCdm} не подменяется — значение с бэкенда / справочника.
+   * Schema API / LobVar больше не содержат {@code varCdm}.
    */
   private isSchemaTreeMpVar(v: BusinessLineVar): boolean {
     if ((v.varType?.trim().toUpperCase() ?? '') === 'OBJECT') {
@@ -473,10 +414,6 @@ export class BusinessLineEditComponent implements OnInit {
     );
   }
 
-  private schemaApiVarCdm(v: BusinessLineVar): string {
-    return (v.varCdm ?? '').trim();
-  }
-
   private businessLineVarToSchemaLobVarForApi(
     v: BusinessLineVar,
     idRemap: Map<number, number>,
@@ -493,7 +430,6 @@ export class BusinessLineEditComponent implements OnInit {
       varType: v.varType ?? 'STRING',
       varDataType: v.varDataType ?? 'STRING',
       varValue: v.varValue ?? '',
-      varCdm: this.schemaApiVarCdm(v),
       varNr: String(v.varNr ?? 0),
       id: mode === 'update' ? v.id! : 0,
       parent_id,
@@ -525,7 +461,6 @@ export class BusinessLineEditComponent implements OnInit {
     target.varNr = Number.isFinite(nr) ? nr : target.varNr ?? 0;
     target.varList = lob.varList ?? undefined;
     target.isSystem = lob.isSystem;
-    target.varCdm = lob.varCdm ?? '';
     target.unsavedSchemaRow = undefined;
     target.name = lob.name ?? '';
   }
@@ -652,7 +587,6 @@ export class BusinessLineEditComponent implements OnInit {
       varDataType: row.varDataType ?? 'STRING',
       varValue: row.varValue ?? '',
       varNr: row.varNr ?? 0,
-      varCdm: row.varCdm ?? '',
       varList: row.varList,
       isSystem: row.isSystem,
       isDeleted: false,
@@ -675,7 +609,6 @@ export class BusinessLineEditComponent implements OnInit {
       varList: v.varList,
       varPath: v.varPath ?? '',
       varValue: v.varValue ?? '',
-      varCdm: v.varCdm ?? '',
       unsavedSchemaRow: v.unsavedSchemaRow,
       name: v.name ?? '',
     };
@@ -720,53 +653,14 @@ export class BusinessLineEditComponent implements OnInit {
     this.updateChanges();
   }
 
-  /** Синхронизация правок из tree-table / диалога обратно в mpVars. */
+  /** Синхронизация правок из tree-table / диалога обратно в mpVars (только varList / varValue). */
   onSchemaTreeRowUpdated(row: TreeTableSourceRow): void {
     const v = this.businessLine.mpVars.find((x) => x.id === row.id);
     if (!v || !this.isSchemaTreeMpVar(v)) return;
-    v.varDataType = row.varDataType ?? v.varDataType;
     v.varList = row.varList;
-    v.varName = row.varName;
-    v.varCode = row.varCode;
-    v.varType = row.varType ?? v.varType;
-    v.varPath = row.varPath ?? v.varPath;
     v.varValue = row.varValue ?? v.varValue;
-    v.name = row.name?.trim() || row.varName || v.name || '';
-    if (v.unsavedSchemaRow !== 'new') {
-      v.unsavedSchemaRow = 'modified';
-    }
     this.syncTreeTableFromMpVars();
     this.updateChanges();
-  }
-
-  onSchemaTreeChildCreate(payload: TreeTableChildCreatePayload<TreeTableSourceRow>): void {
-    const id = this.nextMpVarId();
-    const d = payload.draft;
-    const newVar: BusinessLineVar = {
-      id,
-      parent_id: payload.parentId,
-      varCode: d.varCode.trim(),
-      varName: d.varName.trim(),
-      varType: d.varType ?? 'STRING',
-      varPath: d.varPath ?? '',
-      varDataType: d.varDataType ?? 'STRING',
-      varValue: d.varValue ?? '',
-      varNr: d.varNr ?? 0,
-      varCdm: (d.varCdm ?? '').trim() || (d.varPath ?? '').trim(),
-      varList: d.varList,
-      isSystem: false,
-      isDeleted: false,
-      unsavedSchemaRow: 'new',
-      name: d.name?.trim() || d.varName.trim() || '',
-    };
-    this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
-    this.syncTreeTableFromMpVars();
-    this.updateChanges();
-  }
-
-  private nextMpVarId(): number {
-    const ids = this.businessLine.mpVars.map((v) => v.id).filter((x): x is number => x != null && Number.isFinite(x));
-    return ids.length ? Math.max(...ids) + 1 : 1;
   }
 
   onTreeTableEdit(node: TreeTableSourceRow): void {
@@ -794,40 +688,6 @@ export class BusinessLineEditComponent implements OnInit {
     markSchemaBranchDeleted(node.id);
     this.syncTreeTableFromMpVars();
     this.snack.open(`Скрыто из дерева: ${node.varName} (${node.varCode})`, 'OK', { duration: 3500 });
-    this.updateChanges();
-  }
-
-  onTreeTableCreate(parent: TreeTableSourceRow): void {
-    this.schemaTreeTable?.openCreateChildDialog(parent);
-  }
-
-  phTypeChanged(): void {
-    
-    // Remove all vars whose varPath starts with 'policyHolder.' from mpVars
-    if (Array.isArray(this.businessLine.mpVars)) {
-      this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varCdm.startsWith('policyHolder'))
-      );
-    }    
-    let newVars: any[] =[];
-    newVars = this.varService.getPhDefVars(this.businessLine.mpPhType);
-
-    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
-    this.updateChanges();
-  }
-
-  ioChanged(): void {
-
-    // Remove all vars whose varPath starts with 'insuredObject.' from mpVars
-    if (Array.isArray(this.businessLine.mpVars)) {
-      this.businessLine.mpVars = this.businessLine.mpVars.filter(
-        v => !(v.varCdm.startsWith('insuredObject'))
-      );
-    }
-    let newVars: any[] = [];
-    newVars = this.varService.getIoDefVars(this.businessLine.mpInsObjectType);
-
-    this.businessLine.mpVars = [...this.businessLine.mpVars, ...newVars];
     this.updateChanges();
   }
 
@@ -875,15 +735,15 @@ export class BusinessLineEditComponent implements OnInit {
   addVar(): void {
     this.openVarDialog({ varCode: '', varType: 'IN', varPath: '', varName: '', varDataType: 'STRING' }, (res) => {
       if (!res) return;
-        const model: BusinessLineVar = { 
-          varCode: res.varCode  , 
-          varType: res.varType, 
-          varPath: res.varPath, 
-          varName: res.varName, 
-          varDataType: res.varDataType, 
-          varValue: '', 
-          varNr: 0, 
-          varCdm: res.varPath };
+        const model: BusinessLineVar = {
+          varCode: res.varCode,
+          varType: res.varType,
+          varPath: res.varPath,
+          varName: res.varName,
+          varDataType: res.varDataType,
+          varValue: '',
+          varNr: 0,
+        };
         this.businessLine.mpVars = [...this.businessLine.mpVars, model];
         this.updateChanges();
     });
@@ -894,6 +754,103 @@ export class BusinessLineEditComponent implements OnInit {
   deleteVar(v: BusinessLineVar): void {      
     this.businessLine.mpVars = this.businessLine.mpVars.filter(x => x.varCode !== v.varCode);
     this.updateChanges();
+  }
+
+  private loadLlmStatus(): void {
+    this.tenantLlmConfigService.getConfig().subscribe({
+      next: (view) => {
+        this.llmReady = view.configured && view.enabled;
+      },
+      error: () => {
+        this.llmReady = false;
+      },
+    });
+  }
+
+  askCoverLlm(): void {
+    const text = (this.coverLlmText || '').trim();
+    const lobCode = (this.businessLine.mpCode || '').trim();
+    if (!text || !lobCode || this.askingLlm) {
+      if (!lobCode) {
+        this.snack.open('Сначала укажите код продуктовой группы', 'OK', { duration: 3500 });
+      }
+      return;
+    }
+    this.askingLlm = true;
+    this.llmService.assistLob(lobCode, text, 'COVER').subscribe({
+      next: (response) => {
+        this.askingLlm = false;
+        if (!response.success) {
+          const msg =
+            response.errors?.filter(Boolean).join('; ') || 'LLM не вернул покрытия';
+          this.snack.open(msg, 'OK', { duration: 5000 });
+          return;
+        }
+        const drafts = this.normalizeCoverDrafts(response.result);
+        if (!drafts.length) {
+          this.snack.open('Пустой ответ LLM по покрытиям', 'OK', { duration: 3500 });
+          return;
+        }
+        const added = this.applyCoverDrafts(drafts);
+        if (response.warnings?.length) {
+          this.snack.open(response.warnings.join('; '), 'OK', { duration: 5000 });
+        }
+        this.snack.open(
+          added > 0 ? `Добавлено покрытий: ${added}` : 'Новых покрытий нет (уже существуют)',
+          'OK',
+          { duration: 3500 },
+        );
+      },
+      error: (err) => {
+        this.askingLlm = false;
+        this.snack.open(resolveLlmErrorMessage(err), 'OK', { duration: 5000 });
+      },
+    });
+  }
+
+  private normalizeCoverDrafts(result: unknown): LlmCoverDraft[] {
+    if (Array.isArray(result)) {
+      return result as LlmCoverDraft[];
+    }
+    if (result && typeof result === 'object') {
+      const obj = result as { covers?: LlmCoverDraft[]; code?: string; name?: string };
+      if (Array.isArray(obj.covers)) {
+        return obj.covers;
+      }
+      if (obj.code && obj.name) {
+        return [obj as LlmCoverDraft];
+      }
+    }
+    return [];
+  }
+
+  private applyCoverDrafts(drafts: LlmCoverDraft[]): number {
+    const existing = new Set(
+      (this.businessLine.mpCovers || []).map((c) => (c.coverCode || '').toUpperCase()),
+    );
+    const toAdd: BusinessLineCover[] = [];
+    for (const draft of drafts) {
+      const code = (draft.code || '').trim();
+      const name = (draft.name || '').trim();
+      if (!code || !name) {
+        continue;
+      }
+      if (existing.has(code.toUpperCase())) {
+        continue;
+      }
+      existing.add(code.toUpperCase());
+      toAdd.push({
+        coverCode: code,
+        coverName: name,
+        risks: (draft.risks || '').trim(),
+      });
+    }
+    if (toAdd.length === 0) {
+      return 0;
+    }
+    this.businessLine.mpCovers = [...this.businessLine.mpCovers, ...toAdd];
+    this.updateChanges();
+    return toAdd.length;
   }
 
   addCover(): void {
@@ -1106,102 +1063,6 @@ export class BusinessLineEditComponent implements OnInit {
     this.exampleJsonText = JSON.stringify("{ val1: val1, val2: val2, val3: val3 }", null, 2);
   }
 
-  showPolicyHolderJson(): void {
-    const lobCode = this.businessLine.mpCode;
-
-    if (!lobCode) {
-      this.snack.open('Please set mpCode first', 'Close', { duration: 2000 });
-      return;
-    }
-
-    this.svc.getExampleJson(lobCode).subscribe(exampleData => {
-      this.dialog.open(JsonViewDialog, {
-        data: { title: 'PolicyHolder JSON', object: exampleData },
-        width: '800px',
-        maxHeight: '80vh'
-      });
-    });
-  }
-
-  addPolicyHolderVar(): void {
-    const ref = this.dialog.open(AddPolicyHolderVarDialog, {
-      width: '500px'
-    });
-
-    ref.afterClosed().subscribe(result => {
-      if (result && result.varCode && result.varName) {
-        // Calculate next varNr
-        const maxVarNr = this.businessLine.mpVars.reduce((max, v) => {
-          return Math.max(max, v.varNr ?? 0);
-        }, 0);
-
-        // Create new variable with policyHolder prefix
-        const newVar: BusinessLineVar = {
-          varCode: 'ph_' + result.varCode,
-          varName: result.varName,
-          varPath: `policyHolder.additionalProperties.${result.varCode}`,
-          varType: 'IN',
-          varDataType: 'STRING',
-          varValue: '',
-          varNr: maxVarNr + 1,
-          varCdm: 'policyHolder.additionalProperties.' + result.varCode
-        };
-
-        this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
-        this.updateChanges();
-        this.snack.open('Variable added successfully', 'Close', { duration: 2000 });
-      }
-    });
-  }
-
-  addInsObjectVar(): void {
-    const ref = this.dialog.open(AddInsObjectVarDialog, {
-      width: '500px'
-    });
-
-    ref.afterClosed().subscribe(result => {
-      if (result && result.varCode && result.varName) {
-        // Calculate next varNr
-        const maxVarNr = this.businessLine.mpVars.reduce((max, v) => {
-          return Math.max(max, v.varNr ?? 0);
-        }, 0);
-
-        // Create new variable with insuredObject prefix
-        const newVar: BusinessLineVar = {
-          varCode: 'io_' + result.varCode,
-          varName: result.varName,
-          varPath: `insuredObject.additionalProperties.${result.varCode}`,
-          varType: 'IN',
-          varDataType: 'STRING',
-          varValue: '',
-          varNr: maxVarNr + 1,
-          varCdm: ''
-        };
-
-        this.businessLine.mpVars = [...this.businessLine.mpVars, newVar];
-        this.updateChanges();
-        this.snack.open('Variable added successfully', 'Close', { duration: 2000 });
-      }
-    });
-  }
-
-  showInsObjectJson(): void {
-    const lobCode = this.businessLine.mpCode;
-
-    if (!lobCode) {
-      this.snack.open('Please set mpCode first', 'Close', { duration: 2000 });
-      return;
-    }
-
-    this.svc.getExampleJson(lobCode).subscribe(exampleData => {
-      this.dialog.open(JsonViewDialog, {
-        data: { title: 'Insured Object JSON', object: exampleData },
-        width: '800px',
-        maxHeight: '80vh'
-      });
-    });
-  }
-
   get files(): BusinessLineFile[] {
     return this.businessLine.mpFiles || [];
   }
@@ -1209,7 +1070,7 @@ export class BusinessLineEditComponent implements OnInit {
   get textVars(): BusinessLineVar[] {
     return (this.businessLine.mpVars || [])
       .filter(v => v.varType === 'TEXT')
-      .sort((a, b) => (a.varCdm || '').localeCompare(b.varCdm || ''));
+      .sort((a, b) => (a.varCode || '').localeCompare(b.varCode || ''));
   }
 
   addFile(): void {
@@ -1290,7 +1151,6 @@ export class BusinessLineEditComponent implements OnInit {
         varPath: '',
         varType: 'TEXT',
         varValue: res.value,
-        varCdm: 'strings.' + res.code,
         varNr: (this.businessLine.mpVars.length || 0) + 1000
       };
       
@@ -1329,7 +1189,6 @@ export class BusinessLineEditComponent implements OnInit {
             varCode: res.code,
             varName: res.name,
             varValue: res.value,
-            varCdm: 'strings.' + res.code
           },
           ...this.businessLine.mpVars.slice(index + 1)
         ];
@@ -1703,78 +1562,6 @@ export class JsonViewDialog {
       // Could show a snackbar notification here if needed
     });
   }
-}
-
-@Component({
-    selector: 'app-add-policy-holder-var-dialog',
-    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-    template: `
-    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Добавить переменную страхователя</h2>
-    <div mat-dialog-content style="padding-top: 20px;">
-      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-        <mat-label>varCode</mat-label>
-        <input matInput [(ngModel)]="varCode" placeholder="e.g., person.firstName">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-        <mat-label>varName</mat-label>
-        <input matInput [(ngModel)]="varName" placeholder="e.g., First Name">
-      </mat-form-field>
-
-      <p style="font-size: 12px; color: #666; margin: 0;">
-        Variable path will be: <strong>policyHolder.additionalProperties.{{ varCode || '...' }}</strong>
-      </p>
-    </div>
-    <div mat-dialog-actions align="end">
-      <button mat-stroked-button mat-dialog-close>Отмена</button>
-      <button mat-flat-button
-              color="primary"
-              [mat-dialog-close]="{varCode: varCode, varName: varName}"
-              [disabled]="!varCode || !varName">
-        Сохранить
-      </button>
-    </div>
-  `
-})
-export class AddPolicyHolderVarDialog {
-  varCode = '';
-  varName = '';
-}
-
-@Component({
-    selector: 'app-add-ins-object-var-dialog',
-    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
-    template: `
-    <h2 mat-dialog-title style="color: #495057; font-size: 18px; font-weight: 600;">Добавить переменную объекта страхования</h2>
-    <div mat-dialog-content style="padding-top: 20px;">
-      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-        <mat-label>varCode</mat-label>
-        <input matInput [(ngModel)]="varCode" placeholder="e.g., device.serialNumber">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 16px;">
-        <mat-label>varName</mat-label>
-        <input matInput [(ngModel)]="varName" placeholder="e.g., Serial Number">
-      </mat-form-field>
-
-      <p style="font-size: 12px; color: #666; margin: 0;">
-        Variable path will be: <strong>insuredObject.additionalProperties.{{ varCode || '...' }}</strong>
-      </p>
-    </div>
-    <div mat-dialog-actions align="end">
-      <button mat-stroked-button mat-dialog-close>Отмена</button>
-      <button mat-flat-button
-              color="primary"
-              [mat-dialog-close]="{varCode: varCode, varName: varName}"
-              [disabled]="!varCode || !varName">
-        Сохранить
-      </button>
-    </div>
-  `
-})
-export class AddInsObjectVarDialog {
-  varCode = '';
-  varName = '';
 }
 
 @Component({

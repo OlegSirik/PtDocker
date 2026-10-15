@@ -1,6 +1,7 @@
 package ru.pt.product.llm.prompt;
 
 import org.springframework.stereotype.Component;
+import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.db.service.RefDataService;
 
@@ -51,6 +52,49 @@ public class VarsContextFormatter {
                 .filter(this::isIncluded)
                 .map(PvVar::getVarCode)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Compact schema tree for SCHEMA assist (includes OBJECT nodes; skips deleted).
+     */
+    public String formatSchema(List<LobVar> vars) {
+        if (vars == null || vars.isEmpty()) {
+            return "";
+        }
+        return vars.stream()
+                .filter(this::isSchemaIncluded)
+                .map(this::toSchemaLine)
+                .collect(Collectors.joining("\n"));
+    }
+
+    public Set<String> schemaVarCodes(List<LobVar> vars) {
+        if (vars == null) {
+            return Set.of();
+        }
+        return vars.stream()
+                .filter(this::isSchemaIncluded)
+                .map(LobVar::getVarCode)
+                .collect(Collectors.toSet());
+    }
+
+    private String toSchemaLine(LobVar var) {
+        return var.getVarCode()
+                + " | " + firstNonBlank(var.getVarName(), var.getName())
+                + " | " + nullToEmpty(var.getVarPath())
+                + " | " + nullToEmpty(var.getVarType())
+                + " | id=" + (var.getId() != null ? var.getId() : "")
+                + " | parent_id=" + (var.getParent_id() != null ? var.getParent_id() : "");
+    }
+
+    private boolean isSchemaIncluded(LobVar var) {
+        if (var == null || var.getIsDeleted()) {
+            return false;
+        }
+        return var.getVarCode() != null && !var.getVarCode().isBlank();
+    }
+
+    private static String nullToEmpty(String value) {
+        return value != null ? value : "";
     }
 
     public String formatMerged(List<PvVar> productVars, List<PvVar> calculatorVars, Long tenantId) {

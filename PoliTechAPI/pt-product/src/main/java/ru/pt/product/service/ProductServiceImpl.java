@@ -233,7 +233,6 @@ public class ProductServiceImpl implements ProductService {
                 pvVar.setVarType(var.getVarType());
                 pvVar.setVarValue(var.getVarValue());
                 pvVar.setVarDataType(var.getVarDataType());
-                pvVar.setVarCdm(var.getVarCdm());
                 pvVar.setVarNr(var.getVarNr());
                 pvVar.setId(var.getId());
                 pvVar.setParent_id(var.getParent_id());
@@ -662,7 +661,9 @@ public class ProductServiceImpl implements ProductService {
         return saveVersion(tenantId, productId, versionNo, pv);
     }
 
-    // add update delete vars for policy
+    /**
+     * Internal: cascade from schema/LOB. Not exposed on ProductController.
+     */
     @Transactional
     public ProductVersionModel addVar( Long tenantId, Long productId, Long versionNo, PvVar var ) {
         ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
@@ -678,7 +679,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
         pv.getVars().stream().filter(v -> v.getVarCode().equals(var.getVarCode())).findFirst().ifPresent(v -> {
             
-            v.setVarName(var.getVarName());
+      //      v.setVarName(var.getVarName());
       //      v.setVarPath(var.getVarPath());
       //      v.setVarType(var.getVarType());
       //      v.setVarDataType(var.getVarDataType());
@@ -690,7 +691,7 @@ public class ProductServiceImpl implements ProductService {
             v.setIsDeleted(var.getIsDeleted());
             v.setIsTarifFactor(var.getIsTarifFactor());
             v.setIsOptional(var.getIsOptional());
-            v.setName(var.getName());
+      //      v.setName(var.getName());
         });
         addValidatorInList(pv, var);
         addValidatorNotNullSave(pv, var);
@@ -906,50 +907,11 @@ public class ProductServiceImpl implements ProductService {
 
         ProductVersionModel productVersionModel = getVersion(tenantId, id, versionNo);
 
-        List<PvVar> vars = productVersionModel.getVars();
-        Map<String, String> varValues = new HashMap<>();
-        for (PvVar var : vars) {
-            if (var.getIsDeleted()) {
-                continue;
-            }
-            if (!var.getIsTarifFactor()) {
-                continue;
-            }
-            varValues.put(var.getVarCode(), var.getVarValue());
-        }
-
-        varValues.put("pl_productCode", productVersionModel.getCode());        
-        varValues.put("pl_issueDate", formattedNow());
-        varValues.put("io_packageCode", "0");
-        try {
-            if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-                String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
-                if (values.length > 1) {
-                    varValues.put("waitingPeriod", values[0].trim());
-                }
-            } else {
-                varValues.put("startDate", formattedNow());
-            }
-            } catch (Exception e) {}
-    
-            try {
-            if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-                String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
-                if (values.length > 1) {
-                    varValues.put("policyTerm", values[0].trim());
-                }
-            } else {
-                varValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
-            }
-            } catch (Exception e) {}
-    
-            
-        String schemaJson = schemaService.getAttributesMetadataJson(
+        Map<String, String> varValues = buildExampleVarValuesByPath(productVersionModel, true);
+        return schemaService.getAttributesMetadataJson(
                 getCurrentUser().getTenantId(),
                 SchemaService.INSURANCE_CONTRACT,
                 varValues);
-
-        return schemaJson;
 
     }
 
@@ -965,47 +927,67 @@ public class ProductServiceImpl implements ProductService {
 
         ProductVersionModel productVersionModel = getVersion(tenantId, id, versionNo);
 
-        List<PvVar> vars = productVersionModel.getVars();
-        Map<String, String> varValues = new HashMap<>();
-        for (PvVar var : vars) {
-            if (var.getIsDeleted()) {
-                continue;
-            }
-            varValues.put(var.getVarCode(), var.getVarValue());
-        }
-
-        varValues.put("pl_productCode", productVersionModel.getCode());        
-        varValues.put("pl_issueDate", formattedNow());
-        varValues.put("io_packageCode", "0");
-        try {
-            if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
-                String values[] = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
-                if (values.length > 1) {
-                    varValues.put("waitingPeriod", values[0].trim());
-                }
-            } else {
-                varValues.put("startDate", formattedNow());
-            }
-            } catch (Exception e) {}
-    
-            try {
-            if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
-                String values[] = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
-                if (values.length > 1) {
-                    varValues.put("policyTerm", values[0].trim());
-                }
-            } else {
-                varValues.put("endDate", ZonedDateTime.now().plusYears(1).format(formatter));
-            }
-            } catch (Exception e) {}
-    
-            
-        String schemaJson = schemaService.getAttributesMetadataJson(
+        Map<String, String> varValues = buildExampleVarValuesByPath(productVersionModel, false);
+        return schemaService.getAttributesMetadataJson(
                 getCurrentUser().getTenantId(),
                 SchemaService.INSURANCE_CONTRACT,
                 varValues);
+    }
 
-        return schemaJson;
+    /**
+     * Карта для metadata JSON: ключ = {@link PvVar#getVarPath()} (JsonPath), не {@code varCode}.
+     */
+    private Map<String, String> buildExampleVarValuesByPath(
+            ProductVersionModel productVersionModel, boolean tarifFactorOnly) {
+        Map<String, String> varValues = new HashMap<>();
+        List<PvVar> vars = productVersionModel.getVars();
+        if (vars != null) {
+            for (PvVar var : vars) {
+                if (var.getIsDeleted()) {
+                    continue;
+                }
+                if (tarifFactorOnly && !var.getIsTarifFactor()) {
+                    continue;
+                }
+                putExamplePathValue(varValues, var.getVarPath(), var.getVarValue());
+            }
+        }
+
+        putExamplePathValue(varValues, "productCode", productVersionModel.getCode());
+        putExamplePathValue(varValues, "issueDate", formattedNow());
+        putExamplePathValue(varValues, "insuredObjects[0].packageCode", "0");
+        try {
+            if (productVersionModel.getWaitingPeriod().getValidatorType().equals("LIST")) {
+                String[] values = productVersionModel.getWaitingPeriod().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    putExamplePathValue(varValues, "waitingPeriod", values[0].trim());
+                }
+            } else {
+                putExamplePathValue(varValues, "startDate", formattedNow());
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            if (productVersionModel.getPolicyTerm().getValidatorType().equals("LIST")) {
+                String[] values = productVersionModel.getPolicyTerm().getValidatorValue().split(",");
+                if (values.length > 1) {
+                    putExamplePathValue(varValues, "policyTerm", values[0].trim());
+                }
+            } else {
+                putExamplePathValue(
+                        varValues, "endDate", ZonedDateTime.now().plusYears(1).format(formatter));
+            }
+        } catch (Exception ignored) {
+        }
+        return varValues;
+    }
+
+    private static void putExamplePathValue(Map<String, String> map, String varPath, String value) {
+        if (varPath == null || varPath.isBlank()) {
+            return;
+        }
+        map.put(varPath.trim(), value != null ? value : "");
     }
 
     @Override
@@ -1143,87 +1125,6 @@ authService.check(
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public ProductVersionModel reloadVars(Long tenantId, Long productId, Long versionNo, String category) {
-        
-        authService.check(
-            getCurrentUser(), 
-            ResourceType.PRODUCT, 
-            String.valueOf(productId),  // productVersionModel.getId().toString(),   // resourceId - list all
-            tenantId,   // resourceAccountId - list all
-            Action.MANAGE);
-
-        if (category == null || category.isBlank()) {
-            throw new BadRequestException("category must not be empty");
-        }
-
-        ProductEntity product = productRepository.findById(tenantId, productId)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
-        if (product.getDevVersionNo() == null || !product.getDevVersionNo().equals(versionNo)) {
-            throw new UnprocessableEntityException("only dev version can be reloaded");
-        }
-
-        ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
-                .orElseThrow(() -> new NotFoundException("Version not found"));
-
-        ProductVersionModel productVersionModel;
-        try {
-            productVersionModel = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
-        } catch (JsonProcessingException e) {
-            throw new InternalServerErrorException("Error reading product version model from JSON", e);
-        }
-
-        if (!"DEV".equalsIgnoreCase(productVersionModel.getVersionStatus())) {
-            throw new UnprocessableEntityException("only DEV version can be reloaded");
-        }
-
-        List<PvVar> vars = productVersionModel.getVars();
-        if (vars == null) {
-            vars = new ArrayList<>();
-        } else {
-            vars = new ArrayList<>(vars);
-        }
-
-        String categoryPrefix = category.trim();
-        vars.removeIf(var -> var != null
-                && var.getVarCdm() != null
-                && var.getVarCdm().startsWith(categoryPrefix));
-
-        LobModel lob = lobService.getByCode(tenantId, productVersionModel.getLob());
-        if (lob != null && lob.getMpVars() != null) {
-            for (LobVar var : lob.getMpVars()) {
-                if (var.getVarCdm() == null || !var.getVarCdm().startsWith(categoryPrefix)) {
-                    continue;
-                }
-                PvVar pvVar = new PvVar();
-                pvVar.setVarCode(var.getVarCode());
-                pvVar.setVarName(var.getVarName());
-                pvVar.setVarPath(var.getVarPath());
-                pvVar.setVarType(var.getVarType());
-                pvVar.setVarValue(var.getVarValue());
-                pvVar.setVarDataType(var.getVarDataType());
-                pvVar.setVarCdm(var.getVarCdm());
-                pvVar.setVarNr(var.getVarNr());
-                vars.add(pvVar);
-            }
-        }
-
-        productVersionModel.setVars(vars);
-        productVersionModel.setVersionStatus("DEV");
-        productVersionModel.setId(productId);
-        productVersionModel.setVersionNo(versionNo);
-
-        try {
-            pv.setProduct(objectMapper.writeValueAsString(productVersionModel));
-        } catch (JsonProcessingException e) {
-            throw new InternalServerErrorException("Error writing product version model to JSON", e);
-        }
-        productVersionRepository.save(pv);
-
-        return productVersionModel;
-    }
- 
     private PvVar mapMetadataToVar(AttributeDefEntity entity) {
         PvVar pvVar = new PvVar();
         pvVar.setVarCode(entity.getVarCode());
@@ -1231,7 +1132,6 @@ authService.check(
         pvVar.setVarPath(entity.getVarPath());
         pvVar.setVarType(entity.getVarType());
         pvVar.setVarValue(entity.getVarValue());
-        pvVar.setVarCdm(entity.getVarCdm());
         pvVar.setVarNr(entity.getVarOrd() != null ? entity.getVarOrd().toString() : "0");
         
         // Map varDataType string to enum

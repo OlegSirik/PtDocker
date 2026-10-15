@@ -83,7 +83,9 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
     private static boolean isEmptyCalculator(CalculatorModel calculator) {
         boolean hasFormulas = calculator.getFormulas() != null && !calculator.getFormulas().isEmpty();
         boolean hasCoefficients = calculator.getCoefficients() != null && !calculator.getCoefficients().isEmpty();
-        return !hasFormulas && !hasCoefficients;
+        boolean hasVars = calculator.getVars() != null && !calculator.getVars().isEmpty();
+        // Delta responses may contain only new vars.
+        return !hasFormulas && !hasCoefficients && !hasVars;
     }
 
     private static Set<String> mergeVarCodes(Set<String> knownVarCodes, List<PvVar> responseVars) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.exception.BadRequestException;
@@ -19,10 +20,13 @@ import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
 import ru.pt.api.service.product.LobService;
+import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.schema.SchemaService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.LobEntity;
+import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.repository.LobRepository;
+import ru.pt.product.repository.ProductRepository;
 import ru.pt.api.dto.product.LobVar;
 
 import java.util.ArrayList;
@@ -43,6 +47,9 @@ public class LobServiceImpl implements LobService {
     private final Logger log = LoggerFactory.getLogger(LobServiceImpl.class);
 
     private final LobRepository lobRepository;
+    private final ProductRepository productRepository;
+    /** Без цикла с {@link ProductServiceImpl} (он зависит от LobService). */
+    private final ObjectProvider<ProductService> productService;
     private final ObjectMapper objectMapper;
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationService authService;
@@ -364,7 +371,6 @@ public class LobServiceImpl implements LobService {
         l.setVarType(p.getVarType());
         l.setVarValue(p.getVarValue() != null ? p.getVarValue() : "");
         l.setVarDataType(p.getVarDataType());
-        l.setVarCdm(p.getVarCdm());
         l.setVarNr(p.getVarNr());
         l.setVarList(p.getVarList());
         l.setIsSystem(p.getIsSystem());
@@ -382,5 +388,109 @@ public class LobServiceImpl implements LobService {
         l.setVarDataType(VarDataType.OBJECT);
         l.setVarValue("");
         return l;
+    }
+
+    @Override
+    @Transactional
+    public void appendSchemaAttributeAsDeleted(Long tenantId, LobVar schemaVar) {
+        if (schemaVar == null || schemaVar.getVarCode() == null || schemaVar.getVarCode().isBlank()) {
+            return;
+        }
+        String code = schemaVar.getVarCode().trim();
+
+        for (LobEntity entity : lobRepository.findActiveByTid(tenantId)) {
+            LobModel model;
+            try {
+                model = objectMapper.readValue(entity.getLob(), LobModel.class);
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException("Failed to parse LOB JSON for code=" + entity.getCode(), ex);
+            }
+
+            List<LobVar> vars = model.getMpVars();
+            if (vars == null) {
+                vars = new ArrayList<>();
+            } else {
+                vars = new ArrayList<>(vars);
+            }
+            boolean exists = vars.stream()
+                    .anyMatch(v -> v != null && code.equals(v.getVarCode()));
+            if (!exists) {
+                vars.add(copyAsDeletedLobVar(schemaVar));
+                model.setMpVars(vars);
+                try {
+                    entity.setLob(objectMapper.writeValueAsString(model));
+                } catch (JsonProcessingException ex) {
+                    throw new RuntimeException("Failed to write LOB JSON for code=" + entity.getCode(), ex);
+                }
+                lobRepository.save(entity);
+            }
+
+            appendAttributeToDevProductsOfLob(tenantId, entity.getCode(), schemaVar, code);
+        }
+    }
+
+    /**
+     * DEV-версии продуктов LOB через {@link ProductService#addVar}
+     * ({@code pt_products} ACTIVE с {@code lob} и {@code dev_version_no}).
+     */
+    private void appendAttributeToDevProductsOfLob(
+            Long tenantId, String lobCode, LobVar schemaVar, String varCode) {
+        if (lobCode == null || lobCode.isBlank()) {
+            return;
+        }
+        ProductService productsApi = productService.getObject();
+        List<ProductEntity> products =
+                productRepository.findActiveByTidAndLobWithDevVersion(tenantId, lobCode);
+        for (ProductEntity product : products) {
+            Long versionNo = product.getDevVersionNo();
+            if (versionNo == null) {
+                continue;
+            }
+            try {
+                productsApi.addVar(
+                        tenantId, product.getId(), versionNo, copyAsDeletedPvVar(schemaVar));
+            } catch (BadRequestException ex) {
+                // varCode уже есть в продукте
+                log.debug(
+                        "Skip addVar (already exists): productId={}, versionNo={}, varCode={}",
+                        product.getId(),
+                        versionNo,
+                        varCode);
+            } catch (UnprocessableEntityException | NotFoundException ex) {
+                log.warn(
+                        "Skip addVar for productId={}, versionNo={}, lob={}: {}",
+                        product.getId(),
+                        versionNo,
+                        lobCode,
+                        ex.getMessage());
+            }
+        }
+    }
+
+    private static LobVar copyAsDeletedLobVar(LobVar src) {
+        return LobVar.builder()
+                .id(src.getId())
+                .parent_id(src.getParent_id())
+                .varCode(src.getVarCode())
+                .varName(src.getVarName())
+                .varPath(src.getVarPath())
+                .varType(src.getVarType())
+                .varDataType(src.getVarDataType())
+                .varValue(src.getVarValue() != null ? src.getVarValue() : "")
+                .varNr(src.getVarNr())
+                .varList(src.getVarList())
+                .isSystem(src.getIsSystem())
+                .isDeleted(true)
+                .name(src.getName() != null ? src.getName() : src.getVarName())
+                .build();
+    }
+
+    private static PvVar copyAsDeletedPvVar(LobVar src) {
+        PvVar v = new PvVar(src);
+        v.setIsDeleted(true);
+        v.setIsSystem(src.getIsSystem());
+        v.setIsOptional(true);
+        v.setIsTarifFactor(false);
+        return v;
     }
 }

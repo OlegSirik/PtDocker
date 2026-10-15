@@ -25,6 +25,16 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             """)
     List<Object[]> listActiveSummaries(@Param("tId") Long tId, @Param("insComp") Long insComp);
 
+    /** Активные продукты LOB с указанной dev-версией ({@code dev_version_no is not null}). */
+    @Query("""
+            select p from ProductEntity p
+            where p.tId = :tId and p.lob = :lob and p.recordStatus = 'ACTIVE'
+              and p.devVersionNo is not null
+            order by p.code
+            """)
+    List<ProductEntity> findActiveByTidAndLobWithDevVersion(
+            @Param("tId") Long tId, @Param("lob") String lob);
+
     @Query(
         """
             select pr.roleProductId

@@ -1,0 +1,59 @@
+<mat-card class="policy-plaque">
+  <mat-card-header>
+    <mat-card-title>Страхователь</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="fields-grid">
+    <label class="field">
+      <span>Фамилия</span>
+      <input type="text" [value]="person()?.lastName || ''" (change)="onPersonField('lastName', $event)" />
+    </label>
+    <label class="field">
+      <span>Имя</span>
+      <input type="text" [value]="person()?.firstName || ''" (change)="onPersonField('firstName', $event)" />
+    </label>
+    <label class="field">
+      <span>Отчество</span>
+      <input type="text" [value]="person()?.middleName || ''" (change)="onPersonField('middleName', $event)" />
+    </label>
+    <label class="field">
+      <span>Дата рождения</span>
+      <input type="date" [value]="person()?.birthDate || ''" (change)="onBirthDate($event)" />
+    </label>
+    <label class="field">
+      <span>Телефон</span>
+      <input type="text" [value]="contacts()?.phone || ''" (change)="onContactField('phone', $event)" />
+    </label>
+    <label class="field">
+      <span>Email</span>
+      <input type="email" [value]="contacts()?.email || ''" (change)="onContactField('email', $event)" />
+    </label>
+    <label class="field">
+      <span>Документ</span>
+      <select [value]="document()?.typeCode || 'PASSPORT'" (change)="onDocType($event)">
+        @for (t of documentTypes; track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span>Номер</span>
+      <input type="text" [value]="document()?.number || ''" (change)="onDocField('number', $event)" />
+    </label>
+    <label class="field">
+      <span>Дата выдачи</span>
+      <input type="date" [value]="document()?.dateIssue || ''" (change)="onDocIssueDate($event)" />
+    </label>
+    <label class="field">
+      <span>Кем выдан</span>
+      <input type="text" [value]="document()?.whom || ''" (change)="onDocField('whom', $event)" />
+    </label>
+    <label class="field">
+      <span>Код подразделения</span>
+      <input type="text" [value]="document()?.divisionCode || ''" (change)="onDocField('divisionCode', $event)" />
+    </label>
+    <label class="field full-width">
+      <span>Адрес регистрации</span>
+      <input type="text" [value]="address()?.addressStr || ''" (change)="onAddress($event)" />
+    </label>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,106 @@
+<div class="quote-layout">
+  <div class="quote-left">
+    <mat-card class="policy-plaque">
+      <mat-card-header>
+        <mat-card-title>Спорт</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <label class="field-label">Виды спорта (до 5)</label>
+        <select class="native-select" multiple size="7" (change)="onSportsChange($event)">
+          @for (opt of sportOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="policy-plaque">
+      <mat-card-header>
+        <mat-card-title>Застрахованный</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="fields-grid">
+        <label class="field">
+          <span>Дата рождения</span>
+          <input type="date" [value]="insured()?.person?.birthDate || ''" (change)="onBirthDate($event)" />
+        </label>
+        <label class="field">
+          <span>Пол</span>
+          <select [value]="insured()?.person?.gender || ''" (change)="onGender($event)">
+            <option value="">—</option>
+            <option value="M">Мужской</option>
+            <option value="F">Женский</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Страховая сумма</span>
+          <input type="text" [value]="insured()?.sumInsured || ''" (change)="onSumInsured($event)" />
+        </label>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="policy-plaque">
+      <mat-card-header>
+        <mat-card-title>Покрытия</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <label class="field">
+          <span>Пакет</span>
+          <select [value]="insured()?.packageCode ?? '0'" (change)="onPackage($event)">
+            @for (pkg of packageOptions; track pkg.value) {
+              <option [value]="pkg.value">{{ pkg.label }}</option>
+            }
+          </select>
+        </label>
+      </mat-card-content>
+    </mat-card>
+
+    <app-policy-term-block />
+  </div>
+
+  <div class="quote-right">
+    <mat-card class="policy-plaque result-plaque">
+      <mat-card-header>
+        <mat-card-title>Страхование от НС</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="muted">Срок страхования</p>
+        <p>
+          с {{ store.dateInputValue(policy().startDate) || '—' }},
+          {{ termLabel() }}
+        </p>
+        <p>Пакет: {{ packageLabel() }}</p>
+
+        <div class="actions">
+          <button mat-flat-button color="primary" type="button" (click)="quote()" [disabled]="loading()">
+            Рассчитать
+          </button>
+          @if (loading()) {
+            <mat-spinner diameter="28"></mat-spinner>
+          }
+        </div>
+
+        @if (quoted() || ((policy().premium ?? 0) > 0)) {
+          <p class="premium">
+            Премия:
+            <strong>{{ policy().premium ?? 0 | currency:'RUB':'symbol-narrow':'1.0-2' }}</strong>
+          </p>
+        }
+
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <button
+          mat-flat-button
+          color="accent"
+          class="issue-btn"
+          type="button"
+          (click)="issue()"
+          [disabled]="!canIssue()"
+        >
+          Оформить
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

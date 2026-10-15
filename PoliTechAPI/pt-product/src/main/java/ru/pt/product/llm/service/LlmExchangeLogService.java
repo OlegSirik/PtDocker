@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.llm.LlmAssistRequest;
 import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.llm.LlmLobAssistRequest;
+import ru.pt.api.dto.llm.LlmSchemaAssistRequest;
+import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.security.AuthenticatedUser;
@@ -160,6 +162,86 @@ public class LlmExchangeLogService {
         } catch (Exception ex) {
             log.warn("Failed to persist llm_exchange lob failure log: {}", ex.getMessage());
         }
+    }
+
+    @Transactional
+    public void logSchemaExchange(
+            LlmSchemaAssistRequest request,
+            String contractCode,
+            List<LlmMessage> messages,
+            LlmAssistResponse response,
+            LlmCompletionResult completion,
+            String providerCode,
+            AuthenticatedUser user) {
+        try {
+            LlmExchangeEntity entity = new LlmExchangeEntity();
+            entity.setTid(user.getTenantId());
+            entity.setUserAccountId(user.getId());
+            entity.setTaskType(LlmTaskType.SCHEMA.name());
+            entity.setProductCode(contractCode);
+            entity.setProviderCode(providerCode);
+            entity.setRequest(buildSchemaRequestJson(request, contractCode, messages));
+            if (completion != null) {
+                entity.setModel(completion.model());
+                entity.setPromptTokens(completion.promptTokens());
+                entity.setCompletionTokens(completion.completionTokens());
+                entity.setLatencyMs(completion.latencyMs());
+            }
+            if (response != null) {
+                entity.setSuccess(response.isSuccess());
+                entity.setStatus(resolveStatus(response));
+                entity.setResponse(buildResponseJson(response));
+            } else {
+                entity.setSuccess(false);
+                entity.setStatus("PROVIDER_ERROR");
+            }
+            repository.save(entity);
+        } catch (Exception ex) {
+            log.warn("Failed to persist llm_exchange schema log: {}", ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void logSchemaFailure(
+            LlmSchemaAssistRequest request,
+            String contractCode,
+            List<LlmMessage> messages,
+            String providerCode,
+            AuthenticatedUser user,
+            String errorMessage) {
+        try {
+            LlmExchangeEntity entity = new LlmExchangeEntity();
+            entity.setTid(user.getTenantId());
+            entity.setUserAccountId(user.getId());
+            entity.setTaskType(LlmTaskType.SCHEMA.name());
+            entity.setProductCode(contractCode);
+            entity.setProviderCode(providerCode);
+            entity.setRequest(buildSchemaRequestJson(request, contractCode, messages));
+            entity.setSuccess(false);
+            entity.setStatus("PROVIDER_ERROR");
+            entity.setResponse(toJson(objectMapper.createObjectNode().put("error", errorMessage)));
+            repository.save(entity);
+        } catch (Exception ex) {
+            log.warn("Failed to persist llm_exchange schema failure log: {}", ex.getMessage());
+        }
+    }
+
+    private String buildSchemaRequestJson(
+            LlmSchemaAssistRequest request, String contractCode, List<LlmMessage> messages) {
+        ObjectNode root = objectMapper.createObjectNode();
+        root.put("taskType", LlmTaskType.SCHEMA.name());
+        root.put("userMessage", request.getUserMessage());
+        root.put("contractCode", contractCode);
+        if (request.getParentVarCode() != null) {
+            root.put("parentVarCode", request.getParentVarCode());
+        }
+        ArrayNode msgArray = root.putArray("messages");
+        for (LlmMessage message : messages) {
+            ObjectNode msg = msgArray.addObject();
+            msg.put("role", message.role());
+            msg.put("content", message.content());
+        }
+        return toJson(root);
     }
 
     private String buildLobRequestJson(LlmLobAssistRequest request, LobModel lob, List<LlmMessage> messages) {

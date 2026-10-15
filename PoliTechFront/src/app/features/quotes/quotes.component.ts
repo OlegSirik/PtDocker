@@ -11,7 +11,6 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { LkQuoteService, Quote } from '../../shared/services/api/lk-quote.service';
-import { ProductsService, ProductList } from '../../shared/services/products.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { PolicyService } from '../../shared/services/policy.service';
 import { Subject } from 'rxjs';
@@ -38,30 +37,32 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 export class QuotesComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private quoteService = inject(LkQuoteService);
-  private productsService = inject(ProductsService);
   private authService = inject(AuthService);
   private policyService = inject(PolicyService);
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
 
   quotes: Quote[] = [];
-  products: ProductList[] = [];
   filteredQuotes: Quote[] = [];
-  
-  selectedProductId: number | null = null;
+
+  /** Продукты для «Создать» — статически; позже дополнят */
+  readonly createProducts: { pageId: string; label: string; code: string }[] = [
+    { pageId: 'ns-policy', label: 'Несчастный случай', code: 'NS' },
+    { pageId: 'policy_gad001', label: 'Страхование техники', code: 'GAD' }
+  ];
+  selectedCreatePageId: string | null = null;
+
   searchText: string = '';
   selectedStatus: string = '';
-  
+
   statusOptions: string[] = ['DRAFT', 'ISSUED', 'PAID', 'CANCELLED', 'EXPIRED'];
-  
+
   displayedQuotes: Quote[] = [];
   maxRows = 20;
 
   ngOnInit(): void {
     this.loadQuotes();
-    this.loadProducts();
-    
-    // Setup debounced search
+
     this.searchSubject$.pipe(
       debounceTime(500),
       distinctUntilChanged(),
@@ -88,38 +89,12 @@ export class QuotesComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadProducts(): void {
-    this.productsService.getProducts().subscribe({
-      next: (products) => {
-        this.products = products;
-      },
-      error: (error) => {
-        console.error('Error loading products:', error);
-      }
-    });
-  }
-
-  onProductSelected2(): void {
-    if (this.selectedProductId) {
-      const product = this.products.find(p => p.id === this.selectedProductId);
-      if (product) {
-        // Navigate to route based on product id
-        this.router.navigate(['/', this.authService.tenant, 'product', product.id, 'version', product.devVersionNo || product.prodVersionNo || 1]);
-      }
+  onCreateProductSelected(): void {
+    if (!this.selectedCreatePageId) {
+      return;
     }
-  }
-
-  onProductSelected(): void {
-
-    if (this.selectedProductId) {
-      const product = this.products.find(p => p.id === this.selectedProductId);
-      if (product) {
-        // Navigate to route based on product id
-        this.router.navigate(['/', this.authService.tenant, 'product', product.id, 'version', product.devVersionNo || product.prodVersionNo || 1, 'form']);
-      }
-    }
-
-
+    this.router.navigate(['/', this.authService.tenant, 'lk', this.selectedCreatePageId]);
+    this.selectedCreatePageId = null;
   }
 
   onSearchChange(): void {

@@ -16,6 +16,25 @@
 
 # Содержание
 
+1. Назначение и границы платформы
+2. Архитектурный стиль
+3. Общая архитектура системы
+4. Модульная структура backend
+5. Frontend и пользовательский интерфейс
+6. Аутентификация
+7. Авторизация
+8. Tenant и разделение рабочих сред
+9. Product Domain
+10. Pricing, Calculator и Rules (обзор)
+11. Quote и Policy lifecycle
+12. Страховой контракт (каноническая модель)
+13. Схема договора → продуктовая группа → продукт
+14. Настройка продукта: каталог рычагов
+15. Калькулятор, quote/save и тестирование
+16. Unified Contract Data Model
+17–27. Документы, номера, платежи, API, deployment, ADR, …
+
+Канон **продуктовой** документации — главы **§9 и §13–15**. Runtime quote/save детально: `PoliTechAPI/docs/POLICY_QUOTE_SAVE.md`.
 
 ---
 
@@ -193,7 +212,8 @@ API вызывает прикладные модули; прикладные м�
 
 # 5. Frontend и пользовательский интерфейс
 
-Frontend построен на Angular/TypeScript. В текущем контексте используются Angular Router, Angular Material, Formly, RxJS, Chart.js и интеграция с Keycloak.
+Frontend построен на Angular/TypeScript. В текущем контексте используются Angular Router, Angular Material, RxJS, Chart.js и интеграция с Keycloak. Для ввода договора параллельно существуют **policy-entry** (блочный shell) и legacy **Formly**-формы.
+
 Маршрутизация содержит tenantId как часть URL-контекста. Это важно: tenant является не только внутренним параметром backend, но и частью пользовательского контекста frontend.
 
 ```text
@@ -204,10 +224,20 @@ Frontend построен на Angular/TypeScript. В текущем конте�
        +-- TenantGuard
        |
        +-- tenant-scoped application UI
-
 ```
 
 Таким образом, frontend должен передавать и поддерживать tenant context, а backend обязан независимо проверять принадлежность текущего principal к tenant scope. Нельзя считать URL единственным механизмом изоляции.
+
+## 5.1. Экраны продуктового контура (as-is)
+
+| Экран | Назначение | Подробнее |
+|-------|------------|-----------|
+| Contract schema (admin) | CRUD атрибутов схемы + LLM preview/apply | §13 / §13.5.1 |
+| LOB / business-line edit | Продуктовая группа: value/list, covers, TEXT, коэффициенты | §13–14 |
+| Product | Версия продукта: vars, пакеты, validators, CEL, Test | §13–15 |
+| Calculator | Формулы и таблицы коэффициентов пакета | §15 |
+| Policy-entry | Ввод котировки/полиса блоками UI | §14 |
+| Formly forms | Legacy путь ввода по product.vars | §14 |
 
 ---
 
@@ -217,6 +247,8 @@ Frontend построен на Angular/TypeScript. В текущем конте�
 Аутентификация в платформе определяет, каким образом запрос связывается с конкретным пользователем или техническим клиентом. При этом схема аутентификации является частью конфигурации рабочего пространства Tenant, но не обязана быть одинаковой для всех клиентов этого Tenant.
 
 Такое разделение позволяет сохранить простую модель для обычного случая, когда весь Tenant работает по одной схеме, и одновременно поддержать интеграционные и локальные программы, которым требуется другой способ подключения.
+
+> **Статус раздела.** Архитектурная модель (Tenant `authType` + Client override) соответствует коду. Конкретные схемы и степень их готовности описаны в §6.4 и §6.10 **по фактической реализации** (`pt-auth`), а не как целевой идеал. Целевые расширения (SAML, полноценный OIDC JWKS, OAuth Proxy) помечены отдельно.
 
 ## 6.1. Схема аутентификации Tenant
 
@@ -307,120 +339,103 @@ Client представляет конкретное приложение, пр�
 
 ## 6.4. Поддерживаемые схемы
 
-На текущем уровне модель предусматривает следующие типы:
+В коде enum `ru.pt.auth.model.AuthType` содержит:
 
 ```text
 LOCAL_JWT
-KEYCLOAK
+JWT
 HEADERS
 APIKEY
+KEYCLOAK
 NONE
 ```
 
-При этом конкретная реализация и степень готовности отдельных типов могут отличаться.
+Для каждой схемы ниже указано, **что реализовано сейчас** и **что остаётся целевым**.
 
-### LOCAL_JWT
+### LOCAL_JWT — основная рабочая схема
 
-JWT проверяется непосредственно backend-приложением через стандартный механизм Spring Security и локальную конфигурацию JWT.
+JWT выпускается платформой (`JwtTokenUtil`) и проверяется backend через `LocalJwtAuthenticationStrategy`:
 
-Схема подходит для основного пользовательского API, когда backend самостоятельно отвечает за проверку JWT.
+* извлекается Bearer-токен из `Authorization`;
+* вызывается `jwtTokenUtil.validateToken(jwt)`;
+* из claims читаются `username` (login) и `client_id`;
+* опционально учитывается заголовок `X-Account-Id`.
 
-Упрощённо поток выглядит так:
+Фронтенд (`PoliTechFront`) в текущем виде работает именно через REST login + Bearer JWT (`AuthService`), а не через Angular Keycloak adapter (код Keycloak во фронте отключён / закомментирован).
+
+Эндпоинты выдачи токена: `POST /api/v1/{tenantCode}/auth/login`, `/token`, `/refresh-token`.
 
 ```text
 Client
    │
    │ Authorization: Bearer <JWT>
    ▼
-Backend
+AccountResolutionFilter
    │
-   ├── JWT validation
-   ├── identity extraction
-   └── authorization
+   └── LocalJwtAuthenticationStrategy
+         ├── validateToken
+         ├── set login + client_id in RequestContext
+         └── AccountResolverService → Account / Acting Account
 ```
+
+### JWT — внешний / tenant-configured JWT
+
+Отдельный тип `AuthType.JWT` (`JwtAuthenticationStrategy`). Предназначен для JWT, выпущенных вне локального контура платформы.
+
+As-is:
+
+* есть заготовка per-tenant `auth_config` (`issuer`, `jwks_uri`);
+* при наличии `issuer` проверяется совпадение claim `iss`;
+* **проверка подписи через JWKS пока не подключена** — используется тот же `JwtTokenUtil.validateToken` (legacy);
+* в комментарии кода прямо указано, что JWKS integration — следующий шаг.
 
 ### KEYCLOAK
 
-Для Keycloak используется отдельный OAuth Proxy.
+В коде это **не** отдельный OAuth Proxy перед приложением, а стратегия `KeycloakIdentityStrategy` внутри filter chain.
 
-В этом варианте backend не выполняет повторную проверку JWT. Проверка происходит до попадания запроса в backend:
+As-is:
 
-```text
-Client
-   │
-   ▼
-OAuth Proxy
-   │
-   ├── authentication against Keycloak
-   ├── token validation
-   └── authenticated request
-   │
-   ▼
-Backend
-```
+* ожидается Bearer JWT;
+* проверяются expiration, опционально `iss` и `aud`/`azp` из tenant `auth_config`;
+* **полноценная проверка подписи JWKS / Keycloak realm keys не реализована**.
 
-После успешной аутентификации proxy передаёт backend валидный JWT и необходимый контекст идентичности.
-
-Таким образом, в режиме `KEYCLOAK` ответственность за первичную проверку JWT находится на OAuth Proxy, а backend доверяет запросу, прошедшему через этот доверенный authentication layer.
-
-Это отличается от `LOCAL_JWT`, где проверка JWT является непосредственной обязанностью backend.
+Целевая модель с OAuth Proxy (проверка до backend) остаётся допустимым deployment-вариантом, но **текущий код backend сам разбирает JWT** и не предполагает обязательный proxy.
 
 ### HEADERS
 
-В режиме `HEADERS` идентичность запроса передаётся через HTTP headers.
+Стратегия `HeaderAuthenticationStrategy` ожидает заголовки:
 
-Такая схема может использоваться, когда перед backend уже существует доверенный внешний authentication или gateway layer, который определяет пользователя и передаёт его идентификаторы в запросе.
+```text
+X-Client-Id
+X-User-Id
+X-Account-Id   (опционально)
+```
 
-В этом случае критически важно, чтобы backend был доступен только через доверенный слой, способный гарантировать корректность соответствующих headers.
+As-is: при отсутствии `X-Client-Id` / `X-User-Id` выбрасывается ошибка, но **значения headers не записываются в `RequestContext`** — стратегия фактически незавершена. Использовать в production нельзя без доработки и без гарантии, что backend недоступен напрямую извне.
 
 ### APIKEY
 
-В режиме `APIKEY` клиент аутентифицируется с помощью API key, передаваемого в HTTP header.
-
-Например:
-
-```text
-X-API-Key: <client-api-key>
-```
-
-Такая схема особенно удобна для машинных интеграций и локальных программ.
-
-Типичный сценарий:
-
-```text
-Tenant
-    authType = LOCAL_JWT
-
-Client
-    name = local-program
-    authType = APIKEY
-```
-
-В этом случае основная часть Tenant продолжает использовать JWT, а локальная программа использует API key.
+`ApiKeyIdentityStrategy` — машинная аутентификация по API key в HTTP header (типично `X-API-Key`). Подходит для локальных интеграционных программ при Tenant с `LOCAL_JWT` и Client override на `APIKEY`.
 
 ### NONE
 
-`NONE` означает отсутствие аутентификации на уровне данного authentication механизма.
-
-Такой режим не должен автоматически означать отсутствие авторизации или отсутствие других ограничений. Его применение должно определяться назначением конкретного Tenant или Client и общей моделью безопасности платформы.
+`NoAuthenticationStrategy` / ветка в `AccountResolutionFilter`: при `authType == NONE` filter пропускает resolve identity. Режим не отменяет другие ограничения платформы; применять только для явно публичных контуров.
 
 ## 6.5. Эффективная схема аутентификации
 
-Для каждого запроса система должна определить эффективный authentication type.
+Для каждого запроса система определяет effective auth type.
 
-Правило является простым:
+Правило в коде (`AccountResolutionFilter`):
 
 ```text
 effectiveAuthType =
-    client.authType
-        ?? tenant.authType
+    если есть заголовок X-Client-ID и у Client задан authType
+        → Client.authType
+    иначе
+        → Tenant.authType
 ```
 
-То есть Client имеет приоритет над Tenant.
-
-Если Client не определяет собственную схему, используется схема Tenant.
-
-Например:
+То есть Client имеет приоритет над Tenant. Client подбирается по `X-Client-ID` в контексте уже разрешённого Tenant.
 
 | Tenant  | Client        | Client authType | Effective authType |
 | ------- | ------------- | --------------- | ------------------ |
@@ -441,7 +456,7 @@ effectiveAuthType =
 
 > Что этому субъекту разрешено делать?
 
-Tenant и Client участвуют в определении контекста запроса, но не заменяют модель Account и Privileges.
+Tenant и Client участвуют в определении контекста запроса, но не заменяют модель Account и прав (роли / Resource+Action / ProductRole).
 
 После успешной аутентификации платформа должна получить контекст, на основании которого выполняются последующие проверки:
 
@@ -454,9 +469,9 @@ Tenant Context
       ↓
 Account / Client
       ↓
-Privileges
+Role + Resource/Action (+ ProductRole)
       ↓
-Data Scope
+Data Scope (Account hierarchy)
       ↓
 Business operation
 ```
@@ -471,7 +486,7 @@ Business operation
 
 **Client** определяет приложение или технический канал, через который выполняется обращение. Client может переопределить схему Tenant.
 
-**Account** определяет пользователя и его права внутри Tenant.
+**Account** определяет пользователя (логин привязан к Account) и его роль / область данных внутри Tenant.
 
 Например:
 
@@ -480,7 +495,7 @@ Tenant: Company
     authType = LOCAL_JWT
 
 Account: ivanov
-    privileges = ...
+    nodeType / role = ACCOUNT | PRODUCT_ADMIN | ...
 
 Client: web
     authType = inherited
@@ -547,9 +562,56 @@ Tenant
     └── Local Program       → APIKEY
 ```
 
-При этом все клиенты могут работать с одним Tenant, одной областью данных и общей моделью авторизации.
+## 6.10. Текущее состояние реализации (as-is)
 
-Такой подход особенно важен для платформы, которая должна одновременно обслуживать пользовательские приложения, административные интерфейсы и машинные интеграции.
+### Filter chain (`SecurityConfig`)
+
+Порядок фильтров в `pt-auth`:
+
+```text
+TenantResolutionFilter
+    ↓
+AccountResolutionFilter      ← выбор strategy по effective AuthType, resolve identity + accounts
+    ↓
+IdentityResolutionFilter
+    ↓
+TenantImpersonationFilter    ← SYS_ADMIN: X-Imp-Tenant
+    ↓
+ContextCleanupFilter
+```
+
+`TenantResolutionFilter` определяет Tenant (код из path `/api/v1/{tenantCode}/...` и связанных правил).
+
+`AccountResolutionFilter` — центральная точка AuthN: выбирает `IdentitySourceStrategy`, вызывает `resolveIdentity`, затем `AccountResolverService.resolveAccounts()`.
+
+`TenantImpersonationFilter` позволяет `SYS_ADMIN` временно работать в контексте другого Tenant через заголовок `X-Imp-Tenant`.
+
+### Login / token API
+
+* `POST /api/v1/{tenantCode}/auth/login` — парольная аутентификация через password authenticator, привязанный к authType.
+* `POST /api/v1/{tenantCode}/auth/token` — **выдаёт JWT по `clientId` + `userLogin` без проверки пароля** (служебный / упрощённый контур; в production должен быть ограничен или убран).
+* `POST /api/v1/{tenantCode}/auth/refresh-token`, `/set-password` — вспомогательные операции.
+
+### Frontend
+
+* Основной путь: REST JWT (`AuthService` + interceptor с `Authorization: Bearer`).
+* `TenantGuard` **фактически отключён** (`return true` до проверок) — сопоставление `tenantId` в URL с tenant логина не enforced.
+* Angular Keycloak adapter в UI не является активным путём входа.
+
+### Что соответствует архитектуре
+
+* Tenant `auth_type` + Client `auth_type` override через `X-Client-ID`.
+* Strategy pattern по `AuthType`.
+* Разделение Tenant → identity → Account resolution.
+* Request-scoped контекст (`RequestContext`) вместо разбора JWT в бизнес-слое.
+
+### Что не доведено
+
+* JWKS / cryptographic verify для `JWT` и `KEYCLOAK`.
+* Завершение `HEADERS` (запись identity в контекст).
+* Единый DTO enum auth types на всех слоях (backend `AuthType`, API refs `TenantAuthType` / client DTO — наборы расходятся; в client DTO могут отсутствовать `JWT` / `KEYCLOAK`).
+* Жёсткая изоляция `/auth/token` от публичного доступа.
+* Фронтовый `TenantGuard`.
 
 ---
 
@@ -561,6 +623,8 @@ Tenant
 Аутентификация отвечает на вопрос, кто обращается к платформе. Авторизация отвечает на другой вопрос: что именно этому субъекту разрешено делать и с какими данными он может работать.
 
 В платформе эти две задачи разделены. После того как запрос получил идентичность и был связан с Tenant, Client и Account, начинается собственно авторизация.
+
+> **Статус раздела.** Иерархия Account + `actingAccountId` + `AuthZMatrix` (Resource/Action) — реализованный фундамент. Модель «Privilege entity / ABAC / explicit deny» в коде **отсутствует**: права задаются статически в `AuthZMatrix` и (частично) ProductRole. Детали as-is — §7.20; рекомендации по рефакторингу — §7.22.
 
 Модель авторизации построена вокруг нескольких независимых проверок. Сам факт наличия роли ещё не означает доступ ко всем данным, а доступ к данным ещё не означает право выполнить над ними любую операцию.
 
@@ -1490,31 +1554,30 @@ Data
 
 На текущем состоянии проекта авторизация уже имеет рабочий фундамент:
 
-* существует `AuthenticatedUser`;
-* существует Tenant context;
-* существует Client context;
-* существует Account hierarchy;
+* существует `AuthenticatedUser` / `UserDetailsImpl`;
+* существует Tenant context и Client context;
+* существует Account hierarchy (`AccountNodeType`: TENANT → CLIENT → GROUP → ACCOUNT → SUB + admin-типы SYS_ADMIN, TNT_ADMIN, CLIENT_ADMIN, GROUP_ADMIN, PRODUCT_ADMIN);
 * существует `actingAccountId`;
-* существует `AuthorizationService`;
-* существует статическая `AuthZMatrix`;
-* существует проверка Resource + Action;
-* существует Product Role;
-* существуют service-level проверки;
-* используются `@PreAuthorize` для части API;
+* существует `AuthorizationService` / `AuthorizationServiceImpl`;
+* существует статическая `AuthZMatrix` (ResourceType → applicable Actions; Role → permissions);
+* существует проверка Resource + Action через `roleHasPermission`;
+* существует Product Role API (`checkProductAction`), но не всегда вызывается из основного `check()`;
+* существуют service-level проверки и частично `@PreAuthorize`;
 * существует отдельный механизм Account Token;
-* существует разделение области данных и разрешённых операций.
+* существует разделение области данных (hierarchy/`isParent`) и разрешённых операций (matrix).
 
 При этом ряд элементов ещё не является окончательной реализацией.
 
 В частности:
 
-1. `UserRole` и `AuthZ.Role` содержат разные наборы ролей.
-2. В документации описана более общая privilege-модель, чем реально используется в `AuthZMatrix`.
-3. `CustomPermissionEvaluator` пока содержит placeholder и фактически не реализует проверку прав.
-4. Проверка `AuthZMatrix.isApplicable()` в `AuthorizationServiceImpl` сейчас закомментирована.
-5. Дополнительная `checkProductAction()` в основном `check()` также пока не подключена — её вызов находится в закомментированном коде.
-6. Часть административных `@PreAuthorize` и другие проверки находятся в состоянии постепенного перехода или закомментированы.
-7. Механизм явного deny/override, описанный в проектной документации, не представлен в текущем `AuthZMatrix` как самостоятельная модель.
+1. `UserRole` / `AccountNodeType` и `AuthZ.Role` содержат пересекающиеся, но не синхронизированные наборы ролей; маппинг хрупкий (`AuthZ.Role.valueOf(user.getUserRole())`).
+2. Отдельной сущности Privilege / ACL в БД нет — права зашиты в `AuthZMatrix` (в матрице есть временные `// ToDo - delete it just to test` permissions).
+3. `CustomPermissionEvaluator` — placeholder, не реализует проверку прав.
+4. Проверка `AuthZMatrix.isApplicable()` в `AuthorizationServiceImpl` закомментирована.
+5. Вызов `checkProductAction()` из основного `check()` закомментирован / не всегда активен.
+6. Часть административных `@PreAuthorize` закомментирована или в переходном состоянии.
+7. Explicit deny / override policy engine отсутствует.
+8. На фронте tenant-изоляция маршрутов (`TenantGuard`) не enforced.
 
 Поэтому текущую архитектуру следует описывать как:
 
@@ -1523,11 +1586,11 @@ Authorization
 =
 Account Hierarchy
 +
-Role Matrix
+Role Matrix (AuthZMatrix)
 +
-Product Roles
+Product Roles (частично)
 +
-Resource / Action Checks
+Resource / Action Checks (частично)
 ```
 
 а не как полностью реализованный ABAC/Policy Engine.
@@ -1588,6 +1651,44 @@ Action
 
 Именно эта модель должна оставаться основой дальнейшего развития авторизации: **иерархия Account определяет область данных, системные права определяют общие операции, а Product Role уточняет разрешения для конкретного страхового продукта.**
 
+## 7.22. Оптимизация и рефакторинг (AuthN / AuthZ / Tenant)
+
+Ниже — практические улучшения по коду `pt-auth` / фронту, без смены целевой модели.
+
+### Критично для безопасности
+
+1. **Довести crypto-verify JWT** для `JWT` и `KEYCLOAK` (JWKS), не полагаться на parse + `iss`/`exp` alone.
+2. **Закрыть или защитить** `POST .../auth/token` (сейчас JWT без пароля).
+3. **Завершить или отключить** `HEADERS` strategy; в незавершённом виде опасна.
+4. **Включить `TenantGuard`** на фронте (сейчас early `return true`).
+5. **Убрать test-permissions** из `AuthZMatrix` (`ToDo - delete it just to test`).
+
+### Согласованность модели
+
+6. **Единый enum AuthType** на слоях: `AuthType` (pt-auth), `TenantAuthType`, Client DTO — сейчас расходятся.
+7. **Единый Role enum**: связать `AccountNodeType` admin-роли и `AuthZ.Role` явным маппингом, без `valueOf` по строке.
+8. **Включить** `isApplicable()` и `checkProductAction()` в основной `check()`, либо удалить мёртвый код.
+9. **Реализовать или удалить** `CustomPermissionEvaluator` — не оставлять placeholder в Spring Security path.
+
+### Упрощение filter chain
+
+10. **AccountResolutionFilter vs IdentityResolutionFilter**: сейчас resolve identity фактически внутри Account filter; имена и ответственность размыть — либо переименовать, либо реально разнести шаги (resolve auth type → identity → account → impersonation).
+11. **Дублирование `X-Account-Id`**: парсится и в filter, и в `LocalJwtAuthenticationStrategy` — оставить одно место.
+12. **RequestContext cleanup**: убедиться, что `ContextCleanupFilter` покрывает все ThreadLocal/request attributes при ошибках mid-chain.
+
+### Данные и изоляция Tenant
+
+13. **Гарантировать `tid` в запросах репозиториев** (filter/specification), а не только «в целевой архитектуре».
+14. **Импersonation (`X-Imp-Tenant`)**: явно логировать audit; ограничить список impersonable tenants.
+15. Tenant technical config (§8.7): as-is в БД в основном `auth_type` (+ связанные auth_config); file storage / LLM / rate limits — целевые, не выдавать за реализованные.
+
+### Frontend
+
+16. Синхронизировать login tenant с route `:tenantId`.
+17. Не смешивать отключённый Keycloak-код с REST JWT — либо удалить мёртвый adapter, либо оформить feature-flag.
+
+Приоритет внедрения: пункты 1–5 → 6–9 → остальное.
+
 ---
 
 
@@ -1596,6 +1697,8 @@ Action
 В многопользовательской системе недостаточно определить, кто имеет доступ к конкретной операции. Необходимо ещё определить, **в каком рабочем пространстве пользователь работает и с какими данными и настройками он взаимодействует**.
 
 Для этого в платформе используется понятие **Tenant**.
+
+> **Статус раздела.** Логическая модель Tenant (`tid`, изоляция рабочих сред, связь с Account) соответствует коду (`TenantEntity`, path `{tenantCode}`, `TenantResolutionFilter`). Расширенная «техническая конфигурация Tenant» (§8.7: file storage, LLM, rate limits, SAML) — **целевая**; as-is в сущности Tenant в первую очередь `code`, `name`, `auth_type` (+ auth_config / связанные client-настройки). См. §8.8.
 
 Tenant представляет собой изолированную область данных, настроек и пользователей. При этом Tenant не обязан напрямую соответствовать юридическому лицу. Он может представлять любую группу пользователей, для которой требуется отдельное рабочее пространство.
 
@@ -1892,40 +1995,38 @@ Tenant — это универсальный механизм разделени
 
 Tenant может самостоятельно определять способ аутентификации пользователей.
 
-Например:
+**As-is (код):** поле `TenantEntity.authType` / client override; enum `AuthType` = `LOCAL_JWT | JWT | HEADERS | APIKEY | KEYCLOAK | NONE`. Параметры схем (issuer, audience, jwks_uri и т.п.) хранятся в tenant auth_config там, где стратегия это читает. Подробности готовности схем — §6.4 и §6.10.
 
-```text id="a4m7kx"
+**Целевое расширение** (ещё не как полноценный admin UI / единый config API):
+
+```text
 authentication
 ├── type
 ├── parameters
 └── policies
 ```
 
-В зависимости от выбранного типа могут настраиваться соответствующие параметры.
+Примеры целевых профилей:
 
-Например:
+```text
+LOCAL_JWT
+  └── password policy / token TTL
 
-```text id="q8v3pd"
-LOCAL
-  └── password policy
-
-OIDC
+JWT / KEYCLOAK (OIDC)
   ├── issuer
-  ├── clientId
-  ├── clientSecret
-  └── scopes
+  ├── audience
+  ├── jwks_uri
+  └── clientId (IdP)
 
-SAML
+SAML                          ← не реализовано в AuthType
   ├── entityId
   ├── metadata
   └── certificate
 ```
 
-Конкретный набор параметров зависит от поддерживаемого механизма.
+Секреты (`clientSecret`, API keys) не должны возвращаться через обычный API чтения настроек в открытом виде.
 
-При этом секреты, такие как `clientSecret`, не должны возвращаться через обычный API чтения настроек в открытом виде.
-
-Таким образом, Tenant может иметь собственную схему подключения пользователей, не меняя глобальную конфигурацию платформы.
+Таким образом, Tenant может иметь собственную схему подключения пользователей, не меняя глобальную конфигурацию платформы. Конкретный набор реализованных типов — только из `AuthType`, не из целевого списка SAML/OIDC «в полном объёме».
 
 ### Хранилище файлов
 
@@ -2153,112 +2254,109 @@ Tenant
 
 Именно это позволяет использовать одну платформу для существенно разных сценариев: от обычной рабочей среды страховой компании до отдельного Tenant для разработки, специализированной линии бизнеса или публичных страниц.
 
+## 8.8. Текущее состояние Tenant в коде (as-is)
+
+### Разрешение Tenant на запросе
+
+1. URL вида `/api/v1/{tenantCode}/...`.
+2. `TenantResolutionFilter` поднимает Tenant в `RequestContext`.
+3. Далее AuthN/AuthZ работают уже внутри этого Tenant (кроме impersonation).
+
+### Создание Tenant
+
+`TenantService` при создании Tenant заводит базовую иерархию Account (в т.ч. узлы `SYS_ADMIN` / `TNT_ADMIN` / `PRODUCT_ADMIN` / default `ACCOUNT` в зависимости от сценария) — Tenant сразу получает каркас админ-структуры, а не только запись в таблице tenants.
+
+### Impersonation
+
+`TenantImpersonationFilter` + заголовок `X-Imp-Tenant` для `SYS_ADMIN`: смена рабочего Tenant без повторного логина. Это платформенный механизм, не «обычный» user feature.
+
+### Что верно в модели §8.1–8.6
+
+* Tenant = логическое рабочее пространство, не обязательно юрлицо.
+* Изоляция через `tid`, общая PostgreSQL допустима.
+* Account живёт внутри Tenant и не заменяет Tenant.
+* Один Tenant — много Clients с разным authType.
+
+### Что ещё целевое
+
+* Полный tenant-admin UI для file storage / LLM / quotas / rate limits (§8.7).
+* Гарантированный `tid` на **всех** tenant-owned таблицах и во всех repository queries (нужен аудит схемы и сервисов).
+* Фронтовая проверка, что route tenant = login tenant.
 
 ---
 
 
 # 9. Product Domain
 
-Продукт является конфигурацией страхового предложения. Внутри него находятся версии, покрытия, риски, тарифные таблицы, формулы, правила и документы.
+Продукт — конфигурация страхового предложения внутри Tenant. Иерархия:
 
 ```text
-Product Family / Group
-          |
-          v
-       Product
-          |
-          +---- Product Version
-                    |
-          +---------+---------+---------+
-          |         |         |         |
-       Coverages  Risks    Rates      Rules
-                                                                     +-- Formulas
-
+Tenant
+  └── Contract schema (mt_attribute_def)     ← словарь полей договора
+  └── LOB / продуктовая группа              ← линия бизнеса, mpVars, covers, …
+        └── Product
+              └── Product Version (DEV | PROD)
+                    ├── vars, packages, validators, CEL, …
+                    └── Calculator (на пакет)
 ```
 
+- **Схема договора** — источник новых атрибутов на уровне тенанта (§13).
+- **LOB** — шаблон группы продуктов: состав полей, покрытия, тексты (§13–14).
+- **Версия продукта** — зафиксированный снимок для расчёта и продажи (§14–15).
 
-## Версионирование
+## Версионирование (as-is)
 
-Опубликованная Product Version не должна изменяться задним числом. Lifecycle: DRAFT → PUBLISHED → DEPRECATED.
-Это необходимо для воспроизводимости расчёта и исторической корректности полиса: старый договор должен ссылаться на ту версию продукта, на которой он был оформлен.
+В коде `versionStatus`: **`DEV`** и **`PROD`**.
+
+- Изменения конфигурации версии — только в **DEV** (`getVersion4Update`).
+- Публикация: операция **GO2PROD** копирует DEV → PROD.
+- Новая DEV после PROD: словарь из LOB + перенос продуктовых флагов с предыдущей PROD (см. §13).
+
+Опубликованная PROD не должна меняться задним числом: старый договор ссылается на `productVersion`, на которой был оформлен.
+
+Подробно: **§13** (каскад словаря), **§14** (рычаги), **§15** (калькулятор, quote/save, тест).
 
 ---
 
 
 # 10. Pricing, Calculator и Rules
 
+Краткий обзор. Детали — **§15**.
 
-## Calculator
+- **Calculator** — формулы и таблицы коэффициентов на пакет; пишет премии/СС во vars договора.
+- **Rules (CEL)** — конфигурируемые условия над vars без Java-кода процесса.
+- **Validators** — декларативные проверки QUOTE/SAVE (не CEL).
 
-Модуль Calculator использует rate tables, formulas и variables. Общая концепция расчёта:
-
-```text
-Input contract data
-       |
-       v
-Risk / Rating factors
-       |
-       v
-Rate Tables + Formulas
-       |
-       v
-Adjustments / Discounts
-       |
-       v
-Premium
-
-```
-
-
-## Rules
-
-Модуль Rules использует CEL для вычисления бизнес-условий. Это позволяет отделять конфигурируемые eligibility/validation правила от Java-кода.
-
-## Среды
-
-- DEV — настройка и тестирование продукта/правил.
-
-- PROD — использование опубликованной версии.
-
-- Published configuration должна быть воспроизводимой.
-
-Quote и Policy могут использовать один и тот же входной InsuranceContractRequest, если фактические поля совпадают. Разделение Quote и Policy является прежде всего lifecycle/resource distinction, а не обязательным различием входного DTO.
+Среды: DEV — настройка и тест; PROD — продажа по опубликованной версии. Quote и save используют один каркас договора; различие — lifecycle и шаги оркестратора (§11, §15).
 
 ---
 
 
 # 11. Quote и Policy lifecycle
 
-
 ```text
-InsuranceContractRequest
-          |
-          +--> POST /quotes
-          |       |
-          |       +--> calculation
-          |       +--> quote
-          |
-          +--> POST /policies
-                  |
-                  +--> validation
-                  +--> calculation
-                  +--> issuance
-                  +--> policy snapshot
-
+JSON договора
+    ├── POST …/sales/quotes   → расчёт, статус QUOTE
+    └── POST …/sales/policies → валидация, расчёт, номер, запись (ISSUED | UNDERWRITING → …)
 ```
 
+## Статусы (as-is)
 
-## Quote
+| Статус | Смысл |
+|--------|--------|
+| `QUOTE` | Черновик расчёта |
+| `UNDERWRITING` | Требует ручного рассмотрения (целевой soft-gate на save) |
+| `ISSUED` | Выпущен |
+| `PAID` | Оплачен |
 
-Quote — результат предварительного расчёта и предложения. Его задача — показать условия и стоимость до окончательного выпуска.
+## Quote и Policy
 
-## Policy
+- **Quote** — предварительный расчёт и предложение.
+- **Policy** — зафиксированный договор; Party / IO хранятся как snapshot.
 
-Policy — зафиксированный страховой договор. Для него критична историческая неизменяемость исходных данных: Party и Insured Object сохраняются как snapshot.
+Если Party создана через `masterPartyId`, изменение Master Data после выпуска не меняет уже существующий полис.
 
-## Snapshot semantics
-
-Если Party была создана на основе Master Data через masterPartyId, изменение Master Data после выпуска полиса не должно менять уже существующий полис.
+Пайплайн шагов и хранение JSON: **§15** и `PoliTechAPI/docs/POLICY_QUOTE_SAVE.md`.
 
 ---
 
@@ -3085,22 +3183,22 @@ InsuredObject
 | `usedSince`           | date    | Дата начала эксплуатации         |
 | `mileage`             | number  | Пробег                           |
 | `cost`                | number  | Стоимость транспортного средства |
-| `yearIssue`           | date    | Дата выпуска                     |
-| `isNotRegistered`     | boolean | Признак отсутствия регистрации   |
-| `vehicleCategoryCode` | string  | Категория транспортного средства |
-| `vehicleTypeCode`     | string  | Тип транспортного средства       |
+| `manufactureDate `    | date    | Дата выпуска                     |
+| `isRegistered`        | boolean | Признак регистрации   |
+| `categoryCode`        | string  | Категория транспортного средства |
+| `typeCode`            | string  | Тип транспортного средства       |
 
 ### Vehicle Model
 
 | Атрибут          | Тип    | Описание            |
 | ---------------- | ------ | ------------------- |
-| `mark`           | string | Марка               |
+| `brand`          | string | Марка               |
 | `model`          | string | Модель              |
-| `horsePower`     | string | Мощность            |
+| `horsePower`     | number | Мощность            |
 | `engineTypeCode` | string | Тип двигателя       |
-| `engineVolume`   | string | Объём двигателя     |
-| `doors`          | string | Количество дверей   |
-| `hoodTypeCode`   | string | Тип кузова          |
+| `engineVolume`   | number | Объём двигателя     |
+| `doors`          | number | Количество дверей   |
+| `bodyTypeCode`   | string | Тип кузова          |
 | `gearTypeCode`   | string | Тип коробки передач |
 
 ---
@@ -3112,6 +3210,7 @@ InsuredObject
 | Атрибут       | Тип    | Описание      |
 | ------------- | ------ | ------------- |
 | `typeCode`    | string | Тип документа |
+| `serial`      | string | Серия         |
 | `number`      | string | Номер         |
 | `dateIssue`   | date   | Дата выдачи   |
 | `whom`        | string | Кем выдан     |
@@ -4215,6 +4314,274 @@ Transport  Transport
 > **Каноническая модель описывает бизнес-смысл страхового контракта. Транспортная модель описывает способ передачи этого контракта. Mapping связывает транспортные данные с каноническими кодами.**
 
 Поэтому изменение JSON-структуры внешнего API не должно само по себе приводить к изменению формул, правил и бизнес-семантики страхового договора.
+
+---
+
+# 13. Схема договора → продуктовая группа → продукт
+
+Глава описывает, как словарь полей договора живёт на трёх уровнях и как новые атрибуты попадают из схемы тенанта в LOB и версии продуктов.
+
+## 13.1. Три уровня словаря
+
+```text
+Tenant schema (mt_attribute_def)
+        │  addAttribute
+        │  → append в LOB (isDeleted=true)
+        │  → addVar в DEV-продукты LOB
+        ▼
+LOB.mpVars          (снимок + overrides)
+        │  create product / new DEV from LOB
+        ▼
+ProductVersion.vars (снимок; правки только DEV)
+```
+
+| Уровень | Хранение | Роль |
+|---------|----------|------|
+| **Схема** | `mt_attribute_def`, UI contract-schema | Канон атрибутов тенанта (`document_id`, напр. `INSURANCE_CONTRACT`) |
+| **LOB** | JSON `pt_lobs.lob` → `mpVars` | Состав полей группы; value/list; скрытие (`isDeleted`) |
+| **Продукт** | JSON версии → `vars` | Словарь для VariableContext, калькулятора, CEL, UI |
+
+Между уровнями **нет live-ссылки**: продукт не подтягивает изменения схемы автоматически при каждом save LOB. Новые поля схемы попадают в LOB/продукты каскадом при `addAttribute`; новая DEV-версия собирает словарь из текущего LOB.
+
+Колонки `mt_attribute_def` (после V9–V12): `var_code`, `var_name`, `var_path`, `var_ord`, `var_type`, `var_data_type`, `var_value`, `var_list`, `is_system` (+ дерево `parent_id`). Поля `code` / `name` / `var_cdm` / `var_cardinality` удалены.
+
+## 13.2. Каскад добавления атрибута (as-is)
+
+1. Админ создаёт атрибут в схеме: `SchemaService.addAttribute`.
+2. После сохранения: `LobService.appendSchemaAttributeAsDeleted` — во все активные LOB тенанта узел с `isDeleted = true` (по умолчанию скрыт в группе).
+3. Для DEV-версий продуктов этих LOB: `ProductService.addVar` (сервисный метод; **HTTP POST addVar у продукта снят**).
+
+Добавление «с нуля» только через схему. LOB и продукт не экспонируют API создания произвольных schema-vars.
+
+## 13.3. Что можно менять на каждом уровне
+
+| Уровень | Добавление узлов схемы | Правка полей |
+|---------|------------------------|--------------|
+| **Схема (tenant)** | Да — полный CRUD атрибута | Все метаданные: code, name, path, type, list, … |
+| **LOB** | Нет (только каскад из схемы) | Для schema-vars: **value, list, isDeleted** (и UI-ограничения). TEXT/MAGIC и др. — отдельные сущности в том же `mpVars` (as-is) |
+| **Продукт DEV** | Нет с API; каскад/`addVar` из сервиса | **varValue, varList, isDeleted, isTarifFactor, isOptional** |
+| **Продукт PROD** | Нет | Конфигурация не обновляется через manage-API версии |
+
+Целевая модель TEXT-шаблонов (отдельный каталог tenant → LOB → snapshot в продукте) — см. §14; as-is TEXT часто лежат в `mpVars` с `varType = TEXT`.
+
+## 13.4. Создание и обновление DEV-версии
+
+При создании продукта / новой DEV:
+
+- словарь строится из **LOB.mpVars**;
+- если есть предыдущая PROD — для совпадающих `varCode` переносятся продуктовые флаги (`isDeleted`, `isTarifFactor`, `isOptional`, `varValue`);
+- коды, которых не было в PROD, могут прийти с `isDeleted = true` (новое из LOB — выключено, пока не включат в DEV).
+
+Так версия **фиксирует** набор на момент сборки и не портится случайными правками тенант-схемы.
+
+## 13.5. UI
+
+| Экран | Действия |
+|-------|----------|
+| Contract schema | Дерево схемы; add/edit/delete атрибутов; LLM-ассистент (ниже) |
+| LOB edit | Дерево схемы-проекции: edit value/list; restore/hide; без «+» дочерних schema-узлов |
+| Product (DEV) | Дерево vars: value/list/флаги; без add schema-var с UI API |
+
+Пример расширения схемы: миграция `V13__attribute_def_vehicle.sql` (Vehicle / Model / Document под `insuredObject`).
+
+### 13.5.1. LLM-ассистент схемы (as-is)
+
+На экране **contract-schema**: текст на естественном языке → preview списка атрибутов → Apply.
+
+- API: `POST /api/v1/{tenant}/admin/schema/{contractCode}/llm/assist` (`taskType = SCHEMA`).
+- Контекст модели — текущее дерево `mt_attribute_def` (без записи в БД).
+- Apply на UI: последовательные `POST …/attributes` (`SchemaService.addAttribute`) → каскад в LOB (`isDeleted=true`) и DEV-продукты.
+- Без auto-commit: человек подтверждает черновик. LOB enable / product flags — вне MVP.
+
+Пример запроса: «добавь марку, модель и VIN для объекта страхования авто».
+
+---
+
+# 14. Настройка продукта: каталог рычагов
+
+Кастомизация продукта **не меняет** Java-каркас `StdPolicy` / оркестратор. Она наполняет открытый слой и правила вокруг него.
+
+## 14.1. Каркас vs открытый слой
+
+```text
+Каркас (платформа)                 Открытый слой (продукт / LOB)
+─────────────────────────────     ─────────────────────────────
+даты, премия, номер, статус       policyHolder.* / IO bags
+insurer, commission shape         набор PvVar / JsonPath
+insuredObjects[0] + covers[]      CEL, validators, calculator
+installments, options             TEXT, пакеты, периоды дат
+```
+
+**Жёсткие ограничения (as-is):** ровно один `insuredObject`; JsonPath покрытий вида `insuredObjects[0].…`; system-bound vars нельзя писать через произвольный `putVar` (только typed setters).
+
+System-bound (фрагмент): `pl_premium`, `pl_policyNumber`, `pl_startDate`, `pl_endDate`, `pl_issueDate`, `pl_statusCode`, `io_packageCode`, …
+
+## 14.2. Версия продукта (`ProductVersionModel`)
+
+```text
+ProductVersion
+├── code, name, lob, insCompanyId, versionNo, versionStatus
+├── phType / ioType
+├── waitingPeriod / policyTerm          PeriodRule
+├── vars[]                              PvVar
+├── packages[]
+│     ├── code, name
+│     ├── covers[] (deductibles, limits, mandatory, terms)
+│     ├── calculatorId
+│     └── files[]                       печатные формы
+├── quoteValidator[] / saveValidator[]
+├── numberGenerator
+└── (CEL rules в pt_rules, scope PRODUCT/…)
+```
+
+## 14.3. Словарь `product.vars`
+
+Единый каталог для материализации JSON → VariableContext, калькулятора, CEL, digests/ПФ, UI.
+
+| Поле | Смысл |
+|------|--------|
+| `varCode` | Уникальный код |
+| `varName` | Подпись |
+| `varPath` | JsonPath к wire JSON |
+| `varType` | `IN`, `MAGIC`, `CONST`, `VAR`, `OBJECT`, `TEXT`, `COEFFICIENT`, `CALC`, … |
+| `varDataType` | `STRING`, `NUMBER`, `OBJECT`, … |
+| `varValue` / `varList` | Значение / справочник |
+| `isSystem` / `isDeleted` / `isTarifFactor` / `isOptional` | Флаги |
+| `parent_id` | Дерево |
+
+`IN` — из входного JSON; `MAGIC` — вычисляемые (возраст, срок); `TEXT` — шаблоны `{{varCode}}`; `OBJECT` — группировка.
+
+## 14.4. Периоды дат
+
+Формат периодов — ISO-8601. В продукте:
+
+- **waitingPeriod** — правило для `startDate` относительно продажи/оплаты: `RANGE` (напр. `P0D-P30D`), `LIST` (напр. `P1D,P14D`), иные правила по мере развития.
+- **policyTerm** — правило для `endDate` / срока (RANGE или LIST).
+
+`issueDate` несёт таймзону продажи; даты периода договора интерпретируются в этой зоне.
+
+## 14.5. Пакеты и покрытия
+
+Пакет (`packages[]`): код, имя, список covers, `calculatorId`, файлы ПФ.
+
+Покрытие: `code`, обязательность, waiting/coverage term, франшизы (`deductibles[]`), лимиты, связь с vars `co_*_sumInsured` / `co_*_premium`.
+
+На договоре: `insuredObjects[0].packageCode` + `covers[]` с `sumInsured` / `premium` / `deductibleCode` (см. §12.14).
+
+## 14.6. Валидаторы продукта (не CEL)
+
+Списки `quoteValidator` / `saveValidator`. Типы (as-is): `NOT_NULL`, сравнения, `MATCHES_REGEX`, `IN_LIST`, `RANGE`, форматы (`EMAIL`, `PHONE*`, `INN`, …).
+
+Декларативные попарные проверки; без произвольных выражений.
+
+## 14.7. CEL (`pt_rules`)
+
+Выражения над vars. Семантика: **`true` = pass**.
+
+| RuleType | В quote/save (as-is) |
+|----------|----------------------|
+| `PRE_QUOTE_VALIDATION` | до расчёта (quote и save) |
+| `POST_QUOTE_VALIDATION` | после расчёта, hard-fail |
+| `PRE_SAVE_VALIDATION` | до расчёта на save |
+| `POST_SAVE_VALIDATION` | в оркестраторе не вызывается |
+| `UNDERWRITING` | вызывается на save, но non-validation типы пропускаются → фактически не исполняется |
+| прочие | зарезервированы |
+
+Scope (порядок слоёв): `PRODUCT → LOB → TENANT → CLIENT`.
+
+## 14.8. Прочие рычаги
+
+| Рычаг | Назначение |
+|-------|------------|
+| Number generator | маска `{YY}…{XXXX}`, reset YEARLY/MONTHLY/NEVER, xor |
+| Commission rates | min/max на SALE/PROLONGATION (account×product) |
+| TEXT / digests / ПФ | `TextDocumentView`, `ph_digest` / `io_digest`, файлы пакета |
+| Ins company | страховщик на договоре |
+| Add-on pricelists | кросс-продажи на quote |
+| AuthZ | QUOTE / SELL / TEST / GO2PROD |
+| Wire adapter | смена JSON-каркаса (план; см. POLICY_WIRE_ADAPTERS) |
+
+## 14.9. Frontend ввода договора
+
+- **policy-entry** — блочный shell (`lk/ns-policy` и аналоги): целевой путь конфигурации страниц.
+- **Formly** — legacy UI по `product.vars` (маршрут form ещё существует).
+
+Оркестратор quote/save от UI не зависит: один JSON-каркас.
+
+## 14.10. Чеклист настройки продукта
+
+1. Схема / LOB — поля и covers.  
+2. Версия DEV — код, имя, страховщик, периоды.  
+3. Пакеты, покрытия, франшизы, калькулятор, файлы.  
+4. Vars — JsonPath, MAGIC/TEXT, тарифные факторы.  
+5. Validators QUOTE/SAVE.  
+6. CEL PRE/POST.  
+7. Номер, комиссия, тексты.  
+8. Права Account/Client.  
+9. Тест на DEV (§15) → GO2PROD.
+
+---
+
+# 15. Калькулятор, quote/save и тестирование
+
+## 15.1. Калькулятор
+
+Калькулятор привязан к **пакету** (`calculatorId`). Модель: formulas + coefficient tables + собственные vars.
+
+- Вход: VariableContext продукта (в т.ч. `isTarifFactor`).
+- Выход: запись премий/СС/промежуточных величин в vars → каркас covers / `pl_premium`.
+- В JSON калькулятора vars помечаются `varCdm = "CALCULATOR"` (единственный живой смысл `varCdm` на бэкенде; в LOB/`LobVar` поля нет).
+
+Запуск: в quote и save **после** pre-validators и CEL PRE_*, **до** CEL POST_QUOTE.
+
+## 15.2. Контур quote / save (сжато)
+
+```text
+normalize → product/auth → commission check → init vars
+  → ValidatorService (QUOTE[/SAVE])
+  → CEL PRE_QUOTE [/ PRE_SAVE]
+  → Calculator
+  → CEL POST_QUOTE          ← hard fail
+  → digests / commission / (quote: add-ons)
+  → [save] number + installments
+  → [save] UNDERWRITING     ← целевой soft-gate (см. gaps §14.7)
+  → [save] storage + payments
+```
+
+API (as-is):
+
+| Метод | URL |
+|-------|-----|
+| POST | `/api/v1/{tenant}/sales/quotes` |
+| POST | `/api/v1/{tenant}/sales/policies` |
+| GET | `/api/v1/{tenant}/sales/policies/{policyNumber}` |
+
+Тело — wire JSON (`PolicyDTO`); процесс работает через `StdPolicy`. В БД лежит тот же wire JSON, обогащённый процессом.
+
+Полный разбор слоёв, storage и gaps: **`PoliTechAPI/docs/POLICY_QUOTE_SAVE.md`**.
+
+## 15.3. Тестирование продукта (DEV)
+
+На экране продукта вкладка **Test** (as-is):
+
+- типы запроса Quote / Policy;
+- ввод JSON request → Execute → response;
+- сохранение примеров запроса (продуктовые тесты).
+
+Права: действие **TEST** / dataScope DEV для работы с DEV-версией.
+
+Перед **GO2PROD** проверяют: расчёт премии, validators/CEL, пакеты и covers, печатные формы/digests, номер и комиссию на типичных сценариях.
+
+PROD-версия используется продажами; конфигурация на ней через manage-API не правится.
+
+## 15.4. Среды
+
+| Среда | Версия продукта | Назначение |
+|-------|-----------------|------------|
+| DEV | `versionStatus = DEV` | Настройка, Test tab, расчёт с dataScope DEV |
+| PROD | `versionStatus = PROD` | Продажа; воспроизводимый snapshot конфигурации |
+
+---
 
 ## 16. Unified Contract Data Model
 

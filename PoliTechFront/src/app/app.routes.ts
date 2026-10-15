@@ -25,6 +25,8 @@ import { TenantGuard } from './shared/guards/tenant.guard';
 import { QuotesComponent } from './features/quotes/quotes.component';
 import { UserProfileComponent } from './features/user-profile/user-profile.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { PolicyEntryShellComponent } from './features/policy-entry/shell/policy-entry-shell.component';
+import { ContractSchemaComponent } from './features/admin-panel/contract-schema/contract-schema.component';
 
 
 export const routes: Routes = [
@@ -51,8 +53,21 @@ export const routes: Routes = [
   { path: 'product/:product-id/version/:version-no/form', component: FormlyFormsComponent, canActivate: [authGuard] },
   { path: 'products/:productId/versions/:versionNo/packages/:packageNo/calculator', component: CalculatorComponent, canActivate: [authGuard] },
   { path: 'lk/quotes', component: QuotesComponent, canActivate: [authGuard] },
+  {
+    path: 'lk/ns-policy',
+    component: PolicyEntryShellComponent,
+    canActivate: [authGuard],
+    data: { pageId: 'ns-policy' }
+  },
+  {
+    path: 'lk/policy_gad001',
+    component: PolicyEntryShellComponent,
+    canActivate: [authGuard],
+    data: { pageId: 'policy_gad001' }
+  },
   
   { path: 'admin/tenants', component: TenantsPageComponent, canActivate: [authGuard] },
+  { path: 'admin/contract-schema', component: ContractSchemaComponent, canActivate: [authGuard] },
   { path: 'admin/rules', component: RulesPageComponent, canActivate: [authGuard] },
   { path: 'admin/rules/edit', component: RuleEditComponent, canActivate: [authGuard] },
   { path: 'admin/rules/:id', component: RuleEditComponent, canActivate: [authGuard] },

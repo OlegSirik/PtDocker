@@ -90,7 +90,6 @@ public class PvVar {
         this.varType = lobVar.getVarType();
         this.varValue = lobVar.getVarValue();
         this.varDataType = lobVar.getVarDataType();
-        this.varCdm = lobVar.getVarCdm();
         this.varNr = lobVar.getVarNr();
         this.id = lobVar.getId();
         this.parent_id = lobVar.getParent_id();

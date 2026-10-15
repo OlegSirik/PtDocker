@@ -1,0 +1,181 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">Схема договора</h1>
+  </div>
+
+  <div class="pt-box">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Модель договора</h3>
+    </div>
+    <h4 class="pt-box-subtitle">
+      Выберите тип договора из справочника. Схема атрибутов загружается из mt_attribute_def.
+    </h4>
+
+    <div class="pt-box-card">
+      <div class="pt-box-card-row">
+        <mat-form-field class="form-field" appearance="outline">
+          <mat-label>Модель договора</mat-label>
+          <mat-select
+            [(ngModel)]="selectedModelCode"
+            (ngModelChange)="onModelChange()"
+            [disabled]="loadingModels || models.length === 0"
+          >
+            @for (m of models; track m.code) {
+              <mat-option [value]="m.code">{{ m.name }} ({{ m.code }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+
+  <div class="pt-box">
+    <div class="pt-box-title-row">
+      <h3 class="pt-box-title">Схема договора</h3>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="!selectedModelCode || loadingTree || generatingExample"
+        (click)="generateExampleJson()"
+      >
+        Сгенерить пример
+      </button>
+    </div>
+    <h4 class="pt-box-subtitle">
+      Схема договора, используется для хранения договора и передачи договора по АПИ.
+    </h4>
+
+    @if (selectedModelCode) {
+      <div class="schema-llm-box">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Запрос к LLM</mat-label>
+          <textarea
+            matInput
+            rows="2"
+            [(ngModel)]="llmText"
+            placeholder="Например: добавь марку, модель и VIN для объекта страхования авто"
+          ></textarea>
+        </mat-form-field>
+
+        @if (!llmReady) {
+          <p class="llm-hint">
+            LLM не настроен или отключён. Настройте интеграцию в разделе Tenants → LLM.
+          </p>
+        }
+
+        <div class="llm-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="!llmReady || askingLlm || applyingLlm || !(llmText || '').trim()"
+            (click)="askLlm()"
+          >
+            {{ askingLlm ? 'Запрос…' : 'Спросить LLM' }}
+          </button>
+          @if (llmDraft.length) {
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="askingLlm || applyingLlm"
+              (click)="clearLlmDraft()"
+            >
+              Очистить черновик
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="askingLlm || applyingLlm"
+              (click)="applyLlmDraft()"
+            >
+              {{ applyingLlm ? 'Применение…' : 'Применить (' + llmDraft.length + ')' }}
+            </button>
+          }
+        </div>
+
+        @if (llmDraft.length) {
+          <div class="llm-preview">
+            <h4 class="llm-preview-title">Черновик атрибутов</h4>
+            @if (llmWarnings.length) {
+              <p class="llm-warnings">{{ llmWarnings.join('; ') }}</p>
+            }
+            <table class="llm-preview-table">
+              <thead>
+                <tr>
+                  <th>varCode</th>
+                  <th>varName</th>
+                  <th>varPath</th>
+                  <th>type</th>
+                  <th>parent</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of llmDraft; track a.varCode) {
+                  <tr>
+                    <td>{{ a.varCode }}</td>
+                    <td>{{ a.varName }}</td>
+                    <td>{{ a.varPath }}</td>
+                    <td>{{ a.varType }}/{{ a.varDataType || '—' }}</td>
+                    <td>{{ a.parentVarCode || a.parent_id || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    @if (!selectedModelCode) {
+      <p class="empty-hint">Нет доступных моделей договора для тенанта.</p>
+    } @else if (loadingTree) {
+      <p class="empty-hint">Загрузка схемы…</p>
+    } @else {
+      <div class="schema-tree-toolbar">
+        <mat-slide-toggle
+          [(ngModel)]="showDeletedSchemaTree"
+          (ngModelChange)="onShowDeletedSchemaChange()"
+        >
+          Показывать скрытые
+        </mat-slide-toggle>
+      </div>
+
+      <app-tree-table
+        #schemaTreeTable
+        [rows]="treeTableData"
+        [displayedColumns]="treeTableDisplayedColumns"
+        [showDeleted]="showDeletedSchemaTree"
+        (rowSoftDeleted)="onTreeTableDelete($event)"
+        (rowVarUpdated)="onSchemaTreeRowUpdated($event)"
+        (rowChildCreate)="onSchemaTreeChildCreate($event)"
+      >
+        <ng-template #nameCell let-item>
+          <span class="schema-tree-name-cell">
+            <span class="schema-tree-name-text">{{ item.varName }}</span>
+          </span>
+        </ng-template>
+        <ng-template #actionsCell let-item>
+          <span class="tree-table-actions">
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="'Изменить: ' + item.varName"
+              matTooltip="Изменить"
+              (click)="onTreeTableEdit(item); $event.stopPropagation()"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="'Создать дочерний элемент для: ' + item.varName"
+              (click)="onTreeTableCreate(item); $event.stopPropagation()"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+          </span>
+        </ng-template>
+      </app-tree-table>
+    }
+  </div>
+</div>

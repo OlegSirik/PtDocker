@@ -1,12 +1,14 @@
 package ru.pt.api.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.Builder;
 
+/** {@code varCdm} в старых LOB JSON игнорируется при чтении. */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
 @Getter
 @AllArgsConstructor
@@ -29,9 +31,6 @@ public class LobVar {
 
     @JsonProperty("varValue")
     private String varValue;
-    
-    @JsonProperty("varCdm")
-    private String varCdm;
 
     @JsonProperty("varNr")
     private String varNr;

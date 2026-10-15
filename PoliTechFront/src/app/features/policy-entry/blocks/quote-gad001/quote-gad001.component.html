@@ -1,0 +1,108 @@
+<div class="quote-layout">
+  <div class="quote-left">
+    <mat-card class="policy-plaque">
+      <mat-card-header>
+        <mat-card-title>Объект страхования — техника</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="fields-grid">
+        <label class="field">
+          <span>Наименование</span>
+          <input type="text" [value]="device()?.deviceName || ''" (change)="onDeviceName($event)" />
+        </label>
+        <label class="field">
+          <span>Тип устройства</span>
+          <select [value]="device()?.deviceTypeCode || 'PHONE'" (change)="onDeviceType($event)">
+            @for (opt of deviceTypeOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span>Бренд</span>
+          <input type="text" [value]="device()?.tradeMark || ''" (change)="onTradeMark($event)" />
+        </label>
+        <label class="field">
+          <span>Модель</span>
+          <input type="text" [value]="device()?.model || ''" (change)="onModel($event)" />
+        </label>
+        <label class="field">
+          <span>Серийный номер</span>
+          <input type="text" [value]="device()?.serialNr || ''" (change)="onSerialNr($event)" />
+        </label>
+        <label class="field">
+          <span>IMEI</span>
+          <input type="text" [value]="device()?.imei || ''" (change)="onImei($event)" />
+        </label>
+        <label class="field">
+          <span>Стоимость устройства</span>
+          <input
+            type="number"
+            [value]="device()?.devicePrice ?? ''"
+            (change)="onDevicePrice($event)"
+          />
+        </label>
+        <label class="field">
+          <span>Страховая сумма</span>
+          <input type="text" [value]="insured()?.sumInsured || ''" (change)="onSumInsured($event)" />
+        </label>
+        <label class="field">
+          <span>Пакет</span>
+          <select [value]="insured()?.packageCode ?? '0'" (change)="onPackage($event)">
+            @for (pkg of packageOptions; track pkg.value) {
+              <option [value]="pkg.value">{{ pkg.label }}</option>
+            }
+          </select>
+        </label>
+      </mat-card-content>
+    </mat-card>
+
+    <app-policy-term-block />
+  </div>
+
+  <div class="quote-right">
+    <mat-card class="policy-plaque result-plaque">
+      <mat-card-header>
+        <mat-card-title>Страхование техники</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="muted">Срок страхования</p>
+        <p>
+          с {{ store.dateInputValue(policy().startDate) || '—' }},
+          {{ termLabel() }}
+        </p>
+        <p>Пакет: {{ packageLabel() }}</p>
+
+        <div class="actions">
+          <button mat-flat-button color="primary" type="button" (click)="quote()" [disabled]="loading()">
+            Рассчитать
+          </button>
+          @if (loading()) {
+            <mat-spinner diameter="28"></mat-spinner>
+          }
+        </div>
+
+        @if (quoted() || ((policy().premium ?? 0) > 0)) {
+          <p class="premium">
+            Премия:
+            <strong>{{ policy().premium ?? 0 | currency:'RUB':'symbol-narrow':'1.0-2' }}</strong>
+          </p>
+        }
+
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <button
+          mat-flat-button
+          color="accent"
+          class="issue-btn"
+          type="button"
+          (click)="issue()"
+          [disabled]="!canIssue()"
+        >
+          Оформить
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

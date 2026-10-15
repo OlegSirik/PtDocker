@@ -32,6 +32,10 @@
         <button mat-button [routerLink]="['/', tenantCode, 'admin', 'accounts', '1']" class="nav-button">Аккаунты</button>
       }
 
+      @if (user && hasRole(TOOLBAR_ROLE.TNT_ADMIN)) {
+        <button mat-button [routerLink]="['/', tenantCode, 'admin', 'contract-schema']" class="nav-button">Схема договора</button>
+      }
+
       @if (user) {
         <button mat-icon-button type="button" class="theme-toggle-button" [attr.aria-label]="isDarkMode ? 'Светлая тема' : 'Темная тема'" (click)="toggleTheme()">
           <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>

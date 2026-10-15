@@ -41,7 +41,7 @@ export class LoginDialogComponent {
   ) {
 
     this.isEditMode = !!data.login;
-    this.tenantCode = data.tenantCode;
+    this.tenantCode = data.tenantCode || data.login?.tenantCode || '';
 
     this.loginForm = this.fb.group({
       fullName: [data.login?.fullName || '', Validators.required],
@@ -76,7 +76,7 @@ export class LoginDialogComponent {
     }
 
     const formValue = this.loginForm.value;
-    
+
     // Get tenantId from current user
     this.authService.currentUser$.pipe(take(1)).subscribe((user: any) => {
       if (!user) {
@@ -85,9 +85,17 @@ export class LoginDialogComponent {
         return;
       }
 
-      //const tenantCode = user.tenantCode;
+      const tenantCode = this.tenantCode || user.tenantCode || '';
+      if (!tenantCode) {
+        console.error('Tenant code is required to create/update login');
+        this.dialogRef.close({ success: false, error: 'Tenant code is required' });
+        return;
+      }
+      this.tenantCode = tenantCode;
+
+      const impHeaders = { 'X-Imp-Tenant': tenantCode };
       const loginData: Login = {
-        tenantCode: this.tenantCode,
+        tenantCode,
         userLogin: formValue.userLogin,
         password: formValue.password || '',
         fullName: formValue.fullName,
@@ -97,11 +105,11 @@ export class LoginDialogComponent {
       if (this.isEditMode && this.data.login?.id) {
         // Update existing login
         loginData.id = this.data.login.id;
-        this.loginService.update( this.data.login.id, loginData, {'X-Imp-Tenant': this.tenantCode}).subscribe({
+        this.loginService.update(this.data.login.id, loginData, impHeaders).subscribe({
           next: () => {
             // If password was changed, update password separately
             if (this.changePassword && formValue.password) {
-              this.loginService.updatePassword(formValue.userLogin, this.tenantCode, formValue.password).subscribe({
+              this.loginService.updatePassword(formValue.userLogin, tenantCode, formValue.password).subscribe({
                 next: () => {
                   this.dialogRef.close({ success: true, action: 'update' });
                 },
@@ -121,11 +129,11 @@ export class LoginDialogComponent {
         });
       } else {
         // Create new login
-        this.loginService.create(loginData, {'X-Imp-Tenant': this.tenantCode}).subscribe({
+        this.loginService.create(loginData, impHeaders).subscribe({
           next: () => {
             // Update password after creating login
             if (formValue.password) {
-              this.loginService.updatePassword(formValue.userLogin, this.tenantCode, formValue.password).subscribe({
+              this.loginService.updatePassword(formValue.userLogin, tenantCode, formValue.password).subscribe({
                 next: () => {
                   this.dialogRef.close({ success: true, action: 'create', login: loginData });
                 },
@@ -152,8 +160,15 @@ export class LoginDialogComponent {
       return;
     }
 
+    const tenantCode = this.tenantCode || this.data.login.tenantCode || '';
+    if (!tenantCode) {
+      console.error('Tenant code is required to delete login');
+      this.dialogRef.close({ success: false, error: 'Tenant code is required' });
+      return;
+    }
+
     if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      this.loginService.delete(this.data.login.id, {'X-Imp-Tenant': this.tenantCode}).subscribe({
+      this.loginService.delete(this.data.login.id, { 'X-Imp-Tenant': tenantCode }).subscribe({
         next: () => {
           this.dialogRef.close({ success: true, action: 'delete' });
         },

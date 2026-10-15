@@ -9,16 +9,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.api.dto.exception.NotFoundException;
+import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
+import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.schema.SchemaService;
 import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.product.entity.AttributeDefEntity;
@@ -35,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,6 +57,8 @@ public class SchemaServiceImpl implements SchemaService {
 
     private final ContractModelRepository contractModelRepository;
     private final AttributeDefRepository attributeDefRepository;
+    /** {@link ObjectProvider} — без цикла конструктора с {@link LobServiceImpl} (он зависит от SchemaService). */
+    private final ObjectProvider<LobService> lobService;
     private final AuthorizationService authorizationService;
     private final SecurityContextHelper securityContextHelper;
    
@@ -93,75 +97,142 @@ public class SchemaServiceImpl implements SchemaService {
         return t == null ? VarDataType.STRING.name() : t.name();
     }
 
-    /** Имя поля в JSON: {@code code}, иначе {@code varCode}. */
-    private static String attributeJsonKey(AttributeDefEntity e) {
-        if (e.getCode() != null && !e.getCode().isBlank()) {
-            return e.getCode().trim();
-        }
-        return e.getVarCode() != null ? e.getVarCode() : "";
-    }
-
     /**
-     * Лист без детей — строка-заглушка {@code ""} (или число/логика по {@code var_data_type});
-     * при {@code var_cardinality = MULT} — массив из одного шаблонного элемента {@code [""]} / {@code [0]}.
-     * Узел с детьми — объект с ключами-потомками; при MULT — один шаблон элемента: {@code [{ ... }]}.
+     * Metadata JSON собирается по {@code var_path} (JsonPath), не по {@code var_code} и не по дереву
+     * {@code parent_id}. Фильтры {@code [?()]} / {@code [*]} / {@code []} для записи скелета
+     * сводятся к {@code [0]}.
      */
-    private JsonNode buildAttributeJsonSubtree(
-            AttributeDefEntity e,
-            Map<Long, List<AttributeDefEntity>> childrenByParent) {
-        List<AttributeDefEntity> raw = childrenByParent.getOrDefault(e.getId(), List.of());
-        if (raw.isEmpty()) {
-            JsonNode leaf = leafTemplateNode(e);
-            if (isMultCardinality(e)) {
-                ArrayNode arr = objectMapper.createArrayNode();
-                arr.add(leaf);
-                return arr;
-            }
-            return leaf;
-        }
-        List<AttributeDefEntity> kids = new ArrayList<>(raw);
-        kids.sort(SCHEMA_TREE_ORDER);
-        ObjectNode childObject = buildChildObjectNode(kids, childrenByParent);
-        if (isMultCardinality(e)) {
-            ArrayNode arr = objectMapper.createArrayNode();
-            if (!childObject.isEmpty()) {
-                arr.add(childObject);
-            }
-            return arr;
-        }
-        return childObject;
-    }
-
-    private ObjectNode buildChildObjectNode(
-            List<AttributeDefEntity> kids,
-            Map<Long, List<AttributeDefEntity>> childrenByParent) {
-        ObjectNode obj = objectMapper.createObjectNode();
-        for (AttributeDefEntity c : kids) {
-            String key = attributeJsonKey(c);
-            if (!key.isEmpty()) {
-                obj.set(key, buildAttributeJsonSubtree(c, childrenByParent));
-            }
-        }
-        return obj;
-    }
-
-    private static String normalizedVarCardinality(String cardinality) {
-        if (cardinality == null || cardinality.isBlank()) {
+    private static String normalizePathForSkeleton(String varPath) {
+        if (varPath == null) {
             return "";
         }
-        return cardinality.trim().toUpperCase(Locale.ROOT);
+        String s = varPath.trim();
+        if (s.isEmpty() || "*".equals(s) || "null".equalsIgnoreCase(s)) {
+            return "";
+        }
+        if (s.startsWith("$.")) {
+            s = s.substring(2);
+        } else if (s.startsWith("$")) {
+            s = s.substring(1);
+            if (s.startsWith(".")) {
+                s = s.substring(1);
+            }
+        }
+        s = s.replaceAll("\\[\\?\\([^\\]]*\\)\\]", "[0]");
+        s = s.replace("[*]", "[0]");
+        s = s.replace("[]", "[0]");
+        return s.trim();
     }
 
-    /**
-     * Повторяемость по {@code var_cardinality}: {@code MULT} / {@code MULTIPLE} — узел в JSON — массив
-     * (шаблон: один элемент в массиве).
-     */
-    private static boolean isMultCardinality(AttributeDefEntity e) {
-        String c = normalizedVarCardinality(e.getVarCardinality());
-        return "MULT".equals(c) || "MULTIPLE".equals(c);
+    private record PathSeg(String name, int index, boolean arrayIndex) {
+        static PathSeg prop(String name) {
+            return new PathSeg(name, -1, false);
+        }
+
+        static PathSeg index(int index) {
+            return new PathSeg(null, index, true);
+        }
     }
 
-    /** Заглушка для листа метаданных (без дочерних узлов в дереве атрибутов). */
+    private static List<PathSeg> parseNormalizedPath(String path) {
+        List<PathSeg> segs = new ArrayList<>();
+        int i = 0;
+        while (i < path.length()) {
+            char ch = path.charAt(i);
+            if (ch == '.') {
+                i++;
+                continue;
+            }
+            if (ch == '[') {
+                int end = path.indexOf(']', i);
+                if (end < 0) {
+                    break;
+                }
+                String inside = path.substring(i + 1, end).trim();
+                try {
+                    segs.add(PathSeg.index(Integer.parseInt(inside)));
+                } catch (NumberFormatException ignored) {
+                    return List.of();
+                }
+                i = end + 1;
+                continue;
+            }
+            int start = i;
+            while (i < path.length()) {
+                char c = path.charAt(i);
+                if (c == '.' || c == '[') {
+                    break;
+                }
+                i++;
+            }
+            String name = path.substring(start, i).trim();
+            if (!name.isEmpty()) {
+                segs.add(PathSeg.prop(name));
+            }
+        }
+        return segs;
+    }
+
+    /** Запись значения по нормализованному пути; создаёт промежуточные object/array. */
+    private void putAtPath(ObjectNode root, String normalizedPath, JsonNode value) {
+        List<PathSeg> segs = parseNormalizedPath(normalizedPath);
+        if (segs.isEmpty()) {
+            return;
+        }
+        JsonNode cursor = root;
+        for (int i = 0; i < segs.size() - 1; i++) {
+            PathSeg seg = segs.get(i);
+            PathSeg next = segs.get(i + 1);
+            if (seg.arrayIndex()) {
+                if (!(cursor instanceof ArrayNode arr)) {
+                    return;
+                }
+                while (arr.size() <= seg.index()) {
+                    arr.addNull();
+                }
+                JsonNode el = arr.get(seg.index());
+                if (next.arrayIndex()) {
+                    if (!(el instanceof ArrayNode)) {
+                        el = objectMapper.createArrayNode();
+                        arr.set(seg.index(), el);
+                    }
+                } else if (!(el instanceof ObjectNode)) {
+                    el = objectMapper.createObjectNode();
+                    arr.set(seg.index(), el);
+                }
+                cursor = el;
+            } else {
+                if (!(cursor instanceof ObjectNode obj)) {
+                    return;
+                }
+                JsonNode child = obj.get(seg.name());
+                if (next.arrayIndex()) {
+                    if (!(child instanceof ArrayNode)) {
+                        child = objectMapper.createArrayNode();
+                        obj.set(seg.name(), child);
+                    }
+                } else if (!(child instanceof ObjectNode)) {
+                    child = objectMapper.createObjectNode();
+                    obj.set(seg.name(), child);
+                }
+                cursor = child;
+            }
+        }
+        PathSeg last = segs.get(segs.size() - 1);
+        if (last.arrayIndex()) {
+            if (!(cursor instanceof ArrayNode arr)) {
+                return;
+            }
+            while (arr.size() <= last.index()) {
+                arr.addNull();
+            }
+            arr.set(last.index(), value);
+        } else if (cursor instanceof ObjectNode obj) {
+            obj.set(last.name(), value);
+        }
+    }
+
+    /** Заглушка для листа метаданных. */
     private JsonNode leafTemplateNode(AttributeDefEntity e) {
         JsonNodeFactory f = objectMapper.getNodeFactory();
         if (e.getVarValue() != null && !e.getVarValue().isBlank()) {
@@ -177,123 +248,95 @@ public class SchemaServiceImpl implements SchemaService {
         return f.textNode("");
     }
 
-    private static boolean varCodeInValues(AttributeDefEntity e, Map<String, String> varValues) {
-        String vc = e.getVarCode();
-        return vc != null && varValues.containsKey(vc);
+    /** Карта значений для metadata: ключ = {@code var_path} (сырой или нормализованный), не {@code var_code}. */
+    private static String lookupByVarPath(AttributeDefEntity e, Map<String, String> varValues) {
+        if (varValues == null || varValues.isEmpty()) {
+            return null;
+        }
+        String raw = e.getVarPath();
+        if (raw != null) {
+            String trimmed = raw.trim();
+            if (!trimmed.isEmpty() && varValues.containsKey(trimmed)) {
+                return varValues.get(trimmed);
+            }
+        }
+        String norm = normalizePathForSkeleton(raw);
+        if (!norm.isEmpty() && varValues.containsKey(norm)) {
+            return varValues.get(norm);
+        }
+        return null;
     }
 
     private static boolean keepByFilter(AttributeDefEntity e, Map<String, String> varValues) {
-        return e.isSystem() || varCodeInValues(e, varValues);
+        return e.isSystem() || lookupByVarPath(e, varValues) != null;
     }
+
+    private static boolean isSchemaLeaf(
+            AttributeDefEntity e, Map<Long, List<AttributeDefEntity>> childrenByParent) {
+        return childrenByParent.getOrDefault(e.getId(), List.of()).isEmpty();
+    }
+
+    private JsonNode leafValueNode(AttributeDefEntity e, Map<String, String> varValuesOrNull) {
+        if (varValuesOrNull == null) {
+            return leafTemplateNode(e);
+        }
+        String fromMap = lookupByVarPath(e, varValuesOrNull);
+        if (fromMap != null) {
+            return objectMapper.getNodeFactory().textNode(fromMap);
+        }
+        return objectMapper.getNodeFactory().textNode(e.getVarValue() != null ? e.getVarValue() : "");
+    }
+
+    /** Порядок полей в metadata JSON: {@code var_ord}, затем {@code id}. */
+    private static final Comparator<AttributeDefEntity> METADATA_VAR_ORD =
+            Comparator
+                    .comparing((AttributeDefEntity e) -> e.getVarOrd() != null ? e.getVarOrd() : Long.MAX_VALUE)
+                    .thenComparing(AttributeDefEntity::getId, Comparator.nullsLast(Long::compareTo));
 
     /**
-     * Лист — строка из {@code varValues} по {@code var_code} или {@code var_value} схемы;
-     * иначе объект/массив из отфильтрованных потомков. Узел не попадает в JSON, если он не
-     * {@link #keepByFilter} и не имеет непустых потомков; пустые контейнеры при {@code MULT}
-     * отбрасываются, кроме случая когда сам узел {@link #keepByFilter} — тогда остаётся {@code {}} или {@code [{}]}.
+     * Скелет / пример JSON: листья {@code IN} кладутся по нормализованному {@code var_path}
+     * в порядке {@code var_ord} (порядок ключей в ObjectNode = порядок вставки).
+     * {@code varValuesOrNull == null} — полный скелет; иначе system + пути из карты
+     * (ключи карты — JsonPath / {@code var_path}, не {@code var_code}).
      */
-    private Optional<JsonNode> buildFilteredAttributeSubtree(
-            AttributeDefEntity e,
-            Map<Long, List<AttributeDefEntity>> childrenByParent,
-            Map<String, String> varValues) {
-        List<AttributeDefEntity> raw = childrenByParent.getOrDefault(e.getId(), List.of());
-        boolean hasKids = !raw.isEmpty();
-
-        if (!hasKids) {
-            if (!keepByFilter(e, varValues)) {
-                return Optional.empty();
-            }
-            String vc = e.getVarCode();
-            String text;
-            if (vc != null && varValues.containsKey(vc)) {
-                String v = varValues.get(vc);
-                text = v != null ? v : "";
-            } else {
-                text = e.getVarValue() != null ? e.getVarValue() : "";
-            }
-            JsonNode leaf = objectMapper.getNodeFactory().textNode(text);
-            if (isMultCardinality(e)) {
-                ArrayNode arr = objectMapper.createArrayNode();
-                arr.add(leaf);
-                return Optional.of(arr);
-            }
-            return Optional.of(leaf);
-        }
-
-        List<AttributeDefEntity> kids = new ArrayList<>(raw);
-        kids.sort(SCHEMA_TREE_ORDER);
-
-        ObjectNode childObject = objectMapper.createObjectNode();
-        for (AttributeDefEntity c : kids) {
-            String key = attributeJsonKey(c);
-            if (!key.isEmpty()) {
-                buildFilteredAttributeSubtree(c, childrenByParent, varValues)
-                        .ifPresent(node -> childObject.set(key, node));
+    private ObjectNode buildMetadataDocumentByJsonPath(
+            List<AttributeDefEntity> rows, Map<String, String> varValuesOrNull) {
+        Map<Long, List<AttributeDefEntity>> childrenByParent = new HashMap<>();
+        for (AttributeDefEntity row : rows) {
+            Long pid = row.getParentId();
+            if (pid != null) {
+                childrenByParent.computeIfAbsent(pid, k -> new ArrayList<>()).add(row);
             }
         }
-        if (childObject.isEmpty()) {
-            if (!keepByFilter(e, varValues)) {
-                return Optional.empty();
-            }
-            if (isMultCardinality(e)) {
-                ArrayNode arr = objectMapper.createArrayNode();
-                arr.add(objectMapper.createObjectNode());
-                return Optional.of(arr);
-            }
-            return Optional.of(objectMapper.createObjectNode());
-        }
-        if (isMultCardinality(e)) {
-            ArrayNode arr = objectMapper.createArrayNode();
-            arr.add(childObject);
-            return Optional.of(arr);
-        }
-        return Optional.of(childObject);
-    }
 
-    /**
-     * Узлы с {@code parent_id == null} — технические корни; в JSON не выводятся, на верхний уровень
-     * попадают только их прямые потомки.
-     */
-    private void appendMetadataRootsChildrenToDocument(
-            ObjectNode document,
-            List<AttributeDefEntity> roots,
-            Map<Long, List<AttributeDefEntity>> childrenByParent) {
-        for (AttributeDefEntity r : roots) {
-            List<AttributeDefEntity> raw = childrenByParent.getOrDefault(r.getId(), List.of());
-            if (raw.isEmpty()) {
+        List<AttributeDefEntity> leaves = new ArrayList<>();
+        for (AttributeDefEntity e : rows) {
+            String type = e.getVarType() != null ? e.getVarType().trim() : "";
+            if (!"IN".equals(type)) {
                 continue;
             }
-            List<AttributeDefEntity> kids = new ArrayList<>(raw);
-            kids.sort(SCHEMA_TREE_ORDER);
-            for (AttributeDefEntity c : kids) {
-                String key = attributeJsonKey(c);
-                if (!key.isEmpty()) {
-                    document.set(key, buildAttributeJsonSubtree(c, childrenByParent));
-                }
-            }
-        }
-    }
-
-    private void appendFilteredMetadataRootsChildrenToDocument(
-            ObjectNode document,
-            List<AttributeDefEntity> roots,
-            Map<Long, List<AttributeDefEntity>> childrenByParent,
-            Map<String, String> varValues) {
-        for (AttributeDefEntity r : roots) {
-            List<AttributeDefEntity> raw = childrenByParent.getOrDefault(r.getId(), List.of());
-            if (raw.isEmpty()) {
+            if (!isSchemaLeaf(e, childrenByParent)) {
                 continue;
             }
-            List<AttributeDefEntity> kids = new ArrayList<>(raw);
-            kids.sort(SCHEMA_TREE_ORDER);
-            for (AttributeDefEntity c : kids) {
-                String key = attributeJsonKey(c);
-                if (!key.isEmpty()) {
-                    buildFilteredAttributeSubtree(c, childrenByParent, varValues)
-                            .ifPresent(node -> document.set(key, node));
-                }
+            if (varValuesOrNull != null && !keepByFilter(e, varValuesOrNull)) {
+                continue;
             }
+            String path = normalizePathForSkeleton(e.getVarPath());
+            if (path.isEmpty()) {
+                continue;
+            }
+            leaves.add(e);
         }
+        leaves.sort(METADATA_VAR_ORD);
+
+        ObjectNode document = objectMapper.createObjectNode();
+        for (AttributeDefEntity e : leaves) {
+            putAtPath(
+                    document,
+                    normalizePathForSkeleton(e.getVarPath()),
+                    leafValueNode(e, varValuesOrNull));
+        }
+        return document;
     }
 
     private void validateCode(String code, String fieldName) {
@@ -326,10 +369,10 @@ public class SchemaServiceImpl implements SchemaService {
                 .varList(e.getVarList())
                 .isSystem(e.isSystem())
                 .varPath(e.getVarPath())
-                .varCdm(e.getVarCdm())
                 .varValue(e.getVarValue() != null ? e.getVarValue() : "")
                 .isDeleted(false)
-                .name(e.getName())
+                // API-совместимость: name = varName (колонки name в mt_attribute_def больше нет)
+                .name(e.getVarName())
                 .build();
     }
 
@@ -343,12 +386,7 @@ public class SchemaServiceImpl implements SchemaService {
         e.setVarDataType(varDataTypeToDb(v.getVarDataType()));
         e.setVarValue(v.getVarValue());
         e.setVarList(v.getVarList());
-        e.setVarCdm(v.getVarCdm());
         e.setSystem(v.getIsSystem());
-        String displayName = v.getVarName() == null ? null
-                : (v.getVarName().length() > 250 ? v.getVarName().substring(0, 250) : v.getVarName());
-        e.setCode(v.getVarCode());
-        e.setName(displayName);
     }
 
     @Override
@@ -423,15 +461,25 @@ public class SchemaServiceImpl implements SchemaService {
         n.setVarPath(t.getVarPath());
         n.setVarOrd(t.getVarOrd() != null ? t.getVarOrd() : 0L);
         n.setVarType(t.getVarType());
-        n.setVarCardinality(t.getVarCardinality() != null ? t.getVarCardinality() : "SINGLE");
         n.setVarDataType(t.getVarDataType());
         n.setVarValue(t.getVarValue());
-        n.setVarCdm(t.getVarCdm());
         n.setVarList(t.getVarList());
-        n.setCode(t.getCode());
-        n.setName(t.getName());
         n.setSystem(t.isSystem());
         return n;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContractModelDto> listContractModels(Long tenantId) {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tenantId, AuthZ.Action.LIST);
+
+        return contractModelRepository.findByTid(tenantId).stream()
+                .sorted(Comparator
+                        .comparing((ContractModelEntity m) -> m.getName() != null ? m.getName() : "", String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(m -> m.getCode() != null ? m.getCode() : "", String.CASE_INSENSITIVE_ORDER))
+                .map(m -> new ContractModelDto(m.getId(), m.getCode(), m.getName()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -457,24 +505,13 @@ public class SchemaServiceImpl implements SchemaService {
         List<AttributeDefEntity> rows =
                 attributeDefRepository.findByTenantIdAndDocumentId(tenantId, contractCode);
 
-        // delete rows where isDeleted is true and var_type != 'IN','OBJECT'       
-        rows.removeIf(row -> !row.getVarType().equals("IN") && !row.getVarType().equals("OBJECT"));
+        // OBJECT нужны только чтобы отличить листья IN (есть ли дети в дереве схемы)
+        rows.removeIf(row -> {
+            String t = row.getVarType();
+            return t == null || (!t.equals("IN") && !t.equals("OBJECT"));
+        });
 
-        Map<Long, List<AttributeDefEntity>> childrenByParent = new HashMap<>();
-        List<AttributeDefEntity> roots = new ArrayList<>();
-
-        for (AttributeDefEntity row : rows) {
-            Long pid = row.getParentId();
-            if (pid == null) {
-                roots.add(row);
-            } else {
-                childrenByParent.computeIfAbsent(pid, k -> new ArrayList<>()).add(row);
-            }
-        }
-
-        roots.sort(SCHEMA_TREE_ORDER);
-        ObjectNode document = objectMapper.createObjectNode();
-        appendMetadataRootsChildrenToDocument(document, roots, childrenByParent);
+        ObjectNode document = buildMetadataDocumentByJsonPath(rows, null);
         try {
             return objectMapper.writeValueAsString(document);
         } catch (JsonProcessingException ex) {
@@ -486,30 +523,19 @@ public class SchemaServiceImpl implements SchemaService {
     @Transactional(readOnly = true)
     public String getAttributesMetadataJson(Long tenantId, String contractCode, Map<String, String> varValues) {
         AuthenticatedUser user = getCurrentUser();
-        
+
         authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tenantId, AuthZ.Action.LIST);
 
         List<AttributeDefEntity> rows =
                 attributeDefRepository.findByTenantIdAndDocumentId(tenantId, contractCode);
 
-        rows.removeIf(row -> !(row.getVarType().equals("IN") || row.getVarType().equals("OBJECT")));
-
-        Map<Long, List<AttributeDefEntity>> childrenByParent = new HashMap<>();
-        List<AttributeDefEntity> roots = new ArrayList<>();
-
-        for (AttributeDefEntity row : rows) {
-            Long pid = row.getParentId();
-            if (pid == null) {
-                roots.add(row);
-            } else {
-                childrenByParent.computeIfAbsent(pid, k -> new ArrayList<>()).add(row);
-            }
-        }
+        rows.removeIf(row -> {
+            String t = row.getVarType();
+            return t == null || (!t.equals("IN") && !t.equals("OBJECT"));
+        });
 
         Map<String, String> vals = varValues != null ? varValues : Map.of();
-        roots.sort(SCHEMA_TREE_ORDER);
-        ObjectNode document = objectMapper.createObjectNode();
-        appendFilteredMetadataRootsChildrenToDocument(document, roots, childrenByParent, vals);
+        ObjectNode document = buildMetadataDocumentByJsonPath(rows, vals);
         try {
             return objectMapper.writeValueAsString(document);
         } catch (JsonProcessingException ex) {
@@ -545,10 +571,11 @@ public class SchemaServiceImpl implements SchemaService {
         AttributeDefEntity e = new AttributeDefEntity();
         e.setTenantId(tenantId);
         e.setDocumentId(documentId);
-        e.setVarCardinality("SINGLE");
         applyLobVarToEntity(lobVar, e);
         AttributeDefEntity saved = attributeDefRepository.save(e);
         lobVar.setId(saved.getId());
+
+        lobService.getObject().appendSchemaAttributeAsDeleted(tenantId, lobVar);
     }
 
     @Override

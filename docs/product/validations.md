@@ -1,5 +1,7 @@
 # Процесс расчета премии и создания договора
 
+> **Канон:** продуктовый обзор quote/save и валидаторов — [`docs/curdoc/doc.md`](../curdoc/doc.md) **§14.6–14.7**, **§15**; runtime — [`POLICY_QUOTE_SAVE.md`](../../PoliTechAPI/docs/POLICY_QUOTE_SAVE.md). Ниже — исторический продуктовый взгляд на этапы.
+
 ## Общая схема
 
 ```text

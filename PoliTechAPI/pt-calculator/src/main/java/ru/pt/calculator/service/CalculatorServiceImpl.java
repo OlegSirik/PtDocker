@@ -359,12 +359,17 @@ public class CalculatorServiceImpl implements CalculatorService {
         newJson.setVersionNo(versionNo);
         newJson.setPackageNo(packageNo);
 
-        // delete newJson vars where varCdm is not CALCULATOR
-        String a1 = Integer.toString(newJson.getVars().size());
-        
-        newJson.getVars().removeIf(var -> !var.getVarCdm().equalsIgnoreCase("CALCULATOR"));
-
-        String a2 = Integer.toString(newJson.getVars().size());
+        // Keep only calculator-owned vars. Null/blank varCdm (e.g. after LLM) → treat as CALCULATOR.
+        if (newJson.getVars() == null) {
+            newJson.setVars(new ArrayList<>());
+        }
+        for (PvVar var : newJson.getVars()) {
+            if (var != null && (var.getVarCdm() == null || var.getVarCdm().isBlank())) {
+                var.setVarCdm("CALCULATOR");
+            }
+        }
+        newJson.getVars().removeIf(var ->
+                var == null || !"CALCULATOR".equalsIgnoreCase(var.getVarCdm()));
 
         String calculatorJson;
         try {

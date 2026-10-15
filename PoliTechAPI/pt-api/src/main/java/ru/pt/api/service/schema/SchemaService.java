@@ -1,5 +1,6 @@
 package ru.pt.api.service.schema;
 
+import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobVar;
 
 import java.util.List;
@@ -15,6 +16,11 @@ public interface SchemaService {
     void newTenantCreated(Long tid);
 
     /**
+     * Список моделей договора тенанта ({@code mt_contract_model}).
+     */
+    List<ContractModelDto> listContractModels(Long tenantId);
+
+    /**
      * Дерево атрибутов схемы договора ({@code mt_attribute_def}).
      *
      * @param tenantCode код тенанта из URL
@@ -23,21 +29,23 @@ public interface SchemaService {
     List<LobVar> getAttributes(Long tenantId, String contractCode);
 
     /**
-     * JSON template from attribute tree. Rows with {@code parent_id == null} are technical roots and
-     * are omitted; top-level JSON fields are their direct children, then by {@code parent_id}.
-     * Field name: {@code code} or else {@code varCode}; leaf {@code ""}; else nested structure.
+     * JSON-скелет по листьям схемы: структура и имена полей из нормализованного {@code var_path}
+     * (JsonPath; {@code [?()]} / {@code [*]} → {@code [0]}), значения-заглушки по {@code var_data_type}.
+     * {@code var_code} только идентифицирует атрибут, в ключи JSON не попадает.
      */
     String getAttributesMetadataJson(Long tenantId, String contractCode);
 
     /**
-     * Как {@link #getAttributesMetadataJson(String, String)}, но в дереве остаются только узлы с
-     * {@code isSystem == true} или с {@code var_code}, присутствующим в {@code varValues}.
-     * Для ключей из {@code varValues} подставляется соответствующее значение; для системных полей
-     * вне карты — {@code var_value} из схемы. Пустые {@code OBJECT}/{@code ARRAY} после фильтрации
-     * из результата исключаются.
+     * Как {@link #getAttributesMetadataJson(Long, String)}, но только листья {@code IN} с
+     * {@code isSystem} или {@code var_path} из {@code varValues}. Ключи карты — JsonPath
+     * ({@code var_path}), не {@code var_code}; размещение в JSON — по тому же path.
      */
     String getAttributesMetadataJson(Long tenantId, String contractCode, Map<String, String> varValues);
 
+    /**
+     * Создать атрибут в схеме; копия добавляется в {@code mpVars} всех активных LOB тенанта
+     * ({@code pt_lobs}) с {@code isDeleted = true}.
+     */
     void addAttribute(Long tenantId, String contractCode, LobVar lobVar);
 
     void updateAttribute(Long tenantId, String contractCode, LobVar lobVar);

@@ -5,6 +5,7 @@ import ru.pt.api.dto.llm.LlmAssistResponse;
 import ru.pt.api.dto.llm.LlmCalculatorAssistRequest;
 import ru.pt.api.dto.llm.LlmCalculatorAssistResponse;
 import ru.pt.api.dto.llm.LlmLobAssistRequest;
+import ru.pt.api.dto.llm.LlmSchemaAssistRequest;
 import ru.pt.api.security.AuthenticatedUser;
 
 public interface LlmAssistantService {
@@ -12,6 +13,8 @@ public interface LlmAssistantService {
     LlmAssistResponse assist(LlmAssistRequest request, AuthenticatedUser user);
 
     LlmAssistResponse assistLob(LlmLobAssistRequest request, AuthenticatedUser user);
+
+    LlmAssistResponse assistSchema(LlmSchemaAssistRequest request, AuthenticatedUser user);
 
     LlmCalculatorAssistResponse assistCalculator(LlmCalculatorAssistRequest request, AuthenticatedUser user);
 }
