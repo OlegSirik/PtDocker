@@ -142,6 +142,34 @@ override  getUrl(id?: (number | string)): string {
       io['person'] = { ...personFromInsured };
     }
 
+    const device = insured?.device;
+    if (device && (insured?.ioType === 'DEVICE' || device.tradeMark || device.model || device.imei || device.serialNr)) {
+      const d: Record<string, unknown> = {};
+      for (const key of [
+        'deviceName',
+        'deviceTypeCode',
+        'tradeMark',
+        'model',
+        'serialNr',
+        'licenseKey',
+        'imei',
+        'osName',
+        'osVersion',
+        'countryCode',
+      ] as const) {
+        const v = device[key];
+        if (v != null && String(v).trim() !== '') {
+          d[key] = String(v).trim();
+        }
+      }
+      if (device.devicePrice != null && !Number.isNaN(Number(device.devicePrice))) {
+        d['devicePrice'] = Number(device.devicePrice);
+      }
+      if (Object.keys(d).length > 0) {
+        io['device'] = d;
+      }
+    }
+
     const body: Record<string, unknown> = {
       productCode: policy.productCode,
       statusCode: 'DRAFT',

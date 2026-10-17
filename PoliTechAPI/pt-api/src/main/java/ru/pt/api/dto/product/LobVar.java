@@ -53,6 +53,13 @@ public class LobVar {
     @JsonProperty("name")
     private String name;
 
+    /**
+     * Статус в схеме договора ({@code mt_attribute_def.default_state}): ENABLED / DISABLED.
+     * При создании LOB атрибуты DISABLED копируются с {@code isDeleted = true}.
+     */
+    @JsonProperty("defaultState")
+    private String defaultState;
+
     // Constructors
     public LobVar() {
     }
@@ -100,5 +107,13 @@ public class LobVar {
     }
     public void setName(String name) {
         this.name = name;
-    }           
+    }
+
+    public String getDefaultState() {
+        return defaultState;
+    }
+
+    public void setDefaultState(String defaultState) {
+        this.defaultState = defaultState;
+    }
 }

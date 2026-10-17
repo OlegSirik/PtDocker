@@ -32,26 +32,37 @@
   <div class="pt-box">
     <div class="pt-box-title-row">
       <h3 class="pt-box-title">Схема договора</h3>
-      <button
-        mat-stroked-button
-        type="button"
-        [disabled]="!selectedModelCode || loadingTree || generatingExample"
-        (click)="generateExampleJson()"
-      >
-        Сгенерить пример
-      </button>
+      <div class="pt-box-title-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [class.agent-toggle-active]="showLlmAgentCard"
+          [disabled]="!selectedModelCode"
+          (click)="showLlmAgentCard = !showLlmAgentCard"
+        >
+          AI-агент
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!selectedModelCode || loadingTree || generatingExample"
+          (click)="generateExampleJson()"
+        >
+          Сгенерить пример
+        </button>
+      </div>
     </div>
     <h4 class="pt-box-subtitle">
       Схема договора, используется для хранения договора и передачи договора по АПИ.
     </h4>
 
-    @if (selectedModelCode) {
-      <div class="schema-llm-box">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Запрос к LLM</mat-label>
+    @if (showLlmAgentCard && selectedModelCode) {
+      <div class="llm-agent-box schema-llm-box">
+        <mat-form-field appearance="outline" class="full-width llm-text-field">
+          <mat-label>Команда для AI-агента</mat-label>
           <textarea
             matInput
-            rows="2"
+            rows="3"
             [(ngModel)]="llmText"
             placeholder="Например: добавь марку, модель и VIN для объекта страхования авто"
           ></textarea>
@@ -70,7 +81,7 @@
             [disabled]="!llmReady || askingLlm || applyingLlm || !(llmText || '').trim()"
             (click)="askLlm()"
           >
-            {{ askingLlm ? 'Запрос…' : 'Спросить LLM' }}
+            {{ askingLlm ? 'Запрос…' : 'Выполнить' }}
           </button>
           @if (llmDraft.length) {
             <button
@@ -150,12 +161,37 @@
         (rowChildCreate)="onSchemaTreeChildCreate($event)"
       >
         <ng-template #nameCell let-item>
-          <span class="schema-tree-name-cell">
+          <span
+            class="schema-tree-name-cell"
+            [class.is-disabled]="item.defaultState === 'DISABLED'"
+          >
             <span class="schema-tree-name-text">{{ item.varName }}</span>
+            @if (item.defaultState === 'DISABLED') {
+              <span class="schema-tree-state-badge">DISABLED</span>
+            }
           </span>
         </ng-template>
         <ng-template #actionsCell let-item>
           <span class="tree-table-actions">
+            <button
+              mat-icon-button
+              type="button"
+              class="state-toggle-btn"
+              [class.is-off]="item.defaultState === 'DISABLED'"
+              [matTooltip]="
+                item.defaultState === 'DISABLED'
+                  ? 'Включить (ENABLED)'
+                  : 'Отключить (DISABLED)'
+              "
+              [attr.aria-label]="
+                (item.defaultState === 'DISABLED' ? 'Включить: ' : 'Отключить: ') + item.varName
+              "
+              (click)="onToggleDefaultState(item); $event.stopPropagation()"
+            >
+              <mat-icon>{{
+                item.defaultState === 'DISABLED' ? 'toggle_off' : 'toggle_on'
+              }}</mat-icon>
+            </button>
             <button
               mat-icon-button
               type="button"
@@ -165,14 +201,17 @@
             >
               <mat-icon>edit</mat-icon>
             </button>
-            <button
-              mat-icon-button
-              type="button"
-              [attr.aria-label]="'Создать дочерний элемент для: ' + item.varName"
-              (click)="onTreeTableCreate(item); $event.stopPropagation()"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
+            @if (isObjectVarTypeRow(item)) {
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Добавить дочерний элемент"
+                [attr.aria-label]="'Создать дочерний элемент для: ' + item.varName"
+                (click)="onTreeTableCreate(item); $event.stopPropagation()"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+            }
           </span>
         </ng-template>
       </app-tree-table>

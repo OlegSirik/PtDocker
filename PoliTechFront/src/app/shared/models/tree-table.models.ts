@@ -21,6 +21,8 @@ export interface SchemaTreeApiRow {
   varList?: string | null;
   isSystem?: boolean;
   isDeleted?: boolean;
+  /** ENABLED / DISABLED — mt_attribute_def.default_state */
+  defaultState?: string | null;
   /**
    * Deprecated: колонки name в mt_attribute_def нет.
    * Клиент заполняет из varName для совместимости TreeTableSourceRow.name.
@@ -47,6 +49,7 @@ export function schemaTreeApiRowToSourceRow(row: SchemaTreeApiRow): TreeTableSou
     varDataType: row.varDataType ?? undefined,
     isSystem: row.isSystem ?? false,
     isDeleted: row.isDeleted ?? false,
+    defaultState: (row.defaultState || 'ENABLED').toUpperCase() === 'DISABLED' ? 'DISABLED' : 'ENABLED',
     varList: row.varList ?? undefined,
     varPath: row.varPath ?? '',
     varValue: row.varValue ?? '',
@@ -90,6 +93,8 @@ export interface TreeTableSourceRow {
   varType?: string; // "varType": "OBJECT" или все остальное
   varDataType?: string;
   isSystem?: boolean; // признак системной переменной (если true, то строка не удаляется из дерева)
+  /** Статус схемы: ENABLED / DISABLED (mt_attribute_def.default_state) */
+  defaultState?: 'ENABLED' | 'DISABLED';
   /** Тарифный фактор (PvVar / продукт) */
   isTarifFactor?: boolean;
   /** Опциональная переменная (PvVar / продукт) */

@@ -121,10 +121,10 @@
         @if (showLlmAgentCard) {
           <div class="pt-box llm-agent-box">
             <div class="pt-box-title-row">
-              <h3 class="pt-box-title">Агент</h3>
+              <h3 class="pt-box-title">AI-агент</h3>
             </div>
             <mat-form-field appearance="outline" class="llm-text-field">
-              <mat-label>Команда для агента</mat-label>
+              <mat-label>Команда для AI-агента</mat-label>
               <textarea
                 matInput
                 rows="3"
@@ -160,7 +160,7 @@
                 [class.agent-toggle-active]="showLlmAgentCard"
                 (click)="showLlmAgentCard = !showLlmAgentCard"
               >
-                Агент
+                AI-агент
               </button>
               <button mat-flat-button type="button" (click)="addCover()">
                 Добавить

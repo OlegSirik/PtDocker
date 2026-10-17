@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { PolicyDraftStore } from '../../state/policy-draft.store';
 
 @Component({
   selector: 'app-payment-block',
@@ -11,6 +12,8 @@ import { MatCardModule } from '@angular/material/card';
   styleUrl: './payment-block.component.scss'
 })
 export class PaymentBlockComponent {
+  readonly store = inject(PolicyDraftStore);
+
   /** Заглушка — без API (todo §0.10) */
   onPaid(): void {}
 }

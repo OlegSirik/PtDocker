@@ -28,6 +28,7 @@ import ru.pt.product.entity.ProductEntity;
 import ru.pt.product.repository.LobRepository;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.schema.AttributeDefaultState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -159,12 +160,17 @@ public class LobServiceImpl implements LobService {
             schemaVarMap.put(schemaVar.getVarCode(), schemaVar);
         }
         for (LobVar payloadVar : payload.getMpVars()) {
-            LobVar schemaVar = schemaVarMap.get(payloadVar.getVarCode());   
+            LobVar schemaVar = schemaVarMap.get(payloadVar.getVarCode());
             if (schemaVar != null) {
                 payloadVar.setId(schemaVar.getId());
                 payloadVar.setParent_id(schemaVar.getParent_id());
                 payloadVar.setIsSystem(schemaVar.getIsSystem());
                 payloadVar.setName(schemaVar.getName());
+                payloadVar.setDefaultState(schemaVar.getDefaultState());
+                // DISABLED в схеме → в LOB isDeleted
+                if (AttributeDefaultState.isDisabled(schemaVar.getDefaultState())) {
+                    payloadVar.setIsDeleted(true);
+                }
             } else {
                 payloadVar.setIsDeleted(true);
             }
@@ -184,7 +190,8 @@ public class LobServiceImpl implements LobService {
         }
 
         for (LobVar schemaVar : schemaLob) {
-            if (!payloadVarCodes.contains(schemaVar.getVarCode())) {
+            if (!payloadVarCodes.contains(schemaVar.getVarCode())
+                    || AttributeDefaultState.isDisabled(schemaVar.getDefaultState())) {
                 schemaVar.setIsDeleted(true);
             }
         }

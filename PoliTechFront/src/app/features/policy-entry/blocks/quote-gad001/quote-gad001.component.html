@@ -11,7 +11,7 @@
         </label>
         <label class="field">
           <span>Тип устройства</span>
-          <select [value]="device()?.deviceTypeCode || 'PHONE'" (change)="onDeviceType($event)">
+          <select [value]="device()?.deviceTypeCode || 'DIGITAL-DEVICE'" (change)="onDeviceType($event)">
             @for (opt of deviceTypeOptions; track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
             }

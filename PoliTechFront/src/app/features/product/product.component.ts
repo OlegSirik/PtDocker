@@ -43,6 +43,7 @@ import { FilesService, FileTemplate } from '../../shared/services/api/files.serv
 import { AuthService } from '../../shared/services/auth.service';
 import { TestRequestService } from '../../shared/services/api/test-request.service';
 import { InsCompanyService, InsuranceCompanyDto } from '../../shared/services/api/ins-company.service';
+import { PolicyFormService, PolicyFormDto } from '../../shared/services/api/policy-form.service';
 import { RulesService, RuleType, type Rule } from '../../shared/services/api/rules.service';
 import {
   LlmService,
@@ -141,6 +142,9 @@ export class ProductComponent implements OnInit {
 
   /** Справочник страховых компаний (выбор ins_company_id) */
   insCompanies: InsuranceCompanyDto[] = [];
+
+  /** Глобальный каталог LK-форм (tid=1) */
+  policyForms: PolicyFormDto[] = [];
 
   /** Сравнение значений mat-select для null / id */
   compareInsCompanyIds = (a: number | null | undefined, b: number | null | undefined): boolean => {
@@ -274,6 +278,7 @@ export class ProductComponent implements OnInit {
     private filesService: FilesService,
     private testRequestService: TestRequestService,
     private insCompanyService: InsCompanyService,
+    private policyFormService: PolicyFormService,
   ) {}
 
   ngOnInit(): void {
@@ -295,6 +300,7 @@ export class ProductComponent implements OnInit {
     this.loadProduct(id ? parseInt(id) : undefined, versionNo ? parseInt(versionNo) : undefined).pipe(
       switchMap((product) => {
         if (product && product.lob) {
+          this.loadPolicyForms();
           return this.loadLob(product.lob);
         }
         return of(null as BusinessLineEdit | null);
@@ -305,6 +311,17 @@ export class ProductComponent implements OnInit {
       })
     ).subscribe();
 
+  }
+
+  private loadPolicyForms(): void {
+    this.policyFormService.listForms().subscribe({
+      next: (list) => {
+        this.policyForms = list ?? [];
+      },
+      error: () => {
+        this.policyForms = [];
+      },
+    });
   }
 
   private loadLlmStatus(): void {

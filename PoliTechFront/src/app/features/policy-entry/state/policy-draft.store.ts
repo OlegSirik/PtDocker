@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   Policy,
   PolicyHolder,
@@ -11,6 +11,7 @@ import {
 } from '../../../shared/models/policy.models';
 import { PolicyDraftMeta } from '../models/policy-draft-meta.model';
 import type { PolicyIoType } from '../models/policy-page-config.model';
+import { PolicyService } from '../../../shared/services/policy.service';
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -45,6 +46,8 @@ export function toPolicyTerm(months: number): string {
 
 @Injectable()
 export class PolicyDraftStore {
+  private readonly policyService = inject(PolicyService);
+
   private readonly _policy = signal<Policy>(new Policy());
   private readonly _meta = signal<PolicyDraftMeta>({
     pageId: '',
@@ -62,6 +65,7 @@ export class PolicyDraftStore {
   readonly quoted = computed(() => this._meta().quoted);
   readonly stepIndex = computed(() => this._meta().stepIndex);
   readonly premium = computed(() => this._policy().premium ?? 0);
+  readonly policyNumber = computed(() => this._policy().policyNumber ?? '');
   readonly canIssue = computed(() => {
     const p = this._policy().premium;
     return p != null && p > 0;
@@ -93,7 +97,7 @@ export class PolicyDraftStore {
             new InsuredObject({
               ioType: 'DEVICE',
               packageCode: '0',
-              device: new Device({ deviceTypeCode: 'PHONE' })
+              device: new Device({ deviceTypeCode: 'DIGITAL-DEVICE' })
             })
           ]
         : [
@@ -271,6 +275,64 @@ export class PolicyDraftStore {
 
   goToPayment(): void {
     this.setStepIndex(2);
+  }
+
+  /**
+   * Выпуск договора: POST /sales/policies → номер договора → шаг оплаты.
+   * При ошибке остаёмся на оформлении и пишем store.error.
+   */
+  issuePolicy(): void {
+    if (this._meta().loading) {
+      return;
+    }
+    this.syncInsuredToPolicyHolder();
+    this.setError(null);
+    this.setLoading(true);
+    this.policyService.savePolicy(this._policy()).subscribe({
+      next: result => {
+        const policyNumber =
+          (result as Policy)?.policyNumber?.trim() ||
+          (result as { policyNr?: string })?.policyNr?.trim() ||
+          '';
+        this._policy.update(current => {
+          const next = Object.assign(new Policy(), current);
+          next.policyHolder = current.policyHolder;
+          next.insuredObjects = current.insuredObjects;
+          next.premium = current.premium;
+          next.endDate = current.endDate;
+          next.policyNumber = policyNumber || current.policyNumber;
+          if ((result as Policy)?.id != null) {
+            next.id = (result as Policy).id;
+          }
+          return next;
+        });
+        this._meta.update(m => ({ ...m, loading: false, error: null }));
+        this.setStepIndex(2);
+      },
+      error: err => {
+        this.setError(this.resolveApiError(err, 'Ошибка выпуска договора'));
+      },
+    });
+  }
+
+  private resolveApiError(err: unknown, fallback: string): string {
+    const e = err as {
+      error?: { message?: string; error?: string; detail?: string } | string;
+      message?: string;
+    };
+    if (typeof e?.error === 'string' && e.error.trim()) {
+      return e.error.trim();
+    }
+    if (e?.error && typeof e.error === 'object') {
+      const msg = e.error.message || e.error.error || e.error.detail;
+      if (msg && String(msg).trim()) {
+        return String(msg).trim();
+      }
+    }
+    if (e?.message && String(e.message).trim()) {
+      return String(e.message).trim();
+    }
+    return fallback;
   }
 
   goBack(): void {

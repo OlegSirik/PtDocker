@@ -18,6 +18,7 @@ import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.VarDataType;
+import ru.pt.api.dto.schema.AttributeDefaultState;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -358,6 +359,7 @@ public class SchemaServiceImpl implements SchemaService {
                 vdt = VarDataType.STRING;
             }
         }
+        String defaultState = AttributeDefaultState.normalize(e.getDefaultState());
         return LobVar.builder()
                 .id(e.getId())
                 .parent_id(e.getParentId())
@@ -373,6 +375,7 @@ public class SchemaServiceImpl implements SchemaService {
                 .isDeleted(false)
                 // API-совместимость: name = varName (колонки name в mt_attribute_def больше нет)
                 .name(e.getVarName())
+                .defaultState(defaultState)
                 .build();
     }
 
@@ -387,6 +390,7 @@ public class SchemaServiceImpl implements SchemaService {
         e.setVarValue(v.getVarValue());
         e.setVarList(v.getVarList());
         e.setSystem(v.getIsSystem());
+        e.setDefaultState(AttributeDefaultState.normalize(v.getDefaultState()));
     }
 
     @Override
@@ -465,6 +469,7 @@ public class SchemaServiceImpl implements SchemaService {
         n.setVarValue(t.getVarValue());
         n.setVarList(t.getVarList());
         n.setSystem(t.isSystem());
+        n.setDefaultState(AttributeDefaultState.normalize(t.getDefaultState()));
         return n;
     }
 
@@ -634,16 +639,15 @@ public class SchemaServiceImpl implements SchemaService {
         }
         assertNodeInSchema(lobVar.getId(), tenantId, documentId);
 
+        if (attributeDefRepository.existsByParentIdAndTenantIdAndDocumentId(
+                lobVar.getId(), tenantId, documentId)) {
+            throw new BadRequestException(
+                    "Сначала удалите дочерние атрибуты: у узла id=" + lobVar.getId() + " есть потомки");
+        }
+
         int n = entityManager.createNativeQuery("""
-                WITH RECURSIVE sub AS (
-                    SELECT id FROM mt_attribute_def
-                    WHERE id = :rootId AND tenant_id = :tid AND document_id = :docId
-                    UNION ALL
-                    SELECT c.id FROM mt_attribute_def c
-                    INNER JOIN sub p ON c.parent_id = p.id
-                    WHERE c.tenant_id = :tid AND c.document_id = :docId
-                )
-                DELETE FROM mt_attribute_def WHERE id IN (SELECT id FROM sub)
+                DELETE FROM mt_attribute_def
+                WHERE id = :rootId AND tenant_id = :tid AND document_id = :docId
                 """)
                 .setParameter("rootId", lobVar.getId())
                 .setParameter("tid", tenantId)

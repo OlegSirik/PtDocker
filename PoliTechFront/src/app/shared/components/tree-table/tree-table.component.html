@@ -60,7 +60,7 @@
             class="tree-action-delete"
             color="warn"
             [disabled]="row.data.isSystem === true"
-            [matTooltip]="row.data.isSystem === true ? 'Системная переменная — удаление недоступно' : 'Скрыть из дерева'"
+            [matTooltip]="row.data.isSystem === true ? 'Системная переменная — удаление недоступно' : 'Удалить'"
             matTooltipPosition="above"
             (click)="onBuiltInDeleteClick(row.data, $event)"
             [attr.aria-label]="'Удалить: ' + row.data.varName"

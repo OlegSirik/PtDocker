@@ -40,6 +40,8 @@ export interface Product {
   };
   /** CEL rules from pt_rules (product / LOB / tenant scope); populated on load only */
   celRules?: Rule[];
+  /** Optional LK form page id (pt_policy_forms.page_id) */
+  policyFormPageId?: string | null;
 }
 
 export interface ProductDocumentation {

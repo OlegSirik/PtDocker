@@ -72,12 +72,24 @@
     }
   }
 
-  .schema-llm-box {
-    margin: 16px 0 8px;
-    padding: 12px 0 4px;
-    border-top: 1px solid #e8e8e8;
+  .pt-box-title-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 
-    .full-width {
+  .agent-toggle-active {
+    background: rgba(25, 118, 210, 0.08);
+  }
+
+  .schema-llm-box,
+  .llm-agent-box {
+    margin: 0 0 16px;
+    padding: 0;
+
+    .full-width,
+    .llm-text-field {
       width: 100%;
     }
 
@@ -148,11 +160,35 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+
+    &.is-disabled .schema-tree-name-text {
+      color: rgb(158, 158, 158);
+      text-decoration: line-through;
+    }
+  }
+
+  .schema-tree-state-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #b71c1c;
+    background: #ffebee;
+    border-radius: 4px;
+    padding: 1px 6px;
+    line-height: 16px;
   }
 
   .tree-table-actions {
     display: inline-flex;
     align-items: center;
+
+    .state-toggle-btn mat-icon {
+      color: #2e7d32;
+    }
+
+    .state-toggle-btn.is-off mat-icon {
+      color: rgb(158, 158, 158);
+    }
   }
 
   .empty-hint {

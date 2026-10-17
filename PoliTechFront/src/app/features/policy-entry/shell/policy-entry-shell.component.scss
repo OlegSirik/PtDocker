@@ -84,6 +84,12 @@
   color: $warn-color;
 }
 
+.step-error {
+  margin: $spacing-sm 0 0;
+  color: $warn-color;
+  font-size: $font-size-sm;
+}
+
 :host-context(body.theme-dark) {
   .step-indicator li {
     background-color: #2a2a2a;

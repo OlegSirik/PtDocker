@@ -1,10 +1,9 @@
 export const GAD_DEVICE_TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'PHONE', label: 'Смартфон' },
-  { value: 'TABLET', label: 'Планшет' },
-  { value: 'LAPTOP', label: 'Ноутбук' },
-  { value: 'WATCH', label: 'Часы' },
-  { value: 'OTHER', label: 'Другое' }
+  { value: 'DIGITAL-DEVICE', label: 'Цифровое устройство' },
+  { value: 'HOME-DEVICE', label: 'Домашнее устройство' },
 ];
+
+export const GAD_DEFAULT_DEVICE_TYPE = 'DIGITAL-DEVICE';
 
 export const GAD_PACKAGE_OPTIONS: { value: string; label: string }[] = [
   { value: '0', label: 'Комплексная защита' },

@@ -285,6 +285,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
           varValue: res.varValue,
           varNr: res.varNr ?? 0,
           name: (res.name?.trim() || res.varName) ?? '',
+          defaultState: res.defaultState === 'DISABLED' ? 'DISABLED' : 'ENABLED',
         });
       }
       this.rebuildFlat();
@@ -293,9 +294,9 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
     });
   }
 
-  /** Диалог создания дочернего узла. */
+  /** Диалог создания дочернего узла (только для OBJECT). */
   openCreateChildDialog(parent: T): void {
-    if (!this.enableVarEditDialog || parent.isDeleted) {
+    if (!this.enableVarEditDialog || parent.isDeleted || !isObjectVarTypeRow(parent)) {
       return;
     }
     const siblings = this._rows.filter((r) => r.parent_id === parent.id && !r.isDeleted);
@@ -312,6 +313,7 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
       varType: 'IN',
       varDataType: 'STRING',
       name: '',
+      defaultState: 'ENABLED',
     };
     const ref = this.dialog.open(TreeTableRowEditDialogComponent, {
       width: '520px',

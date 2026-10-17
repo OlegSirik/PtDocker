@@ -27,6 +27,7 @@ export interface TreeTableRowEditDialogData {
 
 const VAR_TYPES = ['IN', 'VAR', 'MAGIC', 'CONST', 'OBJECT'] as const;
 const VAR_DATA_TYPES = ['STRING', 'NUMBER', 'OBJECT'] as const;
+const DEFAULT_STATES = ['ENABLED', 'DISABLED'] as const;
 
 @Component({
   selector: 'app-tree-table-row-edit-dialog',
@@ -80,6 +81,16 @@ const VAR_DATA_TYPES = ['STRING', 'NUMBER', 'OBJECT'] as const;
         <mat-label>Порядок (var_ord)</mat-label>
         <input matInput type="number" [(ngModel)]="model.varNr" name="varNr" [readonly]="metaReadonly" />
       </mat-form-field>
+      @if (!metaReadonly) {
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Статус (default_state)</mat-label>
+          <mat-select [(ngModel)]="model.defaultState" name="defaultState">
+            @for (s of defaultStates; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-stroked-button mat-dialog-close type="button">Отмена</button>
@@ -106,6 +117,7 @@ export class TreeTableRowEditDialogComponent {
   model: TreeTableSourceRow;
   readonly varTypes = [...VAR_TYPES];
   readonly varDataTypes = [...VAR_DATA_TYPES];
+  readonly defaultStates = [...DEFAULT_STATES];
   /** Метаданные схемы недоступны (режим LOB/продукт). */
   readonly metaReadonly: boolean;
 
@@ -119,6 +131,8 @@ export class TreeTableRowEditDialogComponent {
     this.model.varType = (VAR_TYPES as readonly string[]).includes(vt) ? vt : 'IN';
     const vdt = (this.model.varDataType ?? '').trim().toUpperCase();
     this.model.varDataType = (VAR_DATA_TYPES as readonly string[]).includes(vdt) ? vdt : 'STRING';
+    const ds = (this.model.defaultState ?? 'ENABLED').trim().toUpperCase();
+    this.model.defaultState = ds === 'DISABLED' ? 'DISABLED' : 'ENABLED';
   }
 
   isValid(): boolean {

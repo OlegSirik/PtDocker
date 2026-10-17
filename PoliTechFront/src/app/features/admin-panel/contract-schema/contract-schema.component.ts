@@ -68,6 +68,7 @@ export class ContractSchemaComponent implements OnInit {
 
   @ViewChild('schemaTreeTable') schemaTreeTable?: TreeTableComponent;
 
+  readonly isObjectVarTypeRow = isObjectVarTypeRow;
   readonly treeTableDisplayedColumns = ['name', 'code', 'actions'];
 
   models: ContractModel[] = [];
@@ -84,6 +85,8 @@ export class ContractSchemaComponent implements OnInit {
   applyingLlm = false;
   llmDraft: LlmSchemaAttributeDraft[] = [];
   llmWarnings: string[] = [];
+  /** Карта AI-агента (скрыта по умолчанию; повторный клик гасит). */
+  showLlmAgentCard = false;
 
   ngOnInit(): void {
     if (!this.authService.hasRole(TOOLBAR_ROLE.TNT_ADMIN)) {
@@ -276,6 +279,7 @@ export class ContractSchemaComponent implements OnInit {
       isSystem: false,
       isDeleted: false,
       name: (attr.varName || '').trim(),
+      defaultState: 'ENABLED',
     };
   }
 
@@ -383,7 +387,43 @@ export class ContractSchemaComponent implements OnInit {
   }
 
   onTreeTableCreate(parent: TreeTableSourceRow): void {
+    if (!isObjectVarTypeRow(parent)) {
+      this.snack.open('Дочерние элементы можно добавлять только к OBJECT', 'OK', {
+        duration: 3000,
+      });
+      return;
+    }
     this.schemaTreeTable?.openCreateChildDialog(parent);
+  }
+
+  /** Переключение ENABLED ↔ DISABLED без открытия диалога. */
+  onToggleDefaultState(node: TreeTableSourceRow): void {
+    if (!this.selectedModelCode) {
+      return;
+    }
+    const next: 'ENABLED' | 'DISABLED' =
+      node.defaultState === 'DISABLED' ? 'ENABLED' : 'DISABLED';
+    const body = this.toLobVar({ ...node, defaultState: next });
+    this.varsService.updateAttribute(this.selectedModelCode, body).subscribe({
+      next: (saved) => {
+        this.applyLobVarToRow(node, saved);
+        node.defaultState = next;
+        this.treeTableData = [...this.treeTableData];
+        this.snack.open(
+          next === 'DISABLED'
+            ? `Отключено: ${node.varName}`
+            : `Включено: ${node.varName}`,
+          'OK',
+          { duration: 2500 },
+        );
+      },
+      error: (err) => {
+        this.snack.open(err?.error?.message ?? 'Не удалось изменить статус', 'OK', {
+          duration: 4000,
+        });
+        this.loadTree();
+      },
+    });
   }
 
   onSchemaTreeRowUpdated(row: TreeTableSourceRow): void {
@@ -421,6 +461,7 @@ export class ContractSchemaComponent implements OnInit {
       isSystem: false,
       isDeleted: false,
       name: d.name?.trim() || d.varName.trim() || '',
+      defaultState: d.defaultState === 'DISABLED' ? 'DISABLED' : 'ENABLED',
     };
     this.varsService.createAttribute(this.selectedModelCode, body).subscribe({
       next: () => {
@@ -439,6 +480,14 @@ export class ContractSchemaComponent implements OnInit {
     if (!this.selectedModelCode) return;
     if (node.isSystem) {
       this.snack.open('Системный атрибут нельзя удалить', 'OK', { duration: 3000 });
+      this.loadTree();
+      return;
+    }
+    const hasChildren = this.treeTableData.some(
+      (r) => r.parent_id === node.id && !r.isDeleted,
+    );
+    if (hasChildren) {
+      this.snack.open('Сначала удалите дочерние атрибуты', 'OK', { duration: 3500 });
       this.loadTree();
       return;
     }
@@ -470,6 +519,7 @@ export class ContractSchemaComponent implements OnInit {
       isSystem: !!row.isSystem,
       isDeleted: !!row.isDeleted,
       name: row.name ?? row.varName ?? '',
+      defaultState: row.defaultState === 'DISABLED' ? 'DISABLED' : 'ENABLED',
     };
   }
 
@@ -488,6 +538,8 @@ export class ContractSchemaComponent implements OnInit {
     target.varList = lob.varList ?? undefined;
     target.isSystem = lob.isSystem;
     target.name = lob.name ?? lob.varName ?? '';
+    target.defaultState =
+      (lob.defaultState || '').toUpperCase() === 'DISABLED' ? 'DISABLED' : 'ENABLED';
   }
 }
 

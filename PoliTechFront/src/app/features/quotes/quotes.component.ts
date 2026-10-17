@@ -13,6 +13,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { LkQuoteService, Quote } from '../../shared/services/api/lk-quote.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { PolicyService } from '../../shared/services/policy.service';
+import {
+  PolicyFormService,
+  ProductForQuoteDto,
+} from '../../shared/services/api/policy-form.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
@@ -39,18 +43,15 @@ export class QuotesComponent implements OnInit, OnDestroy {
   private quoteService = inject(LkQuoteService);
   private authService = inject(AuthService);
   private policyService = inject(PolicyService);
+  private policyFormService = inject(PolicyFormService);
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
 
   quotes: Quote[] = [];
   filteredQuotes: Quote[] = [];
 
-  /** Продукты для «Создать» — статически; позже дополнят */
-  readonly createProducts: { pageId: string; label: string; code: string }[] = [
-    { pageId: 'ns-policy', label: 'Несчастный случай', code: 'NS' },
-    { pageId: 'policy_gad001', label: 'Страхование техники', code: 'GAD' }
-  ];
-  selectedCreatePageId: string | null = null;
+  createProducts: ProductForQuoteDto[] = [];
+  selectedCreateProductId: number | null = null;
 
   searchText: string = '';
   selectedStatus: string = '';
@@ -62,6 +63,7 @@ export class QuotesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadQuotes();
+    this.loadCreateProducts();
 
     this.searchSubject$.pipe(
       debounceTime(500),
@@ -77,6 +79,18 @@ export class QuotesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  loadCreateProducts(): void {
+    this.policyFormService.listProductsForQuote().subscribe({
+      next: (list) => {
+        this.createProducts = list ?? [];
+      },
+      error: (error) => {
+        console.error('Error loading products for quote:', error);
+        this.createProducts = [];
+      }
+    });
+  }
+
   loadQuotes(): void {
     this.quoteService.getAll().subscribe({
       next: (quotes) => {
@@ -90,16 +104,30 @@ export class QuotesComponent implements OnInit, OnDestroy {
   }
 
   onCreateProductSelected(): void {
-    if (!this.selectedCreatePageId) {
+    if (this.selectedCreateProductId == null) {
       return;
     }
-    this.router.navigate(['/', this.authService.tenant, 'lk', this.selectedCreatePageId]);
-    this.selectedCreatePageId = null;
+    const product = this.createProducts.find(p => p.productId === this.selectedCreateProductId);
+    if (!product) {
+      this.selectedCreateProductId = null;
+      return;
+    }
+    this.router.navigate(
+      ['/', this.authService.tenant, 'lk', product.pageId],
+      {
+        queryParams: {
+          productCode: product.productCode,
+          versionNo: product.versionNo,
+          title: product.title,
+          ioType: product.ioType || 'PERSON',
+        },
+      },
+    );
+    this.selectedCreateProductId = null;
   }
 
   onSearchChange(): void {
     console.log('onSearchChange', this.searchText);
-    // Emit search text to subject for debouncing
     this.performSearch(this.searchText);
   }
 
@@ -107,7 +135,6 @@ export class QuotesComponent implements OnInit, OnDestroy {
   private performSearch(searchText: string): void {
     console.log('performSearch', searchText);
     if (searchText.trim()) {
-      // Call service with search parameter
       this.quoteService.getAccountQuotes(searchText.trim()).subscribe({
         next: (quotes) => {
           this.quotes = quotes;
@@ -115,12 +142,10 @@ export class QuotesComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error searching quotes:', error);
-          // Fallback to local filtering if service call fails
           this.applyFilters();
         }
       });
     } else {
-      // If search is empty, reload all quotes
       this.loadQuotes();
     }
   }
@@ -132,7 +157,6 @@ export class QuotesComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     let filtered = [...this.quotes];
     
-    // Filter by search text
     if (this.searchText.trim()) {
       const searchLower = this.searchText.trim().toLowerCase();
       filtered = filtered.filter(q => 
@@ -142,7 +166,6 @@ export class QuotesComponent implements OnInit, OnDestroy {
       );
     }
     
-    // Filter by status
     if (this.selectedStatus) {
       filtered = filtered.filter(q => q.policyStatus === this.selectedStatus);
     }
@@ -188,12 +211,5 @@ export class QuotesComponent implements OnInit, OnDestroy {
         }
       });
     }
-    
-/*
-    const commandProperty = `comand${commandNumber}` as keyof Quote;
-    if (quote[commandProperty]) {
-      alert(`comand ${commandNumber}`);
-    }
-*/    
   }
 }

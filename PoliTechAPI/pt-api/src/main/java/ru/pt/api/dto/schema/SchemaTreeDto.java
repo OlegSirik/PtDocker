@@ -11,5 +11,7 @@ public record SchemaTreeDto(
     String varList,
     boolean isSystem,
     String varPath,
-    String varValue
+    String varValue,
+    /** ENABLED / DISABLED */
+    String defaultState
 ) {}

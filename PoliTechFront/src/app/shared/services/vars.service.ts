@@ -94,6 +94,8 @@ export interface LobVar {
   isSystem: boolean;
   isDeleted: boolean;
   name: string;
+  /** ENABLED / DISABLED — mt_attribute_def.default_state */
+  defaultState?: 'ENABLED' | 'DISABLED' | string;
 }
 
 /** Модель договора из {@code mt_contract_model}. */

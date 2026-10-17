@@ -51,6 +51,10 @@ public class AttributeDefEntity {
     @Column(name = "is_system", nullable = false)
     private boolean system;
 
+    /** {@code ENABLED} / {@code DISABLED}; по умолчанию ENABLED. */
+    @Column(name = "default_state", nullable = false, length = 30)
+    private String defaultState = "ENABLED";
+
     public AttributeDefEntity() {
     }
 
@@ -156,5 +160,13 @@ public class AttributeDefEntity {
 
     public void setSystem(boolean system) {
         this.system = system;
+    }
+
+    public String getDefaultState() {
+        return defaultState;
+    }
+
+    public void setDefaultState(String defaultState) {
+        this.defaultState = defaultState;
     }
 }

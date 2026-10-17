@@ -1,6 +1,12 @@
 <mat-card class="policy-plaque">
   <mat-card-header>
-    <mat-card-title>Оплата</mat-card-title>
+    <mat-card-title>
+      @if (store.policyNumber()) {
+        Оплата договора {{ store.policyNumber() }}
+      } @else {
+        Оплата
+      }
+    </mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <button mat-flat-button color="primary" type="button" (click)="onPaid()">Полис оплачен</button>

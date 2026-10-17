@@ -20,6 +20,7 @@ import ru.pt.api.dto.numbers.NumberGeneratorDescription;
 import ru.pt.api.dto.product.*;
 import ru.pt.api.service.numbers.NumberGeneratorService;
 import ru.pt.api.service.product.LobService;
+import ru.pt.api.service.product.PolicyFormService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.ProductServiceCRUD;
 import ru.pt.api.security.AuthenticatedUser;
@@ -86,6 +87,7 @@ public class ProductServiceImpl implements ProductService {
     private final AccountService accountService;
     private final RuleManagementService ruleManagementService;
     private final ProductDocumentationGenerator productDocumentationGenerator;
+    private final PolicyFormService policyFormService;
     /**
      * Get current authenticated user from security context
      * @return AuthenticatedUser representing the current user
@@ -267,6 +269,8 @@ public class ProductServiceImpl implements ProductService {
 
         // установить id number generator в productVersionModel
         productVersionModel.getNumberGeneratorDescription().setId(numberGeneratorDescription.getId());
+
+        assertPolicyFormAllowed(tenantId, productVersionModel);
 
         String productJson;
         try {
@@ -522,6 +526,8 @@ public class ProductServiceImpl implements ProductService {
         product.setInsCompanyId(newProductVersionModel.getInsCompanyId());
         productRepository.save(product);
 
+        assertPolicyFormAllowed(tenantId, newProductVersionModel);
+
         String newProductVersionJson;
         try {
             newProductVersionJson = objectMapper.writeValueAsString(newProductVersionModel);
@@ -537,6 +543,19 @@ public class ProductServiceImpl implements ProductService {
         );
 */
         return newProductVersionModel;
+    }
+
+    private void assertPolicyFormAllowed(Long tenantId, ProductVersionModel model) {
+        String pageId = model.getPolicyFormPageId();
+        if (pageId == null || pageId.isBlank()) {
+            model.setPolicyFormPageId(null);
+            return;
+        }
+        pageId = pageId.trim();
+        model.setPolicyFormPageId(pageId);
+        if (!policyFormService.isKnownPageId(pageId)) {
+            throw new BadRequestException("Unknown policy form pageId: " + pageId);
+        }
     }
 
     /******************** */
@@ -568,6 +587,8 @@ public class ProductServiceImpl implements ProductService {
     private ProductVersionModel saveVersion( Long tenantId, Long productId, Long versionNo, ProductVersionModel productVersionModel ) {
         ProductVersionEntity pv = productVersionRepository.findByProductIdAndVersionNo(tenantId, productId, versionNo)
             .orElseThrow(() -> new NotFoundException("Version not found"));
+
+        assertPolicyFormAllowed(tenantId, productVersionModel);
 
         try {
             pv.setProduct(objectMapper.writeValueAsString(productVersionModel));

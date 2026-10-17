@@ -10,10 +10,10 @@
         <div class="product-section">
           <mat-form-field class="product-field" appearance="outline">
             <mat-label>Создать</mat-label>
-            <mat-select [(ngModel)]="selectedCreatePageId" (ngModelChange)="onCreateProductSelected()">
+            <mat-select [(ngModel)]="selectedCreateProductId" (ngModelChange)="onCreateProductSelected()">
               <mat-option [value]="null">Выберите продукт</mat-option>
-              @for (product of createProducts; track product.pageId) {
-                <mat-option [value]="product.pageId">{{ product.label }} ({{ product.code }})</mat-option>
+              @for (product of createProducts; track product.productId) {
+                <mat-option [value]="product.productId">{{ product.productName }} ({{ product.productCode }})</mat-option>
               }
             </mat-select>
           </mat-form-field>

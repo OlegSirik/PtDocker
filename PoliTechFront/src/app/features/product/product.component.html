@@ -88,6 +88,21 @@
                   </mat-form-field>
                 
           </div>
+          <div class="pt-box-card-row">
+                  <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>Форма LK</mat-label>
+                    <mat-select
+                      [(ngModel)]="product.policyFormPageId"
+                      (ngModelChange)="updateChanges()"
+                      [disabled]="product.versionStatus === 'PROD'"
+                    >
+                      <mat-option [value]="null">— не выбрано —</mat-option>
+                      @for (f of policyForms; track f.pageId) {
+                        <mat-option [value]="f.pageId">{{ f.title }} ({{ f.pageId }})</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+          </div>
       </div>
 
       <div class="pt-box" style="margin-top: 20px;">
@@ -601,10 +616,10 @@
     @if (showLlmAgentCard) {
       <div class="pt-box llm-agent-box" style="margin-top: 20px;">
         <div class="pt-box-title-row">
-          <h3 class="pt-box-title">Агент</h3>
+          <h3 class="pt-box-title">AI-агент</h3>
         </div>
         <mat-form-field appearance="outline" class="llm-text-field">
-          <mat-label>Команда для агента</mat-label>
+          <mat-label>Команда для AI-агента</mat-label>
           <textarea
             matInput
             rows="3"
@@ -679,7 +694,7 @@
             [disabled]="crudLockedPendingSave"
             (click)="showLlmAgentCard = !showLlmAgentCard"
           >
-            Агент
+            AI-агент
           </button>
   <button
             mat-stroked-button

@@ -25,6 +25,8 @@ public interface AttributeDefRepository extends JpaRepository<AttributeDefEntity
 
     boolean existsByIdAndTenantIdAndDocumentId(Long id, Long tenantId, String documentId);
 
+    boolean existsByParentIdAndTenantIdAndDocumentId(Long parentId, Long tenantId, String documentId);
+
     /** {@code modelCode} — то же, что {@code document_id} в {@code mt_attribute_def}. */
     @Query("SELECT a FROM AttributeDefEntity a WHERE a.tenantId = :tenantId AND a.documentId = :modelCode")
     List<AttributeDefEntity> findByTenantAndModelCode(@Param("tenantId") Long tenantId, @Param("modelCode") String modelCode);

@@ -1,7 +1,7 @@
 @if (pageConfig) {
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">{{ pageConfig.title }}</h1>
+      <h1 class="page-title">{{ pageTitle || pageConfig.pageId }}</h1>
     </div>
 
     <ol class="step-indicator" role="tablist" aria-label="Шаги оформления">
@@ -46,10 +46,21 @@
             }
           }
         }
+        @if (store.error()) {
+          <p class="step-error">{{ store.error() }}</p>
+        }
         <div class="pt-box-actions step-actions">
-          <button mat-stroked-button type="button" (click)="store.goBack()">Назад</button>
-          <button mat-flat-button color="primary" type="button" (click)="store.goToPayment()">
-            Далее к оплате
+          <button mat-stroked-button type="button" [disabled]="store.loading()" (click)="store.goBack()">
+            Назад
+          </button>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="store.loading()"
+            (click)="store.issuePolicy()"
+          >
+            {{ store.loading() ? 'Выпуск…' : 'Выпустить договор' }}
           </button>
         </div>
       }

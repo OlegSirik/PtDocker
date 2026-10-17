@@ -66,6 +66,12 @@ public class ProductVersionModel {
     @JsonProperty("celRules")
     private List<RuleDto> celRules;
 
+    /**
+     * Optional LK form page id ({@code pt_policy_forms.page_id}, global catalog {@code tid = 1}).
+     */
+    @JsonProperty("policyFormPageId")
+    private String policyFormPageId;
+
     public Long getId() {
         return id;
     }
@@ -208,6 +214,14 @@ public class ProductVersionModel {
 
     public void setCelRules(List<RuleDto> celRules) {
         this.celRules = celRules;
+    }
+
+    public String getPolicyFormPageId() {
+        return policyFormPageId;
+    }
+
+    public void setPolicyFormPageId(String policyFormPageId) {
+        this.policyFormPageId = policyFormPageId;
     }
 
 }
