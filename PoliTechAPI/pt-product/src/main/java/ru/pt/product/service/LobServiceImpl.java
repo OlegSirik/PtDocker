@@ -454,6 +454,7 @@ public class LobServiceImpl implements LobService {
                 continue;
             }
             try {
+                // addVar runs in REQUIRES_NEW — failures must not mark schema TX rollback-only
                 productsApi.addVar(
                         tenantId, product.getId(), versionNo, copyAsDeletedPvVar(schemaVar));
             } catch (BadRequestException ex) {
@@ -463,12 +464,20 @@ public class LobServiceImpl implements LobService {
                         product.getId(),
                         versionNo,
                         varCode);
-            } catch (UnprocessableEntityException | NotFoundException ex) {
+            } catch (UnprocessableEntityException | NotFoundException | ForbiddenException ex) {
                 log.warn(
                         "Skip addVar for productId={}, versionNo={}, lob={}: {}",
                         product.getId(),
                         versionNo,
                         lobCode,
+                        ex.getMessage());
+            } catch (RuntimeException ex) {
+                log.warn(
+                        "Skip addVar for productId={}, versionNo={}, lob={}, varCode={}: {}",
+                        product.getId(),
+                        versionNo,
+                        lobCode,
+                        varCode,
                         ex.getMessage());
             }
         }

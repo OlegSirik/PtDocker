@@ -3,6 +3,7 @@ package ru.pt.api.admin;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class SchemaLlmController {
     private final LlmAssistantService llmAssistantService;
 
     @PostMapping("/assist")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<LlmAssistResponse> llmAssist(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,

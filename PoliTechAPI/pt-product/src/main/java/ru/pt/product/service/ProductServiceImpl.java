@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Propagation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -667,6 +668,10 @@ public class ProductServiceImpl implements ProductService {
         pv.getPackages().stream().filter(p -> p.getCode().equals(packageCode)).findFirst().ifPresent(p -> {
             p.getCovers().stream().filter(c -> c.getCode().equals(cover.getCode())).findFirst().ifPresent(c -> {
                 c.setCode(cover.getCode());
+                c.setIsMandatory(cover.getIsMandatory());
+                c.setWaitingPeriod(cover.getWaitingPeriod());
+                c.setCoverageTerm(cover.getCoverageTerm());
+                c.setIsDeductibleMandatory(cover.getIsDeductibleMandatory());
                 c.setDeductibles(cover.getDeductibles());
                 c.setLimits(cover.getLimits());
             });
@@ -684,13 +689,19 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * Internal: cascade from schema/LOB. Not exposed on ProductController.
+     * {@code REQUIRES_NEW} — чтобы «var already exists» / skip не помечали rollback-only
+     * транзакцию {@code SchemaService.addAttribute}.
      */
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW)
     public ProductVersionModel addVar( Long tenantId, Long productId, Long versionNo, PvVar var ) {
         ProductVersionModel pv = getVersion4Update(tenantId, productId, versionNo);
-        // check var for dublicate code
-        if (pv.getVars().stream().anyMatch(v -> v.getVarCode().equals(var.getVarCode()))) {
-            throw new BadRequestException("Var with code " + var.getVarCode() + " already exists");
+        String code = var != null ? var.getVarCode() : null;
+        if (code != null && pv.getVars() != null
+                && pv.getVars().stream().anyMatch(v -> v != null && code.equals(v.getVarCode()))) {
+            throw new BadRequestException("Var with code " + code + " already exists");
+        }
+        if (pv.getVars() == null) {
+            pv.setVars(new ArrayList<>());
         }
         pv.getVars().add(var);
         return saveVersion(tenantId, productId, versionNo, pv);

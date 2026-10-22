@@ -3,6 +3,7 @@ package ru.pt.api.admin;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,7 @@ public class ContractModelController {
     private final SchemaService schemaService;
 
     @GetMapping
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<List<ContractModelDto>> listModels(
             @PathVariable String tenantCode,
             @AuthenticationPrincipal UserDetailsImpl user) {

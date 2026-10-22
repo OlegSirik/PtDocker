@@ -83,7 +83,19 @@ public class VarsContextFormatter {
                 + " | " + nullToEmpty(var.getVarPath())
                 + " | " + nullToEmpty(var.getVarType())
                 + " | id=" + (var.getId() != null ? var.getId() : "")
-                + " | parent_id=" + (var.getParent_id() != null ? var.getParent_id() : "");
+                + " | parent_id=" + (var.getParent_id() != null ? var.getParent_id() : "")
+                + " | varList=" + nullToEmpty(var.getVarList());
+    }
+
+    /** Compact list of existing tenant refdict codes for SCHEMA assist. */
+    public String formatExistingRefdicts(List<String> refCodes) {
+        if (refCodes == null || refCodes.isEmpty()) {
+            return "(нет)";
+        }
+        return refCodes.stream()
+                .filter(c -> c != null && !c.isBlank())
+                .sorted()
+                .collect(Collectors.joining(", "));
     }
 
     private boolean isSchemaIncluded(LobVar var) {

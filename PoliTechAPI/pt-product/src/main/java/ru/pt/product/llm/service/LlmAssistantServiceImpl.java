@@ -32,6 +32,8 @@ import ru.pt.product.llm.provider.LlmCompletionRequest;
 import ru.pt.product.llm.provider.LlmCompletionResult;
 import ru.pt.product.llm.provider.LlmGateway;
 import ru.pt.product.llm.provider.LlmMessage;
+import ru.pt.api.dto.refdict.RefDictDto;
+import ru.pt.api.service.db.RefDictAdminService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +59,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
     private final LlmExchangeLogService exchangeLogService;
     private final TenantLlmConfigService tenantLlmConfigService;
     private final LlmCalculatorApplicator calculatorApplicator;
+    private final RefDictAdminService refDictAdminService;
 
     public LlmAssistantServiceImpl(
             ProductService productService,
@@ -68,7 +71,8 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             LlmResponseProcessorRegistry processorRegistry,
             LlmExchangeLogService exchangeLogService,
             TenantLlmConfigService tenantLlmConfigService,
-            LlmCalculatorApplicator calculatorApplicator) {
+            LlmCalculatorApplicator calculatorApplicator,
+            RefDictAdminService refDictAdminService) {
         this.productService = productService;
         this.lobService = lobService;
         this.schemaService = schemaService;
@@ -79,6 +83,7 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
         this.exchangeLogService = exchangeLogService;
         this.tenantLlmConfigService = tenantLlmConfigService;
         this.calculatorApplicator = calculatorApplicator;
+        this.refDictAdminService = refDictAdminService;
     }
 
     @Override
@@ -141,11 +146,17 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
             schemaVars = List.of();
         }
 
+        List<String> existingRefCodes = refDictAdminService.listDicts(user.getTenantId()).stream()
+                .map(RefDictDto::getCode)
+                .toList();
+        String existingRefdictsText = varsContextFormatter.formatExistingRefdicts(existingRefCodes);
+
         List<LlmMessage> messages = promptAssembler.assembleForSchema(
                 request.getUserMessage().trim(),
                 contractCode,
                 schemaVars,
-                request.getParentVarCode());
+                request.getParentVarCode(),
+                existingRefdictsText);
 
         Set<String> knownVarCodes = varsContextFormatter.schemaVarCodes(schemaVars);
         List<PvVar> asPvVars = schemaVars.stream()

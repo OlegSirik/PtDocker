@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class SchemaController  {
      * Return Tree of sections, entities and attributes for current tid and contract code
      */
     @GetMapping
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<List<LobVar>> getAttributes(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,
@@ -43,6 +45,7 @@ public class SchemaController  {
      * GET .../attributes/metadata — JSON-скелет по {@code var_path} (JsonPath), не по {@code var_code}.
      */
     @GetMapping(value = "/metadata", produces = "application/json")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<String> getAttributesMetadataJson(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,
@@ -55,6 +58,7 @@ public class SchemaController  {
      * (не {@code var_code}).
      */
     @PostMapping(value = "/metadata/with-values", produces = "application/json")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<String> getAttributesMetadataJsonWithValues(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,
@@ -64,6 +68,7 @@ public class SchemaController  {
     }
 
    @PostMapping
+   @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
    public ResponseEntity<LobVar> addAttribute(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,
@@ -74,6 +79,7 @@ public class SchemaController  {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<LobVar> updateAttribute(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,
@@ -84,6 +90,7 @@ public class SchemaController  {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SYS_ADMIN')")
     public ResponseEntity<Void> deleteAttribute(
             @PathVariable String tenantCode,
             @PathVariable String contractCode,

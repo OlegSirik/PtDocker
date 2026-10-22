@@ -121,7 +121,8 @@ public class PromptAssembler {
             String userMessage,
             String contractCode,
             List<LobVar> schemaVars,
-            String parentVarCodeHint) {
+            String parentVarCodeHint,
+            String existingRefdictsText) {
         String system = loadPrompt(LlmTaskType.SCHEMA);
         String schemaText = varsContextFormatter.formatSchema(schemaVars);
         String parentHint = (parentVarCodeHint != null && !parentVarCodeHint.isBlank())
@@ -133,12 +134,18 @@ public class PromptAssembler {
 
                 Модель договора (contractCode): %s
                 %s
-                Текущая схема (varCode | varName | varPath | varType | id | parent_id):
+                Существующие справочники тенанта (коды):
+                %s
+
+                Текущая схема (varCode | varName | varPath | varType | id | parent_id | varList):
                 %s
                 """.formatted(
                 userMessage,
                 nullToEmpty(contractCode),
                 parentHint,
+                existingRefdictsText == null || existingRefdictsText.isBlank()
+                        ? "(нет)"
+                        : existingRefdictsText,
                 schemaText.isBlank() ? "(пусто)" : schemaText);
         return List.of(
                 new LlmMessage("system", system),

@@ -15,8 +15,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { concatMap, from, of } from 'rxjs';
-import { catchError, map, toArray } from 'rxjs/operators';
+import { concat, from, of } from 'rxjs';
+import { catchError, concatMap, map, toArray } from 'rxjs/operators';
 import {
   TreeTableComponent,
   type TreeTableChildCreatePayload,
@@ -34,7 +34,9 @@ import {
   type LlmAssistResponse,
   type LlmSchemaAttributeDraft,
   type LlmSchemaDraft,
+  type LlmSchemaRefDictDraft,
 } from '../../../shared/services/api/llm.service';
+import { RefDictsService } from '../../../shared/services/api/refdicts.service';
 import { TenantLlmConfigService } from '../../../shared/services/api/tenant-llm-config.service';
 import { resolveLlmErrorMessage } from '../../../shared/utils/llm-error.util';
 
@@ -64,6 +66,7 @@ export class ContractSchemaComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly llmService = inject(LlmService);
+  private readonly refDictsService = inject(RefDictsService);
   private readonly tenantLlmConfigService = inject(TenantLlmConfigService);
 
   @ViewChild('schemaTreeTable') schemaTreeTable?: TreeTableComponent;
@@ -84,12 +87,16 @@ export class ContractSchemaComponent implements OnInit {
   askingLlm = false;
   applyingLlm = false;
   llmDraft: LlmSchemaAttributeDraft[] = [];
+  llmRefdicts: LlmSchemaRefDictDraft[] = [];
   llmWarnings: string[] = [];
   /** Карта AI-агента (скрыта по умолчанию; повторный клик гасит). */
   showLlmAgentCard = false;
 
   ngOnInit(): void {
-    if (!this.authService.hasRole(TOOLBAR_ROLE.TNT_ADMIN)) {
+    if (
+      !this.authService.hasRole(TOOLBAR_ROLE.PRODUCT_ADMIN) &&
+      !this.authService.hasRole(TOOLBAR_ROLE.SYS_ADMIN)
+    ) {
       this.router.navigate(['/', this.authService.tenant, 'forbidden']);
       return;
     }
@@ -143,6 +150,7 @@ export class ContractSchemaComponent implements OnInit {
     }
     this.askingLlm = true;
     this.llmDraft = [];
+    this.llmRefdicts = [];
     this.llmWarnings = [];
     this.llmService.assistSchema(this.selectedModelCode, text).subscribe({
       next: (response) => this.onLlmAssistResponse(response),
@@ -155,11 +163,16 @@ export class ContractSchemaComponent implements OnInit {
 
   clearLlmDraft(): void {
     this.llmDraft = [];
+    this.llmRefdicts = [];
     this.llmWarnings = [];
   }
 
   applyLlmDraft(): void {
-    if (!this.selectedModelCode || this.llmDraft.length === 0 || this.applyingLlm) {
+    if (
+      !this.selectedModelCode ||
+      (this.llmDraft.length === 0 && this.llmRefdicts.length === 0) ||
+      this.applyingLlm
+    ) {
       return;
     }
     const contractCode = this.selectedModelCode;
@@ -172,41 +185,54 @@ export class ContractSchemaComponent implements OnInit {
     }
 
     this.applyingLlm = true;
-    from(ordered)
-      .pipe(
-        concatMap((attr) => {
-          const body = this.draftToLobVar(attr, idByCode);
-          return this.varsService.createAttribute(contractCode, body).pipe(
-            map((saved) => {
-              if (saved?.varCode && saved.id != null) {
-                idByCode.set(saved.varCode, saved.id);
-              }
-              return { ok: true as const, code: attr.varCode };
+    const refdictOps$ = from(this.llmRefdicts).pipe(
+      concatMap((dict) => this.applyOneRefdict(dict)),
+      toArray(),
+    );
+    const attrOps$ = from(ordered).pipe(
+      concatMap((attr) => {
+        const body = this.draftToLobVar(attr, idByCode);
+        return this.varsService.createAttribute(contractCode, body).pipe(
+          map((saved) => {
+            if (saved?.varCode && saved.id != null) {
+              idByCode.set(saved.varCode, saved.id);
+            }
+            return { ok: true as const, kind: 'attr' as const, code: attr.varCode };
+          }),
+          catchError((err) =>
+            of({
+              ok: false as const,
+              kind: 'attr' as const,
+              code: attr.varCode,
+              message: err?.error?.message ?? 'Ошибка создания атрибута',
             }),
-            catchError((err) =>
-              of({
-                ok: false as const,
-                code: attr.varCode,
-                message: err?.error?.message ?? 'Ошибка создания',
-              }),
-            ),
-          );
-        }),
-        toArray(),
-      )
+          ),
+        );
+      }),
+      toArray(),
+    );
+
+    concat(refdictOps$, attrOps$)
+      .pipe(toArray())
       .subscribe({
-        next: (results) => {
+        next: (batches) => {
           this.applyingLlm = false;
+          const results = batches.flat();
           const failed = results.filter((r) => !r.ok);
-          const okCount = results.length - failed.length;
+          const okAttrs = results.filter((r) => r.ok && r.kind === 'attr').length;
+          const okDicts = results.filter((r) => r.ok && r.kind === 'refdict').length;
           if (failed.length === 0) {
-            this.snack.open(`Добавлено атрибутов: ${okCount}`, 'OK', { duration: 3500 });
+            this.snack.open(
+              `Справочники: ${okDicts}, атрибуты: ${okAttrs}`,
+              'OK',
+              { duration: 3500 },
+            );
             this.clearLlmDraft();
             this.llmText = '';
           } else {
             const codes = failed.map((f) => f.code).join(', ');
             this.snack.open(
-              `Применено ${okCount}, ошибки: ${codes}`,
+              `Частично: справочники ${okDicts}, атрибуты ${okAttrs}; ошибки: ${codes}`,
               'OK',
               { duration: 6000 },
             );
@@ -221,6 +247,68 @@ export class ContractSchemaComponent implements OnInit {
       });
   }
 
+  /** Create pt_refdicts + pt_refdata; treat "already exists" as success. */
+  private applyOneRefdict(dict: LlmSchemaRefDictDraft) {
+    const code = (dict.code || '').trim();
+    const name = (dict.name || '').trim() || code;
+    const items = dict.items ?? [];
+    return this.refDictsService.createDict({ code, name }).pipe(
+      map(() => true),
+      catchError((err) => {
+        const msg = String(err?.error?.message ?? err?.message ?? '');
+        if (/already exists/i.test(msg) || err?.status === 400) {
+          return of(true);
+        }
+        return of(false);
+      }),
+      concatMap((dictOk) => {
+        if (!dictOk) {
+          return of({
+            ok: false as const,
+            kind: 'refdict' as const,
+            code,
+            message: 'Не удалось создать справочник',
+          });
+        }
+        if (!items.length) {
+          return of({ ok: true as const, kind: 'refdict' as const, code });
+        }
+        return from(items).pipe(
+          concatMap((item) =>
+            this.refDictsService
+              .createItem(code, {
+                code: (item.code || '').trim(),
+                name: (item.name || '').trim() || (item.code || '').trim(),
+              })
+              .pipe(
+                map(() => true),
+                catchError((err) => {
+                  const msg = String(err?.error?.message ?? err?.message ?? '');
+                  if (/already exists/i.test(msg) || err?.status === 400) {
+                    return of(true);
+                  }
+                  return of(false);
+                }),
+              ),
+          ),
+          toArray(),
+          map((itemResults) => {
+            const failedItems = itemResults.filter((ok) => !ok).length;
+            if (failedItems > 0) {
+              return {
+                ok: false as const,
+                kind: 'refdict' as const,
+                code,
+                message: `Ошибки значений: ${failedItems}`,
+              };
+            }
+            return { ok: true as const, kind: 'refdict' as const, code };
+          }),
+        );
+      }),
+    );
+  }
+
   private onLlmAssistResponse(response: LlmAssistResponse): void {
     this.askingLlm = false;
     if (!response.success) {
@@ -231,11 +319,13 @@ export class ContractSchemaComponent implements OnInit {
     }
     const draft = response.result as LlmSchemaDraft | undefined;
     const attrs = draft?.attributes ?? [];
-    if (!attrs.length) {
-      this.snack.open('Пустой черновик атрибутов', 'OK', { duration: 3500 });
+    const refdicts = draft?.refdicts ?? [];
+    if (!attrs.length && !refdicts.length) {
+      this.snack.open('Пустой черновик', 'OK', { duration: 3500 });
       return;
     }
     this.llmDraft = attrs;
+    this.llmRefdicts = refdicts;
     this.llmWarnings = response.warnings ?? [];
     if (this.llmWarnings.length) {
       this.snack.open(this.llmWarnings.join('; '), 'OK', { duration: 5000 });

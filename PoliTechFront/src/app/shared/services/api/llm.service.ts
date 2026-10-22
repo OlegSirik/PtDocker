@@ -61,8 +61,20 @@ export interface LlmSchemaAttributeDraft {
   parentVarCode?: string | null;
 }
 
+export interface LlmSchemaRefDictItemDraft {
+  code: string;
+  name: string;
+}
+
+export interface LlmSchemaRefDictDraft {
+  code: string;
+  name: string;
+  items?: LlmSchemaRefDictItemDraft[];
+}
+
 export interface LlmSchemaDraft {
   attributes: LlmSchemaAttributeDraft[];
+  refdicts?: LlmSchemaRefDictDraft[];
 }
 
 export interface LlmAssistResponse {

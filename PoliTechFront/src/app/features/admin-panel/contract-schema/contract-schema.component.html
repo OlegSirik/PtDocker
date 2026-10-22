@@ -83,7 +83,7 @@
           >
             {{ askingLlm ? 'Запрос…' : 'Выполнить' }}
           </button>
-          @if (llmDraft.length) {
+          @if (llmDraft.length || llmRefdicts.length) {
             <button
               mat-stroked-button
               type="button"
@@ -99,39 +99,72 @@
               [disabled]="askingLlm || applyingLlm"
               (click)="applyLlmDraft()"
             >
-              {{ applyingLlm ? 'Применение…' : 'Применить (' + llmDraft.length + ')' }}
+              {{
+                applyingLlm
+                  ? 'Применение…'
+                  : 'Применить (' + (llmDraft.length + llmRefdicts.length) + ')'
+              }}
             </button>
           }
         </div>
 
-        @if (llmDraft.length) {
+        @if (llmDraft.length || llmRefdicts.length) {
           <div class="llm-preview">
-            <h4 class="llm-preview-title">Черновик атрибутов</h4>
             @if (llmWarnings.length) {
               <p class="llm-warnings">{{ llmWarnings.join('; ') }}</p>
             }
-            <table class="llm-preview-table">
-              <thead>
-                <tr>
-                  <th>varCode</th>
-                  <th>varName</th>
-                  <th>varPath</th>
-                  <th>type</th>
-                  <th>parent</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (a of llmDraft; track a.varCode) {
+            @if (llmRefdicts.length) {
+              <h4 class="llm-preview-title">Черновик справочников</h4>
+              <table class="llm-preview-table">
+                <thead>
                   <tr>
-                    <td>{{ a.varCode }}</td>
-                    <td>{{ a.varName }}</td>
-                    <td>{{ a.varPath }}</td>
-                    <td>{{ a.varType }}/{{ a.varDataType || '—' }}</td>
-                    <td>{{ a.parentVarCode || a.parent_id || '—' }}</td>
+                    <th>code</th>
+                    <th>name</th>
+                    <th>values</th>
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (d of llmRefdicts; track d.code) {
+                    <tr>
+                      <td>{{ d.code }}</td>
+                      <td>{{ d.name }}</td>
+                      <td>
+                        @for (it of d.items ?? []; track it.code; let last = $last) {
+                          {{ it.code }}={{ it.name }}@if (!last) {; }
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+            @if (llmDraft.length) {
+              <h4 class="llm-preview-title">Черновик атрибутов</h4>
+              <table class="llm-preview-table">
+                <thead>
+                  <tr>
+                    <th>varCode</th>
+                    <th>varName</th>
+                    <th>varPath</th>
+                    <th>type</th>
+                    <th>varList</th>
+                    <th>parent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (a of llmDraft; track a.varCode) {
+                    <tr>
+                      <td>{{ a.varCode }}</td>
+                      <td>{{ a.varName }}</td>
+                      <td>{{ a.varPath }}</td>
+                      <td>{{ a.varType }}/{{ a.varDataType || '—' }}</td>
+                      <td>{{ a.varList || '—' }}</td>
+                      <td>{{ a.parentVarCode || a.parent_id || '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
           </div>
         }
       </div>
