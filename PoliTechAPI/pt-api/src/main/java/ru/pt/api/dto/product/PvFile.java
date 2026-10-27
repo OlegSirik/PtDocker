@@ -1,14 +1,26 @@
 package ru.pt.api.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PvFile {
-    @com.fasterxml.jackson.annotation.JsonProperty("fileCode")
+    @JsonProperty("fileCode")
     private String fileCode;
 
-    @com.fasterxml.jackson.annotation.JsonProperty("fileName")
+    @JsonProperty("fileName")
     private String fileName;
 
-    @com.fasterxml.jackson.annotation.JsonProperty("fileId")
+    @JsonProperty("fileId")
     private Integer fileId;
+
+    /** Порядковый номер части ПФ (для многостраничного merge). Legacy без поля → 1. */
+    @JsonProperty("fileNr")
+    private Integer fileNr;
+
+    /** true — PDF берётся как есть, без AcroForm. Legacy без поля → false. */
+    @JsonProperty("isStatic")
+    private Boolean isStatic;
 
     public PvFile() {
     }
@@ -17,6 +29,8 @@ public class PvFile {
         this.fileCode = fileCode;
         this.fileName = fileName;
         this.fileId = fileId;
+        this.fileNr = 1;
+        this.isStatic = false;
     }
 
     public String getFileCode() {
@@ -41,5 +55,30 @@ public class PvFile {
 
     public void setFileId(Integer fileId) {
         this.fileId = fileId;
+    }
+
+    public Integer getFileNr() {
+        return fileNr;
+    }
+
+    public void setFileNr(Integer fileNr) {
+        this.fileNr = fileNr;
+    }
+
+    /** Эффективный номер части: null → 1. */
+    public int effectiveFileNr() {
+        return fileNr != null && fileNr > 0 ? fileNr : 1;
+    }
+
+    public Boolean getIsStatic() {
+        return isStatic;
+    }
+
+    public void setIsStatic(Boolean isStatic) {
+        this.isStatic = isStatic;
+    }
+
+    public boolean isStaticFile() {
+        return Boolean.TRUE.equals(isStatic);
     }
 }

@@ -4444,7 +4444,7 @@ ProductVersion
 | `varName` | Подпись |
 | `varPath` | JsonPath к wire JSON |
 | `varType` | `IN`, `MAGIC`, `CONST`, `VAR`, `OBJECT`, `TEXT`, `COEFFICIENT`, `CALC`, … |
-| `varDataType` | `STRING`, `NUMBER`, `OBJECT`, … |
+| `varDataType` | `STRING`, `NUMBER`, `OBJECT` |
 | `varValue` / `varList` | Значение / справочник |
 | `isSystem` / `isDeleted` / `isTarifFactor` / `isOptional` | Флаги |
 | `parent_id` | Дерево |

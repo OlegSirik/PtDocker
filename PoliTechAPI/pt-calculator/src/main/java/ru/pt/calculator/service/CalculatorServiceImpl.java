@@ -10,14 +10,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.pt.api.dto.calculator.CalcVarKind;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.api.dto.calculator.CalculatorTemplate;
+import ru.pt.api.dto.calculator.CalculatorVar;
+import ru.pt.api.dto.calculator.CalculatorVarMigration;
 import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
 import ru.pt.api.dto.calculator.FormulaLine;
 import ru.pt.api.dto.calculator.CalculatorTemplateLine;
-import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.dto.product.LobCoefficientColumn;
 import ru.pt.api.dto.product.LobModel;
@@ -51,6 +53,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.math.RoundingMode.HALF_UP;
 
@@ -110,7 +114,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         
         try {
             logger.trace("Parsing calculator JSON for productId={}", productId);
-            CalculatorModel model = objectMapper.readValue(json, CalculatorModel.class);
+            CalculatorModel model = readCalculatorModel(json);
             model.setId(entity.getId());
             model.setProductId(entity.getProductId());
             model.setProductCode(entity.getProductCode());
@@ -118,59 +122,8 @@ public class CalculatorServiceImpl implements CalculatorService {
             model.setPackageNo(entity.getPackageNo());
 
             ProductVersionModel productVersionModel = productServiceCRUD.getVersion(tenantId, productId, versionNo);
-            
-            // Добавить переменные с договора
-            productVersionModel.getVars().forEach(var -> {
-                if (var.getIsTarifFactor() == true) {
-                    //var.setVarCdm("CALCULATOR");
-                    model.getVars().add(var);
-                }
-            });
-            
-            
-            // Добавить переменные с пакета
-
-            productVersionModel.getPackages().forEach(pkg -> {
-
-                if (Objects.equals(pkg.getCode(), packageNo)) {
-                    logger.debug("Found matching package: {}, adding cover variables", packageNo);
-                    pkg.getCovers().forEach(cover -> {
-                        PvVar varSumInsured = PvVar.varSumInsured(cover.getCode());
-                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varSumInsured.getVarCode()))) {
-                            varSumInsured.setVarCdm("CALCULATOR");
-                            model.getVars().add(varSumInsured);
-                        }
-
-                        PvVar varPremium = PvVar.varPremium(cover.getCode());
-                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varPremium.getVarCode()))) {
-                            varPremium.setVarCdm("CALCULATOR");
-                            model.getVars().add(varPremium);
-                        }
-
-                        PvVar varDeductibleNr = PvVar.varDeductibleNr(cover.getCode());
-                        if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleNr.getVarCode()))) {
-                            varDeductibleNr.setVarCdm("CALCULATOR");
-                            model.getVars().add(varDeductibleNr);
-                        }
-
-                        // loop by deductible types
-                        cover.getDeductibles().forEach(deductibleType -> {
-                            PvVar varDeductibleType = PvVar.varDeductibleNr(cover.getCode());
-                            varDeductibleType.setVarCode(varDeductibleType.getVarCode() + "_" + deductibleType.getId());
-                            varDeductibleType.setVarName(deductibleType.getText());
-
-                            if (model.getVars().stream().noneMatch(v -> v.getVarCode().equals(varDeductibleType.getVarCode()))) {
-                                varDeductibleType.setVarCdm("CALCULATOR");
-                                model.getVars().add(varDeductibleType);
-                            }
-                        });
-                    });
-                }
-            });
-
-
-
-
+            syncCoverVars(model, productVersionModel, packageNo);
+            ensurePolicyVarsForFormulaRefs(model, productVersionModel);
             return model;
 
         } catch (JsonProcessingException e) {
@@ -239,20 +192,16 @@ public class CalculatorServiceImpl implements CalculatorService {
                 coefficientDef.setColumns(columns);
                 calculatorModel.getCoefficients().add(coefficientDef);
                     
-                calculatorModel.getVars().add(
-                    new PvVar(
+                CalculatorVar coeffVar = new CalculatorVar(
                         coefficient.getVarCode(),
                         coefficient.getVarName(),
-                        "",
-                        "COEFFICIENT",
-                        "",
-                        VarDataType.NUMBER,
-                        "CALCULATOR",
-                        "100"
-                    )
-                );
+                        CalcVarKind.COEFFICIENT,
+                        VarDataType.NUMBER);
+                calculatorModel.getVars().add(coeffVar);
             });
         }
+
+        syncCoverVars(calculatorModel, productVersionModel, packageNo);
 
         CalculatorEntity e = new CalculatorEntity();
         e.setTId(tenantId);
@@ -279,13 +228,8 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         Optional<CalculatorEntity> existingOpt = calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo);
         if (existingOpt.isPresent()) {
-            try {
-                logger.debug("Calculator already exists, returning existing");
-                return objectMapper.readValue(existingOpt.get().getCalculator(), CalculatorModel.class);
-            } catch (JsonProcessingException e) {
-                logger.error("Failed to parse existing calculator: {}", e.getMessage(), e);
-                throw new RuntimeException(e);
-            }
+            logger.debug("Calculator already exists, returning existing");
+            return getCalculator(tenantId, productId, versionNo, packageNo);
         }
 
         logger.info("Calculator not found, creating new one");
@@ -296,7 +240,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             LobCalculatorTemplateEntity templateEntity = lobCalculatorTemplateRepository.findById(templateId)
                     .orElseThrow(() -> new NotFoundException("Template not found: " + templateId));
             try {
-                calculatorModel = objectMapper.readValue(templateEntity.getCalculatorJson(), CalculatorModel.class);
+                calculatorModel = readCalculatorModel(templateEntity.getCalculatorJson());
                 calculatorModel.setId(null);
                 calculatorModel.setProductId(productId);
                 calculatorModel.setProductCode(productVersionModel.getCode());
@@ -309,7 +253,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
         } else {
             try {
-                calculatorModel = objectMapper.readValue(e.getCalculator(), CalculatorModel.class);
+                calculatorModel = readCalculatorModel(e.getCalculator());
                 
             } catch (JsonProcessingException ex) {
                 throw new RuntimeException("Failed to parse default calculator JSON", ex);
@@ -327,7 +271,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         saved = calculatorRepository.save(saved);
 
         try {
-            CalculatorModel model = objectMapper.readValue(saved.getCalculator(), CalculatorModel.class);
+            CalculatorModel model = readCalculatorModel(saved.getCalculator());
             logger.info("Calculator created successfully: id={}, productId={}", saved.getId(), productId);
             return model;
         } catch (JsonProcessingException ex) {
@@ -359,17 +303,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         newJson.setVersionNo(versionNo);
         newJson.setPackageNo(packageNo);
 
-        // Keep only calculator-owned vars. Null/blank varCdm (e.g. after LLM) → treat as CALCULATOR.
-        if (newJson.getVars() == null) {
-            newJson.setVars(new ArrayList<>());
-        }
-        for (PvVar var : newJson.getVars()) {
-            if (var != null && (var.getVarCdm() == null || var.getVarCdm().isBlank())) {
-                var.setVarCdm("CALCULATOR");
-            }
-        }
-        newJson.getVars().removeIf(var ->
-                var == null || !"CALCULATOR".equalsIgnoreCase(var.getVarCdm()));
+        CalculatorVarMigration.normalizeModel(newJson);
 
         String calculatorJson;
         try {
@@ -383,7 +317,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         CalculatorEntity saved = calculatorRepository.save(entity);
         String calculator = saved.getCalculator();
         try {
-            return objectMapper.readValue(calculator, CalculatorModel.class);
+            return readCalculatorModel(calculator);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -461,6 +395,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         CalculatorEntity saved = calculatorRepository.save(e);
 
         calculator.setId(saved.getId());
+        CalculatorVarMigration.normalizeModel(calculator);
         String calculatorJson;
         try {
             calculatorJson = objectMapper.writeValueAsString(calculator);
@@ -473,8 +408,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         String savedCalculatorJson = saved.getCalculator();
 
         try {
-            CalculatorModel model = objectMapper.readValue(savedCalculatorJson, CalculatorModel.class);
-            return model;               
+            return readCalculatorModel(savedCalculatorJson);
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
         } catch (Exception ex) {
@@ -494,13 +428,22 @@ public class CalculatorServiceImpl implements CalculatorService {
             return;
         }
 
-        CalculatorModel calc = getCalculator(tenantId, productId, versionNo, packageNo);
-        if ( calc == null ) {
+        Optional<CalculatorEntity> sourceOpt =
+                calculatorRepository.findByKeys(tenantId, productId, versionNo, packageNo);
+        if (sourceOpt.isEmpty()) {
             logger.warn("Source calculator not found, skipping copy");
             return;
         }
-
-        Long calcIdFrom = calc.getId();
+        CalculatorModel calc;
+        try {
+            calc = readCalculatorModel(sourceOpt.get().getCalculator());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        Long calcIdFrom = sourceOpt.get().getId();
+        calc.setProductId(productId);
+        calc.setProductCode(sourceOpt.get().getProductCode());
+        calc.setPackageNo(packageNo);
         calc.setVersionNo(versionNoTo);
         calc.setId(null);
 
@@ -550,7 +493,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         CalculatorModel model;
         try {
-            model = objectMapper.readValue(calculatorEntity.getCalculator(), CalculatorModel.class);
+            model = readCalculatorModel(calculatorEntity.getCalculator());
         } catch (JsonProcessingException e) {
             throw new BadRequestException("Calculator JSON is invalid");
         }
@@ -698,7 +641,94 @@ public class CalculatorServiceImpl implements CalculatorService {
         lobCalculatorTemplateRepository.delete(template);
     }
 
-    private String formatTemplateLine(FormulaLine line, List<PvVar> vars) {
+    private CalculatorModel readCalculatorModel(String json) throws JsonProcessingException {
+        CalculatorModel model = objectMapper.readValue(json, CalculatorModel.class);
+        CalculatorVarMigration.normalizeModel(model);
+        return model;
+    }
+
+    /** COVER из пакета — только overlay для редактора/runtime, без product tarif factors. */
+    private void syncCoverVars(CalculatorModel model, ProductVersionModel productVersionModel, String packageNo) {
+        if (model.getVars() == null) {
+            model.setVars(new ArrayList<>());
+        }
+        if (productVersionModel == null || productVersionModel.getPackages() == null) {
+            return;
+        }
+        productVersionModel.getPackages().stream()
+                .filter(pkg -> Objects.equals(pkg.getCode(), packageNo))
+                .findFirst()
+                .ifPresent(pkg -> {
+                    if (pkg.getCovers() == null) {
+                        return;
+                    }
+                    logger.debug("Sync COVER vars for package {}", packageNo);
+                    pkg.getCovers().forEach(cover -> {
+                        if (cover == null || cover.getCode() == null) {
+                            return;
+                        }
+                        addCoverVarIfAbsent(model, CalculatorVar.coverSumInsured(cover.getCode()));
+                        addCoverVarIfAbsent(model, CalculatorVar.coverPremium(cover.getCode()));
+                        addCoverVarIfAbsent(model, CalculatorVar.coverDeductibleNr(cover.getCode()));
+                        if (cover.getDeductibles() != null) {
+                            cover.getDeductibles().forEach(deductibleType -> {
+                                if (deductibleType == null || deductibleType.getId() == null) {
+                                    return;
+                                }
+                                CalculatorVar ded = CalculatorVar.coverDeductibleNr(cover.getCode());
+                                ded.setVarCode(ded.getVarCode() + "_" + deductibleType.getId());
+                                if (deductibleType.getText() != null) {
+                                    ded.setVarName(deductibleType.getText());
+                                }
+                                addCoverVarIfAbsent(model, ded);
+                            });
+                        }
+                    });
+                });
+    }
+
+    private static void addCoverVarIfAbsent(CalculatorModel model, CalculatorVar coverVar) {
+        boolean exists = model.getVars().stream()
+                .anyMatch(v -> v != null && coverVar.getVarCode().equals(v.getVarCode()));
+        if (!exists) {
+            model.getVars().add(coverVar);
+        }
+    }
+
+    /**
+     * В словарь калькулятора из продукта — только {@code isTarifFactor=true} (как POLICY).
+     * Покрытия (сумма/премия/франшиза) добавляет {@link #syncCoverVars}.
+     */
+    private void ensurePolicyVarsForFormulaRefs(CalculatorModel model, ProductVersionModel product) {
+        if (model == null || product == null || product.getVars() == null) {
+            return;
+        }
+        if (model.getVars() == null) {
+            model.setVars(new ArrayList<>());
+        }
+        Set<String> existing = model.getVars().stream()
+                .filter(Objects::nonNull)
+                .map(CalculatorVar::getVarCode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        product.getVars().stream()
+                .filter(Objects::nonNull)
+                .filter(v -> v.getIsTarifFactor())
+                .filter(v -> v.getVarCode() != null && !v.getVarCode().isBlank())
+                .filter(v -> !v.getIsDeleted())
+                .filter(v -> !existing.contains(v.getVarCode()))
+                .forEach(v -> {
+                    CalculatorVar policy = new CalculatorVar(
+                            v.getVarCode(),
+                            v.getVarName() != null ? v.getVarName() : v.getVarCode(),
+                            CalcVarKind.POLICY,
+                            v.getVarDataType() != null ? v.getVarDataType() : VarDataType.NUMBER);
+                    model.getVars().add(policy);
+                    existing.add(v.getVarCode());
+                });
+    }
+
+    private String formatTemplateLine(FormulaLine line, List<CalculatorVar> vars) {
         StringBuilder sb = new StringBuilder();
         if (line.hasCondition()) {
             sb.append("IF ")
@@ -718,8 +748,8 @@ public class CalculatorServiceImpl implements CalculatorService {
         return sb.toString().trim();
     }
 
-    private String resolveVar(String varCode, List<PvVar> vars) {
-        PvVar var = vars.stream().filter(v -> v.getVarCode().equals(varCode)).findFirst().orElse(null);
+    private String resolveVar(String varCode, List<CalculatorVar> vars) {
+        CalculatorVar var = vars.stream().filter(v -> v.getVarCode().equals(varCode)).findFirst().orElse(null);
         if (var == null) {
             return varCode;
         }
@@ -746,15 +776,50 @@ public class CalculatorServiceImpl implements CalculatorService {
             return;
         }
 
-        // Добавить переменные калькулятора в контекст.
-        model.getVars().forEach(v -> {
-            PvVarDefinition varDef = PvVarDefinition.fromPvVar(v);
-            ctx.putDefinition(varDef);
+        // В контекст расчёта: calculator-local (CONST/COEFFICIENT/VAR) + POLICY (tarifFactor) + COVER.
+        // POLICY/COVER — только если definition ещё нет (не затираем вход из продукта/оркестратора).
+        if (model.getVars() != null) {
+            for (CalculatorVar v : model.getVars()) {
+                if (v == null || v.getVarKind() == null || v.getVarCode() == null) {
+                    continue;
+                }
+                CalcVarKind varKind = v.getVarKind();
+                switch (varKind) {
+                    case CONST -> {
+                        ctx.putDefinition(PvVarDefinition.fromCalculatorVar(v));
+                        if (v.getVarValue() != null && !v.getVarValue().isBlank()) {
+                            ctx.put(v.getVarCode(), new BigDecimal(v.getVarValue()));
+                        }
+                    }
+                    case COEFFICIENT, VAR -> ctx.putDefinition(PvVarDefinition.fromCalculatorVar(v));
+                    case POLICY, COVER -> {
+                        if (ctx.getDefinition(v.getVarCode()) == null) {
+                            ctx.putDefinition(PvVarDefinition.fromCalculatorVar(v));
+                        }
+                    }
+                    default -> {
+                        // ignore
+                    }
+                }
+            }
+        }
 
-            if (v.getVarType().equals("CONST")) {
-                ctx.put(v.getVarCode(), new BigDecimal(v.getVarValue()));
-            };
-        });
+        // Из продукта — только isTarifFactor=true (если ещё нет в контексте).
+        ProductVersionModel product = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+        if (product != null && product.getVars() != null) {
+            for (ru.pt.api.dto.product.PvVar pv : product.getVars()) {
+                if (pv == null
+                        || !pv.getIsTarifFactor()
+                        || pv.getIsDeleted()
+                        || pv.getVarCode() == null
+                        || pv.getVarCode().isBlank()) {
+                    continue;
+                }
+                if (ctx.getDefinition(pv.getVarCode()) == null) {
+                    ctx.putDefinition(PvVarDefinition.fromPvVar(pv));
+                }
+            }
+        }
 
         // Получить формулу калькулятора. Она у пакета одна
         FormulaDef formula = model.getFormulas().getFirst();

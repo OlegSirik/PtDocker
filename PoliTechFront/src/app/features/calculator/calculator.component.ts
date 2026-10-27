@@ -87,7 +87,7 @@ export class CalculatorComponent implements OnInit {
   sortOrderOptions: string[] = [];
 
   // Vars table
-  varsDisplayedColumns = ['varCode', 'varName', 'varPath', 'varType', 'varDataType', 'varValue', 'actions'];
+  varsDisplayedColumns = ['varCode', 'varName', 'varType', 'varDataType', 'varValue', 'actions'];
   varsSearchText = '';
   varsPageSize = 10;
   varsPageIndex = 0;
@@ -96,7 +96,20 @@ export class CalculatorComponent implements OnInit {
 
   // Constants
   get constants(): CalculatorVar[] {
-    return (this.calculator.vars ?? []).filter((v): v is CalculatorVar => !!v && v.varType === 'CONST');
+    return (this.calculator.vars ?? []).filter(
+      (v): v is CalculatorVar => !!v && this.resolveVarKind(v) === 'CONST'
+    );
+  }
+
+  /** varKind с fallback на legacy kind/varType. */
+  resolveVarKind(v: CalculatorVar): string {
+    return v.varKind ?? v.kind ?? v.varType ?? '';
+  }
+
+  /** Редактировать/удалять в UI можно только VAR и CONST. */
+  isEditableVar(v: CalculatorVar): boolean {
+    const k = this.resolveVarKind(v);
+    return k === 'VAR' || k === 'CONST';
   }
 
   // Formulas table
@@ -528,7 +541,9 @@ export class CalculatorComponent implements OnInit {
           return;
         }
         
-        result.varCdm = 'CALCULATOR';
+        if (!result.varKind) {
+          result.varKind = (result.kind ?? result.varType ?? 'VAR') as CalculatorVar['varKind'];
+        }
         this.calculator.vars.push(result);
         this.updateVarsTable();
         this.updateChanges();
@@ -537,6 +552,9 @@ export class CalculatorComponent implements OnInit {
   }
 
   editVar(varItem: CalculatorVar, index: number): void {
+    if (!this.isEditableVar(varItem)) {
+      return;
+    }
     const dialogRef = this.dialog.open(VarDialogComponent, {
       width: '700px',
       minWidth: '700px',
@@ -570,6 +588,9 @@ export class CalculatorComponent implements OnInit {
   }
 
   deleteVar(varItem: CalculatorVar, index: number): void {
+    if (!this.isEditableVar(varItem)) {
+      return;
+    }
     if (confirm('Удалить переменную?')) {
       // Find the actual index in calculator.vars array by varCode
       const actualIndex = this.calculator.vars.findIndex(v => v.varCode === varItem.varCode);
@@ -596,7 +617,7 @@ export class CalculatorComponent implements OnInit {
     this.filteredVars = this.calculator.vars.filter(item =>
       (item.varCode && item.varCode.toLowerCase().includes(this.varsSearchText.toLowerCase())) ||
       (item.varName && item.varName.toLowerCase().includes(this.varsSearchText.toLowerCase())) ||
-      (item.varPath && item.varPath.toLowerCase().includes(this.varsSearchText.toLowerCase()))
+      (this.resolveVarKind(item).toLowerCase().includes(this.varsSearchText.toLowerCase()))
     );
     this.updateVarsPagination();
   }
@@ -949,13 +970,10 @@ export class CalculatorComponent implements OnInit {
         const varItem: CalculatorVar = {
           varCode: result.varCode,
           varName: result.varName,
-          varPath: '',
-          varType: 'COEFFICIENT',
+          varKind: 'COEFFICIENT',
           varValue: '',
-          varDataType: 'NUMBER',
-          varCdm: 'CALCULATOR',
-          varNr: 10000
-        }
+          varDataType: 'NUMBER'
+        };
         this.newCalculatorVar(varItem);
 
         this.calculator.coefficients.push(result);
@@ -986,7 +1004,15 @@ export class CalculatorComponent implements OnInit {
 
   deleteCoefficient(coefficient: CalculatorCoefficient, index: number): void {
     if (confirm('Удалить коэффициент?')) {
+      const code = coefficient.varCode;
       this.calculator.coefficients.splice(index, 1);
+      if (code) {
+        const varIndex = this.calculator.vars.findIndex(v => v.varCode === code);
+        if (varIndex !== -1) {
+          this.calculator.vars.splice(varIndex, 1);
+          this.updateVarsTable();
+        }
+      }
       this.updateCoefficientsTable();
       this.updateChanges();
     }
@@ -1439,40 +1465,4 @@ this.coefficientDataRows = rows;
     }
   }
 
-  syncVars() {
-    //throw new Error('Method not implemented.');
-    /*
-export interface PolicyVar {
-  varPath: string;
-  varName: string;
-  varCode: string;
-  varDataType: 'STRING' | 'NUMBER' | 'DATE' | 'DURATION';
-  varValue: string;
-}
-    */
-    this.productService.getProduct( +this.calculator.productId, +this.calculator.versionNo ).subscribe(product => {
-      // loop product.vars
-      // if var not in calculator.vars then add it
-      product.vars.forEach(v => {
-        console.log(v);
-        if (!this.calculator.vars.some(v2 => v2.varCode === v.varCode)) {
-          // Map backend varDataType (including 'DURATION') to frontend literal union type
-          
-
-          this.calculator.vars.push({
-            varCode: v.varCode,
-            varName: v.varName,
-            varPath: v.varPath,
-            varType: v.varType,
-            varDataType: v.varDataType === 'NUMBER' ? 'NUMBER' : 'STRING',
-            varValue: v.varValue,
-            varCdm: v.varCdm,
-            varNr: v.varNr
-          });
-        }
-      });
-
-      this.updateVarsTable();
-    });
-  }
 }

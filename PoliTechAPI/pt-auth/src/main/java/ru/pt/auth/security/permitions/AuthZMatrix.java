@@ -66,16 +66,13 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.LOB, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.PRODUCT, AuthZ.Action.ALL),
 
-            // ToDo - delete it just to test
             formatPermission(AuthZ.ResourceType.ACCOUNT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.ACCOUNT_PRODUCT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.TOKEN, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.LOGIN, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.CONTRACT, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.POLICY_ADDON, AuthZ.Action.ALL),
-            formatPermission(AuthZ.ResourceType.INS_COMPANY, AuthZ.Action.ALL),
-
-            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST)
+            formatPermission(AuthZ.ResourceType.INS_COMPANY, AuthZ.Action.ALL)
         ));
         // PRODUCT_ADMIN может SELL и VIEW продуктов
         ROLE_PERMISSIONS.put(AuthZ.Role.PRODUCT_ADMIN, Set.of(
@@ -85,10 +82,6 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.CLIENT_PRODUCTS, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.CLIENT, AuthZ.Action.LIST),
             formatPermission(AuthZ.ResourceType.CLIENT, AuthZ.Action.VIEW),
-            // ToDo - delete it just to test
-            formatPermission(AuthZ.ResourceType.ACCOUNT, AuthZ.Action.MANAGE),
-            formatPermission(AuthZ.ResourceType.ACCOUNT_PRODUCT, AuthZ.Action.ALL),
-            // formatPermission(AuthZ.ResourceType.ACCOUNT, AuthZ.Action.PERMISSION),
             formatPermission(AuthZ.ResourceType.LOB, AuthZ.Action.ALL),
 
             formatPermission(AuthZ.ResourceType.TOKEN, AuthZ.Action.ALL),
@@ -97,10 +90,25 @@ public final class AuthZMatrix {
             formatPermission(AuthZ.ResourceType.POLICY_ADDON, AuthZ.Action.ALL),
             formatPermission(AuthZ.ResourceType.INS_COMPANY, AuthZ.Action.ALL),
 
-            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.TEST),
             formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.LIST),
 
             formatPermission(AuthZ.ResourceType.FILE, AuthZ.Action.ALL)
+        ));
+
+        ROLE_PERMISSIONS.put(AuthZ.Role.GROUP_ADMIN, Set.of(
+            formatPermission(AuthZ.ResourceType.ACCOUNT, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.ACCOUNT_PRODUCT, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.TOKEN, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.LOGIN, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.CONTRACT, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.POLICY_ADDON, AuthZ.Action.ALL),
+            formatPermission(AuthZ.ResourceType.INS_COMPANY, AuthZ.Action.VIEW),
+            formatPermission(AuthZ.ResourceType.PRODUCT, AuthZ.Action.VIEW),
+            formatPermission(AuthZ.ResourceType.CLIENT, AuthZ.Action.VIEW),
+            formatPermission(AuthZ.ResourceType.CLIENT, AuthZ.Action.LIST),
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.LIST),
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.SELL),
+            formatPermission(AuthZ.ResourceType.POLICY, AuthZ.Action.QUOTE)
         ));
 
         ROLE_PERMISSIONS.put(AuthZ.Role.ACCOUNT, Set.of(

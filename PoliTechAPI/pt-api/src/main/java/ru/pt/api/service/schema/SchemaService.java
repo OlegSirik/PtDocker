@@ -2,6 +2,7 @@ package ru.pt.api.service.schema;
 
 import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobVar;
+import ru.pt.api.dto.schema.ContractSchemaExportDto;
 
 import java.util.List;
 import java.util.Map;
@@ -56,4 +57,15 @@ public interface SchemaService {
      * Следующее значение последовательности {@code mt_attribute_def_seq}.
      */
     Long nextId();
+
+    /**
+     * Выгрузить модель договора и дерево атрибутов в JSON-совместимый DTO.
+     */
+    ContractSchemaExportDto exportContractSchema(Long tenantId, String contractCode);
+
+    /**
+     * Загрузить модель из JSON. Если документ с таким {@code code} уже есть —
+     * атрибуты удаляются и заменяются; запись в {@code mt_contract_model} обновляется/создаётся.
+     */
+    ContractSchemaExportDto importContractSchema(Long tenantId, ContractSchemaExportDto payload);
 }

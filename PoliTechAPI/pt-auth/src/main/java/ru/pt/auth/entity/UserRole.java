@@ -62,11 +62,12 @@ public enum UserRole {
      * @return the corresponding UserRole enum, or null if not found
      */
     public static UserRole fromString(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return null;
         }
+        String n = value.trim();
         for (UserRole role : UserRole.values()) {
-            if (role.value.equals(value)) {
+            if (role.value.equalsIgnoreCase(n) || role.name().equalsIgnoreCase(n)) {
                 return role;
             }
         }

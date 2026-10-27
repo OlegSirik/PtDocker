@@ -108,7 +108,15 @@ public class ClientManagementController {
         if (client.getClientAccountId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        List<AdminResponse> members = adminManagementService.getAccountMembers( client.getClientAccountId(), role == null ? null : UserRole.valueOf(role.toUpperCase()).toString() );
+        String roleName = null;
+        if (role != null && !role.isBlank()) {
+            UserRole parsed = UserRole.fromString(role);
+            if (parsed == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            roleName = parsed.getValue();
+        }
+        List<AdminResponse> members = adminManagementService.getAccountMembers(client.getClientAccountId(), roleName);
         return ResponseEntity.ok(members);
     }
 

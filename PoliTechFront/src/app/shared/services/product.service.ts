@@ -90,6 +90,10 @@ export interface PackageFile {
   fileCode: string;
   fileName: string;
   fileId?: number;
+  /** Порядковый номер части ПФ (merge). */
+  fileNr?: number;
+  /** true — PDF без AcroForm. */
+  isStatic?: boolean;
 }
 
 export interface Package {

@@ -30,8 +30,8 @@ public class PostProcessService {
             if (dedId != null) {
                 cover.setDeductible(new Deductible(dedId, null));
             }
-            cover.setLimitMin(coverDecimal(ctx, coverCode, PvVar::varLimitMin));
-            cover.setLimitMax(coverDecimal(ctx, coverCode, PvVar::varLimitMax));
+//            cover.setLimitMin(coverDecimal(ctx, coverCode, PvVar::varLimitMin));
+//            cover.setLimitMax(coverDecimal(ctx, coverCode, PvVar::varLimitMax));
         }
     }
 

@@ -319,8 +319,8 @@ public class LobServiceImpl implements LobService {
                 addPvVarAsChild(vars, PvVar.varSumInsured(code), coverVar.getId());
                 addPvVarAsChild(vars, PvVar.varPremium(code), coverVar.getId());
                 addPvVarAsChild(vars, PvVar.varDeductibleNr(code), coverVar.getId());
-                addPvVarAsChild(vars, PvVar.varLimitMin(code), coverVar.getId());
-                addPvVarAsChild(vars, PvVar.varLimitMax(code), coverVar.getId());
+                //addPvVarAsChild(vars, PvVar.varLimitMin(code), coverVar.getId());
+                //addPvVarAsChild(vars, PvVar.varLimitMax(code), coverVar.getId());
             }
         }
 

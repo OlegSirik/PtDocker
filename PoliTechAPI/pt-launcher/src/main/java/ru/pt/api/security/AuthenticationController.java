@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.pt.api.admin.dto.SetPasswordRequest;
 import ru.pt.api.dto.auth.Principal;
 import ru.pt.api.service.auth.AccountService;
+import ru.pt.api.dto.exception.ForbiddenException;
 import ru.pt.auth.entity.TenantEntity;
+import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.identity.ExternalJwtAuthenticator;
 import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.LoginRequest;
@@ -200,13 +202,15 @@ public class AuthenticationController {
     }
 
     /**
-     * Генерация JWT токена для пользователя
-     * POST /api/auth/token
+     * Генерация JWT без пароля. Только для SYS_ADMIN (не публичный).
+     * Обычный вход — {@code POST /auth/login}.
      */
     @PostMapping("/token")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TokenResponse> generateToken(
         @PathVariable String tenantCode,
         @RequestBody TokenRequest request) {
+        assertSysAdmin();
         String token = jwtTokenUtil.createToken(tenantCode, request.getClientId(), request.getUserLogin());
 
         if (token == null) {
@@ -229,9 +233,11 @@ public class AuthenticationController {
      * POST /api/auth/refresh-token
      */
     @PostMapping("/refresh-token")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TokenResponse> generateRefreshToken(
         @PathVariable String tenantCode,
         @RequestBody TokenRequest request) {
+        assertSysAdmin();
         String refreshToken = jwtTokenUtil.refreshToken(tenantCode, request.getClientId(), request.getUserLogin());
 
         if (refreshToken == null) {
@@ -310,7 +316,15 @@ public class AuthenticationController {
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", e.getMessage());
-            return ResponseEntity.status(403).body(response);
+                return ResponseEntity.status(403).body(response);
+        }
+    }
+
+    private void assertSysAdmin() {
+        UserDetailsImpl user = securityContextHelper.getCurrentUser()
+                .orElseThrow(() -> new ForbiddenException("Not authenticated"));
+        if (!UserRole.SYS_ADMIN.getValue().equals(user.getUserRole())) {
+            throw new ForbiddenException("Only SYS_ADMIN can mint tokens without password");
         }
     }
 }

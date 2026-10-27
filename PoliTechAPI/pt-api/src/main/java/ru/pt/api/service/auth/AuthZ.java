@@ -1,5 +1,7 @@
 package ru.pt.api.service.auth;
 
+import java.util.Locale;
+
 /**
  * Authorization enums shared across services.
  */
@@ -71,6 +73,39 @@ public final class AuthZ {
         public String getValue() {
             return value;
         }
+
+        /**
+         * Канон строк: {@code SYS_ADMIN}, {@code TNT_ADMIN}, {@code PRODUCT_ADMIN}, {@code GROUP_ADMIN}.
+         * Регистр не важен. Неизвестное значение — {@code null}, не exception.
+         */
+        public static Role parse(String raw) {
+            String n = normalize(raw);
+            if (n == null) {
+                return null;
+            }
+            for (Role role : values()) {
+                if (role.value.equals(n) || role.name().equals(n)) {
+                    return role;
+                }
+            }
+            return null;
+        }
+
+        public static Role require(String raw) {
+            Role role = parse(raw);
+            if (role == null) {
+                throw new IllegalArgumentException("Unknown role: " + raw);
+            }
+            return role;
+        }
+    }
+
+    /** Единый канон имени роли / nodeType. */
+    public static String normalize(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return raw.trim().toUpperCase(Locale.ROOT);
     }
 
     private AuthZ() {

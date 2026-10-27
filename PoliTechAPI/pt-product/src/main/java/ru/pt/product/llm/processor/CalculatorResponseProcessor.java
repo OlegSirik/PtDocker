@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CalculatorVar;
+import ru.pt.api.dto.calculator.CalculatorVarMigration;
 import ru.pt.api.dto.calculator.CoefficientColumn;
 import ru.pt.api.dto.calculator.CoefficientDef;
 import ru.pt.api.dto.calculator.FormulaDef;
@@ -46,6 +48,7 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
             if (calculator == null) {
                 return LlmProcessedResult.fail(List.of("В ответе нет объекта calculator"));
             }
+            CalculatorVarMigration.normalizeModel(calculator);
 
             Set<String> responseVarCodes = mergeVarCodes(knownVarCodes, calculator.getVars());
             Set<String> referencedInFormulas = collectReferencedVarCodes(calculator.getFormulas());
@@ -88,7 +91,7 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
         return !hasFormulas && !hasCoefficients && !hasVars;
     }
 
-    private static Set<String> mergeVarCodes(Set<String> knownVarCodes, List<PvVar> responseVars) {
+    private static Set<String> mergeVarCodes(Set<String> knownVarCodes, List<CalculatorVar> responseVars) {
         Set<String> merged = new LinkedHashSet<>();
         if (knownVarCodes != null) {
             merged.addAll(knownVarCodes);
@@ -96,7 +99,7 @@ public class CalculatorResponseProcessor implements LlmResponseProcessor {
         if (responseVars != null) {
             merged.addAll(responseVars.stream()
                     .filter(v -> v != null && v.getVarCode() != null && !v.getVarCode().isBlank())
-                    .map(PvVar::getVarCode)
+                    .map(CalculatorVar::getVarCode)
                     .collect(Collectors.toSet()));
         }
         return merged;

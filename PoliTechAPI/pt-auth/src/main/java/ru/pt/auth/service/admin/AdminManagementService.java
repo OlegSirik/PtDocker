@@ -1,6 +1,5 @@
 package ru.pt.auth.service.admin;
 
-import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
@@ -123,7 +122,11 @@ public class AdminManagementService {
             if (role == null || role.isEmpty()) {
                 throw new BadRequestException("Не указана роль для фильтрации пользователей");
             }
-            return getAccountUsers(accountId, UserRole.valueOf(role));
+            UserRole parsedRole = UserRole.fromString(role);
+            if (parsedRole == null || !RoleCanon.isAssignableAdminRole(parsedRole)) {
+                throw new BadRequestException("Unknown role: " + role);
+            }
+            return getAccountUsers(accountId, parsedRole);
         } else {
             if (role != null && !role.isEmpty()) {
                 throw new BadRequestException("Для этого account роль не применима");
@@ -145,7 +148,11 @@ public class AdminManagementService {
             if (role == null || role.isEmpty()) {
                 throw new BadRequestException("Не указана роль для пользователя");
             }
-            Account roleAccount = accountService.getOrCreateRoleAccount(AccountNodeType.fromString(role), role.toUpperCase(), accountId);
+            AccountNodeType nodeType = AccountNodeType.fromString(role);
+            if (nodeType == null || !RoleCanon.isAssignableAdminRole(nodeType)) {
+                throw new BadRequestException("Unknown role: " + role);
+            }
+            Account roleAccount = accountService.getOrCreateRoleAccount(nodeType, nodeType.getValue(), accountId);
 
             var saved = linkUserToAccount(roleAccount.id(), login);
 
@@ -177,7 +184,13 @@ public class AdminManagementService {
         AccountLoginEntity alEntity = accountLoginRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("AccountLogin not found"));
 
-        if (!alEntity.getAccount().getId().equals(accountId)) {
+        Long memberAccountId = alEntity.getAccount().getId();
+        Long memberParentId = alEntity.getAccount().getParent() != null
+                ? alEntity.getAccount().getParent().getId()
+                : null;
+        boolean onThisNode = accountId.equals(memberAccountId);
+        boolean onChildRoleNode = accountId.equals(memberParentId);
+        if (!onThisNode && !onChildRoleNode) {
             throw new BadRequestException("member not found for account");
         }
 

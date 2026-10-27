@@ -193,6 +193,11 @@ public class LoginManagementService {
         return logins.stream().map(this::fromEntity).collect(Collectors.toList());
     }
 
+    /** SYS_ADMIN — impersonated tenant; остальные — свой tenant. */
+    public String resolveLoginTenantCode(String tenantCode) {
+        return adminPermissionHelper.checkPermissionAndGetTenantCodeForLoginManagement(tenantCode);
+    }
+
     public LoginDto getLoginByUserLogin(String tenantCode, String userLogin) {
         
         LoginEntity login = loginRepository.findByTenantCodeAndUserLogin(tenantCode,userLogin)

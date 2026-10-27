@@ -11,6 +11,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import jakarta.servlet.DispatcherType;
+
 import ru.pt.auth.security.filter.TenantResolutionFilter;
 //import ru.pt.auth.security.permitions.CustomPermissionEvaluator;
 import ru.pt.auth.security.filter.IdentityResolutionFilter;
@@ -59,7 +61,8 @@ public class SecurityConfig {
         var auth = http
             .csrf(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> {
-                // Добавляем все публичные URL-ы из конфигурации
+                authz.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll();
+                authz.requestMatchers("/error").permitAll();
                 if (!securityConfigurationProperties.getPublicUrls().isEmpty()) {
                     authz.requestMatchers(
                         securityConfigurationProperties.getPublicUrls().toArray(new String[0])

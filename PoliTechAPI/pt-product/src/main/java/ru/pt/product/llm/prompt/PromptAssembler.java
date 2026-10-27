@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ru.pt.api.dto.calculator.CalculatorModel;
+import ru.pt.api.dto.calculator.CalculatorVar;
 import ru.pt.api.dto.llm.LlmTaskType;
 import ru.pt.api.dto.product.LobCover;
 import ru.pt.api.dto.product.LobModel;
@@ -265,18 +266,21 @@ public class PromptAssembler {
         }
     }
 
-    private List<Map<String, String>> slimVars(List<PvVar> vars) {
+    private List<Map<String, String>> slimVars(List<CalculatorVar> vars) {
         if (vars == null || vars.isEmpty()) {
             return List.of();
         }
         List<Map<String, String>> result = new ArrayList<>();
-        for (PvVar var : vars) {
+        for (CalculatorVar var : vars) {
             if (var == null || var.getVarCode() == null || var.getVarCode().isBlank()) {
                 continue;
             }
             Map<String, String> item = new LinkedHashMap<>();
             item.put("varCode", var.getVarCode());
-            item.put("varName", firstNonBlank(var.getVarName(), var.getName()));
+            item.put("varName", firstNonBlank(var.getVarName(), var.getVarCode()));
+            if (var.getVarKind() != null) {
+                item.put("varKind", var.getVarKind().name());
+            }
             result.add(item);
         }
         return result;

@@ -1464,8 +1464,7 @@ export class BusinessLineEditComponent implements OnInit {
       <mat-select [(ngModel)]="model.varDataType">
         <mat-option value="STRING">STRING</mat-option>
         <mat-option value="NUMBER">NUMBER</mat-option>
-        <mat-option value="DATE">DATE</mat-option>
-        <mat-option value="PERIOD">PERIOD</mat-option>
+        <mat-option value="OBJECT">OBJECT</mat-option>
       </mat-select>
     </mat-form-field>
   </div>

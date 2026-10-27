@@ -105,6 +105,28 @@ export interface ContractModel {
   name: string;
 }
 
+/** Узел дерева схемы (без id/parent_id — вложенность через children). */
+export interface ContractSchemaNode {
+  varCode: string;
+  varName: string;
+  varPath: string;
+  varType: string;
+  varDataType?: string;
+  varValue?: string;
+  varNr?: string | number;
+  varList?: string | null;
+  isSystem?: boolean;
+  defaultState?: string;
+  children?: ContractSchemaNode[];
+}
+
+/** Экспорт/импорт модели договора + дерево атрибутов. */
+export interface ContractSchemaExport {
+  code: string;
+  name: string;
+  attributes: ContractSchemaNode[];
+}
+
 @Injectable({
     providedIn: 'root'
   })
@@ -183,5 +205,23 @@ export class VarsService {
   deleteAttribute(contractModel: string, body: LobVar): Observable<void> {
     const url = `${this.schemaUrl(contractModel)}/attributes`;
     return this.http.delete<void>(url, { body });
+  }
+
+  /**
+   * Выгрузить модель договора + атрибуты.
+   * GET /api/v1/{tenant}/admin/schema/{contractCode}/export
+   */
+  exportContractSchema(contractModel: string): Observable<ContractSchemaExport> {
+    const url = `${this.authService.baseApiUrl}/admin/schema/${contractModel}/export`;
+    return this.http.get<ContractSchemaExport>(url);
+  }
+
+  /**
+   * Загрузить модель (замена документа, если code уже есть).
+   * POST /api/v1/{tenant}/admin/schema/import
+   */
+  importContractSchema(payload: ContractSchemaExport): Observable<ContractSchemaExport> {
+    const url = `${this.authService.baseApiUrl}/admin/schema/import`;
+    return this.http.post<ContractSchemaExport>(url, payload);
   }
 }

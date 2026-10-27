@@ -15,8 +15,6 @@ import ru.pt.api.dto.policy.StdPolicy;
 import ru.pt.api.dto.product.PvFile;
 import ru.pt.api.service.file.FileService;
 import ru.pt.api.service.process.FileProcessService;
-import ru.pt.process.service.PreProcessService;
-import ru.pt.process.service.PostProcessService;
 import ru.pt.db.repository.PolicyIndexRepository;
 import ru.pt.db.repository.PolicyRepository;
 import ru.pt.domain.model.VariableContext;
@@ -27,6 +25,7 @@ import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -116,9 +115,6 @@ public class FileProcessServiceImpl implements FileProcessService {
                 LobModel lobModel = lobService.getByCode(policyTid, lobCode);
                 if (lobModel != null && lobModel.getMpVars() != null) {
                     for (LobVar lobVar : lobModel.getMpVars()) {
-                    //    if (lobVar.getIsDeleted()) {
-                    //        continue;
-                    //    }
                         if ("TEXT".equals(lobVar.getVarType().toString())) {
                             pvVarList.add(lobVarToPvVarForPrint(lobVar));
                         }
@@ -143,21 +139,28 @@ public class FileProcessServiceImpl implements FileProcessService {
         
         String packageNo = varCtx.getString(StdPolicy.IO_PACKAGE_CODE);
         logger.debug("Resolved package number for policy {}: {}", policyNumber, packageNo);
-        Integer fileId = null;
 
-        for (PvPackage pvPackage : productVersion.getPackages()) { 
-            if (pvPackage.getCode().toString().equals(packageNo)) {
+        List<PvFile> parts = new ArrayList<>();
+        if (productVersion.getPackages() != null) {
+            for (PvPackage pvPackage : productVersion.getPackages()) {
+                if (pvPackage.getCode() == null || !pvPackage.getCode().toString().equals(packageNo)) {
+                    continue;
+                }
+                if (pvPackage.getFiles() == null) {
+                    break;
+                }
                 for (PvFile pvFile : pvPackage.getFiles()) {
-                    if (pvFile.getFileCode().equals(printFormType)) {
-                        fileId = pvFile.getFileId();
-                        logger.debug("Matched print form file. packageNo={}, fileCode={}, fileId={}", packageNo, printFormType, fileId);
-                        break;
+                    if (pvFile != null
+                            && printFormType.equals(pvFile.getFileCode())
+                            && pvFile.getFileId() != null) {
+                        parts.add(pvFile);
                     }
                 }
                 break;
             }
         }
-        if (fileId == null) {
+
+        if (parts.isEmpty()) {
             logger.warn("Print form file not found. policyNumber={}, packageNo={}, printFormType={}", policyNumber, packageNo, printFormType);
             ErrorModel errorModel = ErrorConstants.createErrorModel(
                 404,
@@ -169,9 +172,26 @@ public class FileProcessServiceImpl implements FileProcessService {
             throw new NotFoundException(errorModel);
         }
 
-        logger.info("Print form resolved. policyNumber={}, fileId={}", policyNumber, fileId);
-        return fileService.getFile(fileId, varCtx);
-    
+        parts.sort(Comparator.comparingInt(PvFile::effectiveFileNr));
+
+        List<byte[]> pdfParts = new ArrayList<>(parts.size());
+        for (PvFile part : parts) {
+            logger.debug("Print part. fileCode={}, fileNr={}, fileId={}, isStatic={}",
+                    part.getFileCode(), part.effectiveFileNr(), part.getFileId(), part.isStaticFile());
+            if (part.isStaticFile()) {
+                pdfParts.add(fileService.getRawFile(part.getFileId()));
+            } else {
+                pdfParts.add(fileService.getFile(part.getFileId(), varCtx));
+            }
+        }
+
+        if (pdfParts.size() == 1) {
+            logger.info("Print form resolved (single part). policyNumber={}, fileId={}", policyNumber, parts.getFirst().getFileId());
+            return pdfParts.getFirst();
+        }
+
+        logger.info("Print form merge. policyNumber={}, parts={}", policyNumber, pdfParts.size());
+        return fileService.mergePdfs(pdfParts);
     }
 
     /**

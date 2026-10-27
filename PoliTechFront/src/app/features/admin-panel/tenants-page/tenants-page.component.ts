@@ -17,7 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TenantsService, Tenant, RecordStatus } from '../../../shared/services/api/tenants.service';
 import { LoginService, Login } from '../../../shared/services/api/logins.service';
-import { TenantAdminService, TenantAdmin } from '../../../shared/services/api/tenant-admins.service';
+import { TenantAdminService, TenantAdmin, ADMIN_ROLES, AddAdminMemberRequest } from '../../../shared/services/api/tenant-admins.service';
 import { AuthService as RestAuthService, User } from '../../../shared/services/auth.service';
 import { LoginDialogComponent } from '../components/login-dialog/login-dialog.component';
 import { TenantLlmConfigComponent } from './tenant-llm-config.component';
@@ -381,19 +381,19 @@ export class TenantsPageComponent implements OnInit {
       width: '400px'
     });
 
-    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+    dialogRef.afterClosed().subscribe((result: AdminMemberForm | undefined) => {
       if (result) {
         const tenantCode = this.selectedTenantCode || this.currentTenantCode;
-        // Find login by userLogin to get full details
 
-              const sysAdminData: TenantAdmin = {
-                tenantCode: 'sys',
-                userLogin: result,
-                role: 'SYS_ADMIN',
-                authClientId: 'sys'
+              const sysAdminData: AddAdminMemberRequest = {
+                userLogin: result.userLogin,
+                fullName: result.fullName,
+                position: result.position,
+                password: result.password,
+                role: ADMIN_ROLES.SYS_ADMIN,
               };
 
-              this.tenantAdminService.create(sysAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
+              this.tenantAdminService.addMember(sysAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
                 next: () => {
                   this.loadSysAdmins();
                   this.snack.open('Sys Admin создан', 'OK', { duration: 2000 });
@@ -457,21 +457,18 @@ export class TenantsPageComponent implements OnInit {
       width: '400px'
     });
 
-    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+    dialogRef.afterClosed().subscribe((result: AdminMemberForm | undefined) => {
       if (result) {
         const tenantCode = this.selectedTenantCode || this.currentTenantCode;
-        // Find login by userLogin from the list of logins
-        //const login = this.logins.find(l => l.userLogin === result);
-
-        //if (login) {
-          const tntAdminData: TenantAdmin = {
-            tenantCode: tenantCode || '',
-            userLogin: result,
-            role: 'TNT_ADMIN',
-            authClientId: 'sys'
+          const tntAdminData: AddAdminMemberRequest = {
+            userLogin: result.userLogin,
+            fullName: result.fullName,
+            position: result.position,
+            password: result.password,
+            role: ADMIN_ROLES.TNT_ADMIN,
           };
 
-          this.tenantAdminService.create(tntAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
+          this.tenantAdminService.addMember(tntAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
             next: () => {
               this.loadTntAdmins();
               this.snack.open('Tenant Admin создан', 'OK', { duration: 2000 });
@@ -481,7 +478,6 @@ export class TenantsPageComponent implements OnInit {
               this.snack.open('Ошибка при создании tenant admin', 'OK', { duration: 2000 });
             }
           });
-      //}
     }
   });
 }
@@ -536,21 +532,18 @@ export class TenantsPageComponent implements OnInit {
       width: '400px'
     });
 
-    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+    dialogRef.afterClosed().subscribe((result: AdminMemberForm | undefined) => {
       if (result) {
         const tenantCode = this.selectedTenantCode || this.currentTenantCode;
-        // Find login by userLogin from the list of logins
-        //const login = this.logins.find(l => l.userLogin === result);
-
-        //if (login) {
-          const productAdminData: TenantAdmin = {
-            tenantCode: tenantCode || '',
-            userLogin: result,
-            role: 'PRODUCT_ADMIN',
-            authClientId: 'sys'
+          const productAdminData: AddAdminMemberRequest = {
+            userLogin: result.userLogin,
+            fullName: result.fullName,
+            position: result.position,
+            password: result.password,
+            role: ADMIN_ROLES.PRODUCT_ADMIN,
           };
 
-          this.tenantAdminService.create(productAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
+          this.tenantAdminService.addMember(productAdminData, {'X-Imp-Tenant': tenantCode || 'demo'}).subscribe({
             next: () => {
               this.loadProductAdmins();
               this.snack.open('Product Admin создан', 'OK', { duration: 2000 });
@@ -560,7 +553,6 @@ export class TenantsPageComponent implements OnInit {
               this.snack.open('Ошибка при создании product admin', 'OK', { duration: 2000 });
             }
           });
-        //}
       }
     });
   }
@@ -571,13 +563,14 @@ export class TenantsPageComponent implements OnInit {
       data: { admin: admin }
     });
 
-    dialogRef.afterClosed().subscribe((result: string | undefined) => {
+    dialogRef.afterClosed().subscribe((result: AdminMemberForm | string | undefined) => {
       if (result && admin.id) {
         const tenantCode = this.selectedTenantCode || this.currentTenantCode;
+        const userLogin = typeof result === 'string' ? result : result.userLogin;
         const productAdminData: TenantAdmin = {
           tenantCode: tenantCode || '',
-          userLogin: result,
-          role: 'PRODUCT_ADMIN',
+          userLogin,
+          role: ADMIN_ROLES.PRODUCT_ADMIN,
         };
 
         this.tenantAdminService.update(admin.id, productAdminData).subscribe({
@@ -812,6 +805,13 @@ export class TenantDialogComponent {
 }
 
 // Sys Admin Add Dialog Component
+export interface AdminMemberForm {
+  userLogin: string;
+  fullName?: string;
+  position?: string;
+  password?: string;
+}
+
 @Component({
   selector: 'app-sys-admin-add-dialog',
   imports: [
@@ -823,26 +823,47 @@ export class TenantDialogComponent {
     MatDividerModule
   ],
   template: `
-    <h2 mat-dialog-title>Sys Admin</h2>
+    <h2 mat-dialog-title>{{ title }}</h2>
     <mat-divider></mat-divider>
     <mat-dialog-content>
       <mat-form-field appearance="outline" style="width: 100%;">
         <mat-label>Login</mat-label>
         <input matInput [(ngModel)]="userLogin" required>
       </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>ФИО</mat-label>
+        <input matInput [(ngModel)]="fullName">
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>Должность</mat-label>
+        <input matInput [(ngModel)]="position">
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>Пароль (для нового логина)</mat-label>
+        <input matInput type="password" [(ngModel)]="password">
+      </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
+      <button mat-button (click)="onCancel()">Отмена</button>
+      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Добавить</button>
     </mat-dialog-actions>
   `
 })
 export class SysAdminAddDialogComponent {
-  userLogin: string = '';
+  userLogin = '';
+  fullName = '';
+  position = '';
+  password = '';
+  title = 'Sys Admin';
 
   constructor(
-    public dialogRef: MatDialogRef<SysAdminAddDialogComponent>
-  ) {}
+    public dialogRef: MatDialogRef<SysAdminAddDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { title?: string } | null
+  ) {
+    if (data?.title) {
+      this.title = data.title;
+    }
+  }
 
   onCancel(): void {
     this.dialogRef.close();
@@ -850,7 +871,12 @@ export class SysAdminAddDialogComponent {
 
   onAdd(): void {
     if (this.userLogin) {
-      this.dialogRef.close(this.userLogin);
+      this.dialogRef.close({
+        userLogin: this.userLogin.trim(),
+        fullName: this.fullName.trim(),
+        position: this.position.trim(),
+        password: this.password,
+      } as AdminMemberForm);
     }
   }
 }
@@ -874,15 +900,30 @@ export class SysAdminAddDialogComponent {
         <mat-label>Login</mat-label>
         <input matInput [(ngModel)]="userLogin" required>
       </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>ФИО</mat-label>
+        <input matInput [(ngModel)]="fullName">
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>Должность</mat-label>
+        <input matInput [(ngModel)]="position">
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 100%;">
+        <mat-label>Пароль (для нового логина)</mat-label>
+        <input matInput type="password" [(ngModel)]="password">
+      </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Add</button>
+      <button mat-button (click)="onCancel()">Отмена</button>
+      <button mat-flat-button color="primary" [disabled]="!userLogin" (click)="onAdd()">Добавить</button>
     </mat-dialog-actions>
   `
 })
 export class TntAdminAddDialogComponent {
-  userLogin: string = '';
+  userLogin = '';
+  fullName = '';
+  position = '';
+  password = '';
 
   constructor(
     public dialogRef: MatDialogRef<TntAdminAddDialogComponent>
@@ -894,7 +935,12 @@ export class TntAdminAddDialogComponent {
 
   onAdd(): void {
     if (this.userLogin) {
-      this.dialogRef.close(this.userLogin);
+      this.dialogRef.close({
+        userLogin: this.userLogin.trim(),
+        fullName: this.fullName.trim(),
+        position: this.position.trim(),
+        password: this.password,
+      } as AdminMemberForm);
     }
   }
 }
@@ -918,6 +964,20 @@ export class TntAdminAddDialogComponent {
         <mat-label>Login</mat-label>
         <input matInput [(ngModel)]="userLogin" required>
       </mat-form-field>
+      @if (!data?.admin) {
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>ФИО</mat-label>
+          <input matInput [(ngModel)]="fullName">
+        </mat-form-field>
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>Должность</mat-label>
+          <input matInput [(ngModel)]="position">
+        </mat-form-field>
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>Пароль (для нового логина)</mat-label>
+          <input matInput type="password" [(ngModel)]="password">
+        </mat-form-field>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Отмена</button>
@@ -928,7 +988,10 @@ export class TntAdminAddDialogComponent {
   `
 })
 export class ProductAdminAddDialogComponent {
-  userLogin: string = '';
+  userLogin = '';
+  fullName = '';
+  position = '';
+  password = '';
 
   constructor(
     public dialogRef: MatDialogRef<ProductAdminAddDialogComponent>,
@@ -945,7 +1008,12 @@ export class ProductAdminAddDialogComponent {
 
   onSave(): void {
     if (this.userLogin) {
-      this.dialogRef.close(this.userLogin);
+      this.dialogRef.close({
+        userLogin: this.userLogin.trim(),
+        fullName: this.fullName.trim(),
+        position: this.position.trim(),
+        password: this.password,
+      } as AdminMemberForm);
     }
   }
 }

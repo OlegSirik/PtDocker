@@ -56,4 +56,14 @@ public interface FileService {
      */
     byte[] getFile(Integer fileId, VariableContext keyValues);
 
+    /**
+     * Сырые байты файла без AcroForm / шаблонизации (для static-частей ПФ).
+     */
+    byte[] getRawFile(Integer fileId);
+
+    /**
+     * Объединить несколько PDF в один (порядок частей сохраняется).
+     */
+    byte[] mergePdfs(java.util.List<byte[]> pdfParts);
+
 }

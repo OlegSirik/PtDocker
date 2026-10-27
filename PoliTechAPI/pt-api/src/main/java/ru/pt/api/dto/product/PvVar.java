@@ -224,7 +224,7 @@ public class PvVar {
         return new PvVar("co_" + coverCode + "_sumInsured"
         , "Страховая сумма по  " + coverCode
         , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].sumInsured"
-        , "VAR"
+        , "IN"
         , ""
         , VarDataType.NUMBER
         , "coverage.co_" + coverCode + "_sumInsured"
@@ -234,14 +234,15 @@ public class PvVar {
         return new PvVar("co_" + coverCode + "_premium"
         , "Премия по  " + coverCode
         , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].premium"
-        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_premium", "1001");
+        , "IN", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_premium", "1001");
     }
     public static PvVar varDeductibleNr(String coverCode) {
         return new PvVar("co_" + coverCode + "_deductibleNr"
         , "Id франшизы по  " + coverCode
         , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].deductibleNr"
-        , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_deductibleNr", "1001");
+        , "IN", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_deductibleNr", "1001");
     }
+/* 
     public static PvVar varLimitMin(String coverCode) {
         return new PvVar("co_" + coverCode + "_limitMin"
         , "Лимит ответственности (min) по  " + coverCode
@@ -254,5 +255,5 @@ public class PvVar {
         , "insuredObjects[0].covers[?(@.cover.code == \"" + coverCode + "\")].limitMax"
         , "VAR", "", VarDataType.NUMBER, "coverage.co_" + coverCode + "_limitMax", "1001");
     }
-
+*/
 }

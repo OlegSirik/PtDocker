@@ -25,6 +25,7 @@ import { isObjectVarTypeRow, type TreeTableSourceRow } from '../../../shared/mod
 import {
   VarsService,
   type ContractModel,
+  type ContractSchemaExport,
   type LobVar,
 } from '../../../shared/services/vars.service';
 import { AuthService } from '../../../shared/services/auth.service';
@@ -81,6 +82,8 @@ export class ContractSchemaComponent implements OnInit {
   loadingModels = false;
   loadingTree = false;
   generatingExample = false;
+  exportingSchema = false;
+  importingSchema = false;
 
   llmReady = true;
   llmText = '';
@@ -141,6 +144,99 @@ export class ContractSchemaComponent implements OnInit {
   onModelChange(): void {
     this.clearLlmDraft();
     this.loadTree();
+  }
+
+  exportSchemaToFile(): void {
+    if (!this.selectedModelCode || this.exportingSchema) {
+      return;
+    }
+    this.exportingSchema = true;
+    this.varsService.exportContractSchema(this.selectedModelCode).subscribe({
+      next: (data) => {
+        this.exportingSchema = false;
+        const dataStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contract-schema_${data.code || this.selectedModelCode}_${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.snack.open('Модель договора сохранена в JSON', 'OK', { duration: 2500 });
+      },
+      error: (err) => {
+        this.exportingSchema = false;
+        this.snack.open(err?.error?.message ?? 'Не удалось выгрузить модель', 'OK', {
+          duration: 4000,
+        });
+      },
+    });
+  }
+
+  importSchemaFromFile(): void {
+    if (this.importingSchema) {
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result)) as ContractSchemaExport;
+          if (!parsed?.code || !Array.isArray(parsed.attributes)) {
+            this.snack.open(
+              'Неверный формат JSON: нужны code и attributes[] (дерево с children)',
+              'OK',
+              { duration: 4000 },
+            );
+            return;
+          }
+          this.importingSchema = true;
+          this.varsService.importContractSchema(parsed).subscribe({
+            next: (saved) => {
+              this.importingSchema = false;
+              this.clearLlmDraft();
+              this.snack.open(`Модель «${saved.code}» загружена`, 'OK', { duration: 3000 });
+              this.loadModelsAfterImport(saved.code);
+            },
+            error: (err) => {
+              this.importingSchema = false;
+              this.snack.open(err?.error?.message ?? 'Не удалось загрузить модель', 'OK', {
+                duration: 5000,
+              });
+            },
+          });
+        } catch {
+          this.snack.open('Ошибка разбора JSON файла', 'OK', { duration: 3000 });
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  private loadModelsAfterImport(selectCode: string): void {
+    this.loadingModels = true;
+    this.varsService.listContractModels().subscribe({
+      next: (list) => {
+        this.models = list ?? [];
+        this.loadingModels = false;
+        this.selectedModelCode = selectCode;
+        this.loadTree();
+      },
+      error: (err) => {
+        this.loadingModels = false;
+        this.snack.open(err?.error?.message ?? 'Не удалось обновить список моделей', 'OK', {
+          duration: 4000,
+        });
+      },
+    });
   }
 
   askLlm(): void {

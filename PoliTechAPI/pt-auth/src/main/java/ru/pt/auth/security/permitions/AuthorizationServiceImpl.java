@@ -11,6 +11,7 @@ import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AccountProductRoles;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
+import ru.pt.auth.entity.RoleCanon;
 import ru.pt.auth.service.AccountDataService;
 
 /**
@@ -72,14 +73,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
         // Permission check
         // Для продукта проверка что user может выполнять такую операцию. 
-        if (!AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action)) {
+        AuthZ.Role role = RoleCanon.toAuthZ(user.getUserRole());
+        if (role == null || !AuthZMatrix.roleHasPermission(role, resourceType, action)) {
             if (log.isTraceEnabled()) {
                 log.trace("Access denied by role matrix: role={}, resourceType={}, action={}",
                         user.getUserRole(), resourceType, action);
             }
             throw new ForbiddenException(
                     "Access denied: %s %s %s"
-                            .formatted(AuthZ.Role.valueOf(user.getUserRole()),resourceType, action)
+                            .formatted(user.getUserRole(), resourceType, action)
             );
         }
 
@@ -101,7 +103,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     public boolean userHasPermition(AuthenticatedUser user,
         AuthZ.ResourceType resourceType,
         AuthZ.Action action) {
-        boolean result = AuthZMatrix.roleHasPermission(AuthZ.Role.valueOf(user.getUserRole()), resourceType, action);
+        AuthZ.Role role = RoleCanon.toAuthZ(user.getUserRole());
+        boolean result = role != null && AuthZMatrix.roleHasPermission(role, resourceType, action);
         if (log.isTraceEnabled()) {
             log.trace("userHasPermition(userId={}, role={}, resourceType={}, action={}) -> {}",
                     user.getId(), user.getUserRole(), resourceType, action, result);

@@ -114,10 +114,12 @@ SQL строится как: `to_number(colN, ...) <conditionOperator> :varCode`
 ## Новые vars
 
 Константа:
-- varType = "CONST", varCdm = "CALCULATOR", varValue = "0.000015", varDataType = "NUMBER"
+- varKind = "CONST", varValue = "0.000015", varDataType = "NUMBER"
 
 Коэффициент:
-- varType = "COEFFICIENT", varCdm = "CALCULATOR", varValue = ""
+- varKind = "COEFFICIENT", varValue = "", varDataType = "NUMBER"
+
+Допустимые varKind: POLICY, CONST, COEFFICIENT, VAR, COVER. Не используй varCdm / product varType (IN/MAGIC/…).
 
 ## Важно
 - Ответ — ТОЛЬКО компактный JSON (без markdown и пояснений)

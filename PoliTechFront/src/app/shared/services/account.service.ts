@@ -263,6 +263,10 @@ export class AccountService {
     return this.http.post<any>(this.getBaseUrl() + `/admin/accounts/${accountId}/members`, body);
   }
 
+  deleteMember(accountId: number, memberId: number): Observable<void> {
+    return this.http.delete<void>(this.getBaseUrl() + `/admin/accounts/${accountId}/members/${memberId}`);
+  }
+
   getMembers(accountId: number, role?: string): Observable<AccountMember[]> {
     const query = role ? `?role=${encodeURIComponent(role)}` : '';
     return this.http

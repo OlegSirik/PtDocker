@@ -18,15 +18,20 @@ export interface Calculator {
   coefficients: CalculatorCoefficient[];
 }
 
+/** varKind словаря калькулятора (изолирован от product varType). */
+export type CalcVarKind = 'POLICY' | 'CONST' | 'COEFFICIENT' | 'VAR' | 'COVER';
+
 export interface CalculatorVar {
   varCode: string;
   varName: string;
-  varPath: string;
-  varType: string;
-  varValue: string;
+  /** Канон: POLICY / CONST / COEFFICIENT / VAR / COVER. */
+  varKind?: CalcVarKind;
+  /** Legacy alias (kind / varType) — для старых ответов API. */
+  kind?: CalcVarKind;
+  varType?: string;
+  varValue?: string;
   varDataType: string;
-  varCdm: string;
-  varNr: number;
+  system?: boolean;
 }
 
 
@@ -176,7 +181,7 @@ export class CalculatorService extends BaseApiService<Calculator> {
 
   // Mock data for dropdowns
   getVarTypeOptions(): Observable<string[]> {
-    return of(['IN', 'OUT', 'CALC']).pipe(delay(200));
+    return of(['POLICY', 'CONST', 'COEFFICIENT', 'VAR', 'COVER']).pipe(delay(200));
   }
 
   getConditionOperatorOptions(): Observable<string[]> {

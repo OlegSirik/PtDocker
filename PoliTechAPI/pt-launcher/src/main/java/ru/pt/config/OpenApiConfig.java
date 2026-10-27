@@ -27,7 +27,7 @@ public class OpenApiConfig {
                     .scheme("bearer")
                     .bearerFormat("JWT")
                     .description("JWT token для авторизации. " +
-                            "Получить токен можно через /api/auth/login или /api/auth/token")
+                            "Получить токен можно через POST /api/v1/{tenantCode}/auth/login")
                 )
                 .addSecuritySchemes("apiKeyAuth", new SecurityScheme()
                     .type(SecurityScheme.Type.APIKEY)

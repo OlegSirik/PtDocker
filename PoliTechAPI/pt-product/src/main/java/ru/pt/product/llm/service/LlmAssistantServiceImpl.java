@@ -37,7 +37,9 @@ import ru.pt.api.service.db.RefDictAdminService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class LlmAssistantServiceImpl implements LlmAssistantService {
@@ -179,8 +181,13 @@ public class LlmAssistantServiceImpl implements LlmAssistantService {
 
         List<LlmMessage> messages = promptAssembler.assembleCalculator(userMessage, calculator);
 
-        List<PvVar> calculatorVars = calculator.getVars() != null ? calculator.getVars() : List.of();
-        Set<String> knownVarCodes = varsContextFormatter.varCodes(calculatorVars);
+        Set<String> knownVarCodes = calculator.getVars() == null
+                ? Set.of()
+                : calculator.getVars().stream()
+                        .filter(Objects::nonNull)
+                        .map(v -> v.getVarCode())
+                        .filter(code -> code != null && !code.isBlank())
+                        .collect(Collectors.toSet());
         LlmAssistRequest logRequest = toAssistRequest(request, userMessage);
 
         LlmAssistResponse llmResponse = completeAndProcess(

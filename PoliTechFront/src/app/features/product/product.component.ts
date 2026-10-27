@@ -31,6 +31,7 @@ import {
 } from '../../shared/services/product.service';
 import { ValidatorDialogComponent } from './validator-dialog/validator-dialog.component';
 import { PackageDialogComponent } from './package-dialog/package-dialog.component';
+import { PackageFileDialogComponent, PackageFileDialogResult } from './package-file-dialog/package-file-dialog.component';
 import { CoverDialogComponent } from './cover-dialog/cover-dialog.component';
 import { DeductibleDialogComponent } from './deductible-dialog/deductible-dialog.component';
 import { LimitDialogComponent } from './limit-dialog/limit-dialog.component';
@@ -226,18 +227,18 @@ export class ProductComponent implements OnInit {
   showDeletedProductTree = false;
 
   /**
-   * EXPERIMENTAL: вкладка «Пакеты2».
-   * Чтобы убрать: false + удалить блок mat-tab «Пакеты2» в product.component.html.
+   * Скрытая архивная вкладка (старый UI пакетов, label «пакеты_архив»).
+   * Включить: true — появится перед основной вкладкой «Пакеты».
    */
-  readonly experimentalPackages2Tab = true;
+  readonly showPackagesArchiveTab = false;
 
   /** Ключи вкладок продукта (query param `tab`). */
   get productTabKeys(): readonly string[] {
-    const keys = ['main', 'validators', 'celRules', 'schema', 'packages'];
-    if (this.experimentalPackages2Tab) {
-      keys.push('packages2');
+    const keys = ['main', 'validators', 'celRules', 'schema'];
+    if (this.showPackagesArchiveTab) {
+      keys.push('packages_archive');
     }
-    keys.push('documentation', 'test');
+    keys.push('packages', 'documentation', 'test');
     return keys;
   }
   selectedTabIndex = 0;
@@ -248,9 +249,9 @@ export class ProductComponent implements OnInit {
     return this.product.versionStatus === 'PROD';
   }
 
-  // Files table
-  filesDisplayedColumns = ['fileCode', 'fileName', 'actions'];
-  files2DisplayedColumns = ['pkg2_file_fileCode', 'pkg2_file_fileName', 'pkg2_file_actions'];
+  // Files table: Тип, Номер, Файл, Статический
+  filesDisplayedColumns = ['fileCode', 'fileNr', 'fileName', 'isStatic', 'actions'];
+  files2DisplayedColumns = ['pkg2_file_fileCode', 'pkg2_file_fileNr', 'pkg2_file_fileName', 'pkg2_file_isStatic', 'pkg2_file_actions'];
   businessLineFiles: PackageFile[] = [];
   
   // Files data
@@ -339,10 +340,12 @@ export class ProductComponent implements OnInit {
     if (!tab) {
       return;
     }
-    const idx = this.productTabKeys.indexOf(tab);
+    // packages2 → packages (бывшее имя вкладки)
+    const normalized = tab === 'packages2' ? 'packages' : tab;
+    const idx = this.productTabKeys.indexOf(normalized);
     if (idx >= 0) {
       this.selectedTabIndex = idx;
-      if (tab === 'documentation') {
+      if (normalized === 'documentation') {
         this.documentationReloadToken++;
       }
     }
@@ -1019,10 +1022,21 @@ export class ProductComponent implements OnInit {
         this.selectedPackageIndex < this.product.packages.length &&
         this.product.packages[this.selectedPackageIndex]) {
       const selectedPackage = this.product.packages[this.selectedPackageIndex];
-      this.paginatedFiles = selectedPackage.files || [];
+      // Новая ссылка + сортировка: Тип, затем Номер — иначе mat-table не видит push.
+      this.paginatedFiles = this.sortPackageFiles(selectedPackage.files || []);
     } else {
       this.paginatedFiles = [];
     }
+  }
+
+  private sortPackageFiles(files: PackageFile[]): PackageFile[] {
+    return [...files].sort((a, b) => {
+      const codeCmp = (a.fileCode || '').localeCompare(b.fileCode || '', undefined, { sensitivity: 'base' });
+      if (codeCmp !== 0) {
+        return codeCmp;
+      }
+      return (a.fileNr ?? 1) - (b.fileNr ?? 1);
+    });
   }
 
   showFiles(pkg: Package, index: number): void {
@@ -2211,16 +2225,65 @@ export class ProductComponent implements OnInit {
     });
   }
 
+  addPackageFile(): void {
+    if (this.crudLockedPendingSave) {
+      return;
+    }
+    if (this.selectedPackageIndex < 0 || !this.product.packages?.[this.selectedPackageIndex]) {
+      this.snackBar.open('Сначала выберите пакет', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const lobFiles = this.lob?.mpFiles ?? [];
+    if (!lobFiles.length) {
+      this.snackBar.open('В LOB нет типов печатных форм (mpFiles)', 'Закрыть', { duration: 3000 });
+      return;
+    }
+    const pkg = this.product.packages[this.selectedPackageIndex];
+    if (!pkg.files) {
+      pkg.files = [];
+    }
+    const dialogRef = this.dialog.open(PackageFileDialogComponent, {
+      width: '480px',
+      data: {
+        lobFiles,
+        existingKeys: pkg.files.map(f => ({
+          fileCode: f.fileCode,
+          fileNr: f.fileNr ?? 1
+        }))
+      }
+    });
+    dialogRef.afterClosed().subscribe((result: PackageFileDialogResult | undefined) => {
+      if (!result) {
+        return;
+      }
+      this.filesService.uploadFile(result.file).subscribe({
+        next: (response) => {
+          const fileId = typeof response.id === 'string' ? parseInt(response.id, 10) : response.id;
+          pkg.files.push({
+            fileCode: result.fileCode,
+            fileName: result.file.name || result.fileName,
+            fileId,
+            fileNr: result.fileNr,
+            isStatic: result.isStatic
+          });
+          this.updateFilesTable();
+          this.updateChanges();
+          this.snackBar.open('Файл добавлен', 'Закрыть', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Ошибка загрузки файла', 'Закрыть', { duration: 3000 })
+      });
+    });
+  }
+
   // File methods - now using Business Line files
   uploadFile(file: PackageFile): void {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '*/*';
+    input.accept = '.pdf,application/pdf';
     input.onchange = (event: any) => {
       const selectedFile = event.target.files[0];
       if (selectedFile) {
-        const fileName = selectedFile.name; // File name includes extension (e.g., "document.pdf")
-        console.log(fileName);
+        const fileName = selectedFile.name;
         this.filesService.uploadFile(selectedFile).subscribe({
           next: (response) => {
             file.fileId = typeof response.id === 'string' ? parseInt(response.id, 10) : response.id;
@@ -2258,33 +2321,30 @@ export class ProductComponent implements OnInit {
     });
   }
 
-  
-
-  refreshFiles(): void {
-    console.log('refresh' + this.lob?.mpName );
-    if (!this.lob?.mpFiles) {
-      // Handle the undefined case: set to empty array or handle error as needed
-      var lobFiles: PackageFile[] = [];
-    } else {
-      var lobFiles: PackageFile[] = this.lob.mpFiles.map(f => ({
-        fileCode: f.fileCode,
-        fileName: f.fileName || ''
-      }));
+  deletePackageFile(file: PackageFile): void {
+    if (this.crudLockedPendingSave) {
+      return;
     }
-console.log(lobFiles);
-
-    this.product.packages.forEach(pkg => {
-console.log(pkg)
-
-      // Add to pkg.files file from lobFiles.
-      // if file exist, check by fileCode, the do nothing
-      // otherwise add fileCode, fileName, null
-      // Объединяем с приоритетом для updates
-      pkg.files = Array.from(
-        new Map([...pkg.files, ...lobFiles].map(item => [item.fileCode, item])).values());
-    });
-    
+    if (this.selectedPackageIndex < 0 || !this.product.packages?.[this.selectedPackageIndex]) {
+      return;
+    }
+    if (!confirm('Удалить файл из пакета?')) {
+      return;
+    }
+    const pkg = this.product.packages[this.selectedPackageIndex];
+    const idx = pkg.files.indexOf(file);
+    if (idx < 0) {
+      const byKey = pkg.files.findIndex(
+        f => f.fileCode === file.fileCode && (f.fileNr ?? 1) === (file.fileNr ?? 1)
+      );
+      if (byKey >= 0) {
+        pkg.files.splice(byKey, 1);
+      }
+    } else {
+      pkg.files.splice(idx, 1);
+    }
     this.updateFilesTable();
+    this.updateChanges();
   }
 
   getFileIndex(file: BusinessLineFile): number {

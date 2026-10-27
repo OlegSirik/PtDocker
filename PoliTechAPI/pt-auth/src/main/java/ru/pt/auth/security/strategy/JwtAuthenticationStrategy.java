@@ -66,7 +66,7 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
                     // For now we still rely on JwtTokenUtil for basic checks and
                     // enforce issuer match if configured. JWKS integration can be
                     // plugged in here later using expectedIssuer + jwksUri.
-                    if (!jwtTokenUtil.validateToken(jwt)) {
+                    if (!jwtTokenUtil.validateToken(jwt, false)) {
                         throw new BadCredentialsException("Invalid JWT token");
                     }
                     if (expectedIssuer != null) {
@@ -84,7 +84,7 @@ public class JwtAuthenticationStrategy implements IdentitySourceStrategy {
         }
 
         if (!validated) {
-            if (!jwtTokenUtil.validateToken(jwt)) {
+            if (!jwtTokenUtil.validateToken(jwt, false)) {
                 throw new BadCredentialsException("Invalid JWT token");
             }
         }

@@ -1,10 +1,11 @@
 package ru.pt.api.dto.calculator;
 
-import ru.pt.api.dto.product.PvVar;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CalculatorModel {
     private Long id;
     private Long productId;
@@ -12,7 +13,7 @@ public class CalculatorModel {
     private Long versionNo;
     private String packageNo;
     private String llmText;
-    private List<PvVar> vars = new ArrayList<>();
+    private List<CalculatorVar> vars = new ArrayList<>();
     private List<FormulaDef> formulas = new ArrayList<>();
     private List<CoefficientDef> coefficients = new ArrayList<>();
 
@@ -64,12 +65,12 @@ public class CalculatorModel {
         this.llmText = llmText;
     }
 
-    public List<PvVar> getVars() {
+    public List<CalculatorVar> getVars() {
         return vars;
     }
 
-    public void setVars(List<PvVar> vars) {
-        this.vars = vars;
+    public void setVars(List<CalculatorVar> vars) {
+        this.vars = vars != null ? vars : new ArrayList<>();
     }
 
     public List<FormulaDef> getFormulas() {

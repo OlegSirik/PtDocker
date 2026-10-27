@@ -78,23 +78,24 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         if (login != null && !login.isEmpty()) {
             accountLoginEntity = accountLoginRepository.findByAll4Fields(tenantCode, authClientId, login, accountId)
+                    .or(() -> accountLoginRepository.findByUserLoginAndAccountId(login, accountId))
                     .orElseThrow(() -> new UsernameNotFoundException("AccountLogin not found with id: " + accountId));
         } else {
             // API key auth: no login, resolve by tenant + client + account
             accountTokenEntity = accountTokenRepository.findByAll4Fields(tenantCode, authClientId, accountId)
                     .orElseThrow(() -> new UsernameNotFoundException("AccountToken not found for account id: " + accountId));
         }
-        //requestContext.setAccount(defaultAccountLogin.getAccount().getId().toString());
         requestContext.setAccount(accountId);
-        // Инициализируем lazy-loaded поля внутри транзакции
-        //initializeLazyFields(defaultAccountLogin, loginEntity);
 
-        // Получаем роли продуктов для аккаунта
+        String identityTenant = accountLoginEntity != null && accountLoginEntity.getTenant() != null
+                ? accountLoginEntity.getTenant().getCode()
+                : tenantCode;
+
         Set<String> productRoles = getProductRoles(accountId);
 
         Long actingAccountId = null;
 
-        AccountEntity accountEntity = accountRepository.findByTenantCodeAndId(tenantCode, accountId)
+        AccountEntity accountEntity = accountRepository.findByTenantCodeAndId(identityTenant, accountId)
             .orElseThrow(() -> new UsernameNotFoundException("Account not found with id: " + accountId));
 
         switch (accountEntity.getNodeType()) {
@@ -130,7 +131,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 throw new ForbiddenException("Недопустимый тип узла для авторизации");
         }
 
-        AccountEntity actingAccountEntity = accountRepository.findByTenantCodeAndId(tenantCode, actingAccountId)
+        AccountEntity actingAccountEntity = accountRepository.findByTenantCodeAndId(identityTenant, actingAccountId)
             .orElseThrow(() -> new UsernameNotFoundException("Account not found with id: " + accountId));
 
         // Создаем UserDetails без пароля (JWT авторизация)

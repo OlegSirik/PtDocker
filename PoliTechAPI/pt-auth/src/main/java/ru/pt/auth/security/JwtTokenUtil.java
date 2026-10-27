@@ -24,8 +24,8 @@ import java.util.Map;
 
 /**
  * Утилита для работы с JWT токенами.
- * Парсит и валидирует JWT токен без проверки подписи (так как токен приходит извне).
- * Также создает новые JWT токены на основе данных пользователя.
+ * Локальные JWT (LOCAL_JWT) проверяются HMAC-SHA256 ({@code jwt.secret}) и сроком.
+ * Внешний JWT (AuthType.JWT) — формат и exp; JWKS подключается в JwtAuthenticationStrategy.
  */
 @Component
 public class JwtTokenUtil {
@@ -159,7 +159,9 @@ public class JwtTokenUtil {
 
             // Добавляем дополнительные данные
             if (accountLogin.getTenant() != null) {
-                payload.put("tenantCode", accountLogin.getTenant().getId());
+                payload.put("tenant", accountLogin.getTenant().getCode());
+                payload.put("tenantCode", accountLogin.getTenant().getCode());
+                payload.put("tenantId", accountLogin.getTenant().getId());
                 payload.put("tenantName", accountLogin.getTenant().getName());
             }
 
@@ -300,11 +302,31 @@ public class JwtTokenUtil {
     }
 
     /**
-     * Валидирует токен (проверяет формат и срок действия)
+     * Валидирует токен: формат, срок, HMAC-SHA256 ({@code jwt.secret}).
+     * Для локальных JWT ({@code LOCAL_JWT}).
      */
     public boolean validateToken(String token) {
+        return validateToken(token, true);
+    }
+
+    /**
+     * @param requireHmac {@code true} для токенов, выданных платформой; {@code false} — только формат и exp
+     *                    (внешний JWT до JWKS).
+     */
+    public boolean validateToken(String token, boolean requireHmac) {
         try {
             if (token == null || token.trim().isEmpty()) {
+                return false;
+            }
+
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                logger.error("Token validation failed: invalid JWT format");
+                return false;
+            }
+
+            if (requireHmac && !verifyHmacSignature(parts)) {
+                logger.error("Token validation failed: invalid signature");
                 return false;
             }
 
@@ -323,6 +345,18 @@ public class JwtTokenUtil {
 
         } catch (Exception e) {
             logger.error("Token validation failed", e);
+            return false;
+        }
+    }
+
+    private boolean verifyHmacSignature(String[] parts) {
+        try {
+            String expected = hmacSha256(parts[0] + "." + parts[1], jwtSecret);
+            byte[] expectedBytes = expected.getBytes(StandardCharsets.US_ASCII);
+            byte[] actualBytes = parts[2].getBytes(StandardCharsets.US_ASCII);
+            return java.security.MessageDigest.isEqual(expectedBytes, actualBytes);
+        } catch (Exception e) {
+            logger.error("Token signature check failed", e);
             return false;
         }
     }

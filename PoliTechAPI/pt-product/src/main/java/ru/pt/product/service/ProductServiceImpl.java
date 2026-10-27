@@ -1166,16 +1166,7 @@ authService.check(
         pvVar.setVarValue(entity.getVarValue());
         pvVar.setVarNr(entity.getVarOrd() != null ? entity.getVarOrd().toString() : "0");
         
-        // Map varDataType string to enum
-        if (entity.getVarDataType() != null) {
-            try {
-                pvVar.setVarDataType(VarDataType.valueOf(entity.getVarDataType().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                pvVar.setVarDataType(VarDataType.STRING);
-            }
-        } else {
-            pvVar.setVarDataType(VarDataType.STRING);
-        }
+        pvVar.setVarDataType(VarDataType.parse(entity.getVarDataType()));
         
         return pvVar;
     }

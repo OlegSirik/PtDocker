@@ -30,6 +30,10 @@ spring:
   jackson:
     serialization:
       '[WRITE_DATES_AS_TIMESTAMPS]': false
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 # Dev/test: tenant create/delete smoke test (set app.test-scenario1.enabled=true). Never in production.
 app:
@@ -86,9 +90,9 @@ payments:
 # Security Configuration
 security:
   public-urls:
+    - "/error"
     - "/api/public/**"
     - "/actuator/health"
-    - "/api/v*/*/auth/token"
     - "/api/v*/*/auth/login"
     - "/swagger-ui/**"
     - "/swagger-ui.html"

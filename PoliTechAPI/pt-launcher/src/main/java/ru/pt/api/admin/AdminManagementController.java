@@ -3,13 +3,10 @@ package ru.pt.api.admin;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.pt.api.security.SecuredController;
 import ru.pt.auth.entity.UserRole;
 import ru.pt.auth.model.AdminResponse;
 import ru.pt.auth.model.LoginDto;
-import ru.pt.auth.security.SecurityContextHelper;
 import ru.pt.auth.service.admin.AdminManagementService;
 import ru.pt.api.dto.exception.BadRequestException;
 import ru.pt.auth.service.LoginManagementService;
@@ -50,27 +47,9 @@ public class AdminManagementController {
     public ResponseEntity<AdminResponse> addMember(
             @PathVariable String tenantCode,
             @PathVariable Long accountId,
-            @RequestBody AddMemberRequest request) {        
-        
-        // Проверить что такой логин уже есть
-        LoginDto login = loginManagementService.getLoginByUserLogin(tenantCode, request.userLogin());
-
-        // Если уже есть, но передали данные для создания логина то вернуть ошибку
-        if ( notNull(request.position()) || notNull(request.fullName()) || notNull(request.password())  )  {
-            if ( login != null ) {
-                throw new BadRequestException("User with login '" + request.userLogin() + "' already exists");
-            }
-            else {
-            // Создать юзера и установить ему пароль
-                loginManagementService.createLogin(tenantCode, request.userLogin(), request.fullName(), request.position());
-                if ( request.password() != null && !request.password().isBlank() ) {
-                    loginManagementService.setPassword(tenantCode, request.userLogin(), request.password());
-                }
-                login = loginManagementService.getLoginByUserLogin(tenantCode, request.userLogin());
-            }
-        }
-                
-        AdminResponse member = adminManagementService.setAccountMember(accountId, request.role(), request.userLogin()); 
+            @RequestBody AddMemberRequest request) {
+        ensureLogin(tenantCode, request);
+        AdminResponse member = adminManagementService.setAccountMember(accountId, request.role(), request.userLogin());
         return ResponseEntity.ok(member);
     }
 
@@ -91,17 +70,25 @@ public class AdminManagementController {
             @RequestParam(required = false) String role) {
         
         Long accountId = adminManagementService.getSysAccountId();
-        List<AdminResponse> members = adminManagementService.getAccountMembers(accountId, role == null ? null : UserRole.valueOf(role.toUpperCase()).toString());
+        String roleName = null;
+        if (role != null && !role.isBlank()) {
+            UserRole parsed = UserRole.fromString(role);
+            if (parsed == null) {
+                throw new BadRequestException("Unknown role: " + role);
+            }
+            roleName = parsed.getValue();
+        }
+        List<AdminResponse> members = adminManagementService.getAccountMembers(accountId, roleName);
         return ResponseEntity.ok(members);
     }
 
     @PostMapping("/admins/members")
-    public ResponseEntity<AdminResponse> addMember(
+    public ResponseEntity<AdminResponse> addTenantAdmin(
             @PathVariable String tenantCode,
-            @RequestBody AddMemberRequest request) {        
-        
+            @RequestBody AddMemberRequest request) {
+        ensureLogin(tenantCode, request);
         Long accountId = adminManagementService.getSysAccountId();
-        AdminResponse member = adminManagementService.setAccountMember(accountId, request.role(), request.userLogin()); 
+        AdminResponse member = adminManagementService.setAccountMember(accountId, request.role(), request.userLogin());
         return ResponseEntity.ok(member);
     }
 
@@ -118,5 +105,24 @@ public class AdminManagementController {
 //-------------------------
     //public record RoleAssignmentRequest(String role, String userLogin, String authClientId) {}
     public record AddMemberRequest(String role, String userLogin, String fullName, String position, String password) {}
-    //public record AccountUser(Long id, String role, String userLogin, String fullName, String position) {}
+
+    /**
+     * Существующий логин — только привязка. Нет логина — создать (fullName по умолчанию = userLogin).
+     */
+    private void ensureLogin(String tenantCode, AddMemberRequest request) {
+        if (request == null || request.userLogin() == null || request.userLogin().isBlank()) {
+            throw new BadRequestException("userLogin is required");
+        }
+        String userLogin = request.userLogin().trim();
+        String effectiveTenant = loginManagementService.resolveLoginTenantCode(tenantCode);
+        LoginDto login = loginManagementService.getLoginByUserLogin(effectiveTenant, userLogin);
+        if (login != null) {
+            return;
+        }
+        String fullName = notNull(request.fullName()) ? request.fullName().trim() : userLogin;
+        loginManagementService.createLogin(effectiveTenant, userLogin, fullName, request.position());
+        if (notNull(request.password())) {
+            loginManagementService.setPassword(effectiveTenant, userLogin, request.password());
+        }
+    }
 }

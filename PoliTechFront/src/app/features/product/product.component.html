@@ -421,7 +421,8 @@
       </div>
   </mat-tab>
 
-  <mat-tab label="Пакеты">
+  @if (showPackagesArchiveTab) {
+  <mat-tab label="пакеты_архив">
     <div class="pt-box" style="margin-top: 20px;">
       <div class="pt-box-title-row">
         <h3 class="pt-box-title">Пакеты покрытий</h3>
@@ -571,30 +572,42 @@
         <div class="pt-box-title-row">
           <h3 class="pt-box-title">Файлы</h3>
           <div class="pt-box-title-buttons">
-            <button mat-icon-button color="primary" [disabled]="crudLockedPendingSave" (click)="refreshFiles()" title="Обновить файлы">
-              <mat-icon>refresh</mat-icon>
+            <button mat-flat-button color="primary" class="add-button" [disabled]="crudLockedPendingSave || selectedPackageIndex < 0" (click)="addPackageFile()">
+              <mat-icon>add</mat-icon>
+              Добавить
             </button>
           </div>
         </div>
         <div class="pt-box-table-box">
           <table mat-table [dataSource]="paginatedFiles" class="product-table">
                       <ng-container matColumnDef="fileCode">
-                        <th mat-header-cell *matHeaderCellDef>fileCode</th>
+                        <th mat-header-cell *matHeaderCellDef>Тип</th>
                         <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
                       </ng-container>
+                      <ng-container matColumnDef="fileNr">
+                        <th mat-header-cell *matHeaderCellDef>Номер</th>
+                        <td mat-cell *matCellDef="let element">{{element.fileNr ?? 1}}</td>
+                      </ng-container>
                       <ng-container matColumnDef="fileName">
-                        <th mat-header-cell *matHeaderCellDef>fileName</th>
+                        <th mat-header-cell *matHeaderCellDef>Файл</th>
                         <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="isStatic">
+                        <th mat-header-cell *matHeaderCellDef>Статический</th>
+                        <td mat-cell *matCellDef="let element">{{element.isStatic ? 'да' : 'нет'}}</td>
                       </ng-container>
                       <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
                         <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                           <div class="action-buttons">
-                            <button mat-icon-button [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Загрузить файл">
+                            <button mat-icon-button [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Заменить файл">
                               <mat-icon>upload</mat-icon>
                             </button>
                             <button mat-icon-button (click)="downloadFile(element); $event.stopPropagation()" title="Скачать файл">
                               <mat-icon>download</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" [disabled]="crudLockedPendingSave" (click)="deletePackageFile(element); $event.stopPropagation()" title="Удалить">
+                              <mat-icon>delete</mat-icon>
                             </button>
                           </div>
                         </td>
@@ -606,13 +619,10 @@
       </div>
     </div>
   </mat-tab>
+  }
 
-  <!--
-    EXPERIMENTAL: Пакеты2 — копия вкладки «Пакеты».
-    Удаление: experimentalPackages2Tab=false в .ts + этот весь mat-tab.
-  -->
-  @if (experimentalPackages2Tab) {
-  <mat-tab label="Пакеты2">
+  <!-- Основная вкладка пакетов (бывшая «Пакеты2»). Архив: showPackagesArchiveTab. -->
+  <mat-tab label="Пакеты">
     @if (showLlmAgentCard) {
       <div class="pt-box llm-agent-box" style="margin-top: 20px;">
         <div class="pt-box-title-row">
@@ -854,30 +864,42 @@
         <div class="pt-box-title-row">
           <h3 class="pt-box-title">Файлы</h3>
           <div class="pt-box-title-buttons">
-            <button mat-icon-button color="primary" [disabled]="crudLockedPendingSave" (click)="refreshFiles()" title="Обновить файлы">
-              <mat-icon>refresh</mat-icon>
+            <button mat-flat-button color="primary" class="add-button" [disabled]="crudLockedPendingSave || selectedPackageIndex < 0" (click)="addPackageFile()">
+              <mat-icon>add</mat-icon>
+              Добавить
             </button>
           </div>
         </div>
         <div class="pt-box-table-box">
           <table mat-table [dataSource]="paginatedFiles" class="product-table">
                       <ng-container matColumnDef="pkg2_file_fileCode">
-                        <th mat-header-cell *matHeaderCellDef>fileCode</th>
+                        <th mat-header-cell *matHeaderCellDef>Тип</th>
                         <td mat-cell *matCellDef="let element">{{element.fileCode}}</td>
                       </ng-container>
+                      <ng-container matColumnDef="pkg2_file_fileNr">
+                        <th mat-header-cell *matHeaderCellDef>Номер</th>
+                        <td mat-cell *matCellDef="let element">{{element.fileNr ?? 1}}</td>
+                      </ng-container>
                       <ng-container matColumnDef="pkg2_file_fileName">
-                        <th mat-header-cell *matHeaderCellDef>fileName</th>
+                        <th mat-header-cell *matHeaderCellDef>Файл</th>
                         <td mat-cell *matCellDef="let element">{{element.fileName}}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="pkg2_file_isStatic">
+                        <th mat-header-cell *matHeaderCellDef>Статический</th>
+                        <td mat-cell *matCellDef="let element">{{element.isStatic ? 'да' : 'нет'}}</td>
                       </ng-container>
                       <ng-container matColumnDef="pkg2_file_actions">
                         <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
                         <td mat-cell *matCellDef="let element; let i = index" class="col-actions">
                           <div class="action-buttons">
-                            <button mat-icon-button [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Загрузить файл">
+                            <button mat-icon-button [disabled]="crudLockedPendingSave" (click)="uploadFile(element); $event.stopPropagation()" title="Заменить файл">
                               <mat-icon>upload</mat-icon>
                             </button>
                             <button mat-icon-button (click)="downloadFile(element); $event.stopPropagation()" title="Скачать файл">
                               <mat-icon>download</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" [disabled]="crudLockedPendingSave" (click)="deletePackageFile(element); $event.stopPropagation()" title="Удалить">
+                              <mat-icon>delete</mat-icon>
                             </button>
                           </div>
                         </td>
@@ -889,7 +911,6 @@
       </div>
     </div>
   </mat-tab>
-  }
 
     <mat-tab label="Документация">
       @if (product.id && product.versionNo) {

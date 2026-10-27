@@ -7,8 +7,8 @@ import ru.pt.api.dto.product.PvVar;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import ru.pt.api.dto.product.VarDataType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,11 +147,14 @@ public class JsonProjection {
     public Map<String, Object> getProductMapFromRequest(List<PvVar> vars) {
         var result = new HashMap<String, Object>();
         vars.forEach(v -> {
-            switch (v.getVarDataType()) {
-                case STRING -> result.put(v.getVarCode(), documentContext.read(v.getVarPath(), String.class));
-                case DATE -> result.put(v.getVarCode(), documentContext.read(v.getVarPath(), LocalDate.class));
-                case TIME -> result.put(v.getVarCode(), documentContext.read(v.getVarPath(), LocalDateTime.class));
+            if (v == null || v.getVarCode() == null || v.getVarPath() == null) {
+                return;
+            }
+            VarDataType dt = v.getVarDataType() != null ? v.getVarDataType() : VarDataType.STRING;
+            switch (dt) {
                 case NUMBER -> result.put(v.getVarCode(), documentContext.read(v.getVarPath(), BigDecimal.class));
+                case OBJECT -> { /* группировка, не leaf-значение */ }
+                case STRING -> result.put(v.getVarCode(), documentContext.read(v.getVarPath(), String.class));
             }
         });
         return result;

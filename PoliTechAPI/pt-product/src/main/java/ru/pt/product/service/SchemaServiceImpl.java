@@ -19,6 +19,8 @@ import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.VarDataType;
 import ru.pt.api.dto.schema.AttributeDefaultState;
+import ru.pt.api.dto.schema.ContractSchemaExportDto;
+import ru.pt.api.dto.schema.ContractSchemaNodeDto;
 import ru.pt.api.security.AuthenticatedUser;
 import ru.pt.api.service.auth.AuthZ;
 import ru.pt.api.service.auth.AuthorizationService;
@@ -351,14 +353,7 @@ public class SchemaServiceImpl implements SchemaService {
     }
 
     private static LobVar toLobVar(AttributeDefEntity e) {
-        VarDataType vdt = null;
-        if (e.getVarDataType() != null && !e.getVarDataType().isBlank()) {
-            try {
-                vdt = VarDataType.valueOf(e.getVarDataType().trim().toUpperCase());
-            } catch (IllegalArgumentException ignored) {
-                vdt = VarDataType.STRING;
-            }
-        }
+        VarDataType vdt = VarDataType.parse(e.getVarDataType());
         String defaultState = AttributeDefaultState.normalize(e.getDefaultState());
         return LobVar.builder()
                 .id(e.getId())
@@ -383,7 +378,8 @@ public class SchemaServiceImpl implements SchemaService {
         e.setParentId(v.getParent_id());
         e.setVarCode(v.getVarCode());
         e.setVarName(v.getVarName());
-        e.setVarPath(v.getVarPath());
+        String path = v.getVarPath();
+        e.setVarPath(path != null && !path.isBlank() ? path : "");
         e.setVarOrd(parseVarOrd(v.getVarNr()));
         e.setVarType(v.getVarType());
         e.setVarDataType(varDataTypeToDb(v.getVarDataType()));
@@ -391,6 +387,13 @@ public class SchemaServiceImpl implements SchemaService {
         e.setVarList(v.getVarList());
         e.setSystem(v.getIsSystem());
         e.setDefaultState(AttributeDefaultState.normalize(v.getDefaultState()));
+    }
+
+    /** {@code varPath} обязателен только для {@code IN}. */
+    private static void requireVarPathForIn(String varType, String varPath, String varCode) {
+        if ("IN".equalsIgnoreCase(varType) && (varPath == null || varPath.isBlank())) {
+            throw new BadRequestException("varPath cannot be empty for IN attribute " + varCode);
+        }
     }
 
     @Override
@@ -562,12 +565,10 @@ public class SchemaServiceImpl implements SchemaService {
         if (lobVar.getVarName() == null || lobVar.getVarName().isBlank()) {
             throw new BadRequestException("varName cannot be empty");
         }
-        if (lobVar.getVarPath() == null || lobVar.getVarPath().isBlank()) {
-            throw new BadRequestException("varPath cannot be empty");
-        }
         if (lobVar.getVarType() == null || lobVar.getVarType().isBlank()) {
             throw new BadRequestException("varType cannot be empty");
         }
+        requireVarPathForIn(lobVar.getVarType(), lobVar.getVarPath(), lobVar.getVarCode());
 
         if (lobVar.getParent_id() != null) {
             assertNodeInSchema(lobVar.getParent_id(), tenantId, documentId);
@@ -606,12 +607,10 @@ public class SchemaServiceImpl implements SchemaService {
         if (lobVar.getVarName() == null || lobVar.getVarName().isBlank()) {
             throw new BadRequestException("varName cannot be empty");
         }
-        if (lobVar.getVarPath() == null || lobVar.getVarPath().isBlank()) {
-            throw new BadRequestException("varPath cannot be empty");
-        }
         if (lobVar.getVarType() == null || lobVar.getVarType().isBlank()) {
             throw new BadRequestException("varType cannot be empty");
         }
+        requireVarPathForIn(lobVar.getVarType(), lobVar.getVarPath(), lobVar.getVarCode());
 
         AttributeDefEntity e = attributeDefRepository.findById(lobVar.getId())
                 .orElseThrow(() -> new NotFoundException("Schema node not found: " + lobVar.getId()));
@@ -655,6 +654,170 @@ public class SchemaServiceImpl implements SchemaService {
                 .executeUpdate();
         if (n == 0) {
             throw new NotFoundException("Schema node not found: " + lobVar.getId());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ContractSchemaExportDto exportContractSchema(Long tenantId, String contractCode) {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tenantId, AuthZ.Action.LIST);
+
+        if (contractCode == null || contractCode.isBlank()) {
+            throw new BadRequestException("contractCode is required");
+        }
+        String documentId = contractCode.trim();
+        ContractModelEntity model = contractModelRepository.findByTidAndCode(tenantId, documentId)
+                .orElseThrow(() -> new NotFoundException("Contract model not found: " + documentId));
+
+        List<AttributeDefEntity> rows = attributeDefRepository
+                .findByTenantIdAndDocumentId(tenantId, documentId);
+        rows.sort(SCHEMA_TREE_ORDER);
+        return new ContractSchemaExportDto(model.getCode(), model.getName(), buildSchemaTree(rows));
+    }
+
+    @Override
+    @Transactional
+    public ContractSchemaExportDto importContractSchema(Long tenantId, ContractSchemaExportDto payload) {
+        AuthenticatedUser user = getCurrentUser();
+        authorizationService.check(user, AuthZ.ResourceType.TENANT, null, tenantId, AuthZ.Action.MANAGE);
+
+        if (payload == null) {
+            throw new BadRequestException("Body is required");
+        }
+        if (payload.getCode() == null || payload.getCode().isBlank()) {
+            throw new BadRequestException("code is required");
+        }
+        String documentId = payload.getCode().trim();
+        if (documentId.length() > 30) {
+            throw new BadRequestException("code max length is 30");
+        }
+        String modelName = payload.getName() != null && !payload.getName().isBlank()
+                ? payload.getName().trim()
+                : documentId;
+
+        ContractModelEntity model = contractModelRepository.findByTidAndCode(tenantId, documentId)
+                .orElseGet(() -> {
+                    ContractModelEntity created = new ContractModelEntity();
+                    created.setTid(tenantId);
+                    created.setCode(documentId);
+                    return created;
+                });
+        model.setName(modelName);
+        contractModelRepository.save(model);
+
+        // FK parent_id → себя: сначала обнуляем связи, потом удаляем документ целиком
+        entityManager.createNativeQuery("""
+                UPDATE mt_attribute_def
+                SET parent_id = NULL
+                WHERE tenant_id = :tid AND document_id = :docId
+                """)
+                .setParameter("tid", tenantId)
+                .setParameter("docId", documentId)
+                .executeUpdate();
+        entityManager.createNativeQuery("""
+                DELETE FROM mt_attribute_def
+                WHERE tenant_id = :tid AND document_id = :docId
+                """)
+                .setParameter("tid", tenantId)
+                .setParameter("docId", documentId)
+                .executeUpdate();
+        entityManager.flush();
+
+        List<ContractSchemaNodeDto> roots =
+                payload.getAttributes() != null ? payload.getAttributes() : List.of();
+        for (ContractSchemaNodeDto root : roots) {
+            if (root != null) {
+                insertSchemaNode(tenantId, documentId, null, root);
+            }
+        }
+
+        return exportContractSchema(tenantId, documentId);
+    }
+
+    /** Плоский список → дерево с {@code children} (без id/parent_id в JSON). */
+    private static List<ContractSchemaNodeDto> buildSchemaTree(List<AttributeDefEntity> rows) {
+        Map<Long, ContractSchemaNodeDto> byId = new HashMap<>();
+        Map<Long, Long> parentById = new HashMap<>();
+        for (AttributeDefEntity e : rows) {
+            byId.put(e.getId(), toSchemaNode(e));
+            parentById.put(e.getId(), e.getParentId());
+        }
+        List<ContractSchemaNodeDto> roots = new ArrayList<>();
+        for (AttributeDefEntity e : rows) {
+            ContractSchemaNodeDto node = byId.get(e.getId());
+            Long parentId = parentById.get(e.getId());
+            if (parentId == null) {
+                roots.add(node);
+            } else {
+                ContractSchemaNodeDto parent = byId.get(parentId);
+                if (parent != null) {
+                    parent.getChildren().add(node);
+                } else {
+                    roots.add(node);
+                }
+            }
+        }
+        return roots;
+    }
+
+    private static ContractSchemaNodeDto toSchemaNode(AttributeDefEntity e) {
+        ContractSchemaNodeDto n = new ContractSchemaNodeDto();
+        n.setVarCode(e.getVarCode());
+        n.setVarName(e.getVarName());
+        n.setVarPath(e.getVarPath());
+        n.setVarType(e.getVarType());
+        n.setVarDataType(VarDataType.parse(e.getVarDataType()));
+        n.setVarValue(e.getVarValue() != null ? e.getVarValue() : "");
+        n.setVarNr(e.getVarOrd() != null ? e.getVarOrd().toString() : null);
+        n.setVarList(e.getVarList());
+        n.setSystem(e.isSystem());
+        n.setDefaultState(AttributeDefaultState.normalize(e.getDefaultState()));
+        return n;
+    }
+
+    /**
+     * Вставка узла и детей. {@code id} не берётся из JSON — генерируется sequence при {@code save}.
+     */
+    private void insertSchemaNode(
+            Long tenantId, String documentId, Long parentId, ContractSchemaNodeDto node) {
+        validateCode(node.getVarCode(), "Attribute");
+        if (node.getVarName() == null || node.getVarName().isBlank()) {
+            throw new BadRequestException("varName cannot be empty for " + node.getVarCode());
+        }
+        if (node.getVarType() == null || node.getVarType().isBlank()) {
+            throw new BadRequestException("varType cannot be empty for " + node.getVarCode());
+        }
+        String varType = node.getVarType().trim();
+        requireVarPathForIn(varType, node.getVarPath(), node.getVarCode());
+        String varPath = node.getVarPath();
+        if (varPath == null || varPath.isBlank()) {
+            varPath = "";
+        }
+
+        AttributeDefEntity e = new AttributeDefEntity();
+        e.setTenantId(tenantId);
+        e.setDocumentId(documentId);
+        e.setParentId(parentId);
+        e.setVarCode(node.getVarCode());
+        e.setVarName(node.getVarName());
+        e.setVarPath(varPath);
+        e.setVarOrd(parseVarOrd(node.getVarNr()));
+        e.setVarType(varType);
+        e.setVarDataType(varDataTypeToDb(node.getVarDataType()));
+        e.setVarValue(node.getVarValue());
+        e.setVarList(node.getVarList());
+        e.setSystem(node.isSystem());
+        e.setDefaultState(AttributeDefaultState.normalize(node.getDefaultState()));
+        AttributeDefEntity saved = attributeDefRepository.save(e);
+
+        List<ContractSchemaNodeDto> children = node.getChildren();
+        if (children != null) {
+            for (ContractSchemaNodeDto child : children) {
+                if (child != null) {
+                    insertSchemaNode(tenantId, documentId, saved.getId(), child);
+                }
+            }
         }
     }
 }

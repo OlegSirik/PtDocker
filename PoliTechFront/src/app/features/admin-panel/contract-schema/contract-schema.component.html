@@ -6,6 +6,28 @@
   <div class="pt-box">
     <div class="pt-box-title-row">
       <h3 class="pt-box-title">Модель договора</h3>
+      <div class="pt-box-title-actions">
+        <button
+          mat-icon-button
+          type="button"
+          title="Выгрузить в JSON"
+          aria-label="Выгрузить в JSON"
+          [disabled]="!selectedModelCode || exportingSchema || importingSchema"
+          (click)="exportSchemaToFile()"
+        >
+          <mat-icon>file_download</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          title="Загрузить из JSON"
+          aria-label="Загрузить из JSON"
+          [disabled]="exportingSchema || importingSchema"
+          (click)="importSchemaFromFile()"
+        >
+          <mat-icon>file_upload</mat-icon>
+        </button>
+      </div>
     </div>
     <h4 class="pt-box-subtitle">
       Выберите тип договора из справочника. Схема атрибутов загружается из mt_attribute_def.

@@ -77,11 +77,12 @@ public enum AccountNodeType {
      * @return the corresponding AccountNodeType enum, or null if not found
      */
     public static AccountNodeType fromString(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return null;
         }
+        String n = value.trim();
         for (AccountNodeType type : AccountNodeType.values()) {
-            if (type.value.equals(value)) {
+            if (type.value.equalsIgnoreCase(n) || type.name().equalsIgnoreCase(n)) {
                 return type;
             }
         }

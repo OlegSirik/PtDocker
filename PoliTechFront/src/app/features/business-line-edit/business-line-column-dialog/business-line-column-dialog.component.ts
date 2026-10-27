@@ -62,8 +62,8 @@ import {
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип данных</mat-label>
           <mat-select [(ngModel)]="column.varDataType" required>
-            <mat-option value="NUMBER">Number</mat-option>
-            <mat-option value="STRING">String</mat-option>
+            <mat-option value="STRING">STRING</mat-option>
+            <mat-option value="NUMBER">NUMBER</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field class="form-field" appearance="outline">

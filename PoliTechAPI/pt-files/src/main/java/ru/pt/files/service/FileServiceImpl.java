@@ -300,6 +300,43 @@ public class FileServiceImpl implements FileService {
         return process(fileId.longValue(), keyValues);
     }
 
+    @Override
+    public byte[] getRawFile(Integer fileId) {
+        if (fileId == null) {
+            throw new NotFoundException("File ID is not found");
+        }
+        FileEntity entity = fileRepository.findActiveById(getCurrentTenantId(), fileId.longValue())
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        if (entity.getFileBody() == null || entity.getFileBody().length == 0) {
+            throw new IllegalArgumentException("File body is empty");
+        }
+        return entity.getFileBody();
+    }
+
+    @Override
+    public byte[] mergePdfs(List<byte[]> pdfParts) {
+        if (pdfParts == null || pdfParts.isEmpty()) {
+            throw new IllegalArgumentException("pdfParts is empty");
+        }
+        if (pdfParts.size() == 1) {
+            return pdfParts.get(0);
+        }
+        try {
+            org.apache.pdfbox.multipdf.PDFMergerUtility merger =
+                    new org.apache.pdfbox.multipdf.PDFMergerUtility();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            merger.setDestinationStream(out);
+            for (byte[] part : pdfParts) {
+                merger.addSource(new org.apache.pdfbox.io.RandomAccessReadBuffer(part));
+            }
+            merger.mergeDocuments(null);
+            return out.toByteArray();
+        } catch (IOException ex) {
+            logger.error("Failed to merge PDFs: {}", ex.getMessage(), ex);
+            throw new InternalServerErrorException("Failed to merge print form PDFs", ex);
+        }
+    }
+
     private FileStorage resolve(Tenant tenant) {
 
         FileStorageType fsType = tenant.storageType();

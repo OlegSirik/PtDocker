@@ -19,6 +19,21 @@ export interface TenantAdmin {
     role?: string;
   }
 
+export interface AddAdminMemberRequest {
+  role: string;
+  userLogin: string;
+  fullName?: string;
+  position?: string;
+  password?: string;
+}
+
+export const ADMIN_ROLES = {
+  SYS_ADMIN: 'SYS_ADMIN',
+  TNT_ADMIN: 'TNT_ADMIN',
+  PRODUCT_ADMIN: 'PRODUCT_ADMIN',
+  GROUP_ADMIN: 'GROUP_ADMIN',
+} as const;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,20 +49,31 @@ export class TenantAdminService extends BaseApiService<TenantAdmin> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=sys_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=SYS_ADMIN', { headers });
   }
   
   getTntADmins(tenantCode: string): Observable<TenantAdmin[]> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=tnt_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=TNT_ADMIN', { headers });
   }
 
   getProductAdmins(tenantCode: string): Observable<TenantAdmin[]> {
     const headers = new HttpHeaders()
     .set('X-Imp-Tenant', tenantCode);
 
-    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=product_admin', { headers });
+    return this.http.get<TenantAdmin[]>(this.getUrl() + '?role=PRODUCT_ADMIN', { headers });
+  }
+
+  addMember(body: AddAdminMemberRequest, headers?: { [key: string]: string }): Observable<TenantAdmin> {
+    const options = { headers: this.createHeaders(headers) };
+    return this.http.post<TenantAdmin>(this.getUrl(), {
+      role: body.role,
+      userLogin: body.userLogin,
+      fullName: body.fullName || undefined,
+      position: body.position || undefined,
+      password: body.password || undefined,
+    }, options);
   }
 }

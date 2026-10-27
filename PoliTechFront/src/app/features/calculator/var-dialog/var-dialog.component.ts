@@ -34,22 +34,16 @@ import { CalculatorVar } from '../../../shared/services/calculator.service';
       <div class="form-row">
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип переменной</mat-label>
-          <mat-select [(ngModel)]="varItem.varType" required>
- <!--
-          <mat-option *ngFor="let option of data.varTypeOptions" [value]="option">
-              {{ option }}
-            </mat-option>
--->       <mat-option value="VAR">VAR</mat-option>
-          <mat-option value="CONST">CONST</mat-option>
-          
-          
+          <mat-select [(ngModel)]="varItem.varKind" required>
+            <mat-option value="VAR">VAR</mat-option>
+            <mat-option value="CONST">CONST</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field class="form-field" appearance="outline">
           <mat-label>Тип данных</mat-label>
           <mat-select [(ngModel)]="varItem.varDataType" required>
-            <mat-option value="NUMBER">Number</mat-option>
-            <mat-option value="STRING">String</mat-option>   
+            <mat-option value="STRING">STRING</mat-option>
+            <mat-option value="NUMBER">NUMBER</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -93,19 +87,24 @@ export class VarDialogComponent {
     },
     public dialogRef: MatDialogRef<VarDialogComponent>
   ) {
-    this.varItem = data.varItem ? { ...data.varItem } : {
-      varCode: '',
-      varName: '',
-      varPath: '',
-      varType: 'VAR',
-      varValue: '',
-      varDataType: 'STRING',
-      varCdm: '',
-      varNr: 10000
-    };
+    this.varItem = data.varItem
+      ? {
+          ...data.varItem,
+          varKind: data.varItem.varKind
+            ?? data.varItem.kind
+            ?? (data.varItem.varType as CalculatorVar['varKind'])
+            ?? 'VAR'
+        }
+      : {
+          varCode: '',
+          varName: '',
+          varKind: 'VAR',
+          varValue: '',
+          varDataType: 'STRING'
+        };
   }
 
   isValid(): boolean {
-    return !!(this.varItem.varCode && this.varItem.varName && this.varItem.varType && this.varItem.varDataType);
+    return !!(this.varItem.varCode && this.varItem.varName && this.varItem.varKind && this.varItem.varDataType);
   }
 }

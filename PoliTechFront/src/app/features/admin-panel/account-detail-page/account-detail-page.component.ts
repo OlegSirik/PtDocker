@@ -459,37 +459,21 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
 
   // Admins
   addAdmin() {
-    const dialogRef = this.dialog.open(TextDialogComponent, {
-      width: '400px',
-      data: { title: 'Дать права администратора', label: 'Admin (email/login)' }
+    const dialogRef = this.dialog.open(MemberLoginDialogComponent, {
+      width: '520px',
+      maxWidth: '90vw',
+      data: {
+        accountId: this.accountId,
+        role: 'GROUP_ADMIN',
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (!this.account) return;
-
-        const login: LoginAccount = {
-          tid: this.account.tid,
-          clientId: this.account.clientId,
-          accountId: this.account.id,
-          userLogin: result.trim(),
-          userRole: 'ADMIN',
-          isDefault: false
-        };
-
-        this.accountService.addLogin(this.account.id, login).subscribe({
-          next: () => {
-            if (!this.account) return;
-            this.accountService.getLogins(this.account.id).subscribe({
-              next: (logins: LoginAccount[]) => {
-                this.admins = logins;
-              },
-              error: (error: unknown) => {
-                console.error('Error getting logins:', error);
-              }
-            });
-          }
-        });
+      if (result?.success) {
+        this.loadChildAccounts();
+        this.snackBar.open('Администратор добавлен', 'OK', { duration: 2000 });
+      } else if (result?.error) {
+        this.snackBar.open('Ошибка при создании администратора', 'OK', { duration: 3000 });
       }
     });
   }
@@ -510,10 +494,20 @@ export class AccountDetailPageComponent implements OnInit, OnDestroy {
   }
 
   deleteAdmin(index: number) {
-    if (confirm('Delete admin?')) {
-      this.admins.splice(index, 1);
-      this.admins = [...this.admins];
-      this.persistAccountExtras();
+    const admin = this.admins[index];
+    if (!admin?.id) {
+      return;
+    }
+    if (confirm('Удалить администратора?')) {
+      this.accountService.deleteMember(this.accountId, admin.id).subscribe({
+        next: () => {
+          this.loadChildAccounts();
+          this.snackBar.open('Администратор удалён', 'OK', { duration: 2000 });
+        },
+        error: () => {
+          this.snackBar.open('Ошибка удаления администратора', 'OK', { duration: 3000 });
+        }
+      });
     }
   }
 

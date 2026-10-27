@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class SchemaResponseProcessor implements LlmResponseProcessor {
 
     private static final Set<String> ALLOWED_VAR_TYPES = Set.of("IN", "OBJECT", "MAGIC", "CONST", "VAR");
-    private static final Set<String> ALLOWED_DATA_TYPES = Set.of("STRING", "NUMBER", "DATE", "TIME", "OBJECT");
+    private static final Set<String> ALLOWED_DATA_TYPES = Set.of("STRING", "NUMBER", "OBJECT");
     private static final Pattern REFDICT_CODE = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9_-]{0,49}$");
 
     private final ObjectMapper objectMapper;
