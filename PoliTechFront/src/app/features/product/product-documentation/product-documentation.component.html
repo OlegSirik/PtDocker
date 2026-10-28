@@ -8,6 +8,15 @@
       <mat-icon>picture_as_pdf</mat-icon>
       Скачать PDF
     </button>
+    <button
+      mat-stroked-button
+      type="button"
+      title="Скачать OpenAPI (api.yaml)"
+      [disabled]="downloadingApiYaml || !productId"
+      (click)="downloadApiYaml()"
+    >
+      api.yaml
+    </button>
   </div>
 
   @if (loading) {

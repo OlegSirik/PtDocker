@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 import ru.pt.api.dto.errors.ErrorConstants;
 import ru.pt.api.dto.errors.ErrorModel;
 import ru.pt.api.dto.exception.NotFoundException;
-import ru.pt.api.dto.product.LobModel;
-import ru.pt.api.dto.product.LobVar;
 import ru.pt.api.dto.product.PvPackage;
 import ru.pt.api.dto.product.PvVar;
 import ru.pt.api.dto.policy.StdPolicy;
@@ -21,7 +19,6 @@ import ru.pt.domain.model.VariableContext;
 import ru.pt.domain.model.VariableContextImpl;
 import ru.pt.product.repository.ProductRepository;
 import ru.pt.product.repository.ProductVersionRepository;
-import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 
 import java.util.ArrayList;
@@ -42,7 +39,6 @@ public class FileProcessServiceImpl implements FileProcessService {
     private final PostProcessService postProcessService;
 
     private final ProductService productService;
-    private final LobService lobService;
 
     public FileProcessServiceImpl(
             PolicyIndexRepository policyIndexRepository,
@@ -52,8 +48,7 @@ public class FileProcessServiceImpl implements FileProcessService {
             FileService fileService,
             PreProcessService preProcessService,
             PostProcessService postProcessService,
-            ProductService productService,
-            LobService lobService
+            ProductService productService
     ) {
         this.policyIndexRepository = policyIndexRepository;
         this.productRepository = productRepository;
@@ -63,7 +58,6 @@ public class FileProcessServiceImpl implements FileProcessService {
         this.preProcessService = preProcessService;
         this.postProcessService = postProcessService;
         this.productService = productService;
-        this.lobService = lobService;
     }
 
    @Override
@@ -103,25 +97,10 @@ public class FileProcessServiceImpl implements FileProcessService {
         logger.debug("Resolved product version. productCode={}, versionNo={}", policyIndex.getProductCode(), policyIndex.getProductVersionNo());
 
 
+        // DEV TEXT already overlaid from LOB in ProductService.getProductByCodeAndVersionNo
         List<PvVar> pvVarList = productVersion.getVars() == null
                 ? new ArrayList<>()
                 : new ArrayList<>(productVersion.getVars());
-        if ("DEV".equals(productVersion.getVersionStatus())) {
-            // Если версия в статусе разработка, то брать описание строк с лоба
-            pvVarList.removeIf(v -> "TEXT".equals(v.getVarType()));
-
-            String lobCode = productVersion.getLob();
-            if (lobCode != null && !lobCode.isBlank()) {
-                LobModel lobModel = lobService.getByCode(policyTid, lobCode);
-                if (lobModel != null && lobModel.getMpVars() != null) {
-                    for (LobVar lobVar : lobModel.getMpVars()) {
-                        if ("TEXT".equals(lobVar.getVarType().toString())) {
-                            pvVarList.add(lobVarToPvVarForPrint(lobVar));
-                        }
-                    }
-                }
-            }
-        }
 
         // 7. Runtime-контекст
         VariableContext varCtx = VariableContextImpl.builder()
@@ -192,26 +171,5 @@ public class FileProcessServiceImpl implements FileProcessService {
 
         logger.info("Print form merge. policyNumber={}, parts={}", policyNumber, pdfParts.size());
         return fileService.mergePdfs(pdfParts);
-    }
-
-    /**
-     * DEV-печать: переменные ЛС в том же виде, что и продуктовые TEXT-шаблоны ({@code varType = TEXT}).
-     */
-    private static PvVar lobVarToPvVarForPrint(LobVar lob) {
-        PvVar v = new PvVar();
-        v.setVarCode(lob.getVarCode());
-        v.setVarName(lob.getVarName());
-        v.setVarPath(lob.getVarPath());
-        v.setVarType("TEXT");
-        v.setVarDataType(lob.getVarDataType());
-        v.setVarValue(lob.getVarValue());
-        v.setVarNr(lob.getVarNr());
-        v.setId(lob.getId());
-        v.setParent_id(lob.getParent_id());
-        v.setVarList(lob.getVarList());
-        v.setIsSystem(lob.getIsSystem());
-        v.setIsDeleted(lob.getIsDeleted());
-        v.setName(lob.getName());
-        return v;
     }
 }

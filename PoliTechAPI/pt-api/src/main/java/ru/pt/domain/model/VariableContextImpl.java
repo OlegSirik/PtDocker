@@ -78,7 +78,7 @@ public final class VariableContextImpl implements CalculatorContext {
                 if (def.getSourceType() == PvVarDefinition.VarSourceType.MAGIC) {
                     continue;
                 }
-                if (def.getSourceType() == PvVarDefinition.VarSourceType.IN) {
+                if (def.getJsonPath() != null && !def.getJsonPath().isBlank()) {
                     Object value = ctx.resolveFromJson(jsonDocument, def);
                     ctx.putValueInternal(def.getCode(), value);
                     materializedCount++;

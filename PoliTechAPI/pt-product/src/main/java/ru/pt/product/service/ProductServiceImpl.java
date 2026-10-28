@@ -340,6 +340,8 @@ public class ProductServiceImpl implements ProductService {
         } catch (JsonProcessingException e) {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
         }
+        // Snapshot current LOB TEXT into the version before freezing as PROD
+        replaceTextVarsFromLob(tenantId, productVersionModel);
         productVersionModel.setVersionStatus("PROD");
         productVersionModel.setVersionNo(versionNo);
         try {
@@ -368,6 +370,7 @@ public class ProductServiceImpl implements ProductService {
             Action.VIEW);
 
         ProductVersionModel model = productServiceCRUD.getVersion(tenantId, productId, versionNo);
+        applyTextOverlayIfDev(tenantId, model);
         attachCelRules(model, tenantId);
         return model;
     }
@@ -1042,8 +1045,64 @@ public class ProductServiceImpl implements ProductService {
             Action.VIEW);
 
         ProductVersionModel model = productServiceCRUD.getProduct(tenantId, id, forDev);
+        applyTextOverlayIfDev(tenantId, model);
         attachCelRules(model, tenantId);
         return model;
+    }
+
+    /**
+     * DEV: TEXT always from current LOB. PROD / other statuses: leave stored vars as-is.
+     * Write paths ({@code getVersion4Update}) must not call this.
+     */
+    private void applyTextOverlayIfDev(Long tenantId, ProductVersionModel model) {
+        if (model == null || !"DEV".equals(model.getVersionStatus())) {
+            return;
+        }
+        replaceTextVarsFromLob(tenantId, model);
+    }
+
+    /**
+     * Drop product TEXT vars and append TEXT vars from LOB ({@code model.lob}).
+     */
+    private void replaceTextVarsFromLob(Long tenantId, ProductVersionModel model) {
+        if (model == null) {
+            return;
+        }
+        List<PvVar> vars = model.getVars() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(model.getVars());
+        vars.removeIf(v -> v != null && "TEXT".equals(v.getVarType()));
+
+        String lobCode = model.getLob();
+        if (lobCode != null && !lobCode.isBlank()) {
+            LobModel lobModel = lobService.getByCode(tenantId, lobCode);
+            if (lobModel != null && lobModel.getMpVars() != null) {
+                for (LobVar lobVar : lobModel.getMpVars()) {
+                    if (lobVar != null && "TEXT".equals(lobVar.getVarType())) {
+                        vars.add(lobVarToPvVar(lobVar));
+                    }
+                }
+            }
+        }
+        model.setVars(vars);
+    }
+
+    private static PvVar lobVarToPvVar(LobVar lob) {
+        PvVar v = new PvVar();
+        v.setVarCode(lob.getVarCode());
+        v.setVarName(lob.getVarName());
+        v.setVarPath(lob.getVarPath());
+        v.setVarType("TEXT");
+        v.setVarDataType(lob.getVarDataType());
+        v.setVarValue(lob.getVarValue());
+        v.setVarNr(lob.getVarNr());
+        v.setId(lob.getId());
+        v.setParent_id(lob.getParent_id());
+        v.setVarList(lob.getVarList());
+        v.setIsSystem(lob.getIsSystem());
+        v.setIsDeleted(lob.getIsDeleted());
+        v.setName(lob.getName());
+        return v;
     }
 
     private void attachCelRules(ProductVersionModel model, Long tenantId) {
@@ -1094,6 +1153,7 @@ authService.check(
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
             model.setInsCompanyId(entity.getInsCompanyId());
+            applyTextOverlayIfDev(tenantId, model);
             return model;
         } catch (JsonProcessingException e) {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
@@ -1120,6 +1180,7 @@ authService.check(
         try {
             ProductVersionModel model = objectMapper.readValue(pv.getProduct(), ProductVersionModel.class);
             model.setInsCompanyId(entity.getInsCompanyId());
+            applyTextOverlayIfDev(tenantId, model);
             return model;
         } catch (JsonProcessingException e) {
             throw new InternalServerErrorException("Error reading product version model from JSON", e);
