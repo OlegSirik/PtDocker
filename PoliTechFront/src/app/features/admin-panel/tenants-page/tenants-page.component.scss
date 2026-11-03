@@ -3,8 +3,8 @@
   width: 100%;
   table-layout: fixed;
   .col-id { width: 100px; min-width: 100px; }
-  .col-name { width: 100px; min-width: 100px; }
-  .col-code { width: 100px; min-width: 100px; }
+  .col-name { width: 200px; min-width: 200px; }
+  .col-code { width: 200px; min-width: 200px; }
   .col-status { width: 100px; min-width: 100px; }
   .col-actions { width: 100px; min-width: 100px; }
 }
@@ -48,5 +48,26 @@
 .search-field {
   min-width: 300px;
   appearance: outline;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.status-deleted {
+  background: #ffebee;
+  color: #c62828;
+}
+.status-suspended {
+  background: #fff8e1;
+  color: #f57f17;
 }
 

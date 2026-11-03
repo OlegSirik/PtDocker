@@ -71,14 +71,17 @@ public class TenantManagementController extends SecuredController {
     }
 
     /**
-     * Удаление tenant (soft delete)
-     * DELETE /api/v1/{tenantCode}/admin/tenants/{tenantResourceId}
+     * Удаление tenant.
+     * DELETE /api/v1/{tenantCode}/admin/tenants/{codeToDelete}
+     * <p>ACTIVE → soft-delete ({@code recordStatus=DELETED});
+     * уже DELETED → hard-purge из БД.
+     * Path {@code tenantCode} — обычно {@code sys}.
      */
-    @DeleteMapping("/{tid}")
+    @DeleteMapping("/{codeToDelete}")
     @PreAuthorize("hasRole('SYS_ADMIN')")
     public ResponseEntity<Void> deleteTenant(
-            @PathVariable String tenantCode) {
-        tenantService.softDeleteTenant(tenantCode);
+            @PathVariable String codeToDelete) {
+        tenantService.softDeleteTenant(codeToDelete);
         return ResponseEntity.noContent().build();
     }
 

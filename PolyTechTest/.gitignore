@@ -1,0 +1,9 @@
+.gradle/
+build/
+reports/*.md
+reports/*.xml
+!reports/.gitkeep
+config/local.yaml
+*.iml
+.idea/
+out/

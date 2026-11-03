@@ -1,5 +1,5 @@
 /**
- * Сборка OpenAPI 3 YAML для sales quotes/policies по JSON-скелету схемы договора.
+ * Сборка OpenAPI 3 YAML для sales quotes/policies по JSON-скелетам quote/save.
  */
 
 /** JSON-значение (скелет metadata) → OpenAPI Schema Object. */
@@ -40,13 +40,16 @@ export interface ProductSalesOpenApiParams {
   productCode: string;
   productName: string;
   versionNo: number | string;
-  /** Скелет/пример тела запроса (схема договора). */
-  contractDocument: unknown;
+  /** Скелет тела quote: isSystem || isTarifFactor. */
+  quoteDocument: unknown;
+  /** Скелет тела save/policy: isDeleted=false. */
+  saveDocument: unknown;
 }
 
-/** Минимальный OpenAPI 3.0 YAML: server + POST quotes/policies + schema. */
+/** OpenAPI 3.0 YAML: server + POST quotes/policies; схемы без example. */
 export function buildProductSalesOpenApiYaml(p: ProductSalesOpenApiParams): string {
-  const schema = jsonToOpenApiSchema(p.contractDocument);
+  const quoteSchema = jsonToOpenApiSchema(p.quoteDocument);
+  const saveSchema = jsonToOpenApiSchema(p.saveDocument);
   const title = p.productName || p.productCode || 'Product';
   const base = p.serverUrl.replace(/\/$/, '');
   const tenant = p.tenantCode || 'tenant';
@@ -58,7 +61,9 @@ export function buildProductSalesOpenApiYaml(p: ProductSalesOpenApiParams): stri
     info: {
       title: `${title} — Sales API`,
       version: String(p.versionNo ?? '1'),
-      description: `Автогенерация для продукта ${p.productCode}. Тело запроса = схема договора (INSURANCE_CONTRACT).`,
+      description:
+        `Автогенерация для продукта ${p.productCode}. ` +
+        `Quote: поля isSystem или isTarifFactor; Save: все isDeleted=false.`,
     },
     servers: [{ url: base, description: 'Current server' }],
     paths: {
@@ -72,8 +77,7 @@ export function buildProductSalesOpenApiYaml(p: ProductSalesOpenApiParams): stri
             required: true,
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/InsuranceContract' },
-                example: p.contractDocument,
+                schema: { $ref: '#/components/schemas/QuoteRequest' },
               },
             },
           },
@@ -99,8 +103,7 @@ export function buildProductSalesOpenApiYaml(p: ProductSalesOpenApiParams): stri
             required: true,
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/InsuranceContract' },
-                example: p.contractDocument,
+                schema: { $ref: '#/components/schemas/SaveRequest' },
               },
             },
           },
@@ -126,7 +129,8 @@ export function buildProductSalesOpenApiYaml(p: ProductSalesOpenApiParams): stri
         },
       },
       schemas: {
-        InsuranceContract: schema,
+        QuoteRequest: quoteSchema,
+        SaveRequest: saveSchema,
       },
     },
   };

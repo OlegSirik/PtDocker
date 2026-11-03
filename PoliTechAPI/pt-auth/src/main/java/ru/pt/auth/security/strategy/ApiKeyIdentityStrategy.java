@@ -5,22 +5,22 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import ru.pt.auth.model.AuthType;
-import ru.pt.auth.repository.AccountRepository;
 import ru.pt.auth.repository.AccountTokenRepository;
+import ru.pt.auth.repository.ClientRepository;
 import ru.pt.auth.security.context.RequestContext;
 
 @Component
 public class ApiKeyIdentityStrategy implements IdentitySourceStrategy {
 
     private final AccountTokenRepository accountTokenRepository;
-    private final AccountRepository accountRepository;
+    private final ClientRepository clientRepository;
     private final RequestContext requestContext;
 
     public ApiKeyIdentityStrategy(AccountTokenRepository accountTokenRepository,
-                                  AccountRepository accountRepository,
+                                  ClientRepository clientRepository,
                                   RequestContext requestContext) {
         this.accountTokenRepository = accountTokenRepository;
-        this.accountRepository = accountRepository;
+        this.clientRepository = clientRepository;
         this.requestContext = requestContext;
     }
 
@@ -41,11 +41,15 @@ public class ApiKeyIdentityStrategy implements IdentitySourceStrategy {
             throw new BadCredentialsException("Tenant is required for API key authentication");
         }
 
-        var tokenEntity = accountTokenRepository.findByTokenAndTenantCodeWithClientAndAccount(apiKey, tenantCode)
+        var tokenEntity = accountTokenRepository.findByTokenAndTenantCode(apiKey, tenantCode)
                 .orElseThrow(() -> new BadCredentialsException("Invalid API key"));
-        var accountEntity = accountRepository.findById(tokenEntity.getAccountId())
-                .orElseThrow(() -> new BadCredentialsException("Account not found for API key"));
-        var clientAuthId = accountEntity.getClient().getAuthClientId();
+        // Avoid lazy AccountEntity.client — read authClientId via client_id on the token row
+        var client = clientRepository.findById(tokenEntity.getClientId())
+                .orElseThrow(() -> new BadCredentialsException("Client not found for API key"));
+        String clientAuthId = client.getAuthClientId();
+        if (clientAuthId == null || clientAuthId.isBlank()) {
+            throw new BadCredentialsException("Client authClientId missing for API key");
+        }
 
         requestContext.setTenant(tenantCode);
         requestContext.setClient(clientAuthId);

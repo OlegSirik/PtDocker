@@ -11,14 +11,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import ru.pt.api.dto.product.ContractModelDto;
 import ru.pt.api.dto.product.LobModel;
 import ru.pt.api.dto.product.ProductVersionModel;
 import ru.pt.api.dto.calculator.CoefficientDataRow;
+import ru.pt.api.dto.schema.ContractSchemaExportDto;
 import ru.pt.api.service.calculator.CalculatorService;
 import ru.pt.api.service.calculator.CoefficientService;
 import ru.pt.api.service.product.LobService;
 import ru.pt.api.service.product.ProductService;
 import ru.pt.api.service.product.ProductTestService;
+import ru.pt.api.service.schema.SchemaService;
 import ru.pt.api.dto.calculator.CalculatorModel;
 import ru.pt.auth.security.UserDetailsImpl;
 
@@ -38,6 +41,8 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(InitialDataBootstrapRunner.class);
 
     private static final Long TENANT_ID = 10L;
+    /** Системный тенант — шаблон схемы договора ({@code mt_contract_model} / {@code mt_attribute_def}). */
+    private static final Long SYSTEM_TENANT_ID = 1L;
     private static final Long ACCOUNT_ID = 16L;
 
     private static final List<String> LOB_FILES = List.of(
@@ -54,6 +59,9 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
             "classpath:bootstrap/CRG/product_CARGO_GENERAL.json"
     );
 
+    private static final String INSURANCE_CONTRACT_SCHEMA =
+            "classpath:bootstrap/Metadata/Insurance_contract.json";
+
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
     private final LobService lobService;
@@ -61,6 +69,7 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
     private final CalculatorService calculatorService;
     private final CoefficientService coefficientService;
     private final ProductTestService productTestService;
+    private final SchemaService schemaService;
 
     public InitialDataBootstrapRunner(ObjectMapper objectMapper,
                                       ResourceLoader resourceLoader,
@@ -68,7 +77,8 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
                                       ProductService productService,
                                       CalculatorService calculatorService,
                                       CoefficientService coefficientService,
-                                      ProductTestService productTestService) {
+                                      ProductTestService productTestService,
+                                      SchemaService schemaService) {
         this.objectMapper = objectMapper;
         this.resourceLoader = resourceLoader;
         this.lobService = lobService;
@@ -76,12 +86,14 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
         this.calculatorService = calculatorService;
         this.coefficientService = coefficientService;
         this.productTestService = productTestService;
+        this.schemaService = schemaService;
     }
 
     Map<String, Long> calculatorIdMap = new HashMap<>();
     
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        runAsTenant(SYSTEM_TENANT_ID, () -> loadContractSchemaIfMissing(INSURANCE_CONTRACT_SCHEMA));
         runAsSystem(() -> {
             loadLobs(LOB_FILES);
             loadProducts(PRODUCT_FILES);
@@ -168,6 +180,33 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
                 quoteJsonFile,
                 policyJsonFile
         );
+    }
+
+    /**
+     * Загрузка схемы договора из JSON в системный тенант ({@link #SYSTEM_TENANT_ID}),
+     * только если модели с таким {@code code} ещё нет.
+     */
+    private void loadContractSchemaIfMissing(String location) {
+        try {
+            ContractSchemaExportDto payload = readResource(location, ContractSchemaExportDto.class);
+            if (payload.getCode() == null || payload.getCode().isBlank()) {
+                log.warn("Contract schema JSON without code, skip: {}", location);
+                return;
+            }
+            String code = payload.getCode().trim();
+            boolean exists = schemaService.listContractModels(SYSTEM_TENANT_ID).stream()
+                    .map(ContractModelDto::getCode)
+                    .anyMatch(code::equals);
+            if (exists) {
+                log.info("Contract schema already exists in system tenant, skip load: {} code={}", location, code);
+                return;
+            }
+            schemaService.importContractSchema(SYSTEM_TENANT_ID, payload);
+            log.info("Contract schema loaded into system tenant: {} code={}", location, code);
+        } catch (Exception e) {
+            log.warn("Contract schema cannot be loaded: {}", location);
+            log.warn("Error: {}", e.getMessage());
+        }
     }
 
     private void loadLobs(List<String> resources) {
@@ -373,13 +412,17 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
     }
 
     private void runAsSystem(Runnable action) {
+        runAsTenant(TENANT_ID, action);
+    }
+
+    private void runAsTenant(Long tenantId, Runnable action) {
         SecurityContext previous = SecurityContextHolder.getContext();
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         UserDetailsImpl systemUser = new UserDetailsImpl(
                 ACCOUNT_ID,          // id
                 "bootstrap-system",  // username
-                "demo",              // tenantCode
-                TENANT_ID,           // tenantId
+                tenantId.equals(SYSTEM_TENANT_ID) ? "system" : "demo", // tenantCode
+                tenantId,            // tenantId
                 ACCOUNT_ID,          // accountId
                 "bootstrap",         // accountName
                 12L,                 // clientId
@@ -387,7 +430,7 @@ public class InitialDataBootstrapRunner implements ApplicationRunner {
                 "TNT_ADMIN",         // userRole
                 new HashSet<>(),     // productRoles
                 true,                // isDefault
-                10L,          // actingAccountId
+                tenantId,            // actingAccountId (TENANT check: isParent(acting, tenantId))
                 String.valueOf(ACCOUNT_ID) // accountPath
         );
         context.setAuthentication(new UsernamePasswordAuthenticationToken(

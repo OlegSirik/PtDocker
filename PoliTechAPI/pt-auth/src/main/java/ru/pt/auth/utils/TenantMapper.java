@@ -38,7 +38,7 @@ public class TenantMapper {
         return new Tenant(
                 entity.getId(),
                 entity.getName(),
-                entity.getRecordStatus() != null ? RecordStatus.valueOf(entity.getRecordStatus()) : null,
+                entity.getRecordStatus() != null ? RecordStatus.fromValue(entity.getRecordStatus()) : null,
                 entity.getAuthType() != null ? TenantAuthType.fromValue(entity.getAuthType()) : null,
                 entity.getStorageType() != null ? FileStorageType.valueOf(entity.getStorageType()) : null,
                 entity.getCode(),

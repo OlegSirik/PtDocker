@@ -150,11 +150,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if ("SYS_ADMIN".equals(user.getUserRole())) {
             
             if (newTenant != null && !newTenant.isEmpty()) {
-                user.setImpersonatedTenantCode(newTenant); 
-                AccountEntity tenantAccount = accountRepository.findTenantAccount(newTenant).orElseThrow(() -> new UsernameNotFoundException("Tenant account not found for tenant: " + newTenant));
-                
-                user.setActingAccountId(tenantAccount.getId());
+                AccountEntity tenantAccount = accountRepository.findTenantAccount(newTenant)
+                        .orElseThrow(() -> new UsernameNotFoundException(
+                                "Tenant account not found for tenant: " + newTenant));
                 user.setImpersonatedTenantCode(newTenant);
+                user.setActingAccountId(tenantAccount.getId());
+                if (tenantAccount.getTenant() != null) {
+                    user.setTenantId(tenantAccount.getTenant().getId());
+                }
             }
         }
         return user;

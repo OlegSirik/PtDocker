@@ -14,6 +14,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import ru.pt.api.dto.exception.NotFoundException;
 import ru.pt.auth.model.AuthType;
 import ru.pt.auth.model.ClientSecurityConfig;
 import ru.pt.auth.model.TenantSecurityConfig;
@@ -77,13 +78,30 @@ public class AccountResolutionFilter extends AbstractSecurityFilter {
             return;
         }
 
-        TenantSecurityConfig config = configService.getConfig(tenant);
+        TenantSecurityConfig resolved;
+        boolean deletedAccess = false;
+        try {
+            resolved = configService.getConfig(tenant);
+        } catch (NotFoundException ex) {
+            // Soft-deleted tenant: resolve auth config, SYS_ADMIN-only after identity
+            resolved = configService.getDeletedTenantConfig(tenant)
+                    .orElseThrow(() -> ex);
+            deletedAccess = true;
+        }
+        requestContext.setDeletedTenantAccess(deletedAccess);
+        final TenantSecurityConfig config = resolved;
         AuthType authType = config.authType();
 
         String clientId = request.getHeader("X-Client-ID");
-        if (clientId !=null && !clientId.isEmpty()) {
-            ClientSecurityConfig clientConfig = clientSecurityConfigService.getConfig(tenant, clientId);
-            authType = clientConfig.authType();
+        if (clientId != null && !clientId.isEmpty()) {
+            try {
+                ClientSecurityConfig clientConfig = clientSecurityConfigService.getConfig(tenant, clientId);
+                if (clientConfig != null && clientConfig.authType() != null) {
+                    authType = clientConfig.authType();
+                }
+            } catch (IllegalArgumentException ignore) {
+                // X-Client-ID from another tenant (e.g. leftover header on /sys/…) — keep tenant authType
+            }
         }
         if (authType == AuthType.NONE) {
             filterChain.doFilter(request, response);
@@ -95,7 +113,7 @@ public class AccountResolutionFilter extends AbstractSecurityFilter {
         IdentitySourceStrategy strategy = strategies.stream()
             .filter(s -> s.supports(aType))
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("No AuthenticationStrategy for " + config.authType()));
+            .orElseThrow(() -> new IllegalStateException("No AuthenticationStrategy for " + aType));
     
         String xAccountId = request.getHeader("X-Account-Id");
         if (xAccountId != null && !xAccountId.isEmpty()) {

@@ -1,0 +1,1 @@
+PS C:\projects\PtDocker> docker compose --env-file docker-compose-local.env -f docker-compose-external-db.yml up --build -d

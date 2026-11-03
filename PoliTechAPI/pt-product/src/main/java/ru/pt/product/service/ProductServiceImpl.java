@@ -971,9 +971,10 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * Карта для metadata JSON: ключ = {@link PvVar#getVarPath()} (JsonPath), не {@code varCode}.
+     * {@code quoteOnly}: только {@code isSystem} или {@code isTarifFactor}; иначе все с {@code isDeleted=false}.
      */
     private Map<String, String> buildExampleVarValuesByPath(
-            ProductVersionModel productVersionModel, boolean tarifFactorOnly) {
+            ProductVersionModel productVersionModel, boolean quoteOnly) {
         Map<String, String> varValues = new HashMap<>();
         List<PvVar> vars = productVersionModel.getVars();
         if (vars != null) {
@@ -981,7 +982,7 @@ public class ProductServiceImpl implements ProductService {
                 if (var.getIsDeleted()) {
                     continue;
                 }
-                if (tarifFactorOnly && !var.getIsTarifFactor()) {
+                if (quoteOnly && !var.getIsSystem() && !var.getIsTarifFactor()) {
                     continue;
                 }
                 putExamplePathValue(varValues, var.getVarPath(), var.getVarValue());

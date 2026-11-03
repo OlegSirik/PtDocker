@@ -67,8 +67,10 @@ public class SecurityFilterConfig {
     @Bean
     public TenantImpersonationFilter tenantImpersonationFilter(
             SecurityConfigurationProperties securityConfigurationProperties,
-            UserDetailsServiceImpl userDetailsServiceImpl
+            UserDetailsServiceImpl userDetailsServiceImpl,
+            RequestContext requestContext
     ) {
-        return new TenantImpersonationFilter(securityConfigurationProperties, userDetailsServiceImpl);
+        return new TenantImpersonationFilter(
+                securityConfigurationProperties, userDetailsServiceImpl, requestContext);
     }
 }

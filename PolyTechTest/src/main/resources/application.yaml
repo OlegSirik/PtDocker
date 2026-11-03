@@ -1,0 +1,31 @@
+baseUrl: http://localhost:8080
+tenantCode: demo
+clientId: sys
+users:
+  admin:
+    login: demo
+    password: "${PT_DEMO_PASSWORD:demo}"
+  other:
+    login: "${PT_OTHER_LOGIN:}"
+    password: "${PT_OTHER_PASSWORD:}"
+  sys:
+    login: sys_admin
+    password: "${PT_SYS_PASSWORD:}"
+defaults:
+  productCode: CARGO_GENERAL
+  versionNo: 1
+  printFormType: POLICY
+load:
+  threads: 20
+  iterationsPerThread: 5
+  totalRequests: 1000
+  concurrencyProbe: [1, 2, 4, 8]
+  requirePrint: false
+adminLifecycle:
+  deleteTenant: true
+reportDir: reports
+tags:
+  - regression
+failFast: false
+connectTimeoutMs: 10000
+readTimeoutMs: 120000

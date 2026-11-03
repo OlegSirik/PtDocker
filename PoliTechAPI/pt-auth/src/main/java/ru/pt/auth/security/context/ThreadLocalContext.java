@@ -9,6 +9,7 @@ public class ThreadLocalContext implements RequestContext {
     private static final ThreadLocal<String> CURRENT_CLIENT = new ThreadLocal<>();
     private static final ThreadLocal<String> CURRENT_LOGIN = new ThreadLocal<>();
     private static final ThreadLocal<Long> CURRENT_ACCOUNT = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> DELETED_TENANT_ACCESS = new ThreadLocal<>();
 
     @Override public String getTenant() { return CURRENT_TENANT.get(); }
     @Override public String getClient() { return CURRENT_CLIENT.get(); }
@@ -19,6 +20,14 @@ public class ThreadLocalContext implements RequestContext {
     @Override public void setClient(String client) { CURRENT_CLIENT.set(client); }
     @Override public void setLogin(String login) { CURRENT_LOGIN.set(login); }
     @Override public void setAccount(Long account) { CURRENT_ACCOUNT.set(account); }
+
+    @Override public boolean isDeletedTenantAccess() {
+        return Boolean.TRUE.equals(DELETED_TENANT_ACCESS.get());
+    }
+
+    @Override public void setDeletedTenantAccess(boolean deletedTenantAccess) {
+        DELETED_TENANT_ACCESS.set(deletedTenantAccess);
+    }
 
     @Override public boolean isTenantResolved() {
         return CURRENT_TENANT.get() != null;
@@ -35,6 +44,7 @@ public class ThreadLocalContext implements RequestContext {
         CURRENT_CLIENT.remove();
         CURRENT_LOGIN.remove();
         CURRENT_ACCOUNT.remove();
+        DELETED_TENANT_ACCESS.remove();
     }
 }
 

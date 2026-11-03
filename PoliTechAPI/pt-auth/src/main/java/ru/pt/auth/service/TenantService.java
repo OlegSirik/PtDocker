@@ -1,5 +1,7 @@
 package ru.pt.auth.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,8 +50,18 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
     private final SchemaService schemaService;
     private final RefDictAdminService refDictAdminService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public Optional<TenantEntity> findByCode(String code) {
         return tenantRepository.findByCode(code.toLowerCase());
+    }
+
+    public Optional<TenantEntity> findByCodeAnyStatus(String code) {
+        if (code == null || code.isBlank()) {
+            return Optional.empty();
+        }
+        return tenantRepository.findByCodeAnyStatus(code.trim());
     }
 
     public Optional<TenantEntity> findByName(String name) {
@@ -180,21 +192,45 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
             throw new ForbiddenException("Only TNT_ADMIN can update tenants");
         }
 
-
-        TenantEntity tenantEntity = findByCode(tenantDto.code())
+        // Include DELETED so soft-deleted tenants can be reactivated
+        TenantEntity tenantEntity = findByCodeAnyStatus(tenantDto.code())
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
-        // Пока только название можно поменять
+        String currentStatus = tenantEntity.getRecordStatus() != null
+                ? tenantEntity.getRecordStatus().toUpperCase()
+                : RecordStatus.ACTIVE.getValue();
+        String newStatus = tenantDto.recordStatus() != null
+                ? tenantDto.recordStatus().getValue()
+                : currentStatus;
+
+        if (RecordStatus.DELETED.getValue().equalsIgnoreCase(currentStatus)) {
+            // From DELETED only reactivation to ACTIVE is allowed
+            if (!RecordStatus.ACTIVE.getValue().equalsIgnoreCase(newStatus)) {
+                throw new BadRequestException(
+                        "Tenant in DELETED status can only be changed to ACTIVE");
+            }
+            tenantEntity.setRecordStatus(RecordStatus.ACTIVE.getValue());
+            tenantEntity.setUpdatedAt(LocalDateTime.now());
+            logger.info("Tenant '{}' reactivated DELETED → ACTIVE by {}",
+                    tenantEntity.getCode(), currentUser.getUsername());
+            TenantEntity saved = save(tenantEntity);
+            return tenantMapper.toDto(saved);
+        }
+
         tenantEntity.setName(tenantDto.name());
-        tenantEntity.setAuthType(tenantDto.authType().getValue());
-        tenantEntity.setRecordStatus(
-                tenantDto.recordStatus() != null ? tenantDto.recordStatus().getValue() : null);
+        if (tenantDto.authType() != null) {
+            tenantEntity.setAuthType(tenantDto.authType().getValue());
+        }
+        if (tenantDto.recordStatus() != null) {
+            tenantEntity.setRecordStatus(tenantDto.recordStatus().getValue());
+        }
+        tenantEntity.setUpdatedAt(LocalDateTime.now());
         TenantEntity savedTenantEntity = save(tenantEntity);
         return tenantMapper.toDto(savedTenantEntity);
     }
 
     /**
-     * SYS_ADMIN: Удаление tenant (soft delete)
+     * SYS_ADMIN: soft-delete ACTIVE tenant; hard-purge if already DELETED.
      */
     @Transactional
     public void softDeleteTenant(String tenantCode) {
@@ -203,27 +239,125 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
             throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
         }
 
-        TenantEntity tenant = findByCode(tenantCode)
-                .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantCode));
+        TenantEntity tenant = findByCodeAnyStatus(tenantCode)
+                .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantCode));
+
+        if (tenant.isSystem() || TenantEntity.SYS_TENANT_CODE.equalsIgnoreCase(tenant.getCode())) {
+            throw new BadRequestException("Cannot delete system tenant 'sys'");
+        }
+
+        if (RecordStatus.DELETED.getValue().equalsIgnoreCase(tenant.getRecordStatus())) {
+            hardPurgeTenant(tenant);
+            return;
+        }
 
         tenant.setRecordStatus(RecordStatus.DELETED.getValue());
         tenant.setUpdatedAt(LocalDateTime.now());
         save(tenant);
-        logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
+        logger.info("Tenant '{}' soft-deleted by SYS_ADMIN", tenant.getName());
+    }
+
+    /**
+     * Hard-delete all tenant-scoped rows then the tenant row itself.
+     */
+    @Transactional
+    public void hardPurgeTenant(TenantEntity tenant) {
+        Long tid = tenant.getId();
+        String code = tenant.getCode();
+        logger.info("Hard-purging tenant id={} code={}", tid, code);
+
+        // Leaf → root (FK-safe). Tables without tid use joins.
+        execSql("DELETE FROM po_addon_policies WHERE policy_id IN (SELECT id FROM policy_index WHERE tid = :tid)", tid);
+        execSql("DELETE FROM policy_data WHERE tid = :tid", tid);
+        execSql("DELETE FROM policy_index WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM pt_payment_allocation WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_payment WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_payment_installment WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_installment_templates WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM coefficient_data WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_calculators WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_lob_calculators WHERE tid = :tid", tid);
+
+        // pt_product_tests has no tid — delete via product_id
+        execSql("DELETE FROM pt_product_tests WHERE product_id IN (SELECT id FROM pt_products WHERE tid = :tid)", tid);
+        execSql("DELETE FROM pt_product_versions WHERE tid = :tid", tid);
+        execSql("DELETE FROM po_addon_products WHERE tid = :tid", tid);
+        execSql("DELETE FROM po_pricelists WHERE tid = :tid", tid);
+        execSql("DELETE FROM po_providers WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_products WHERE tid = :tid", tid);
+
+        // pt_lob_policy_forms dropped in V17; pt_policy_forms is global catalog (tid=1 only)
+        execSql("DELETE FROM pt_policy_forms WHERE tid = :tid AND tid <> 1", tid);
+        execSql("DELETE FROM pt_lobs WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM pt_number_generators WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_files WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_currency_rate WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_insurance_company WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM pt_rules WHERE tid = :tid", tid);
+        execSql("DELETE FROM llm_exchange WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM pt_refdata WHERE tid = :tid", tid);
+        execSql("DELETE FROM pt_refdicts WHERE tid = :tid", tid);
+        execSql("DELETE FROM mt_attribute_def WHERE tenant_id = :tid", tid);
+        execSql("DELETE FROM mt_contract_model WHERE tid = :tid", tid);
+
+        execSql("DELETE FROM acc_commission_rates WHERE tid = :tid", tid);
+        execSql("DELETE FROM acc_product_roles WHERE tid = :tid", tid);
+        execSql("DELETE FROM acc_account_tokens WHERE tid = :tid", tid);
+        execSql("DELETE FROM acc_account_logins WHERE tid = :tid", tid);
+
+        @SuppressWarnings("unchecked")
+        List<Number> cfgIds = entityManager.createNativeQuery(
+                        "SELECT client_configuration_entity_id FROM acc_clients WHERE tid = :tid AND client_configuration_entity_id IS NOT NULL")
+                .setParameter("tid", tid)
+                .getResultList();
+        execSql("UPDATE acc_clients SET default_account_id = NULL, client_configuration_entity_id = NULL WHERE tid = :tid", tid);
+        execSql("DELETE FROM acc_accounts WHERE tid = :tid", tid);
+        for (Number cfgId : cfgIds) {
+            if (cfgId == null) continue;
+            try {
+                entityManager.createNativeQuery("DELETE FROM acc_client_configuration WHERE id = :id")
+                        .setParameter("id", cfgId.longValue())
+                        .executeUpdate();
+            } catch (Exception e) {
+                logger.warn("purge client_configuration id={}: {}", cfgId, e.getMessage());
+            }
+        }
+        execSql("DELETE FROM acc_clients WHERE tid = :tid", tid);
+        execSql("DELETE FROM acc_logins WHERE tid = :tid", tid);
+
+        entityManager.flush();
+        tenantRepository.delete(tenant);
+        entityManager.flush();
+        logger.info("Tenant id={} code={} hard-purged", tid, code);
+    }
+
+    private void execSql(String sql, Long tid) {
+        // SAVEPOINT: one bad SQL must not abort the whole PG transaction
+        entityManager.createNativeQuery("SAVEPOINT tenant_purge_sp").executeUpdate();
+        try {
+            int n = entityManager.createNativeQuery(sql)
+                    .setParameter("tid", tid)
+                    .executeUpdate();
+            entityManager.createNativeQuery("RELEASE SAVEPOINT tenant_purge_sp").executeUpdate();
+            logger.debug("purge sql rows={} sql={}", n, sql);
+        } catch (Exception e) {
+            try {
+                entityManager.createNativeQuery("ROLLBACK TO SAVEPOINT tenant_purge_sp").executeUpdate();
+            } catch (Exception rollbackEx) {
+                logger.warn("purge savepoint rollback failed: {}", rollbackEx.getMessage());
+            }
+            logger.warn("purge skip (tid={}): {} — {}", tid, sql, e.getMessage());
+        }
     }
 
     @Transactional
     public void deleteTenant(Tenant tenantDto) {
-        UserDetailsImpl currentUser = getCurrentUser();
-        if (!"SYS_ADMIN".equals(currentUser.getUserRole())) {
-            throw new ForbiddenException("Only SYS_ADMIN can delete tenants");
-        }
-
-        TenantEntity tenant = findByCode(tenantDto.code())
-                .orElseThrow(() -> new NotFoundException("Tenant not found with ID: " + tenantDto.code()));
-
-        tenantRepository.delete(tenant);
-        logger.info("Tenant '{}' deleted by SYS_ADMIN", tenant.getName());
+        softDeleteTenant(tenantDto.code());
     }
     // ========== HELPER METHODS ==========
 
@@ -262,6 +396,13 @@ public class TenantService implements TenantSecurityConfigService, TenantConfig 
             );
 
         return mapToDomain(entity);
+    }
+
+    @Override
+    public Optional<TenantSecurityConfig> getDeletedTenantConfig(String tenantCode) {
+        return findByCodeAnyStatus(tenantCode)
+            .filter(e -> RecordStatus.DELETED.getValue().equalsIgnoreCase(e.getRecordStatus()))
+            .map(this::mapToDomain);
     }
 
     private TenantSecurityConfig mapToDomain(TenantEntity e) {

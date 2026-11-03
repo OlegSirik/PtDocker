@@ -3,6 +3,7 @@ package ru.pt.auth.security.filter;
 import ru.pt.auth.configuration.SecurityConfigurationProperties;
 import ru.pt.auth.security.UserDetailsImpl;
 import ru.pt.auth.security.UserDetailsServiceImpl;
+import ru.pt.auth.security.context.RequestContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,11 +16,15 @@ import java.io.IOException;
 
 public class TenantImpersonationFilter extends AbstractSecurityFilter {
 
-    private final UserDetailsServiceImpl userDetailsServiceImpl; 
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
+    private final RequestContext requestContext;
 
-    public TenantImpersonationFilter(SecurityConfigurationProperties securityProperties, UserDetailsServiceImpl userDetailsServiceImpl) {
+    public TenantImpersonationFilter(SecurityConfigurationProperties securityProperties,
+                                     UserDetailsServiceImpl userDetailsServiceImpl,
+                                     RequestContext requestContext) {
         super(securityProperties);
         this.userDetailsServiceImpl = userDetailsServiceImpl;
+        this.requestContext = requestContext;
     }
 
     @Override
@@ -38,6 +43,11 @@ public class TenantImpersonationFilter extends AbstractSecurityFilter {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     
         if (auth == null || !auth.isAuthenticated()) {
+            if (requestContext.isDeletedTenantAccess()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                        "Deleted tenant is only accessible for SYS_ADMIN");
+                return;
+            }
             chain.doFilter(request, response);
             return;
         }
@@ -49,6 +59,13 @@ public class TenantImpersonationFilter extends AbstractSecurityFilter {
         }
         
         UserDetailsImpl user = (UserDetailsImpl) principal;
+
+        // Soft-deleted path tenant: only SYS_ADMIN (sys) may continue
+        if (requestContext.isDeletedTenantAccess() && !"SYS_ADMIN".equals(user.getUserRole())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Deleted tenant is only accessible for SYS_ADMIN");
+            return;
+        }
 
         // SYS impersonation
         if ("SYS_ADMIN".equals(user.getUserRole())) {

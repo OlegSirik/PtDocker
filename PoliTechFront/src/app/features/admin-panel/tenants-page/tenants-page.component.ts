@@ -323,18 +323,34 @@ export class TenantsPageComponent implements OnInit {
     });
   }
 
+  tenantStatusClass(status: string | undefined | null): string {
+    const s = (status || 'ACTIVE').toUpperCase();
+    if (s === 'DELETED') return 'status-deleted';
+    if (s === 'SUSPENDED') return 'status-suspended';
+    return 'status-active';
+  }
+
   deleteTenant(tenant: Tenant) {
+    if (!tenant?.code) {
+      this.snack.open('У tenant нет code', 'OK', { duration: 2000 });
+      return;
+    }
+    const hard = (tenant.recordStatus || '').toUpperCase() === 'DELETED';
+    const message = hard
+      ? `Tenant "${tenant.name}" (${tenant.code}) уже DELETED. Удалить из БД безвозвратно?`
+      : `Пометить tenant "${tenant.name}" (${tenant.code}) как DELETED?`;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: { message: `Удалить tenant "${tenant.name}"?` }
+      data: { message }
     });
 
     dialogRef.afterClosed().subscribe((result: boolean | undefined) => {
-      if (result && tenant.id) {
-        this.tenantsService.delete(tenant.id).subscribe({
+      if (result) {
+        // API path is /admin/tenants/{code}
+        this.tenantsService.delete(tenant.code).subscribe({
           next: () => {
             this.loadTenants();
-            this.snack.open('Tenant удален', 'OK', { duration: 2000 });
+            this.snack.open(hard ? 'Tenant удалён из БД' : 'Tenant помечен DELETED', 'OK', { duration: 2000 });
           },
           error: () => {
             this.snack.open('Ошибка при удалении', 'OK', { duration: 2000 });

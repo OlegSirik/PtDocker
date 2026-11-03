@@ -95,11 +95,14 @@ export class TenantService {
   }
 
   getChildAccounts(id: number): Observable<Account[]> {
-    return this.http.get<Account[]>(this.getBaseUrl() + `/admin/accounts/${id}/accounts`);
+    return this.http.get<Account[]>(this.getBaseUrl() + `/admin/accounts/${id}/children?nodeType=ACCOUNT`);
   }
 
   createAccount(account: Account): Observable<Account> {
-    return this.http.post<Account>(this.getBaseUrl() + `/admin/accounts/${account.parentId}/accounts`, account);
+    return this.http.post<Account>(
+      this.getBaseUrl() + `/admin/accounts/${account.parentId}/children`,
+      { name: account.name, nodeType: account.nodeType || 'ACCOUNT' }
+    );
   }
 
   updateAccount(account: Account): Observable<Account> {

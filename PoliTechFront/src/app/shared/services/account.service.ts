@@ -164,7 +164,10 @@ export class AccountService {
   }
 
   createAccount(account: Account): Observable<Account> {
-    return this.http.post<Account>(this.getBaseUrl() + `/admin/accounts/${account.parentId}/accounts`, account);
+    return this.http.post<Account>(
+      this.getBaseUrl() + `/admin/accounts/${account.parentId}/children`,
+      { name: account.name, nodeType: account.nodeType || 'ACCOUNT' }
+    );
   }
 
   updateAccount(account: Account): Observable<Account> {
@@ -182,7 +185,10 @@ export class AccountService {
   }
 
   createGroup(group: Account): Observable<Account> {
-    return this.http.post<Account>(this.getBaseUrl() + `/admin/accounts/${group.parentId}/children`, group);
+    return this.http.post<Account>(
+      this.getBaseUrl() + `/admin/accounts/${group.parentId}/children`,
+      { name: group.name, nodeType: group.nodeType || 'GROUP' }
+    );
   }
 /*
   updateGroup(group: Account): Observable<Account> {
@@ -200,7 +206,10 @@ export class AccountService {
   }
 
   createSub(sub: SubAccount): Observable<SubAccount> {
-    return this.http.post<SubAccount>(this.getBaseUrl() + `/admin/accounts/${sub.parentId}/subaccounts`, sub);
+    return this.http.post<SubAccount>(
+      this.getBaseUrl() + `/admin/accounts/${sub.parentId}/children`,
+      { name: sub.name, nodeType: sub.nodeType || 'SUB' }
+    );
   }
 /*
   updateGroup(group: Account): Observable<Account> {

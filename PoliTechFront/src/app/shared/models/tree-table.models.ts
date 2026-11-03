@@ -30,11 +30,25 @@ export interface SchemaTreeApiRow {
   name?: string | null;
 }
 
-function parseSchemaVarNr(value: string | number | null | undefined): number {
+/** Нормализация {@link TreeTableSourceRow.varNr} для сортировки уровней дерева. */
+export function parseSchemaVarNr(value: string | number | null | undefined): number {
   if (value == null || value === '') return 0;
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const n = Number(String(value).trim());
   return Number.isFinite(n) ? n : 0;
+}
+
+/** Сравнение сиблингов: по {@code varNr} (var_ord), затем {@code id}. */
+export function compareTreeTableRowsByVarNr(
+  a: Pick<TreeTableSourceRow, 'id' | 'varNr'>,
+  b: Pick<TreeTableSourceRow, 'id' | 'varNr'>,
+): number {
+  const ao = parseSchemaVarNr(a.varNr);
+  const bo = parseSchemaVarNr(b.varNr);
+  if (ao !== bo) {
+    return ao - bo;
+  }
+  return (a.id ?? 0) - (b.id ?? 0);
 }
 
 /** Собрать строку для таблицы из сырого ответа API */

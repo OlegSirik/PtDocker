@@ -6,9 +6,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+import { forkJoin } from 'rxjs';
 import { ProductDocumentation, ProductService } from '../../../shared/services/product.service';
 import { AuthService } from '../../../shared/services/auth.service';
-import { VarsService } from '../../../shared/services/vars.service';
 import { BASE_URL } from '../../../shared/tokens';
 import { buildProductSalesOpenApiYaml } from '../../../shared/utils/openapi-from-schema.util';
 
@@ -30,7 +30,6 @@ export class ProductDocumentationComponent implements OnChanges {
 
   private productService = inject(ProductService);
   private sanitizer = inject(DomSanitizer);
-  private varsService = inject(VarsService);
   private authService = inject(AuthService);
   private readonly apiBaseUrl = inject(BASE_URL);
   private snackBar = inject(MatSnackBar);
@@ -87,22 +86,38 @@ export class ProductDocumentationComponent implements OnChanges {
       .save();
   }
 
-  /** OpenAPI YAML: server = BASE_URL, POST /sales/quotes|policies, schema = схема договора. */
+  /** OpenAPI YAML: quote = isSystem|isTarifFactor, save = isDeleted=false; без example в methods. */
   downloadApiYaml(): void {
-    if (this.downloadingApiYaml) {
+    if (this.downloadingApiYaml || !this.productId || !this.versionNo) {
       return;
     }
     this.downloadingApiYaml = true;
-    this.varsService.getAttributesMetadataJson('INSURANCE_CONTRACT').subscribe({
-      next: (contractDocument) => {
+    forkJoin({
+      quote: this.productService.getTestRequestQuote(this.productId, this.versionNo),
+      save: this.productService.getTestRequestSave(this.productId, this.versionNo),
+    }).subscribe({
+      next: ({ quote, save }) => {
         this.downloadingApiYaml = false;
+        let quoteDocument: unknown = {};
+        let saveDocument: unknown = {};
+        try {
+          quoteDocument = JSON.parse(quote || '{}');
+        } catch {
+          quoteDocument = {};
+        }
+        try {
+          saveDocument = JSON.parse(save || '{}');
+        } catch {
+          saveDocument = {};
+        }
         const yaml = buildProductSalesOpenApiYaml({
           serverUrl: this.apiBaseUrl || window.location.origin,
           tenantCode: this.authService.tenant || this.authService.getTenantCode(),
           productCode: this.productCode || String(this.productId),
           productName: this.productName || this.productCode || 'Product',
           versionNo: this.versionNo ?? 1,
-          contractDocument,
+          quoteDocument,
+          saveDocument,
         });
         const blob = new Blob([yaml], { type: 'application/yaml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -115,7 +130,7 @@ export class ProductDocumentationComponent implements OnChanges {
       },
       error: (err: { error?: { message?: string } }) => {
         this.downloadingApiYaml = false;
-        this.snackBar.open(err?.error?.message ?? 'Не удалось получить схему договора', 'Закрыть', {
+        this.snackBar.open(err?.error?.message ?? 'Не удалось получить примеры quote/save', 'Закрыть', {
           duration: 4000,
         });
       },

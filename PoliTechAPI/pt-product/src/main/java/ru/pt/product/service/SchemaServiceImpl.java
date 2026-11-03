@@ -270,8 +270,9 @@ public class SchemaServiceImpl implements SchemaService {
         return null;
     }
 
+    /** При фильтрации оставляем только листья, чей {@code var_path} есть в карте продукта. */
     private static boolean keepByFilter(AttributeDefEntity e, Map<String, String> varValues) {
-        return e.isSystem() || lookupByVarPath(e, varValues) != null;
+        return lookupByVarPath(e, varValues) != null;
     }
 
     private static boolean isSchemaLeaf(
@@ -299,7 +300,7 @@ public class SchemaServiceImpl implements SchemaService {
     /**
      * Скелет / пример JSON: листья {@code IN} кладутся по нормализованному {@code var_path}
      * в порядке {@code var_ord} (порядок ключей в ObjectNode = порядок вставки).
-     * {@code varValuesOrNull == null} — полный скелет; иначе system + пути из карты
+     * {@code varValuesOrNull == null} — полный скелет; иначе только пути из карты
      * (ключи карты — JsonPath / {@code var_path}, не {@code var_code}).
      */
     private ObjectNode buildMetadataDocumentByJsonPath(

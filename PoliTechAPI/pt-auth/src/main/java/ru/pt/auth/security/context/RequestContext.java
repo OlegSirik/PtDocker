@@ -15,5 +15,9 @@ public interface RequestContext {
     void setLogin(String login);
     void setAccount(Long account);
 
+    /** Path tenant is DELETED — only SYS_ADMIN may proceed after auth. */
+    boolean isDeletedTenantAccess();
+    void setDeletedTenantAccess(boolean deletedTenantAccess);
+
     void clear();
 }

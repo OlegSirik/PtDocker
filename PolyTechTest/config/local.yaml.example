@@ -1,0 +1,29 @@
+baseUrl: http://localhost:8080
+tenantCode: demo
+clientId: sys
+users:
+  admin:
+    login: demo
+    password: change-me
+  other:
+    login: other-user
+    password: change-me
+  sys:
+    login: sys_admin
+    password: change-me
+defaults:
+  productCode: CARGO_GENERAL
+  versionNo: 1
+  printFormType: POLICY
+load:
+  threads: 20
+  totalRequests: 1000
+  concurrencyProbe: [1, 2, 4, 8]
+  requirePrint: false
+adminLifecycle:
+  # false — оставить test_<ts> после прогона (login/password = код тенанта)
+  deleteTenant: true
+reportDir: reports
+tags:
+  - regression
+failFast: false

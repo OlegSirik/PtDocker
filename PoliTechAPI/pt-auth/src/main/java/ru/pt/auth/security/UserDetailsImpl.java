@@ -29,7 +29,8 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
     private final Long id;
     private final String username;
     private final String tenantCode;
-    private final Long tenantId;
+    /** Mutable so SYS_ADMIN impersonation can point at the target tenant id. */
+    private Long tenantId;
     private final Long accountId;
     private final String accountName;
     private final String accountPath;
@@ -173,12 +174,20 @@ public class UserDetailsImpl implements UserDetails, AuthenticatedUser {
 
     @Override
     public String getTenantCode() {
+        // SYS_ADMIN + X-Imp-Tenant: callers must see the impersonated tenant
+        if (impersonatedTenantCode != null && !impersonatedTenantCode.isBlank()) {
+            return impersonatedTenantCode;
+        }
         return tenantCode;
     }
 
     @Override
     public Long getTenantId() {
         return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     @Override

@@ -17,7 +17,12 @@ import { MatSlideToggleModule, type MatSlideToggleChange } from '@angular/materi
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { isObjectVarTypeRow, type TreeTableFlatRow, type TreeTableSourceRow } from '../../models/tree-table.models';
+import {
+  compareTreeTableRowsByVarNr,
+  isObjectVarTypeRow,
+  type TreeTableFlatRow,
+  type TreeTableSourceRow,
+} from '../../models/tree-table.models';
 import {
   TreeTableRowEditDialogComponent,
   type TreeTableRowEditFields,
@@ -405,23 +410,15 @@ export class TreeTableComponent<T extends TreeTableSourceRow = TreeTableSourceRo
       const list = byParent.get(key) ?? [];
       list.push(row);
       byParent.set(key, list);
-      
-      // Кэшируем детей
-      if (row.parent_id !== null && row.parent_id !== undefined && idSet.has(row.parent_id)) {
-        const cacheKey = String(row.parent_id);
-        const cached = this.childrenCache.get(cacheKey) ?? [];
-        cached.push(row);
-        this.childrenCache.set(cacheKey, cached);
-      }
     }
-    
-    for (const [, list] of byParent) {
-      list.sort((a, b) => {
-        const ao = a.varNr ?? 0;
-        const bo = b.varNr ?? 0;
-        if (ao !== bo) return ao - bo;
-        return (a.id ?? 0) - (b.id ?? 0);
-      });
+
+    this.childrenCache.clear();
+    for (const [key, list] of byParent) {
+      list.sort(compareTreeTableRowsByVarNr);
+      // Кэш детей — те же отсортированные списки (кроме корня)
+      if (key !== '__root__') {
+        this.childrenCache.set(key, list);
+      }
     }
     return byParent;
   }

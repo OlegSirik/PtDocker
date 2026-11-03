@@ -15,6 +15,10 @@ public interface TenantRepository extends JpaRepository<TenantEntity, Long> {
     @Query("SELECT t FROM TenantEntity t WHERE t.code = :code AND t.recordStatus = 'ACTIVE'")
     Optional<TenantEntity> findByCode(@Param("code") String code);
 
+    /** Any status (for soft→hard delete lifecycle). */
+    @Query("SELECT t FROM TenantEntity t WHERE lower(t.code) = lower(:code)")
+    Optional<TenantEntity> findByCodeAnyStatus(@Param("code") String code);
+
     /**
      * Найти tenant по имени
      */

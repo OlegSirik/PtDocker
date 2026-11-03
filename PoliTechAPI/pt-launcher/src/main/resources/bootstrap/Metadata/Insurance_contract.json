@@ -1,0 +1,3103 @@
+{
+    "code": "INSURANCE_CONTRACT",
+    "name": "INSURANCE_CONTRACT",
+    "attributes": [
+      {
+        "varDataType": "OBJECT",
+        "varCode": "policy",
+        "varName": "Договор страхования",
+        "varPath": "*",
+        "varType": "OBJECT",
+        "varNr": "1",
+        "isSystem": true,
+        "defaultState": "ENABLED",
+        "children": [
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_id",
+            "varName": "ID договора",
+            "varPath": "id",
+            "varType": "VAR",
+            "varNr": "1",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_publicId",
+            "varName": "UID договора",
+            "varPath": "publicId",
+            "varType": "VAR",
+            "varNr": "1",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_productCode",
+            "varName": "Код продукта",
+            "varPath": "productCode",
+            "varType": "IN",
+            "varNr": "2",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_productName",
+            "varName": "Название продукта",
+            "varPath": "productName",
+            "varType": "VAR",
+            "varNr": "2",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_policyNumber",
+            "varName": "Номер договора",
+            "varPath": "policyNumber",
+            "varType": "VAR",
+            "varNr": "5",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_startDate",
+            "varName": "Дата начала действия договора",
+            "varPath": "startDate",
+            "varType": "IN",
+            "varNr": "5",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_endDate",
+            "varName": "Дата окончания договора",
+            "varPath": "endDate",
+            "varType": "IN",
+            "varNr": "6",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_issueDate",
+            "varName": "Дата выпуска договора",
+            "varPath": "issueDate",
+            "varType": "IN",
+            "varNr": "10",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_installmentType",
+            "varName": "Периодичность оплаты",
+            "varPath": "installmentType",
+            "varType": "IN",
+            "varNr": "10",
+            "varList": "installmentType",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_waitingPeriod",
+            "varName": "Период охлаждения",
+            "varPath": "waitingPeriod",
+            "varType": "IN",
+            "varNr": "11",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_policyTerm",
+            "varName": "Срок страхования",
+            "varPath": "policyTerm",
+            "varType": "IN",
+            "varNr": "12",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_currencyCode",
+            "varName": "Валюта договора",
+            "varPath": "currencyCode",
+            "varType": "IN",
+            "varNr": "20",
+            "varList": "currencyCode",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "pl_premiumCur",
+            "varName": "Премия в валюте договора (не рубли )",
+            "varPath": "premiumCur",
+            "varType": "VAR",
+            "varNr": "20",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "pl_currencyRate",
+            "varName": "Курс на дату расчета премии",
+            "varPath": "currencyRate",
+            "varType": "VAR",
+            "varNr": "25",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "pl_premium",
+            "varName": "Премия по договору",
+            "varPath": "premium",
+            "varType": "VAR",
+            "varNr": "32",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "STRING",
+            "varCode": "pl_paymentDate",
+            "varName": "Дата оплаты",
+            "varPath": "paymentDate",
+            "varType": "IN",
+            "varNr": "125",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "gross_up_factor",
+            "varName": "Gross_up_factor 1/(1-kv)",
+            "varPath": "null",
+            "varType": "MAGIC",
+            "varNr": "138",
+            "isSystem": false,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "pl_TermMonths",
+            "varName": "Срок полиса в месяцах",
+            "varPath": "null",
+            "varType": "MAGIC",
+            "varNr": "143",
+            "isSystem": true,
+            "defaultState": "ENABLED"
+          },
+          {
+            "varDataType": "NUMBER",
+            "varCode": "pl_TermDays",
+            "varName": "Срок полиса в днях",
+            "varPath": "null",
+            "varType": "MAGIC",
+            "varNr": "144",
+            "isSystem": true,
+            "defaultState": "DISABLED"
+          },
+          {
+            "varDataType": "OBJECT",
+            "varCode": "commission",
+            "varName": "Агентская комиссия",
+            "varPath": "commission",
+            "varType": "OBJECT",
+            "varNr": "1100",
+            "isSystem": true,
+            "defaultState": "ENABLED",
+            "children": [
+              {
+                "varDataType": "NUMBER",
+                "varCode": "pl_commRate",
+                "varName": "Процент кв по договору",
+                "varPath": "commission.appliedCommissionRate",
+                "varType": "VAR",
+                "varNr": "1",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              },
+              {
+                "varDataType": "NUMBER",
+                "varCode": "pl_commission",
+                "varName": "Комиссия по договору",
+                "varPath": "commission.commissionAmount",
+                "varType": "VAR",
+                "varNr": "2",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              },
+              {
+                "varDataType": "NUMBER",
+                "varCode": "pl_reqCommDiscount",
+                "varName": "Запрошенная скидка за счет комиссии",
+                "varPath": "commission.requestedCommissionDiscount",
+                "varType": "IN",
+                "varNr": "3",
+                "isSystem": true,
+                "defaultState": "ENABLED"
+              },
+              {
+                "varDataType": "NUMBER",
+                "varCode": "pl_reqCommRate",
+                "varName": "Запрошенный размер комиссии",
+                "varPath": "commission.requestedCommissionRate",
+                "varType": "IN",
+                "varNr": "4",
+                "isSystem": true,
+                "defaultState": "ENABLED"
+              }
+            ]
+          },
+          {
+            "varDataType": "OBJECT",
+            "varCode": "insurer",
+            "varName": "Страховщик",
+            "varPath": "insurer",
+            "varType": "OBJECT",
+            "varNr": "1200",
+            "isSystem": true,
+            "defaultState": "DISABLED",
+            "children": [
+              {
+                "varDataType": "STRING",
+                "varCode": "ic_code",
+                "varName": "код СК",
+                "varPath": "insurer.code",
+                "varType": "VAR",
+                "varNr": "1",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              },
+              {
+                "varDataType": "STRING",
+                "varCode": "ic_name",
+                "varName": "название СК",
+                "varPath": "insurer.name",
+                "varType": "VAR",
+                "varNr": "2",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              },
+              {
+                "varDataType": "STRING",
+                "varCode": "ic_representative",
+                "varName": "Представитель, кто подписывает",
+                "varPath": "insurer.contractRepresentative",
+                "varType": "VAR",
+                "varNr": "10",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              },
+              {
+                "varDataType": "STRING",
+                "varCode": "ic_displayName",
+                "varName": "Строка для страхового договора",
+                "varPath": "insurer.contractText",
+                "varType": "VAR",
+                "varNr": "12",
+                "isSystem": true,
+                "defaultState": "DISABLED"
+              }
+            ]
+          },
+          {
+            "varDataType": "OBJECT",
+            "varCode": "policyHolder",
+            "varName": "Страхователь",
+            "varPath": "policyHolder",
+            "varType": "OBJECT",
+            "varNr": "1300",
+            "isSystem": false,
+            "defaultState": "ENABLED",
+            "children": [
+              {
+                "varDataType": "OBJECT",
+                "varCode": "ph_person",
+                "varName": "Физ.лицо",
+                "varPath": "policyHolder.person",
+                "varType": "OBJECT",
+                "varNr": "10",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_firstName",
+                    "varName": "Страхователь.имя",
+                    "varPath": "policyHolder.person.firstName",
+                    "varType": "IN",
+                    "varNr": "2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_lastName",
+                    "varName": "Страхователь.фамилия",
+                    "varPath": "policyHolder.person.lastName",
+                    "varType": "IN",
+                    "varNr": "3",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_middleName",
+                    "varName": "Страхователь.отчество",
+                    "varPath": "policyHolder.person.middleName",
+                    "varType": "IN",
+                    "varNr": "5",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_birthDate",
+                    "varName": "Страхователь.дата рождения",
+                    "varPath": "policyHolder.person.birthDate",
+                    "varType": "IN",
+                    "varNr": "7",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_fullName",
+                    "varName": "Страхователь.полное фио",
+                    "varPath": "policyHolder.person.fullName",
+                    "varType": "IN",
+                    "varNr": "9",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_fullNameEn",
+                    "varName": "Страхователь.полное фио англ",
+                    "varPath": "policyHolder.person.fullNameEn",
+                    "varType": "IN",
+                    "varNr": "12",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_birthPlace",
+                    "varName": "Страхователь.место рождения",
+                    "varPath": "policyHolder.person.birthPlace",
+                    "varType": "IN",
+                    "varNr": "13",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_citizenship",
+                    "varName": "Страхователь.гражданство",
+                    "varPath": "policyHolder.person.citizenship",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "16",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_gender",
+                    "varName": "Пол",
+                    "varPath": "policyHolder.person.gender",
+                    "varType": "IN",
+                    "varNr": "18",
+                    "varList": "gender",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_familyState",
+                    "varName": "Страхователь.семейное положение",
+                    "varPath": "policyHolder.person.familyState",
+                    "varType": "IN",
+                    "varValue": "SINGLE",
+                    "varNr": "20",
+                    "varList": "familyState",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_isPublicOfficial",
+                    "varName": "Страхователь.признак пдл",
+                    "varPath": "policyHolder.person.isPublicOfficial",
+                    "varType": "IN",
+                    "varNr": "26",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_isResident",
+                    "varName": "Страхователь.резидент рф",
+                    "varPath": "policyHolder.person.isResident",
+                    "varType": "IN",
+                    "varValue": "true",
+                    "varNr": "28",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_ext_id",
+                    "varName": "Страхователь.внешний id",
+                    "varPath": "policyHolder.person.ext_id",
+                    "varType": "IN",
+                    "varNr": "31",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "ph_age_end",
+                    "varName": "Страхователь.возраст на дату окончания договора",
+                    "varPath": "null",
+                    "varType": "MAGIC",
+                    "varNr": "141",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "ph_age_issue",
+                    "varName": "Страхователь.возраст на дату выпуска договора",
+                    "varPath": "null",
+                    "varType": "MAGIC",
+                    "varNr": "142",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "ph_contacts",
+                "varName": "Контакты",
+                "varPath": "policyHolder.contacts",
+                "varType": "OBJECT",
+                "varNr": "11",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_phone",
+                    "varName": "Страхователь.телефон",
+                    "varPath": "policyHolder.contacts.phone",
+                    "varType": "IN",
+                    "varNr": "49",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_email",
+                    "varName": "Страхователь.email",
+                    "varPath": "policyHolder.contacts.email",
+                    "varType": "IN",
+                    "varNr": "52",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "ph_organization",
+                "varName": "Юр.лицо",
+                "varPath": "policyHolder.organization",
+                "varType": "OBJECT",
+                "varNr": "12",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_country",
+                    "varName": "Страхователь.код страны регистрации",
+                    "varPath": "policyHolder.organization.country",
+                    "varType": "IN",
+                    "varNr": "35",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_inn",
+                    "varName": "Страхователь.инн юр.лица",
+                    "varPath": "policyHolder.organization.inn",
+                    "varType": "IN",
+                    "varNr": "36",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_fullName",
+                    "varName": "Страхователь.полное наименование юр.лица",
+                    "varPath": "policyHolder.organization.fullName",
+                    "varType": "IN",
+                    "varNr": "37",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_fullNameEn",
+                    "varName": "Страхователь.полное наименование  юр.лица англ",
+                    "varPath": "policyHolder.organization.fullNameEn",
+                    "varType": "IN",
+                    "varNr": "38",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_shortName",
+                    "varName": "Страхователь.краткое наименование юр.лица",
+                    "varPath": "policyHolder.organization.shortName",
+                    "varType": "IN",
+                    "varNr": "39",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_legalForm",
+                    "varName": "Страхователь.организационно-правовая форма",
+                    "varPath": "policyHolder.organization.legalForm",
+                    "varType": "IN",
+                    "varNr": "40",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_kpp",
+                    "varName": "Страхователь.кпп",
+                    "varPath": "policyHolder.organization.kpp",
+                    "varType": "IN",
+                    "varNr": "41",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_ogrn",
+                    "varName": "Страхователь.огрн",
+                    "varPath": "policyHolder.organization.ogrn",
+                    "varType": "IN",
+                    "varNr": "42",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_okpo",
+                    "varName": "Страхователь.окпо",
+                    "varPath": "policyHolder.organization.okpo",
+                    "varType": "IN",
+                    "varNr": "43",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_bic",
+                    "varName": "Страхователь.бик",
+                    "varPath": "policyHolder.organization.bic",
+                    "varType": "IN",
+                    "varNr": "44",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_isResident",
+                    "varName": "Страхователь.резидент рф юр.лица",
+                    "varPath": "policyHolder.organization.isResident",
+                    "varType": "IN",
+                    "varValue": "true",
+                    "varNr": "45",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_group",
+                    "varName": "Страхователь.gруппа страхователя юл",
+                    "varPath": "policyHolder.organization.group",
+                    "varType": "IN",
+                    "varNr": "46",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_ext_id",
+                    "varName": "Страхователь.внешний id (юрик)",
+                    "varPath": "policyHolder.organization.ext_id",
+                    "varType": "IN",
+                    "varNr": "47",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_org_nciCode",
+                    "varName": "Страхователь.нси код",
+                    "varPath": "policyHolder.organization.nciCode",
+                    "varType": "IN",
+                    "varNr": "48",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "ph_identifiers",
+                "varName": "Документ",
+                "varPath": "policyHolder.identifiers[?(@.isPrimary)]",
+                "varType": "OBJECT",
+                "varNr": "13",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_typeCode",
+                    "varName": "Ph.документ.код типа документа",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].typeCode",
+                    "varType": "IN",
+                    "varNr": "55",
+                    "varList": "identifierType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_serial",
+                    "varName": "Ph.документ.серия документа",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].serial",
+                    "varType": "IN",
+                    "varNr": "57",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_number",
+                    "varName": "Ph.документ.номер документа",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].number",
+                    "varType": "IN",
+                    "varNr": "60",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_dateIssue",
+                    "varName": "Ph.документ.дата выдачи",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].dateIssue",
+                    "varType": "IN",
+                    "varNr": "61",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_validUntil",
+                    "varName": "Ph.документ.действительно до",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].validUntil",
+                    "varType": "IN",
+                    "varNr": "64",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_whom",
+                    "varName": "Ph.документ.кем выдан",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].whom",
+                    "varType": "IN",
+                    "varNr": "65",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_divisionCode",
+                    "varName": "Ph.документ.код подразделения",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].divisionCode",
+                    "varType": "IN",
+                    "varNr": "67",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_ext_id",
+                    "varName": "Ph.документ.внешний id",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].ext_id",
+                    "varType": "IN",
+                    "varNr": "70",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_doc_countryCode",
+                    "varName": "Ph.документ.страна выдачи документа",
+                    "varPath": "policyHolder.identifiers[?(@.isPrimary)].countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "72",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "ph_addresses",
+                "varName": "Адрес",
+                "varPath": "policyHolder.addresses[?(@.isPrimary)]",
+                "varType": "OBJECT",
+                "varNr": "14",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_typeCode",
+                    "varName": "Ph.адрес.тип адреса",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].typeCode",
+                    "varType": "IN",
+                    "varValue": "REGISTRATION",
+                    "varNr": "74",
+                    "varList": "addressType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_countryCode",
+                    "varName": "Ph.адрес.код страны",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "76",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_region",
+                    "varName": "Ph.адрес.регион",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].region",
+                    "varType": "IN",
+                    "varNr": "77",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_city",
+                    "varName": "Ph.адрес.город",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].city",
+                    "varType": "IN",
+                    "varNr": "79",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_street",
+                    "varName": "Ph.адрес.улица",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].street",
+                    "varType": "IN",
+                    "varNr": "81",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_house",
+                    "varName": "Ph.адрес.дом",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].house",
+                    "varType": "IN",
+                    "varNr": "83",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_building",
+                    "varName": "Ph.адрес.строение",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].building",
+                    "varType": "IN",
+                    "varNr": "86",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_flat",
+                    "varName": "Ph.адрес.квартира",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].flat",
+                    "varType": "IN",
+                    "varNr": "87",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_room",
+                    "varName": "Ph.адрес.комната",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].room",
+                    "varType": "IN",
+                    "varNr": "89",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_zipCode",
+                    "varName": "Ph.адрес.индекс",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].zipCode",
+                    "varType": "IN",
+                    "varNr": "92",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_kladrId",
+                    "varName": "Ph.адрес.код кладр",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].kladrId",
+                    "varType": "IN",
+                    "varNr": "93",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_fiasId",
+                    "varName": "Ph.адрес.код фиас",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].fiasId",
+                    "varType": "IN",
+                    "varNr": "95",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_addressStr",
+                    "varName": "Ph.адрес.адресная строка",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].addressStr",
+                    "varType": "IN",
+                    "varNr": "98",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_addressStrEn",
+                    "varName": "Ph.адрес.адресная строка англ",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].addressStrEn",
+                    "varType": "IN",
+                    "varNr": "99",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "ph_addr_ext_id",
+                    "varName": "Ph.адрес.внешний id",
+                    "varPath": "policyHolder.addresses[?(@.isPrimary)].ext_id",
+                    "varType": "IN",
+                    "varNr": "101",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "varDataType": "OBJECT",
+            "varCode": "insuredObject",
+            "varName": "Объект страхования",
+            "varPath": "insuredObjects[0]",
+            "varType": "OBJECT",
+            "varNr": "1400",
+            "isSystem": false,
+            "defaultState": "ENABLED",
+            "children": [
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_animal",
+                "varName": "Животное",
+                "varPath": "insuredObjects[0].animal",
+                "varType": "OBJECT",
+                "varNr": "0",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_animal_typeCode",
+                    "varName": "Тип животного",
+                    "varPath": "insuredObjects[0].animal.typeCode",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "varList": "animalType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_animal_breed",
+                    "varName": "Порода",
+                    "varPath": "insuredObjects[0].animal.breed",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_animal_name",
+                    "varName": "Кличка",
+                    "varPath": "insuredObjects[0].animal.name",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_animal_cost",
+                    "varName": "Стоимость",
+                    "varPath": "insuredObjects[0].animal.cost",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_animal_age",
+                    "varName": "Возраст",
+                    "varPath": "insuredObjects[0].animal.age",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_animal_chipNumber",
+                    "varName": "Уникальный номер чипа",
+                    "varPath": "insuredObjects[0].animal.chipNumber",
+                    "varType": "IN",
+                    "varNr": "0",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "STRING",
+                "varCode": "io_packageCode",
+                "varName": "Код пакета",
+                "varPath": "insuredObjects[0].packageCode",
+                "varType": "IN",
+                "varValue": "0",
+                "varNr": "1",
+                "isSystem": false,
+                "defaultState": "ENABLED"
+              },
+              {
+                "varDataType": "NUMBER",
+                "varCode": "io_sumInsured",
+                "varName": "Страховая сумма объекта страхования",
+                "varPath": "insuredObjects[0].sumInsured",
+                "varType": "IN",
+                "varValue": "100000",
+                "varNr": "10",
+                "isSystem": false,
+                "defaultState": "ENABLED"
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_person",
+                "varName": "Физ.лицо",
+                "varPath": "insuredObjects[0].person",
+                "varType": "OBJECT",
+                "varNr": "20",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_firstName",
+                    "varName": "Застрахованный.имя",
+                    "varPath": "insuredObjects[0].person.firstName",
+                    "varType": "IN",
+                    "varNr": "1",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_lastName",
+                    "varName": "Застрахованный.фамилия",
+                    "varPath": "insuredObjects[0].person.lastName",
+                    "varType": "IN",
+                    "varNr": "4",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_middleName",
+                    "varName": "Застрахованный.отчество",
+                    "varPath": "insuredObjects[0].person.middleName",
+                    "varType": "IN",
+                    "varNr": "6",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_birthDate",
+                    "varName": "Застрахованный.дата рождения",
+                    "varPath": "insuredObjects[0].person.birthDate",
+                    "varType": "IN",
+                    "varNr": "8",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_fullName",
+                    "varName": "Застрахованный.полное фио",
+                    "varPath": "insuredObjects[0].person.fullName",
+                    "varType": "IN",
+                    "varNr": "10",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_fullNameEn",
+                    "varName": "Застрахованный.полное фио англ",
+                    "varPath": "insuredObjects[0].person.fullNameEn",
+                    "varType": "IN",
+                    "varNr": "11",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_birthPlace",
+                    "varName": "Застрахованный.место рождения",
+                    "varPath": "insuredObjects[0].person.birthPlace",
+                    "varType": "IN",
+                    "varNr": "14",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_citizenship",
+                    "varName": "Застрахованный.гражданство",
+                    "varPath": "insuredObjects[0].person.citizenship",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "15",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_gender",
+                    "varName": "Застрахованный.пол",
+                    "varPath": "insuredObjects[0].person.gender",
+                    "varType": "IN",
+                    "varNr": "17",
+                    "varList": "gender",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_familyState",
+                    "varName": "Застрахованный.семейное положение",
+                    "varPath": "insuredObjects[0].person.familyState",
+                    "varType": "IN",
+                    "varValue": "SINGLE",
+                    "varNr": "21",
+                    "varList": "familyState",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_isPublicOfficial",
+                    "varName": "Застрахованный.признак пдл",
+                    "varPath": "insuredObjects[0].person.isPublicOfficial",
+                    "varType": "IN",
+                    "varNr": "25",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_isResident",
+                    "varName": "Застрахованный.резидент рф",
+                    "varPath": "insuredObjects[0].person.isResident",
+                    "varType": "IN",
+                    "varValue": "true",
+                    "varNr": "27",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_ext_id",
+                    "varName": "Застрахованный.внешний id",
+                    "varPath": "insuredObjects[0].person.ext_id",
+                    "varType": "IN",
+                    "varNr": "33",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_age_issue",
+                    "varName": "Возраст застрахованного на дату выпуска полиса",
+                    "varPath": "null",
+                    "varType": "MAGIC",
+                    "varNr": "139",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_age_end",
+                    "varName": "Возраст застрахованного на дату окончания полиса",
+                    "varPath": "null",
+                    "varType": "MAGIC",
+                    "varNr": "140",
+                    "isSystem": false,
+                    "defaultState": "DISABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_contacts",
+                "varName": "Контакты",
+                "varPath": "insuredObjects[0].contacts",
+                "varType": "OBJECT",
+                "varNr": "21",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_phone",
+                    "varName": "Застрахованный.телефон",
+                    "varPath": "insuredObjects[0].contacts.phone",
+                    "varType": "IN",
+                    "varNr": "50",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_email",
+                    "varName": "Застрахованный.email",
+                    "varPath": "insuredObjects[0].contacts.email",
+                    "varType": "IN",
+                    "varNr": "51",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_organization",
+                "varName": "Юр.лицо",
+                "varPath": "insuredObjects[0].organization",
+                "varType": "OBJECT",
+                "varNr": "22",
+                "isSystem": false,
+                "defaultState": "ENABLED"
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_identifier",
+                "varName": "Документ основной",
+                "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)]",
+                "varType": "OBJECT",
+                "varNr": "23",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_typeCode",
+                    "varName": "io.документ.код типа документа",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].typeCode",
+                    "varType": "IN",
+                    "varNr": "55",
+                    "varList": "identifierType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_serial",
+                    "varName": "io.документ.серия документа",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].serial",
+                    "varType": "IN",
+                    "varNr": "57",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_number",
+                    "varName": "io.документ.номер документа",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].number",
+                    "varType": "IN",
+                    "varNr": "60",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_dateIssue",
+                    "varName": "io.документ.дата выдачи",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].dateIssue",
+                    "varType": "IN",
+                    "varNr": "61",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_validUntil",
+                    "varName": "io.документ.действительно до",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].validUntil",
+                    "varType": "IN",
+                    "varNr": "64",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_whom",
+                    "varName": "io.документ.кем выдан",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].whom",
+                    "varType": "IN",
+                    "varNr": "65",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_divisionCode",
+                    "varName": "io.документ.код подразделения",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].divisionCode",
+                    "varType": "IN",
+                    "varNr": "67",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_ext_id",
+                    "varName": "io.документ.внешний id",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].ext_id",
+                    "varType": "IN",
+                    "varNr": "70",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_doc_countryCode",
+                    "varName": "io.документ.страна выдачи документа",
+                    "varPath": "insuredObjects[0].identifiers[?(@.isPrimary)].countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "72",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_address",
+                "varName": "Адрес основной",
+                "varPath": "insuredObjects[0].addresses[?(@.isPrimary)]",
+                "varType": "OBJECT",
+                "varNr": "24",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_typeCode",
+                    "varName": "Io.адрес.тип адреса",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].typeCode",
+                    "varType": "IN",
+                    "varValue": "REGISTRATION",
+                    "varNr": "73",
+                    "varList": "addressType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_countryCode",
+                    "varName": "Io.адрес.код страны",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "75",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_region",
+                    "varName": "Io.адрес.регион",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].region",
+                    "varType": "IN",
+                    "varNr": "78",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_city",
+                    "varName": "Io.адрес.город",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].city",
+                    "varType": "IN",
+                    "varNr": "80",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_street",
+                    "varName": "Io.адрес.улица",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].street",
+                    "varType": "IN",
+                    "varNr": "82",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_house",
+                    "varName": "Io.адрес.дом",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].house",
+                    "varType": "IN",
+                    "varNr": "84",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_building",
+                    "varName": "Io.адрес.строение",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].building",
+                    "varType": "IN",
+                    "varNr": "85",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_flat",
+                    "varName": "Io.адрес.квартира",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].flat",
+                    "varType": "IN",
+                    "varNr": "88",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_room",
+                    "varName": "Io.адрес.комната",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].room",
+                    "varType": "IN",
+                    "varNr": "90",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_zipCode",
+                    "varName": "Io.адрес.индекс",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].zipCode",
+                    "varType": "IN",
+                    "varNr": "91",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_kladrId",
+                    "varName": "Io.адрес.код кладр",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].kladrId",
+                    "varType": "IN",
+                    "varNr": "94",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_fiasId",
+                    "varName": "Io.адрес.код фиас",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].fiasId",
+                    "varType": "IN",
+                    "varNr": "96",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_addressStr",
+                    "varName": "Io.адрес.адресная строка",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].addressStr",
+                    "varType": "IN",
+                    "varNr": "97",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_addressStrEn",
+                    "varName": "Io.адрес.адресная строка англ",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].addressStrEn",
+                    "varType": "IN",
+                    "varNr": "100",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_addr_ext_id",
+                    "varName": "Io.адрес.внешний id",
+                    "varPath": "insuredObjects[0].addresses[?(@.isPrimary)].ext_id",
+                    "varType": "IN",
+                    "varNr": "102",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_device",
+                "varName": "Электронное устройство",
+                "varPath": "insuredObjects[0].device",
+                "varType": "OBJECT",
+                "varNr": "25",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_name",
+                    "varName": "Застрахованное ус-во. название",
+                    "varPath": "insuredObjects[0].device.deviceName",
+                    "varType": "IN",
+                    "varValue": "Телефон",
+                    "varNr": "103",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_typeCode",
+                    "varName": "Застрахованное ус-во. код типа",
+                    "varPath": "insuredObjects[0].device.deviceTypeCode",
+                    "varType": "IN",
+                    "varValue": "PHONE",
+                    "varNr": "106",
+                    "varList": "deviceType",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_tradeMark",
+                    "varName": "Застрахованное ус-во. торговая марка",
+                    "varPath": "insuredObjects[0].device.tradeMark",
+                    "varType": "IN",
+                    "varValue": "Samsung",
+                    "varNr": "108",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_model",
+                    "varName": "Застрахованное ус-во. модель",
+                    "varPath": "insuredObjects[0].device.model",
+                    "varType": "IN",
+                    "varValue": "Galaxy S21",
+                    "varNr": "110",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_serialNr",
+                    "varName": "Застрахованное ус-во. серийный номер",
+                    "varPath": "insuredObjects[0].device.serialNr",
+                    "varType": "IN",
+                    "varValue": "1234567890",
+                    "varNr": "112",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_licenseKey",
+                    "varName": "Застрахованное ус-во. ключ лицензии",
+                    "varPath": "insuredObjects[0].device.licenseKey",
+                    "varType": "IN",
+                    "varValue": "1234567890",
+                    "varNr": "114",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_imei",
+                    "varName": "Застрахованное ус-во. imei",
+                    "varPath": "insuredObjects[0].device.imei",
+                    "varType": "IN",
+                    "varValue": "1234567890",
+                    "varNr": "115",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_osVersion",
+                    "varName": "Застрахованное ус-во. версия ос",
+                    "varPath": "insuredObjects[0].device.osVersion",
+                    "varType": "IN",
+                    "varValue": "10",
+                    "varNr": "116",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_osName",
+                    "varName": "Застрахованное ус-во. название ос",
+                    "varPath": "insuredObjects[0].device.osName",
+                    "varType": "IN",
+                    "varValue": "Android",
+                    "varNr": "117",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_device_countryCode",
+                    "varName": "Застрахованное ус-во. код страны",
+                    "varPath": "insuredObjects[0].device.countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "118",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_device_devicePrice",
+                    "varName": "Застрахованное ус-во. цена",
+                    "varPath": "insuredObjects[0].device.devicePrice",
+                    "varType": "IN",
+                    "varValue": "10000",
+                    "varNr": "119",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_property",
+                "varName": "Недвижимость",
+                "varPath": "insuredObjects[0].property",
+                "varType": "OBJECT",
+                "varNr": "26",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_propertyTypeCode",
+                    "varName": "Имущество.тип имущества код",
+                    "varPath": "insuredObjects[0].property.propertyType.code",
+                    "varType": "IN",
+                    "varNr": "104",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cadastrNr",
+                    "varName": "Имущество.кадастровый номер",
+                    "varPath": "insuredObjects[0].property.cadastrNr",
+                    "varType": "IN",
+                    "varValue": "77:07:0018002:2590",
+                    "varNr": "120",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_wallsMaterial",
+                    "varName": "Имущество.материал стен",
+                    "varPath": "insuredObjects[0].property.wallsMaterial",
+                    "varType": "IN",
+                    "varValue": "Каменные, кирпичные",
+                    "varNr": "121",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_wallsMaterialOther",
+                    "varName": "Имущество.материал стен другой",
+                    "varPath": "insuredObjects[0].property.wallsMaterialOther",
+                    "varType": "IN",
+                    "varValue": "Каменные, кирпичные",
+                    "varNr": "122",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_ceilingMaterial",
+                    "varName": "Имущество.материал перекрытий",
+                    "varPath": "insuredObjects[0].property.ceilingMaterial",
+                    "varType": "IN",
+                    "varValue": "Смешанные",
+                    "varNr": "123",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_ceilingMaterialOther",
+                    "varName": "Имущество.материал перекрытий другой",
+                    "varPath": "insuredObjects[0].property.ceilingMaterialOther",
+                    "varType": "IN",
+                    "varValue": "Смешанные",
+                    "varNr": "124",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_constructionYear",
+                    "varName": "Имущество.год постройки",
+                    "varPath": "insuredObjects[0].property.constructionYear",
+                    "varType": "IN",
+                    "varNr": "125",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_repairYear",
+                    "varName": "Имущество.год ремонта",
+                    "varPath": "insuredObjects[0].property.repairYear",
+                    "varType": "IN",
+                    "varNr": "126",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_buildingArea",
+                    "varName": "Имущество.площадь здания",
+                    "varPath": "insuredObjects[0].property.buildingArea",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "127",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_landArea",
+                    "varName": "Имущество.площадь участка",
+                    "varPath": "insuredObjects[0].property.landArea",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "128",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_buildingValue",
+                    "varName": "Имущество.стоимость здания",
+                    "varPath": "insuredObjects[0].property.buildingValue",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "129",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_wearCoefficient",
+                    "varName": "Имущество.коэффициент износа",
+                    "varPath": "insuredObjects[0].property.wearCoefficient",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "130",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_numberOfFloors",
+                    "varName": "Имущество.количество этажей",
+                    "varPath": "insuredObjects[0].property.numberOfFloors",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "131",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_propertyLocation",
+                    "varName": "Имущество.расположение имущества",
+                    "varPath": "insuredObjects[0].property.propertyLocation",
+                    "varType": "IN",
+                    "varValue": "В многоквартирном доме",
+                    "varNr": "132",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_isNewBuilding",
+                    "varName": "Имущество.новостройка",
+                    "varPath": "insuredObjects[0].property.isNewBuilding",
+                    "varType": "IN",
+                    "varNr": "133",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_propertyValue",
+                    "varName": "Имущество.стоимость имущества",
+                    "varPath": "insuredObjects[0].property.propertyValue",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "134",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_commissioningDate",
+                    "varName": "Имущество.дата ввода в эксплуатацию",
+                    "varPath": "insuredObjects[0].property.commissioningDate",
+                    "varType": "IN",
+                    "varNr": "135",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_floor",
+                    "varName": "Имущество.этаж",
+                    "varPath": "insuredObjects[0].property.floor",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "136",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_travelSegments",
+                "varName": "Сегмент авиаперевозки",
+                "varPath": "insuredObjects[0].travelSegments",
+                "varType": "OBJECT",
+                "varNr": "27",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_ticketPrice",
+                    "varName": "Стоимость билета",
+                    "varPath": "insuredObjects[0].travelSegments[*].ticketPrice.sum()",
+                    "varType": "IN",
+                    "varNr": "53",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_legs",
+                    "varName": "Количество перелетов",
+                    "varPath": "insuredObjects[0].travelSegments[*].count()",
+                    "varType": "IN",
+                    "varNr": "56",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_ticketNr",
+                    "varName": "Номер билета",
+                    "varPath": "insuredObjects[0].travelSegments[*].ticketNr",
+                    "varType": "IN",
+                    "varNr": "105",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_departureDate",
+                    "varName": "Дата вылета",
+                    "varPath": "insuredObjects[0].travelSegments[*].departureDate",
+                    "varType": "IN",
+                    "varNr": "107",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_departureTime",
+                    "varName": "Время вылета",
+                    "varPath": "insuredObjects[0].travelSegments[*].departureTime",
+                    "varType": "IN",
+                    "varNr": "109",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_departureCity",
+                    "varName": "Город вылета",
+                    "varPath": "insuredObjects[0].travelSegments[*].departureCity",
+                    "varType": "IN",
+                    "varNr": "111",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_arrivalCity",
+                    "varName": "Город прилета",
+                    "varPath": "insuredObjects[0].travelSegments[*].arrivalCity",
+                    "varType": "IN",
+                    "varNr": "113",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_flightNr",
+                    "varName": "Номер рейса",
+                    "varPath": "insuredObjects[0].travelSegments[*].flightNr",
+                    "varType": "IN",
+                    "varNr": "201",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_departureAirportIATA",
+                    "varName": "Аэропорт вылета IATA",
+                    "varPath": "insuredObjects[0].travelSegments[*].departureAirportIATA",
+                    "varType": "IN",
+                    "varNr": "202",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_departureAirportICAO",
+                    "varName": "Аэропорт вылета ICAO\"",
+                    "varPath": "insuredObjects[0].travelSegments[*].departureAirportICAO",
+                    "varType": "IN",
+                    "varNr": "203",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_arrivalAirportIATA",
+                    "varName": "Аэропорт прилета IATA",
+                    "varPath": "insuredObjects[0].travelSegments[*].arrivalAirportIATA",
+                    "varType": "IN",
+                    "varNr": "204",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_arrivalAirportICAO",
+                    "varName": "Аэропорт прилета ICAO",
+                    "varPath": "insuredObjects[0].travelSegments[*].arrivalAirportICAO",
+                    "varType": "IN",
+                    "varNr": "205",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_travelRoutes",
+                    "varName": "таблица вылет-прилет",
+                    "varPath": "*",
+                    "varType": "MAGIC",
+                    "varNr": "206",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_travelTimetable",
+                    "varName": "таблица - время вылета - прилета",
+                    "varPath": "*",
+                    "varType": "MAGIC",
+                    "varNr": "207",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_riskFactors",
+                "varName": "Доп. риски",
+                "varPath": "insuredObjects[0].riskFactors",
+                "varType": "OBJECT",
+                "varNr": "28",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_sport1",
+                    "varName": "Доп.риск спорт #1",
+                    "varPath": "insuredObjects[0].riskFactors.sport1",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "145",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_sport2",
+                    "varName": "Доп.риск спорт #2",
+                    "varPath": "insuredObjects[0].riskFactors.sport2",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "146",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_sport3",
+                    "varName": "Доп.риск спорт #3",
+                    "varPath": "insuredObjects[0].riskFactors.sport3",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "147",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_sport4",
+                    "varName": "Доп.риск спорт #4",
+                    "varPath": "insuredObjects[0].riskFactors.sport4",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "148",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_sport5",
+                    "varName": "Доп.риск спорт #5",
+                    "varPath": "insuredObjects[0].riskFactors.sport5",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "149",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "rf_profSport",
+                    "varName": "Профессиональный спорт",
+                    "varPath": "insuredObjects[0].riskFactors.profSport",
+                    "varType": "IN",
+                    "varValue": "0",
+                    "varNr": "150",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_vehicle",
+                "varName": "Транспортное средство",
+                "varPath": "insuredObjects[0].vehicle",
+                "varType": "OBJECT",
+                "varNr": "30",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_vin",
+                    "varName": "VIN",
+                    "varPath": "insuredObjects[0].vehicle.vin",
+                    "varType": "IN",
+                    "varNr": "1",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_bodyNumber",
+                    "varName": "Номер кузова",
+                    "varPath": "insuredObjects[0].vehicle.bodyNumber",
+                    "varType": "IN",
+                    "varNr": "2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_chassisNumber",
+                    "varName": "Номер шасси",
+                    "varPath": "insuredObjects[0].vehicle.chassisNumber",
+                    "varType": "IN",
+                    "varNr": "3",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_usedSince",
+                    "varName": "Дата начала эксплуатации",
+                    "varPath": "insuredObjects[0].vehicle.usedSince",
+                    "varType": "IN",
+                    "varNr": "4",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_vehicle_mileage",
+                    "varName": "Пробег",
+                    "varPath": "insuredObjects[0].vehicle.mileage",
+                    "varType": "IN",
+                    "varNr": "5",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "NUMBER",
+                    "varCode": "io_vehicle_cost",
+                    "varName": "Стоимость транспортного средства",
+                    "varPath": "insuredObjects[0].vehicle.cost",
+                    "varType": "IN",
+                    "varNr": "6",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_manufactureDate",
+                    "varName": "Дата выпуска",
+                    "varPath": "insuredObjects[0].vehicle.manufactureDate",
+                    "varType": "IN",
+                    "varNr": "7",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_isRegistered",
+                    "varName": "Признак регистрации",
+                    "varPath": "insuredObjects[0].vehicle.isRegistered",
+                    "varType": "IN",
+                    "varNr": "8",
+                    "varList": "yesNo",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_categoryCode",
+                    "varName": "Категория транспортного средства",
+                    "varPath": "insuredObjects[0].vehicle.categoryCode",
+                    "varType": "IN",
+                    "varNr": "9",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicle_typeCode",
+                    "varName": "Тип транспортного средства",
+                    "varPath": "insuredObjects[0].vehicle.typeCode",
+                    "varType": "IN",
+                    "varNr": "10",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "OBJECT",
+                    "varCode": "io_vehicle_model",
+                    "varName": "Модель ТС",
+                    "varPath": "insuredObjects[0].vehicle.model",
+                    "varType": "OBJECT",
+                    "varNr": "20",
+                    "isSystem": false,
+                    "defaultState": "ENABLED",
+                    "children": [
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_vehicle_model_brand",
+                        "varName": "Марка",
+                        "varPath": "insuredObjects[0].vehicle.model.brand",
+                        "varType": "IN",
+                        "varNr": "1",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_vehicle_model_model",
+                        "varName": "Модель",
+                        "varPath": "insuredObjects[0].vehicle.model.model",
+                        "varType": "IN",
+                        "varNr": "2",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "NUMBER",
+                        "varCode": "io_vehicle_model_horsePower",
+                        "varName": "Мощность",
+                        "varPath": "insuredObjects[0].vehicle.model.horsePower",
+                        "varType": "IN",
+                        "varNr": "3",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_vehicle_model_engineTypeCode",
+                        "varName": "Тип двигателя",
+                        "varPath": "insuredObjects[0].vehicle.model.engineTypeCode",
+                        "varType": "IN",
+                        "varNr": "4",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "NUMBER",
+                        "varCode": "io_vehicle_model_engineVolume",
+                        "varName": "Объём двигателя",
+                        "varPath": "insuredObjects[0].vehicle.model.engineVolume",
+                        "varType": "IN",
+                        "varNr": "5",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "NUMBER",
+                        "varCode": "io_vehicle_model_doors",
+                        "varName": "Количество дверей",
+                        "varPath": "insuredObjects[0].vehicle.model.doors",
+                        "varType": "IN",
+                        "varNr": "6",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_vehicle_model_bodyTypeCode",
+                        "varName": "Тип кузова",
+                        "varPath": "insuredObjects[0].vehicle.model.bodyTypeCode",
+                        "varType": "IN",
+                        "varNr": "7",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_vehicle_model_gearTypeCode",
+                        "varName": "Тип коробки передач",
+                        "varPath": "insuredObjects[0].vehicle.model.gearTypeCode",
+                        "varType": "IN",
+                        "varNr": "8",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_vehicleDocument",
+                "varName": "Документ ТС",
+                "varPath": "insuredObjects[0].vehicleDocument",
+                "varType": "OBJECT",
+                "varNr": "31",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_typeCode",
+                    "varName": "Тип документа",
+                    "varPath": "insuredObjects[0].vehicleDocument.typeCode",
+                    "varType": "IN",
+                    "varNr": "1",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_serial",
+                    "varName": "Серия",
+                    "varPath": "insuredObjects[0].vehicleDocument.serial",
+                    "varType": "IN",
+                    "varNr": "2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_number",
+                    "varName": "Номер",
+                    "varPath": "insuredObjects[0].vehicleDocument.number",
+                    "varType": "IN",
+                    "varNr": "3",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_dateIssue",
+                    "varName": "Дата выдачи",
+                    "varPath": "insuredObjects[0].vehicleDocument.dateIssue",
+                    "varType": "IN",
+                    "varNr": "4",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_whom",
+                    "varName": "Кем выдан",
+                    "varPath": "insuredObjects[0].vehicleDocument.whom",
+                    "varType": "IN",
+                    "varNr": "5",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_vehicleDocument_countryCode",
+                    "varName": "Страна выдачи",
+                    "varPath": "insuredObjects[0].vehicleDocument.countryCode",
+                    "varType": "IN",
+                    "varValue": "RU",
+                    "varNr": "6",
+                    "varList": "country2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_cargo",
+                "varName": "Груз",
+                "varPath": "insuredObjects[0].cargo",
+                "varType": "OBJECT",
+                "varNr": "131",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_cargoType",
+                    "varName": "Наименование груза",
+                    "varPath": "insuredObjects[0].cargo.cargoType",
+                    "varType": "IN",
+                    "varNr": "1",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_cargoTypeEn",
+                    "varName": "Наименование груза (EN)",
+                    "varPath": "insuredObjects[0].cargo.cargoTypeEn",
+                    "varType": "IN",
+                    "varNr": "2",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_cargoCategory",
+                    "varName": "Категория груза",
+                    "varPath": "insuredObjects[0].cargo.cargoCategory",
+                    "varType": "IN",
+                    "varNr": "3",
+                    "varList": "cargoCategory",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_cargoCondition",
+                    "varName": "Состояние груза",
+                    "varPath": "insuredObjects[0].cargo.cargoCondition",
+                    "varType": "IN",
+                    "varNr": "4",
+                    "varList": "cargoCondition",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_weight",
+                    "varName": "Масса груза",
+                    "varPath": "insuredObjects[0].cargo.weight",
+                    "varType": "IN",
+                    "varNr": "5",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_quantity",
+                    "varName": "Количество мест",
+                    "varPath": "insuredObjects[0].cargo.quantity",
+                    "varType": "IN",
+                    "varNr": "6",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_packaging",
+                    "varName": "Упаковка",
+                    "varPath": "insuredObjects[0].cargo.packaging",
+                    "varType": "IN",
+                    "varNr": "7",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_packagingEn",
+                    "varName": "Упаковка (EN)",
+                    "varPath": "insuredObjects[0].cargo.packagingEn",
+                    "varType": "IN",
+                    "varNr": "8",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_containerNumbers",
+                    "varName": "Номера контейнеров",
+                    "varPath": "insuredObjects[0].cargo.containerNumbers",
+                    "varType": "IN",
+                    "varNr": "9",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_containerAmount",
+                    "varName": "Количество контейнеров",
+                    "varPath": "insuredObjects[0].cargo.containerAmount",
+                    "varType": "IN",
+                    "varNr": "10",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_containerType",
+                    "varName": "Тип контейнера",
+                    "varPath": "insuredObjects[0].cargo.containerType",
+                    "varType": "IN",
+                    "varNr": "11",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  },
+                  {
+                    "varDataType": "STRING",
+                    "varCode": "io_cargo_containerTypeEn",
+                    "varName": "Тип контейнера (EN)",
+                    "varPath": "insuredObjects[0].cargo.containerTypeEn",
+                    "varType": "IN",
+                    "varNr": "12",
+                    "isSystem": false,
+                    "defaultState": "ENABLED"
+                  }
+                ]
+              },
+              {
+                "varDataType": "OBJECT",
+                "varCode": "io_shipment",
+                "varName": "Перевозка",
+                "varPath": "insuredObjects[0].shipment",
+                "varType": "OBJECT",
+                "varNr": "132",
+                "isSystem": false,
+                "defaultState": "ENABLED",
+                "children": [
+                  {
+                    "varDataType": "OBJECT",
+                    "varCode": "io_cd_transport",
+                    "varName": "Транспорт",
+                    "varPath": "insuredObjects[0].cargoDelivery.transports[*]",
+                    "varType": "OBJECT",
+                    "varNr": "141",
+                    "isSystem": false,
+                    "defaultState": "ENABLED",
+                    "children": [
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_cd_transport_nameRu",
+                        "varName": "Наименование транспорта (RU)",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].nameRu",
+                        "varType": "IN",
+                        "varNr": "2",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_cd_transport_nameEn",
+                        "varName": "Наименование транспорта (EN)",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].nameEn",
+                        "varType": "IN",
+                        "varNr": "3",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_cd_conditionCarriage",
+                        "varName": "Условия перевозки",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].conditionCarriage",
+                        "varType": "IN",
+                        "varNr": "4",
+                        "isSystem": false,
+                        "defaultState": "ENABLED",
+                        "children": [
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_requirementTransport",
+                            "varName": "Доп. требование к ТС",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].requirements.requirementTransport",
+                            "varType": "IN",
+                            "varNr": "5",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_temperatureControlled",
+                            "varName": "Контролируемая температура",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].requirements.temperatureControlled",
+                            "varType": "IN",
+                            "varNr": "6",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_fragile",
+                            "varName": "Хрупкий",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].requirements.fragile",
+                            "varType": "IN",
+                            "varNr": "10",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          }
+                        ]
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_cd_transport_registrationNumber",
+                        "varName": "Регистрационный номер",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].registrationNumber",
+                        "varType": "IN",
+                        "varNr": "4",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "OBJECT",
+                        "varCode": "io_cd_transport_organization",
+                        "varName": "Организация перевозчика",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].organization",
+                        "varType": "OBJECT",
+                        "varNr": "5",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "OBJECT",
+                        "varCode": "io_cd_transport_ship",
+                        "varName": "Судно",
+                        "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship",
+                        "varType": "OBJECT",
+                        "varNr": "6",
+                        "isSystem": false,
+                        "defaultState": "ENABLED",
+                        "children": [
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_nameRu",
+                            "varName": "Наименование судна (RU)",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.nameRu",
+                            "varType": "IN",
+                            "varNr": "1",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_nameEn",
+                            "varName": "Наименование судна (EN)",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.nameEn",
+                            "varType": "IN",
+                            "varNr": "2",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_class",
+                            "varName": "Класс судна",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.class",
+                            "varType": "IN",
+                            "varNr": "3",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_imo",
+                            "varName": "Номер IMO",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.imo",
+                            "varType": "IN",
+                            "varNr": "4",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_flag",
+                            "varName": "Флаг судна",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.flag",
+                            "varType": "IN",
+                            "varNr": "5",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_constructionDate",
+                            "varName": "Дата постройки",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.constructionDate",
+                            "varType": "IN",
+                            "varNr": "6",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_ownerCountryCode",
+                            "varName": "Страна судовладельца",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.ownerCountryCode",
+                            "varType": "IN",
+                            "varNr": "7",
+                            "varList": "country2",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_managerCountryCode",
+                            "varName": "Страна менеджера",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.managerCountryCode",
+                            "varType": "IN",
+                            "varNr": "8",
+                            "varList": "country2",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          },
+                          {
+                            "varDataType": "STRING",
+                            "varCode": "io_cd_ship_operatorCountryCode",
+                            "varName": "Страна оператора",
+                            "varPath": "insuredObjects[0].cargoDelivery.transports[*].ship.operatorCountryCode",
+                            "varType": "IN",
+                            "varNr": "9",
+                            "varList": "country2",
+                            "isSystem": false,
+                            "defaultState": "ENABLED"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "varDataType": "OBJECT",
+                    "varCode": "io_address_departure",
+                    "varName": "Адрес отправления",
+                    "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')]",
+                    "varType": "OBJECT",
+                    "varNr": "142",
+                    "isSystem": false,
+                    "defaultState": "ENABLED",
+                    "children": [
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_departure_countryCode",
+                        "varName": "Страна",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')].countryCode",
+                        "varType": "IN",
+                        "varNr": "1",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_departure_addressStr",
+                        "varName": "Адрес",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='DEPARTURE')].addressStr",
+                        "varType": "IN",
+                        "varNr": "2",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      }
+                    ]
+                  },
+                  {
+                    "varDataType": "OBJECT",
+                    "varCode": "io_address_transit",
+                    "varName": "Адрес транзита",
+                    "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')]",
+                    "varType": "OBJECT",
+                    "varNr": "143",
+                    "isSystem": false,
+                    "defaultState": "ENABLED",
+                    "children": [
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_transit_countryCode",
+                        "varName": "Страна",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')].countryCode",
+                        "varType": "IN",
+                        "varNr": "1",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_transit_addressStr",
+                        "varName": "Адрес",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='TRANSIT')].addressStr",
+                        "varType": "IN",
+                        "varNr": "2",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      }
+                    ]
+                  },
+                  {
+                    "varDataType": "OBJECT",
+                    "varCode": "io_address_arrival",
+                    "varName": "Адрес прибытия",
+                    "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')]",
+                    "varType": "OBJECT",
+                    "varNr": "144",
+                    "isSystem": false,
+                    "defaultState": "ENABLED",
+                    "children": [
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_arrival_countryCode",
+                        "varName": "Страна",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')].countryCode",
+                        "varType": "IN",
+                        "varNr": "1",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      },
+                      {
+                        "varDataType": "STRING",
+                        "varCode": "io_address_arrival_addressStr",
+                        "varName": "Адрес",
+                        "varPath": "insuredObjects[0].addresses[?(@.typeCode='ARRIVAL')].addressStr",
+                        "varType": "IN",
+                        "varNr": "2",
+                        "isSystem": false,
+                        "defaultState": "ENABLED"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_policy_number",
+        "varName": "Номер договора",
+        "varType": "TEXT",
+        "varValue": "Договор страхования № {{pl_policyNumber}} от {{pl_issueDate|dd.MM.yyyy}}",
+        "varNr": "1101",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_dob",
+        "varName": "Страхователь дата рождения",
+        "varType": "TEXT",
+        "varValue": "{{ph_birthDate|dd.MM.yyyy}}",
+        "varNr": "1104",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_address",
+        "varName": "Страхователь адрес регистрации",
+        "varType": "TEXT",
+        "varValue": "Адрес регистрации: {{ph_addr_addressStr}}",
+        "varNr": "1105",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_phone",
+        "varName": "Страхователь телефон",
+        "varType": "TEXT",
+        "varValue": "Телефон: {{ph_phone}}",
+        "varNr": "1106",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_email",
+        "varName": "Страхователь адрес электронной почты",
+        "varType": "TEXT",
+        "varValue": "{{ph_email}}",
+        "varNr": "1107",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_id",
+        "varName": "Страхователь документ, удостоверяющий личность наименование",
+        "varType": "TEXT",
+        "varValue": "{{#if ph_doc_serial}}серия: {{ph_doc_serial}}{{/if}}{{#if ph_doc_number}}  номер: {{ph_doc_number}}{{/if}}{{#if ph_doc_whom}}  кем выдан: {{ph_doc_whom}}{{/if}}{{#if ph_doc_dateIssue}}  дата выдачи:{{ph_doc_dateIssue|dd.MM.yyyy}}{{/if}}\\n",
+        "varNr": "1108",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_id_serial",
+        "varName": "Страхователь документ серия",
+        "varType": "TEXT",
+        "varValue": "Серия: {{ph_doc_serial}}",
+        "varNr": "1109",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_id_number",
+        "varName": "Страхователь документ номер",
+        "varType": "TEXT",
+        "varValue": "Номер: {{ph_doc_number}}",
+        "varNr": "1110",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_id_date",
+        "varName": "Страхователь документ дата выдачи",
+        "varType": "TEXT",
+        "varValue": "Дата выдачи: {{ph_doc_dateIssue|dd.MM.yyyy}}",
+        "varNr": "1111",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_id_whom",
+        "varName": "Страхователь документ кем выдан",
+        "varType": "TEXT",
+        "varValue": "{{ph_doc_whom}}",
+        "varNr": "1112",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_insurer",
+        "varName": "Страховщик",
+        "varType": "TEXT",
+        "varValue": "САО ВСК",
+        "varNr": "1116",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_header",
+        "varName": "Шапка номер от дата",
+        "varType": "TEXT",
+        "varValue": "Договор страхования № {{pl_policyNumber}} от {{pl_issueDate|dd MMMM yyyy}}г.",
+        "varNr": "1119",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_sumInsured",
+        "varName": "Страховая сумма",
+        "varType": "TEXT",
+        "varValue": "{{io_sumInsured|money}}",
+        "varNr": "1121",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph_citizenship",
+        "varName": "Страхователь гражданство",
+        "varType": "TEXT",
+        "varValue": "{{ph_citizenship|country2}}",
+        "varNr": "1122",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_premium",
+        "varName": "Страховая премия",
+        "varType": "TEXT",
+        "varValue": "{{pl_premium|money}} рублей.",
+        "varNr": "1123",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_paymentDate",
+        "varName": "Страховая премия уплачена",
+        "varType": "TEXT",
+        "varValue": "{{pl_paymentDate|dd MMMM yyyy}}",
+        "varNr": "1124",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_period_text",
+        "varName": "Период ответственности Страховщика",
+        "varType": "TEXT",
+        "varValue": "с {{pl_startDate|date}} по {{pl_endDate|date}}",
+        "varNr": "1125",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_issueDate",
+        "varName": "Дата заключения договора",
+        "varType": "TEXT",
+        "varValue": "{{pl_issueDate|dd.MM.yyyy}}",
+        "varNr": "1128",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_start_period",
+        "varName": "Срок действия договора с",
+        "varType": "TEXT",
+        "varValue": "с 00 часов {{pl_startDate|dd MMMM yyyy}}г. но не ранее времени фактической оплаты страховой премии в полном объеме.",
+        "varNr": "1145",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_end_period",
+        "varName": "Срок действия договора по",
+        "varType": "TEXT",
+        "varValue": "до 24 часов {{pl_endDate|dd MMMM yyyy}}г.",
+        "varNr": "1146",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "io_digest",
+        "varName": "Объект страхования",
+        "varType": "TEXT",
+        "varValue": "{{io_device_model}} {{io_device_name}}",
+        "varNr": "1147",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_sports",
+        "varName": "Все виды спорта",
+        "varType": "TEXT",
+        "varValue": "{{#if rf_sport1}}{{rf_sport1}}{{/if}}{{#if rf_sport2}},{{rf_sport2}}{{/if}}{{#if rf_sport3}},{{rf_sport3}}{{/if}}{{#if rf_sport4}},{{rf_sport4}}{{/if}}{{#if rf_sport5}},{{rf_sport5}}{{/if}}",
+        "varNr": "1148",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "ph_digest",
+        "varName": "Страхователь ( для ЛК)",
+        "varType": "TEXT",
+        "varValue": "{{ph_lastName}} {{ph_firstName}} {{ph_middleName}}",
+        "varNr": "1148",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_pl_territory",
+        "varName": "Территория страхования",
+        "varType": "TEXT",
+        "varValue": "Весь мир",
+        "varNr": "1240",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_pl_payment_frequency",
+        "varName": "Порядок уплаты премии",
+        "varType": "TEXT",
+        "varValue": "единовременно",
+        "varNr": "1241",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt_ph",
+        "varName": "Страхователь",
+        "varType": "TEXT",
+        "varValue": "{{ph_lastName}} {{ph_firstName}} {{ph_middleName}}",
+        "varNr": "1243",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      },
+      {
+        "varDataType": "STRING",
+        "varCode": "txt",
+        "varName": "txt",
+        "varType": "TEXT",
+        "varNr": "1243",
+        "isSystem": false,
+        "defaultState": "ENABLED"
+      }
+    ]
+  }

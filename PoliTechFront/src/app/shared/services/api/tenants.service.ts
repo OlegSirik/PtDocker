@@ -33,5 +33,16 @@ export class TenantsService extends BaseApiService<Tenant> {
     super(http, env, 'admin/tenants', authService);
   }
 
-
+  /**
+   * Tenant CRUD always goes through {@code sys} path so DELETED tenants
+   * can still be listed / reactivated (path tenant must be ACTIVE for getConfig).
+   */
+  override getUrl(id?: number | string): string {
+    let url = this.resourcePath;
+    if (id !== undefined && id !== null && id !== '') {
+      url += '/' + id;
+    }
+    const root = this.authService.baseApiUrl.replace(/\/api\/v1\/[^/]+$/, '/api/v1/sys');
+    return `${root}/${url}`;
+  }
 }

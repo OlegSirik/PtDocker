@@ -1,0 +1,82 @@
+# PolyTechTest REST regression against a running PoliTechAPI instance.
+# Trigger manually after API is up (or wire `needs:` to a compose/boot job later).
+name: PolyTechTest regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "PoliTechAPI base URL (e.g. http://host:8080)"
+        required: false
+        default: ""
+      tags:
+        description: "Comma-separated scenario tags"
+        required: false
+        default: "regression"
+
+jobs:
+  regression:
+    name: "PolyTechTest #${{ github.run_number }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run PolyTechTest
+        working-directory: PolyTechTest
+        env:
+          PT_DEMO_PASSWORD: ${{ secrets.PT_DEMO_PASSWORD }}
+          PT_OTHER_LOGIN: ${{ secrets.PT_OTHER_LOGIN }}
+          PT_OTHER_PASSWORD: ${{ secrets.PT_OTHER_PASSWORD }}
+        run: |
+          set -euo pipefail
+          BASE_URL="${{ inputs.base_url }}"
+          if [ -z "$BASE_URL" ]; then
+            BASE_URL="${{ secrets.PT_BASE_URL }}"
+          fi
+          if [ -z "$BASE_URL" ]; then
+            echo "Set workflow input base_url or secret PT_BASE_URL"
+            exit 1
+          fi
+          if [ -z "${PT_DEMO_PASSWORD:-}" ]; then
+            echo "Secret PT_DEMO_PASSWORD is required"
+            exit 1
+          fi
+          TAGS="${{ inputs.tags }}"
+          TAG_YAML=$(echo "$TAGS" | awk -F',' '{for(i=1;i<=NF;i++){gsub(/^[ \t]+|[ \t]+$/,"",$i); printf "%s\"%s\"", (i>1?", ":""), $i}}')
+          cat > config/ci.yaml <<EOF
+          baseUrl: ${BASE_URL}
+          tenantCode: demo
+          clientId: sys
+          users:
+            admin:
+              login: demo
+              password: "\${PT_DEMO_PASSWORD}"
+            other:
+              login: "\${PT_OTHER_LOGIN:}"
+              password: "\${PT_OTHER_PASSWORD:}"
+          defaults:
+            productCode: CARGO_GENERAL
+            versionNo: 1
+          reportDir: reports
+          tags: [${TAG_YAML}]
+          failFast: false
+          EOF
+          ./gradlew --no-daemon run --args="--config=config/ci.yaml --report-dir=reports"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: polytech-test-reports
+          path: PolyTechTest/reports/
+          if-no-files-found: warn
